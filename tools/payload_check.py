@@ -64,6 +64,7 @@ class Call:
     offset: int
     method: str
     size: int
+    value: Any = None
 
     @property
     def kind(self) -> str | None:
@@ -91,7 +92,8 @@ def recording(cls: type, prefix: str) -> Iterator[list[Call]]:
             finally:
                 depth -= 1
                 if depth == 0:
-                    calls.append(Call(start, __name, self.PayloadPtr - start))
+                    value = kw.get("Value", args[0] if args else None)
+                    calls.append(Call(start, __name, self.PayloadPtr - start, value))
 
         setattr(cls, name, wrapper)
     try:
@@ -251,6 +253,60 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+# methods that write/read one value with more than one byte (byte order reversed on the wire)
+MULTI_BYTE = {"Int", "Uint", "Dint", "Udint", "Word", "Dword", "Real", "IecDate", "IecTime", "Time"}
+
+
+def sdk_fields(wire: bytes, pattern: Callable[[int], int]) -> list[tuple[int, int]]:
+    """Fields (offset, size) of an SDK structure from its pattern in wire byte order."""
+    fields: list[tuple[int, int]] = []
+    o = 0
+    while o < len(wire):
+        size = 1
+        for n in (8, 4, 2):
+            if o + n <= len(wire) and all(wire[o + k] == pattern(o + n - 1 - k) for k in range(n)):
+                size = n
+                break
+        fields.append((o, size))
+        o += size
+    return fields
+
+
+def compare_sdk(calls: list[Call], fields: list[tuple[int, int]]) -> list[str]:
+    """Differences between the recorded calls and the fields of the SDK structure."""
+    problems: list[str] = []
+    multi = {o: n for o, n in fields if n > 1}
+    size = fields[-1][0] + fields[-1][1] if fields else 0
+    matched: set[int] = set()
+    for c in calls:
+        if c.size == 0:
+            continue
+        label = f"{c.method}@{c.offset}"
+        if c.method[3:] in MULTI_BYTE:
+            if multi.get(c.offset) == c.size:
+                matched.add(c.offset)
+            else:
+                inside = [(o, n) for o, n in fields if o <= c.offset < o + n]
+                sdk = (
+                    f"SDK field {inside[0][1]} bytes at {inside[0][0]}"
+                    if inside
+                    else "behind the SDK structure"
+                )
+                problems.append(f"{label} ({c.size} bytes): {sdk}")
+        else:
+            split = [(o, n) for o, n in multi.items() if c.offset < o + n and o < c.offset + c.size]
+            if split:
+                o, n = split[0]
+                problems.append(f"{label} ({c.size} bytes, byte by byte): SDK field {n} bytes at {o}")
+    for o, n in sorted(multi.items()):
+        if o not in matched and not any(c.offset <= o < c.offset + c.size for c in calls if c.size):
+            problems.append(f"SDK field {n} bytes at {o} not in the payload")
+    end = max((c.offset + c.size for c in calls), default=0)
+    if end != size:
+        problems.append(f"payload length {end}, SDK structure {size}")
+    return problems
 
 
 def side_by_side(fb_name: str, direction: str) -> str:

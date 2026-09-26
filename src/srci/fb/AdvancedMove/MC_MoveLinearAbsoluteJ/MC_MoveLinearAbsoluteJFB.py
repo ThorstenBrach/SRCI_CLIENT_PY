@@ -434,7 +434,7 @@ class MC_MoveLinearAbsoluteJFB(RobotLibraryBaseExecuteFB):
         _parameterCnt: int = 0
 
         # set command parameter
-        self._command.CmdTyp = CmdType.MoveLinearAbsolute
+        self._command.CmdTyp = CmdType.MoveLinearAbsoluteJ  # ST-FIX F35
         self._command.ExecMode = self.ExecMode
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority

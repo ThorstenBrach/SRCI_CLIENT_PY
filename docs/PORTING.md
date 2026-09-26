@@ -69,7 +69,12 @@ change behaviour but have no clear fix are *not* patched – the tests document 
 `python -m tools.payload_check [FB ...]` records the `Add*`/`Get*` calls of every function block
 and compares them with the payload tables of the specification (offset, size, REAL/signed/
 unsigned, string field length, payload length). `tests/unit/fb/test_payload_spec.py` fails for
-new deviations and for fixed ones that are still listed as known.
+new deviations and for fixed ones that are still listed as known; it also checks the command
+type of every function block.
+
+The commands the SDK implements are additionally compared with the SDK structures
+(`tests/sdk/test_payload_sdk.py`): the harness fills the `CMD`/`RSP` structure with a byte pattern
+and converts it like the SDK, the reversed multi-byte fields give the exact SDK layout.
 
 ## Logging
 

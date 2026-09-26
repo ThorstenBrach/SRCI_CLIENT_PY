@@ -40,6 +40,7 @@ Status "fixed in Python" means: still to be fixed in the PLC library.
 | F32 | responses of `GroupStop`, `ExchangeConfiguration`, `ReadRobotSWLimits`, `ReadMessages` | fields at the end are not read: `AbortedSequence`, `NumberOfServerLogs`, `DataChanged`; the message text has 150 characters, ST reads 255 (F22) | tables 6-290, 6-87, 6-203, 6-108 | as in ST (no outputs for the fields) |
 | F33 | payload of 23 extended/optional FBs | layout differs from the spec tables (shifted by missing/additional bytes, wrong data types, off-by-one loops). List with details: `KNOWN` in `tests/unit/fb/test_payload_spec.py` | chapter 6 payload tables | as in ST (not testable against the SDK) |
 | F34 | `MC_UserLoginFB`, `MC_SwitchLanguageFB` | `AddString` writes only the actual length; the spec has fixed fields (`Password`/`Username` 50, `LanguageCode` 2) → `Username` at the wrong offset | tables 6-69, 6-76 | as in ST |
+| F35 | `CmdType` enum, `MC_MoveLinearAbsoluteJFB`, `MC_SoftSwitchTcpFB` | wrong command types: MoveLinearAbsoluteJ is sent as **MoveLinearAbsolute (2103)** – the RC reads the joint target as Cartesian position; SoftSwitchTcp as ShiftPosition (7205); MoveCircularAbsolute 2109 / MoveCircularRelative 2106 | spec: MoveLinearAbsoluteJ 2109, SoftSwitchTcp 7300, MoveCircularAbsolute 2106, MoveCircularRelative 2107 | fixed (enum override in `tools/plcopen_gen/overrides.py`, source patches) |
 
 ## Notes on the SRCI SDK (simulation)
 
@@ -57,6 +58,11 @@ Changes inside the private SDK copy are marked `SRCI_PY CUSTOM BEGIN/END` and li
 - `WriteToolData` requires `ToolData.LoadNo` ≥ 1 (0x8D17).
 - Without power a motion command stays buffered (sequence interrupted); after `EnableRobot` it
   needs `GroupContinue`.
+- `RSP::ReadActualPosition` has 2 reserved bytes before the extended axes that are not in the
+  spec (SDK comment: "not anymore in spec, but in Tia?") → E1..E6 of ReadActualPosition are
+  shifted by 2 bytes against the spec and the PLC library.
+- `srci_sim_layout` (harness, not an SDK change) returns the layout of the SDK structures;
+  `tests/sdk/test_payload_sdk.py` compares every payload with them.
 - The SDK checks the lifesign only for a *frozen* value (same lifesign for
   `LifeSignTimeOut` ms real time), not for missing telegrams.
 

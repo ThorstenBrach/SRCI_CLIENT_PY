@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from tools.payload_check import Call, compare, report
-from tools.spec_tables import Entry, PayloadTable
+from tools.payload_check import Call, compare, fb_classes, function_name, report, send_calls
+from tools.spec_tables import Entry, PayloadTable, load_command_types
 
 NO_TABLE = "no payload table in the specification (cyclic data / not specified)"
 
@@ -115,6 +115,32 @@ def test_core_function_blocks_match(result: dict[str, list[str]], fb: str) -> No
         assert result[f"{fb} {direction}"] == []
 
 
+# FBs whose command type is not a function of chapter 6 (cyclic data) or whose payload cannot
+# be built (F33: spline FBs write past the payload buffer)
+NO_COMMAND_TYPE = {
+    "MC_ReadActualPositionCyclicFB",
+    "MC_ReadCallSubprogramCyclicFB",
+    "MC_WriteCallSubprogramCyclicFB",
+    "MC_CreateSplineFB",
+    "MC_DynamicSplineFB",
+}
+
+
+def test_command_types_match_the_specification() -> None:
+    """ST-FIX F35: MoveLinearAbsoluteJ was sent as MoveLinearAbsolute, SoftSwitchTcp as
+    ShiftPosition, MoveCircularAbsolute/Relative with the numbers of an older draft."""
+    spec = {name.lower(): value for name, value in load_command_types().items()}
+    wrong = {}
+    for name, cls in fb_classes():
+        if not hasattr(cls, "CreateCommandPayload") or name in NO_COMMAND_TYPE:
+            continue
+        sent = int(send_calls(cls)[0].value)
+        expected = spec.get(function_name(name).lower())
+        if sent != expected:
+            wrong[name] = (sent, expected)
+    assert wrong == {}
+
+
 # ---------------------------------------------------------------- the checker itself
 
 
@@ -154,3 +180,26 @@ def test_compare_detects_shift_kind_length_and_strings() -> None:
         Call(7, "AddString", 1),
     ]
     assert compare(short_string, TABLE)[0] == "AddString@7: 1 bytes, table S has 2"
+
+
+def test_sdk_fields_from_the_pattern() -> None:
+    from srci.sim.sdk import layout_pattern
+    from tools.payload_check import compare_sdk, sdk_fields
+
+    host = [layout_pattern(i) for i in range(9)]
+    # structure: UINT (0..1), USINT (2), REAL (3..6), 2 BYTE (7, 8) -> wire order reversed per field
+    wire = bytes(host[1::-1] + host[2:3] + host[6:2:-1] + host[7:9])
+    fields = sdk_fields(wire, layout_pattern)
+    assert fields == [(0, 2), (2, 1), (3, 4), (7, 1), (8, 1)]
+    ok = [
+        Call(0, "AddUint", 2),
+        Call(2, "AddUsint", 1),
+        Call(3, "AddReal", 4),
+        Call(7, "AddByte", 1),
+        Call(8, "AddByte", 1),
+    ]
+    assert compare_sdk(ok, fields) == []
+    shifted = [Call(0, "AddUint", 2), Call(2, "AddUint", 2), Call(4, "AddReal", 4)]
+    problems = compare_sdk(shifted, fields)
+    assert "AddUint@2 (2 bytes): SDK field 1 bytes at 2" in problems
+    assert "payload length 8, SDK structure 9" in problems

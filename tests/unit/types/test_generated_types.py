@@ -71,11 +71,17 @@ def test_every_xml_type_is_generated() -> None:
 # ------------------------------------------------------------------ enums
 
 
+from tools.plcopen_gen.overrides import ENUM_OVERRIDES  # noqa: E402
+
+
 @pytest.mark.parametrize("enum", ENUMS, ids=lambda e: e.__name__)
 def test_enum_values_match_xml_and_fit_base(enum: type[IntEnum]) -> None:
     dt = xml_types()[enum.__name__]
     base = iec.enum_base(enum)
     values = {v.get("name"): v.get("value", "") for v in dt.iter(f"{NS}value")}
+    for ov in ENUM_OVERRIDES:  # documented deviations (F35)
+        if ov.enum == enum.__name__:
+            values[ov.name] = str(ov.value)
     assert set(values) == set(enum.__members__)
     for member in enum:
         text = values[member.name]

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-from .model import InitValue, Library, SimpleValue, StructValue
+from .model import EnumValueDef, InitValue, Library, SimpleValue, StructValue
 
 
 class OverrideError(Exception):
@@ -23,6 +23,26 @@ class ConstOverride:
     init: InitValue
     reason: str
 
+
+@dataclass(frozen=True)
+class EnumOverride:
+    """Value of an enum element (added when the element does not exist)."""
+
+    enum: str
+    name: str
+    value: int
+    reason: str
+
+
+# F35: command types of the PLC library that contradict the specification V1.5.9
+ENUM_OVERRIDES: tuple[EnumOverride, ...] = (
+    EnumOverride("CmdType", "MoveCircularAbsolute", 2106, "F35: spec 6.3.13 Type 2106 (library 2109)"),
+    EnumOverride("CmdType", "MoveCircularRelative", 2107, "F35: spec Type 2107 (library 2106)"),
+    EnumOverride(
+        "CmdType", "MoveLinearAbsoluteJ", 2109, "F35: spec 6.3.12 Type 2109 (missing in the library)"
+    ),
+    EnumOverride("CmdType", "SoftSwitchTcp", 7300, "F35: spec Type 7300 (missing in the library)"),
+)
 
 OVERRIDES: tuple[ConstOverride, ...] = (
     ConstOverride(
@@ -38,6 +58,24 @@ OVERRIDES: tuple[ConstOverride, ...] = (
         reason="PLC library still says 1.3.0, but implements SRCI 1.5 (SDK: SRCI_VERSION 1.5)",
     ),
 )
+
+
+def apply_enum_overrides(lib: Library, overrides: tuple[EnumOverride, ...] = ENUM_OVERRIDES) -> None:
+    for ov in overrides:
+        enum = lib.enums.get(ov.enum)
+        if enum is None:
+            raise OverrideError(f"override target enum {ov.enum} not found")
+        for i, value in enumerate(enum.values):
+            if value.name == ov.name:
+                if value.value_expr.strip() == str(ov.value):
+                    raise OverrideError(
+                        f"override {ov.enum}.{ov.name} is obsolete (XML already has the value) - remove it"
+                    )
+                doc = f"{value.doc} [Override: {ov.reason}]".strip()
+                enum.values[i] = replace(value, value_expr=str(ov.value), doc=doc)
+                break
+        else:
+            enum.values.append(EnumValueDef(ov.name, str(ov.value), f"[Override: {ov.reason}]"))
 
 
 def apply_overrides(lib: Library, overrides: tuple[ConstOverride, ...] = OVERRIDES) -> None:
@@ -56,3 +94,5 @@ def apply_overrides(lib: Library, overrides: tuple[ConstOverride, ...] = OVERRID
                 break
         else:
             raise OverrideError(f"override target {ov.group}.{ov.name} not found")
+    if overrides is OVERRIDES:
+        apply_enum_overrides(lib)

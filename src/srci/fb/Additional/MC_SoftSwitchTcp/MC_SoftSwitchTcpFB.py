@@ -275,7 +275,7 @@ class MC_SoftSwitchTcpFB(RobotLibraryBaseExecuteFB):
         _parameterCnt: int = 0
 
         # set command parameter
-        self._command.CmdTyp = CmdType.ShiftPosition
+        self._command.CmdTyp = CmdType.SoftSwitchTCP  # ST-FIX F35
         self._command.ExecMode = self.ExecMode
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority

@@ -33,7 +33,7 @@ __all__ = [
     "sdk_transport",
 ]
 
-API_VERSION = 1
+API_VERSION = 2  # 2: srci_sim_layout
 MAX_TELEGRAM_SIZE = 512
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -139,6 +139,8 @@ def _load(path: Path) -> ctypes.CDLL:
     lib.srci_sim_get_override.restype = ctypes.c_double
     lib.srci_sim_get_states.argtypes = [ctypes.c_void_p, ctypes.POINTER(_States)]
     lib.srci_sim_reset.argtypes = [ctypes.c_void_p]
+    lib.srci_sim_layout.argtypes = [ctypes.c_int, ctypes.c_uint16, ctypes.c_void_p, ctypes.c_size_t]
+    lib.srci_sim_layout.restype = ctypes.c_int
     version = lib.srci_sim_api_version()
     if version != API_VERSION:
         raise SdkNotAvailableError(
@@ -146,6 +148,24 @@ def _load(path: Path) -> ctypes.CDLL:
         )
     _lib_cache[path] = lib
     return lib
+
+
+def layout_pattern(index: int) -> int:
+    """Byte ``index`` of the pattern of :func:`sdk_layout` (host byte order)."""
+    return 0x41 + (index * 7) % 60
+
+
+def sdk_layout(cmd_type: int, response: bool, library: Path | None = None) -> bytes | None:
+    """CMD/RSP structure of the SDK for ``cmd_type``, filled with :func:`layout_pattern` and
+    converted to wire byte order like the SDK does it (multi-byte fields reversed).
+
+    ``None``: the SDK has no structure for it (only the header is used)."""
+    lib = _load(library or find_sdk_library())
+    out = ctypes.create_string_buffer(MAX_TELEGRAM_SIZE)
+    size = lib.srci_sim_layout(1 if response else 0, cmd_type, out, len(out))
+    if size < 0:
+        raise RuntimeError(f"srci_sim_layout({cmd_type}) failed")
+    return out.raw[:size] if size else None
 
 
 def _last_error(lib: ctypes.CDLL) -> str:

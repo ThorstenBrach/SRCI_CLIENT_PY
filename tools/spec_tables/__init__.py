@@ -139,6 +139,28 @@ def parse_spec(text: str) -> list[PayloadTable]:
     return tables
 
 
+_SECTION = re.compile(r"^\d+\s+6\.\d+\.\d+\s+([A-Za-z]+)\s*$")
+_TYPE = re.compile(r"^\d+\s+Type: (\d+)")
+
+
+def parse_command_types(text: str) -> dict[str, int]:
+    """Command type of every function ("6.x.y <Function>" followed by "Type: <n>")."""
+    lines = text.splitlines()
+    types: dict[str, int] = {}
+    for i, line in enumerate(lines):
+        if m := _TYPE.match(line):
+            for j in range(i - 1, max(i - 8, 0), -1):
+                if h := _SECTION.match(lines[j]):
+                    types[h.group(1)] = int(m.group(1))
+                    break
+    return types
+
+
+def load_command_types() -> dict[str, int]:
+    data = json.loads(JSON_PATH.read_text(encoding="utf-8"))
+    return dict(data["command_types"])
+
+
 def load() -> dict[tuple[str, str], PayloadTable]:
     """Tables from ``spec_payload_tables.json``, key (function, "send"/"recv")."""
     data = json.loads(JSON_PATH.read_text(encoding="utf-8"))
@@ -157,7 +179,9 @@ def main(argv: list[str] | None = None) -> int:
     if len(args) != 1:
         print(__doc__)
         return 2
-    tables = parse_spec(Path(args[0]).read_text(encoding="utf-8"))
+    text = Path(args[0]).read_text(encoding="utf-8")
+    tables = parse_spec(text)
+    types = parse_command_types(text)
     lines = [
         json.dumps(
             {
@@ -171,7 +195,15 @@ def main(argv: list[str] | None = None) -> int:
         for t in tables
     ]
     source = "Profile Robot Command Interface V1.5.9 (2024-12-04), payload tables of chapter 6"
-    text = '{"source":' + json.dumps(source) + ',"tables":[\n' + ",\n".join(lines) + "\n]}\n"
-    JSON_PATH.write_text(text, encoding="utf-8")
-    print(f"{len(tables)} tables -> {JSON_PATH}")
+    out = (
+        '{"source":'
+        + json.dumps(source)
+        + ',\n"command_types":'
+        + json.dumps(types, sort_keys=True)
+        + ',\n"tables":[\n'
+        + ",\n".join(lines)
+        + "\n]}\n"
+    )
+    JSON_PATH.write_text(out, encoding="utf-8")
+    print(f"{len(tables)} tables, {len(types)} command types -> {JSON_PATH}")
     return 0

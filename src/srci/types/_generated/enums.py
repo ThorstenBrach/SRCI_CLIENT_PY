@@ -3191,10 +3191,16 @@ class CmdType(_iec.IecIntEnum):
     """Move all joints relative to actual joint position (Relative Joint PTP)"""
     ReturnToPrimary = 2104
     """Return to path left during active interrupt"""
-    MoveCircularAbsolute = 2109
-    """Move the TCP to an absolute joint position (linear interpolation)"""
-    MoveCircularRelative = 2106
-    """Move the TCP relative to the actual cartesian position (circular interpolation)"""
+    MoveCircularAbsolute = 2106
+    """
+    Move the TCP to an absolute joint position (linear interpolation) [Override: F35: spec 6.3.13
+    Type 2106 (library 2109)]
+    """
+    MoveCircularRelative = 2107
+    """
+    Move the TCP relative to the actual cartesian position (circular interpolation) [Override: F35:
+    spec Type 2107 (library 2106)]
+    """
     MoveLinearOffset = 2112
     """Move the TCP relative to a reference cartesian position (linear interpolation)"""
     MoveDirectOffset = 2111
@@ -3348,6 +3354,10 @@ class CmdType(_iec.IecIntEnum):
     Measure the length of objects in the cartesian space, execution time for specified section of a
     job or signal output time of a specified signal
     """
+    MoveLinearAbsoluteJ = 2109
+    """[Override: F35: spec 6.3.12 Type 2109 (missing in the library)]"""
+    SoftSwitchTcp = 7300
+    """[Override: F35: spec Type 7300 (missing in the library)]"""
 
 
 _iec.register_enum(CmdType, _iec.UINT)
