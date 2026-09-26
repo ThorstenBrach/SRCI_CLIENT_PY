@@ -25,7 +25,7 @@ pip install -e .
 
 ```python
 import srci
-print(srci.__version__, srci.SRCI_PROFILE_VERSION)   # e.g. 0.1.0.dev0 1.5.9
+print(srci.__version__, srci.SRCI_PROFILE_VERSION)  # e.g. 0.1.0.dev0 1.5.9
 ```
 
 ## 2. How the library works
@@ -47,8 +47,8 @@ library and of the specification:
 from srci.fb import MC_MoveAxesAbsoluteFB
 
 move = MC_MoveAxesAbsoluteFB()
-move.ParCmd.JointPosition.J1 = 45.0      # degrees
-move.ParCmd.VelocityRate = 50.0          # % of the reference velocity (-1.0 = default)
+move.ParCmd.JointPosition.J1 = 45.0  # degrees
+move.ParCmd.VelocityRate = 50.0  # % of the reference velocity (-1.0 = default)
 ```
 
 All blocks can be imported from `srci.fb`; all data types and enums from `srci.types`.
@@ -177,14 +177,14 @@ the RobotTask negotiates with the RC during the initialization is configured bef
 cycle – here the cyclic position data needed by `ReadActualPositionCyclic`:
 
 ```python
-client = SrciClient(transport)                      # RobotProgram with MC_RobotTaskFB
-cfg = client.program.config                         # RobotTaskParCfg
-cfg.Rob.OptionalCyclic.UseJointPosition = True      # cyclic joint position RC -> PLC
+client = SrciClient(transport)  # RobotProgram with MC_RobotTaskFB
+cfg = client.program.config  # RobotTaskParCfg
+cfg.Rob.OptionalCyclic.UseJointPosition = True  # cyclic joint position RC -> PLC
 cfg.Rob.OptionalCyclic.UseCartesianPosition = True  # cyclic Cartesian position RC -> PLC
 cfg.Rob.Parameter.MessageLevel = MessageLevel.WARNING
 
 client.wait_initialized(timeout=10.0)
-rt = client.program.robot_task                      # outputs of MC_RobotTaskFB
+rt = client.program.robot_task  # outputs of MC_RobotTaskFB
 print(rt.Initialized, client.program.axes_group.Cyclic.RobToPlc.TelegramState.name)
 ```
 
@@ -244,16 +244,16 @@ them on while `Enable` is TRUE:
 
 ```python
 client.execute(MC_GroupResetFB())
-enable = client.enable(MC_EnableRobotFB())   # enable.Enabled == True: robot has power
+enable = client.enable(MC_EnableRobotFB())  # enable.Enabled == True: robot has power
 ...
-client.disable(enable)                       # at the end: drives off
+client.disable(enable)  # at the end: drives off
 ```
 
 ### 4.6 ChangeSpeedOverride
 
 ```python
 ov = MC_ChangeSpeedOverrideFB()
-ov.ParCmd.Override = 50.0        # % of the programmed velocity, applies to all motions
+ov.ParCmd.Override = 50.0  # % of the programmed velocity, applies to all motions
 client.execute(ov)
 ```
 
@@ -268,7 +268,7 @@ print(rp.OutCmd.ActualJointPosition.J1, rp.OutCmd.ActualCartesianPosition.X)
 
 cyc = MC_ReadActualPositionCyclicFB()
 cyc.ParCmd.ReadJointPosition = True
-cyc.ParCmd.ReadCartesianPosition = True      # in the coordinate system ParCmd.ToolNo / FrameNo
+cyc.ParCmd.ReadCartesianPosition = True  # in the coordinate system ParCmd.ToolNo / FrameNo
 client.enable(cyc)
 # from now on cyc.OutCmd.JointPosition / CartesianPosition follow the robot in every cycle
 ```
@@ -285,7 +285,7 @@ index 1. A tool refers to its load (`LoadNo` ≥ 1):
 ```python
 wt = MC_WriteToolDataFB()
 wt.ParCmd.ToolNo = 1
-wt.ParCmd.ToolData.Z = 150.0         # TCP 150 mm in front of the flange
+wt.ParCmd.ToolData.Z = 150.0  # TCP 150 mm in front of the flange
 wt.ParCmd.ToolData.LoadNo = 1
 client.execute(wt)
 
@@ -307,7 +307,7 @@ print(sw.OutCmd.LimitValues.J1LowerLimit, sw.OutCmd.LimitValues.J1UpperLimit)
 
 rd = client.execute(MC_ReadRobotDefaultDynamicsFB())
 wd = MC_WriteRobotDefaultDynamicsFB()
-copy_into(wd.ParCmd.DynamicValues, rd.OutCmd.DynamicValues)   # keep all other values
+copy_into(wd.ParCmd.DynamicValues, rd.OutCmd.DynamicValues)  # keep all other values
 wd.ParCmd.DynamicValues.VelocityRate = 50.0
 client.execute(wd)
 ```
@@ -322,19 +322,19 @@ All motions are Execute blocks. By default (`AbortingMode = BUFFER`) a new motio
 running one; `ABORT` replaces it.
 
 ```python
-move = MC_MoveAxesAbsoluteFB()                  # PTP in joint coordinates
+move = MC_MoveAxesAbsoluteFB()  # PTP in joint coordinates
 move.ParCmd.JointPosition.J1 = 45.0
-client.execute(move)                           # returns when the robot is there
+client.execute(move)  # returns when the robot is there
 
-md = MC_MoveDirectAbsoluteFB()                  # PTP to a Cartesian position
+md = MC_MoveDirectAbsoluteFB()  # PTP to a Cartesian position
 md.ParCmd.Position.X, md.ParCmd.Position.Y, md.ParCmd.Position.Z = 30.0, 10.0, 20.0
 md.ParCmd.ToolNo = 1
 client.execute(md)
 
-first, second = MC_MoveLinearAbsoluteFB(), MC_MoveLinearAbsoluteFB()   # linear motions
-...                                             # positions, ToolNo, VelocityRate
+first, second = MC_MoveLinearAbsoluteFB(), MC_MoveLinearAbsoluteFB()  # linear motions
+...  # positions, ToolNo, VelocityRate
 client.start(first)
-client.start(second)                            # buffered: second.CommandBuffered == True
+client.start(second)  # buffered: second.CommandBuffered == True
 client.wait_done(first)
 client.wait_done(second)
 ```
@@ -354,19 +354,19 @@ jog = MC_GroupJogFB()
 jog.ParCmd.Mode = JogMode.JOG_AXES
 jog.ParCmd.Override = 50
 client.enable(jog)
-jog.ParCmd.Control.Y_J2_Pos = True     # like holding the "J2 +" key
+jog.ParCmd.Control.Y_J2_Pos = True  # like holding the "J2 +" key
 client.idle(0.3)
 jog.ParCmd.Control.Y_J2_Pos = False
 client.disable(jog)
 
 rtp = MC_ReturnToPrimaryFB()
-rtp.ParCmd.ToolNo = TOOL               # tool of the interrupted motion
+rtp.ParCmd.ToolNo = TOOL  # tool of the interrupted motion
 client.add(rtp, Enable=True)
 client.run_until(lambda: rtp.Done or rtp.Error)
 client.disable(rtp)
 
 client.execute(MC_GroupContinueFB())
-client.wait_done(mv)                   # the interrupted motion finishes
+client.wait_done(mv)  # the interrupted motion finishes
 ```
 
 ### 4.12 GroupStop
@@ -402,7 +402,7 @@ Motions are assigned to a sequence with their input `SequenceFlag`.
   `logging` (`--debug` in the demo):
 
   ```python
-  client.program.external_logger = PythonLogger()   # loggers "srci.plc" and "srci.rc"
+  client.program.external_logger = PythonLogger()  # loggers "srci.plc" and "srci.rc"
   client.program.log_level = Severity.DEBUG
   ```
 
@@ -440,7 +440,7 @@ from srci.runtime import Runner
 program = RobotProgram(256, 256)
 move = program.add(MC_MoveAxesAbsoluteFB())
 with Runner(transport, program, cycle_time=0.01) as runner:  # runs until the with block ends
-    runner.call(lambda: setattr(move, "Execute", True))    # set inputs in the cycle thread
+    runner.call(lambda: setattr(move, "Execute", True))  # set inputs in the cycle thread
     ...
 ```
 

@@ -28,12 +28,12 @@ from srci.fb import MC_EnableRobotFB, MC_GroupResetFB, MC_MoveAxesAbsoluteFB
 from srci.transport import TcpTransport
 
 with SrciClient(TcpTransport("192.168.0.10", 5000, 256, 256)) as client:
-    client.wait_initialized()                    # MC_RobotTaskFB: handshake with the RC
+    client.wait_initialized()  # MC_RobotTaskFB: handshake with the RC
     client.execute(MC_GroupResetFB())
     enable = client.enable(MC_EnableRobotFB())
     move = MC_MoveAxesAbsoluteFB()
     move.ParCmd.JointPosition.J1 = 30.0
-    client.execute(move)                         # returns when the robot is there
+    client.execute(move)  # returns when the robot is there
     client.disable(enable)
 ```
 
