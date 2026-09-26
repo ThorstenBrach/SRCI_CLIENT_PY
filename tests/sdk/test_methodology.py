@@ -288,7 +288,8 @@ def test_gen07_axes_group_not_initialized(name: str) -> None:
 def test_gen08_execute_for_one_cycle(name: str) -> None:
     """GEN-08 (Siemens 1-13, spec 5.5.x "Output status"): Execute TRUE for one cycle -> the command
     is executed anyway and Done / Error / CommandAborted is set for at least one cycle."""
-    pytest.xfail("F50: a falling edge of Execute before the end cancels the command, no Done")
+    if name in GEN06_KNOWN:
+        pytest.xfail(GEN06_KNOWN[name])
     with robot() as (sim, h):
         fb = block(name, h)
         start(fb)
@@ -474,7 +475,10 @@ def test_pm01_buffered(name: str) -> None:
 def test_pm02_aborting(name: str) -> None:
     """PM-02 (Siemens "AbortingMode = Abort"): a second command with AbortingMode ABORT aborts
     the active one -> first CommandAborted, second Done."""
-    pytest.xfail("F51: AbortingMode/SequenceFlag are checked but not used for the ExecutionMode")
+    if name in MOTION_KNOWN:
+        pytest.xfail(MOTION_KNOWN[name])
+    if not 2100 < cmd_type(name) < 2299:
+        pytest.skip("SDK: only types 2101..2298 are motion commands of the planner (cam 240x)")
     with robot() as (sim, h):
         sim.set_move_cycles(100)
         first, second = _motion(name, h), _motion(name, h)
@@ -488,32 +492,71 @@ def test_pm02_aborting(name: str) -> None:
         assert first.CommandAborted and not first.Done, outputs(first)
 
 
-@pytest.mark.parametrize("name", MOTION)
-def test_pm03_abort_others(name: str) -> None:
-    """PM-03 (spec 5.6.4.5 ExecutionMode "Sequence AbortOthers"): a second command with
-    ExecMode SEQUENCE_ABORT_OTHERS_PRIMARY aborts the active one -> first CommandAborted,
-    second Done."""
+EXEC_MODE_FBS = sorted(
+    n for n in NAMES if hasattr(CLASSES[n](), "AbortingMode") or hasattr(CLASSES[n](), "ProcessingMode")
+)
+
+
+def _exec_mode_combinations(fb: Any) -> list[tuple[dict[str, Any], int]]:
+    """(inputs, expected ExecutionMode) of spec table 5-77 for the inputs the block has."""
+    from srci.types import AbortingMode, ExecutionMode, ProcessingMode
+
+    seq = (
+        [SequenceFlag.PRIMARY_SEQUENCE, SequenceFlag.SECONDARY_SEQUENCE]
+        if hasattr(fb, "SequenceFlag")
+        else [None]
+    )
+    out: list[tuple[dict[str, Any], int]] = []
+    for flag in seq:
+        secondary = flag == SequenceFlag.SECONDARY_SEQUENCE
+        base = {} if flag is None else {"SequenceFlag": flag}
+        if hasattr(fb, "AbortingMode"):
+            out.append(({**base, "AbortingMode": AbortingMode.BUFFER}, 7 if secondary else 0))
+            out.append(({**base, "AbortingMode": AbortingMode.ABORT}, 8 if secondary else 1))
+        else:
+            out.append(({**base, "ProcessingMode": ProcessingMode.BUFFERED}, 7 if secondary else 0))
+            out.append(({**base, "ProcessingMode": ProcessingMode.ABORTING}, 8 if secondary else 1))
+            out.append(({**base, "ProcessingMode": ProcessingMode.TRIGGER_BUFFERED}, 7 if secondary else 0))
+            out.append(({**base, "ProcessingMode": ProcessingMode.TRIGGER_ABORTING}, 8 if secondary else 1))
+    if hasattr(fb, "ProcessingMode") and not hasattr(fb, "AbortingMode"):
+        nos = {} if not hasattr(fb, "SequenceFlag") else {"SequenceFlag": SequenceFlag.NO_SEQUENCE}
+        out += [
+            ({**nos, "ProcessingMode": ProcessingMode.PARALLEL}, int(ExecutionMode.PARALLEL)),
+            ({**nos, "ProcessingMode": ProcessingMode.CONTINUOUS}, int(ExecutionMode.CONTINUOUS)),
+            ({**nos, "ProcessingMode": ProcessingMode.TRIGGER_ONCE}, int(ExecutionMode.PARALLEL)),
+            ({**nos, "ProcessingMode": ProcessingMode.TRIGGER_MULTIPLE}, int(ExecutionMode.TRIGGER_MULTIPLE)),
+        ]
+    return out
+
+
+@pytest.mark.parametrize("name", EXEC_MODE_FBS)
+def test_pm03_execution_mode(name: str) -> None:
+    """PM-03 (ST-FIX F51, spec table 5-77): the ExecutionMode in the telegram follows the inputs
+    AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary,
+    Parallel, Continuous, Trigger Once / Multiple)."""
     if name in MOTION_KNOWN:
         pytest.xfail(MOTION_KNOWN[name])
-    if not 2100 < cmd_type(name) < 2299:
-        pytest.skip("SDK: only types 2101..2298 are motion commands of the planner (cam 240x)")
-    with robot() as (sim, h):
-        sim.set_move_cycles(100)
-        first, second = _motion(name, h), _motion(name, h)
-        start(first)
-        h.run(100, until=lambda: bool(first.Active or first.Error))
-        assert first.Active, outputs(first)
-        second.ExecMode = type(second.ExecMode).SEQUENCE_ABORT_OTHERS_PRIMARY
-        start(second)
-        h.run(400, until=lambda: bool(second.Done or second.Error))
-        assert second.Done, outputs(second)
-        assert first.CommandAborted and not first.Done and not first.Busy, outputs(first)
+    checked = 0
+    for inputs, expected in _exec_mode_combinations(CLASSES[name]()):
+        with robot() as (sim, h):
+            fb = _motion(name, h) if name in MOTION else block(name, h)
+            for key, value in inputs.items():
+                setattr(fb, key, value)
+            start(fb)
+            h.run(20)
+            sent = sim.last_command(cmd_type(name))
+            if sent is None:
+                assert fb.Error, (inputs, outputs(fb))  # combination rejected by the block itself
+                continue
+            assert int(sent["@ExecutionMode"]) == expected, inputs
+            checked += 1
+    assert checked, "no combination was sent"
 
 
 @pytest.mark.parametrize("name", MOTION)
 def test_seq01_secondary_sequence(name: str) -> None:
     """SEQ-01 (Siemens "SequenceFlag", spec 5.6.4.5): the primary sequence is interrupted,
-    SetSequence(secondary), a command with ExecMode SEQUENCE_SECONDARY + GroupContinue is
+    SetSequence(secondary), a command with SequenceFlag SECONDARY + GroupContinue is
     executed while the primary command stays interrupted, SetSequence(primary) is accepted."""
     if name in MOTION_KNOWN:
         pytest.xfail(MOTION_KNOWN[name])
@@ -532,7 +575,7 @@ def test_seq01_secondary_sequence(name: str) -> None:
         h.run(100, until=lambda: bool(to_secondary.Done or to_secondary.Error))
         assert to_secondary.Done, outputs(to_secondary)
         secondary = _motion(name, h)
-        secondary.ExecMode = type(secondary.ExecMode).SEQUENCE_SECONDARY
+        secondary.SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE
         start(secondary)
         h.run(5)
         h.add(CLASSES_ALL["MC_GroupContinueFB"](), Execute=True)  # continue in the secondary sequence
@@ -608,8 +651,6 @@ def test_buf02_more_than_15_commands_in_one_cycle(name: str) -> None:
     """BUF-02 (Siemens "Call more than 15 CMDs in 1 Cycle"): 16 instances started in the same
     cycle -> all commands are sent and every instance ends with Done or with the error of the
     RC (a limit of the RC is not a limit of the client)."""
-    if name == "MC_GroupInterruptFB":
-        pytest.xfail("F52: more than 10 responses in one telegram -> the others are dropped, FB stays Busy")
     with robot() as (sim, h):
         start_log = len(sim.logs)
         fbs = [h.add(CLASSES_ALL[name]()) for _ in range(16)]
@@ -622,3 +663,23 @@ def test_buf02_more_than_15_commands_in_one_cycle(name: str) -> None:
 
 def _type_of(name: str) -> int:
     return int(send_calls(CLASSES_ALL[name])[0].value)
+
+
+@pytest.mark.parametrize(
+    "name", ["MC_GroupStopFB", "MC_MoveAxesAbsoluteFB", "MC_ReadToolDataFB", "MC_EnableRobotFB"]
+)
+def test_tmo01_no_response(name: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    """TMO-01 (ST-FIX F53): the RC never answers the command -> Error ERR_TIMEOUT_CMD after the
+    command timeout (5 s), Busy FALSE; before the fix the block stayed Busy forever."""
+    from srci.fb._internal.ActiveCommandRegisterFB import ActiveCommandRegisterFB
+    from srci.types import RobotLibraryErrorIdEnum
+
+    with robot() as (_, h):
+        fb = _motion(name, h) if name in MOTION else h.add(CLASSES_ALL[name]())
+        monkeypatch.setattr(ActiveCommandRegisterFB, "AddRsp", lambda self, **_: 0)
+        start(fb)
+        h.run(400)  # 4 s
+        assert fb.Busy and not fb.Error, outputs(fb)
+        h.run(200, until=lambda: bool(fb.Error))
+        assert fb.Error and fb.ErrorID == RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD, outputs(fb)
+        assert not fb.Busy

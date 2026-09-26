@@ -15,6 +15,7 @@ import srci.types as _T
 from srci.fb._internal.BaseFBs.RobotLibraryLogFB import RobotLibraryLogFB
 from srci.fb._internal.Recv.RobotLibraryResponseDataFB import RobotLibraryResponseDataFB
 from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommandDataFB
+from srci.functions.Common import CheckTimeout
 from srci.functions.Convert.TO_STRING.MESSAGE_CODE_TO_STRING import MESSAGE_CODE_TO_STRING
 from srci.functions.Convert.TO_STRING.WORD_TO_STRING_HEX import WORD_TO_STRING_HEX
 from srci.iec.rt import CONCAT, copy_into, copy_value, trunc_str
@@ -131,6 +132,13 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
     def __body(self) -> None:
         self.OnCall(AxesGroup=self.AxesGroup)
         self.OnExecRun(AxesGroup=self.AxesGroup)
+        # ST-FIX F53: no response of the RC within _timeoutCmd after the command was added
+        # -> error (before: _timerCmd was started but never evaluated, the FB stayed Busy)
+        if (self._uniqueID != 0 and self._rspHeader.State == CmdMessageState.EMPTY) and (not self.Error):
+            if CheckTimeout(rTimer=self._timerCmd) == RobotLibraryConstants.OK:
+                self.AxesGroup.Acyclic.ActiveCommandRegister.RemoveCmd(UniqueID=self._uniqueID)
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD, Overwrite=True)
+                self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         self.CheckParameterChanged(AxesGroup=self.AxesGroup)
 
         if self.AxesGroup.State.OnlineChange_R.Q:
@@ -294,6 +302,7 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
         self._responseReceived = False
 
         self._uniqueID = 0
+        self._rspHeader.State = CmdMessageState.EMPTY  # ST-FIX F53: no response yet
         self._stepCmd = 0
         self.Error = False
         self.ErrorID = 0

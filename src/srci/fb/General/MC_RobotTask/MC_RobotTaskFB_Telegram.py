@@ -457,11 +457,13 @@ class MC_RobotTaskFB_Telegram:
                     _fragIdx += 1
 
                 # Check fragment index limit reached ?
+                # ST-FIX F52: FRAGMENT_MAX = 31 covers every 256 byte telegram; if the limit is
+                # still reached (longer telegrams), responses are lost -> ERROR instead of DEBUG
                 if _fragIdx > RobotLibraryParameter.FRAGMENT_MAX:
                     self.CreateLogMessagePara1(
                         Timestamp=self.SystemTime,
                         MessageType=MessageType.CMD,
-                        Severity=Severity.DEBUG,
+                        Severity=Severity.ERROR,
                         MessageCode=0,
                         MessageText="Fragment index out of range, _fragIdx = {1} ",
                         Para1=str(_fragIdx),

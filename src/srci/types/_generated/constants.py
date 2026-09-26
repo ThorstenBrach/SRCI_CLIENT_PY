@@ -90,8 +90,13 @@ class RobotLibraryParameter:
     """Maximal amount of entries in the Active Command Register"""
     MESSAGE_CODES_MAX: ClassVar[int] = 15
     """Maximal amount of message codes"""
-    FRAGMENT_MAX: ClassVar[int] = 9
-    """Maximal amount of fragments"""
+    FRAGMENT_MAX: ClassVar[int] = 31
+    """
+    Maximal amount of fragments [Override: ST-FIX F52: 10 fragments (0..9) per telegram are too few
+    - a 256 byte telegram holds up to 27 fragments (header 8 bytes + at least 1 byte payload);
+    fragments behind the array were dropped although the telegram was acknowledged -> responses
+    lost]
+    """
     SWAP_BYTE_ORDER: ClassVar[bool] = True
     """Flag to indicate that the byte order must be changed"""
     INVALID_FRAMES_CHECK_TIMEOUT: ClassVar[int] = 60000

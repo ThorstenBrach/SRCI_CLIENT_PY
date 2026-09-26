@@ -623,7 +623,17 @@ class MC_MoveApproachDirectFB(RobotLibraryBaseExecuteFB):
 
         # set command parameter
         self._command.CmdTyp = CmdType.MoveApproachDirect
-        self._command.ExecMode = self.ExecMode
+        # ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
+        if self.SequenceFlag == SequenceFlag.SECONDARY_SEQUENCE:
+            if self.AbortingMode == AbortingMode.ABORT:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY
+            else:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_SECONDARY
+        else:
+            if self.AbortingMode == AbortingMode.ABORT:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY
+            else:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority
         self._command.EmitterID[0] = self._parCmd.EmitterID[0]

@@ -699,7 +699,17 @@ class MC_MoveLinearOffsetFB(RobotLibraryBaseExecuteFB):
 
         # set command parameter
         self._command.CmdTyp = CmdType.MoveLinearOffset
-        self._command.ExecMode = self.ExecMode
+        # ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
+        if self.SequenceFlag == SequenceFlag.SECONDARY_SEQUENCE:
+            if self.AbortingMode == AbortingMode.ABORT:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY
+            else:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_SECONDARY
+        else:
+            if self.AbortingMode == AbortingMode.ABORT:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY
+            else:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority
         copy_into(self._command.EmitterID, self._parCmd.EmitterID)

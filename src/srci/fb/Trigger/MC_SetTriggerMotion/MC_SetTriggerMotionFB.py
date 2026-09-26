@@ -239,7 +239,28 @@ class MC_SetTriggerMotionFB(RobotLibraryBaseExecuteFB):
 
         # set command parameter
         self._command.CmdTyp = CmdType.SetTriggerMotion
-        self._command.ExecMode = self.ExecMode
+        # ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
+        match self.ProcessingMode:
+            case ProcessingMode.BUFFERED | ProcessingMode.TRIGGER_BUFFERED:
+                if False:
+                    self._command.ExecMode = ExecutionMode.SEQUENCE_SECONDARY
+                else:
+                    self._command.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
+            case ProcessingMode.ABORTING | ProcessingMode.TRIGGER_ABORTING:
+                if False:
+                    self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY
+                else:
+                    self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY
+            case ProcessingMode.PARALLEL | ProcessingMode.TRIGGER_ONCE:
+                self._command.ExecMode = ExecutionMode.PARALLEL
+            case ProcessingMode.CONTINUOUS | ProcessingMode.TRIGGER_CONTINUOUS:
+                self._command.ExecMode = ExecutionMode.CONTINUOUS
+            case ProcessingMode.TRIGGER_MULTIPLE:
+                self._command.ExecMode = ExecutionMode.TRIGGER_MULTIPLE
+            case ProcessingMode.DEACTIVATE:
+                self._command.ExecMode = ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER
+            case _:
+                self._command.ExecMode = self.ExecMode
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority
         self._command.EmitterID[0] = self._parCmd.EmitterID[0]

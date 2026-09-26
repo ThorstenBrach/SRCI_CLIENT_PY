@@ -146,8 +146,20 @@ def update(entries: list[dict[str, object]], functions: list[TestFunction]) -> l
     for function in functions:
         found = by_test.get(function.test)
         match = PATTERN_ID.match(function.docstring)
+        renamed = None
+        if found is None and match:
+            # pattern ID of a renamed test function: the retired entry moves to the new name
+            renamed = next(
+                (e for e in by_test.values() if e["id"] == match.group(1) and e["test"] not in current),
+                None,
+            )
         if found is not None:
             entry = found
+        elif renamed is not None:
+            del by_test[str(renamed["test"])]
+            renamed["test"] = function.test
+            by_test[function.test] = renamed
+            entry = renamed
         else:
             if match:
                 new_id = match.group(1)

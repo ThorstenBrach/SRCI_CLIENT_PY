@@ -57,6 +57,14 @@ OVERRIDES: tuple[ConstOverride, ...] = (
         ),
         reason="PLC library still says 1.3.0, but implements SRCI 1.5 (SDK: SRCI_VERSION 1.5)",
     ),
+    ConstOverride(
+        group="RobotLibraryParameter",
+        name="FRAGMENT_MAX",
+        init=SimpleValue("31"),
+        reason="ST-FIX F52: 10 fragments (0..9) per telegram are too few - a 256 byte telegram holds up to "
+        "27 fragments (header 8 bytes + at least 1 byte payload); fragments behind the array were dropped "
+        "although the telegram was acknowledged -> responses lost",
+    ),
 )
 
 

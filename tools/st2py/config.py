@@ -16,6 +16,7 @@ class SourcePatch:
     old: str
     new: str
     reason: str
+    regex: bool = False  # old is a regular expression (must match at least once)
 
 
 @dataclass(frozen=True)
@@ -25,6 +26,15 @@ class BodyAppend:
     pou: str
     method: str
     text: str
+    reason: str
+
+
+@dataclass(frozen=True)
+class VarAppend:
+    """Variables added to a POU (ST declaration text, e.g. ``"VAR\\n _x : BOOL;\\nEND_VAR"``)."""
+
+    pou: str
+    decl: str
     reason: str
 
 
@@ -42,6 +52,7 @@ class Mixin:
 class Config:
     patches: list[SourcePatch] = field(default_factory=list)
     appends: list[BodyAppend] = field(default_factory=list)
+    variables: list[VarAppend] = field(default_factory=list)
     mixins: dict[str, Mixin] = field(default_factory=dict)  # POU name -> mixin
 
     @property
@@ -111,6 +122,129 @@ F28_POUS = (
     "MC_WriteToolDataFB",
     "MC_WriteWorkAreaFB",
 )
+
+
+# F51: the inputs AbortingMode / SequenceFlag / ProcessingMode were checked but not used - the
+# telegram always had the ExecutionMode of the base input ExecMode. Python derives the
+# ExecutionMode from them (spec table 5-77 "ProcessingModes - ExecutionModes mapping").
+F51_ABORTING_POUS = (
+    "MC_BrakeTestFB",
+    "MC_LoadMeasurementAutomaticFB",
+    "MC_MoveApproachDirectFB",
+    "MC_MoveApproachLinearFB",
+    "MC_MoveAxesAbsoluteFB",
+    "MC_MoveAxesRelativeFB",
+    "MC_MoveCircularAbsoluteFB",
+    "MC_MoveCircularCamFB",
+    "MC_MoveCircularRelativeFB",
+    "MC_MoveDepartDirectFB",
+    "MC_MoveDepartLinearFB",
+    "MC_MoveDirectAbsoluteFB",
+    "MC_MoveDirectOffsetFB",
+    "MC_MoveDirectRelativeFB",
+    "MC_MoveLinearAbsoluteFB",
+    "MC_MoveLinearAbsoluteJFB",
+    "MC_MoveLinearCamFB",
+    "MC_MoveLinearOffsetFB",
+    "MC_MoveLinearRelativeFB",
+    "MC_MovePickPlaceDirectFB",
+    "MC_MovePickPlaceLinearFB",
+    "MC_MoveSplineFB",
+    "MC_SearchHardStopFB",
+    "MC_SearchHardStopJFB",
+    "MC_SoftSwitchTcpFB",
+    "MC_WaitTimeFB",
+)
+# (POU, has input SequenceFlag)
+F51_PROCESSING_POUS = (
+    ("MC_ActivateNextCommandFB", False),
+    ("MC_CallSubprogramFB", True),
+    ("MC_CollisionDetectionFB", True),
+    ("MC_LoadMeasurementSequentialFB", True),
+    ("MC_MoveSuperImposedFB", False),
+    ("MC_ReactAtTriggerFB", False),
+    ("MC_ReadActualForceFB", False),
+    ("MC_ReadActualPositionFB", True),
+    ("MC_ReadActualTCPVelocityFB", True),
+    ("MC_ReadAnalogInputFB", True),
+    ("MC_ReadDigitalInputsFB", True),
+    ("MC_ReadDigitalOutputsFB", True),
+    ("MC_ReadIntegersFB", True),
+    ("MC_ReadRealsFB", True),
+    ("MC_ReadSystemVariableFB", True),
+    ("MC_RedefineTrackingPosFB", False),
+    ("MC_SetTriggerErrorFB", False),
+    ("MC_SetTriggerLimitFB", False),
+    ("MC_SetTriggerMotionFB", False),
+    ("MC_SetTriggerRegisterFB", False),
+    ("MC_SetTriggerUserFB", True),
+    ("MC_StopSubprogramFB", True),
+    ("MC_WaitForTriggerFB", True),
+    ("MC_WriteAnalogOutputFB", True),
+    ("MC_WriteDigitalOutputsFB", True),
+    ("MC_WriteFrameDataFB", True),
+    ("MC_WriteIntegersFB", True),
+    ("MC_WriteLoadDataFB", True),
+    ("MC_WriteRealsFB", True),
+    ("MC_WriteSystemVariableFB", True),
+    ("MC_WriteToolDataFB", True),
+    ("MC_WriteWorkAreaFB", False),
+)
+_EXEC_MODE = r"_command\.ExecMode\s*:=\s*ExecMode\s*;"
+
+
+def _exec_mode_from_aborting(pou: str) -> SourcePatch:
+    return SourcePatch(
+        pou,
+        "CreateCommandPayload",
+        _EXEC_MODE,
+        "// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)\n"
+        "IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN\n"
+        "  IF ( AbortingMode = AbortingMode.ABORT ) THEN\n"
+        "    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;\n"
+        "  ELSE\n"
+        "    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;\n"
+        "  END_IF\n"
+        "ELSE\n"
+        "  IF ( AbortingMode = AbortingMode.ABORT ) THEN\n"
+        "    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;\n"
+        "  ELSE\n"
+        "    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;\n"
+        "  END_IF\n"
+        "END_IF",
+        "F51: AbortingMode/SequenceFlag had no effect on the ExecutionMode of the telegram",
+        regex=True,
+    )
+
+
+def _exec_mode_from_processing(pou: str, sequence_flag: bool) -> SourcePatch:
+    secondary = "SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE" if sequence_flag else "FALSE"
+    return SourcePatch(
+        pou,
+        "CreateCommandPayload",
+        _EXEC_MODE,
+        "// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77\n"
+        "CASE ProcessingMode OF\n"
+        "  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:\n"
+        f"    IF ( {secondary} ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;\n"
+        "    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF\n"
+        "  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:\n"
+        f"    IF ( {secondary} ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;\n"
+        "    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF\n"
+        "  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:\n"
+        "    _command.ExecMode := ExecutionMode.PARALLEL;\n"
+        "  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:\n"
+        "    _command.ExecMode := ExecutionMode.CONTINUOUS;\n"
+        "  ProcessingMode.TRIGGER_MULTIPLE:\n"
+        "    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;\n"
+        "  ProcessingMode.DEACTIVATE:\n"
+        "    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;\n"
+        "ELSE\n"
+        "  _command.ExecMode := ExecMode;\n"
+        "END_CASE",
+        "F51: ProcessingMode/SequenceFlag had no effect on the ExecutionMode of the telegram",
+        regex=True,
+    )
 
 
 def _bits_in_one_byte(pou: str, bit0: str, bit1: str, table: str) -> tuple[SourcePatch, SourcePatch]:
@@ -287,6 +421,47 @@ CONFIG = Config(
             "_command.AllowDifferences  :=  _parCmd.AllowDifferences; // ST-FIX F38",
             "F38: AllowDifferences was never copied into the command -> always sent as FALSE",
         ),
+        SourcePatch(
+            "RobotLibraryBaseFB",
+            None,
+            "OnExecRun            (AxesGroup := AxesGroup);\n",
+            "OnExecRun            (AxesGroup := AxesGroup);\n"
+            "// ST-FIX F53: no response of the RC within _timeoutCmd after the command was added\n"
+            "// -> error (before: _timerCmd was started but never evaluated, the FB stayed Busy)\n"
+            "IF ( _uniqueID <> 0 ) AND ( _rspHeader.State = CmdMessageState.EMPTY ) AND ( NOT Error )\n"
+            "THEN\n"
+            "  IF ( CheckTimeout( rTimer := _timerCmd ) = RobotLibraryConstants.OK )\n"
+            "  THEN\n"
+            "    AxesGroup.Acyclic.ActiveCommandRegister.RemoveCmd( UniqueID := _uniqueID );\n"
+            "    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD, Overwrite := TRUE );\n"
+            "    OnUpdateStateFlags( State := CmdMessageState.ERROR );\n"
+            "  END_IF\n"
+            "END_IF\n",
+            "F53: the command timeout was set but never evaluated",
+        ),
+        SourcePatch(
+            "RobotLibraryBaseFB",
+            "Reset",
+            "_uniqueId := 0;",
+            "_uniqueId := 0;\n_rspHeader.State := CmdMessageState.EMPTY; // ST-FIX F53: no response yet",
+            "F53: response state of the last execution must not count for the next one",
+        ),
+        SourcePatch(
+            "RobotLibraryBaseExecuteFB",
+            None,
+            "SUPER^(AxesGroup := AxesGroup);",
+            '// ST-FIX F50: a falling edge of Execute must not cancel the command (spec 5.5.x "Output\n'
+            '// status"): Execute is held internally while Busy; Done/Error/CommandAborted of a command\n'
+            "// whose Execute is already FALSE are shown for one cycle, then the block resets\n"
+            "_executeIn := Execute;\n"
+            "Execute     := Execute OR _executeHold;\n"
+            "SUPER^(AxesGroup := AxesGroup);\n"
+            "_executeHold := Busy;\n"
+            "Execute      := _executeIn;",
+            "F50: a falling edge of Execute before the end cancelled the command / hid Done",
+        ),
+        *(_exec_mode_from_aborting(pou) for pou in F51_ABORTING_POUS),
+        *(_exec_mode_from_processing(pou, seq) for pou, seq in F51_PROCESSING_POUS),
         *_swap_no_and_data_changed("MC_ReadToolDataFB", "ToolData.ToolNoReturn", "ToolNoReturn", "6-190"),
         *_swap_no_and_data_changed("MC_ReadFrameDataFB", "FrameNoReturn", "FrameNoReturn", "6-184"),
     ],
@@ -299,6 +474,13 @@ CONFIG = Config(
             "F28: CheckAddParameter omits non-zero parameters when the payload order differs from _command",
         )
         for pou in F28_POUS
+    ],
+    variables=[
+        VarAppend(
+            "RobotLibraryBaseExecuteFB",
+            "VAR\n  _executeIn : BOOL;\n  _executeHold : BOOL;\nEND_VAR",
+            "F50: Execute of the caller and internal hold of Execute while Busy",
+        ),
     ],
     mixins={
         "MC_RobotTaskFB": Mixin(

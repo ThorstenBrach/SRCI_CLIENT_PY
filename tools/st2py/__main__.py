@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 import sys
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from tools.plcopen_gen.overrides import apply_overrides
 from tools.plcopen_gen.parser import parse_library
 
 from .config import CONFIG, Config
+from .decl import parse_interface
 from .emit import EmitError
 from .library import Pou, load_pous
 from .module import ModuleEmitter
@@ -33,14 +35,29 @@ class PatchError(Exception):
 
 
 def apply_patches(pous: dict[str, Pou], cfg: Config) -> None:
+    for var in cfg.variables:
+        pou = pous.get(var.pou.upper())
+        if pou is None:
+            raise PatchError(f"variable target {var.pou} not found")
+        added = parse_interface(f"FUNCTION_BLOCK {var.pou}\n{var.decl}").vars
+        names = {v.name.upper() for v in pou.vars}
+        for v in added:
+            if v.name.upper() in names:
+                raise PatchError(f"variable {var.pou}.{v.name} exists already - remove the VarAppend")
+        pou.vars.extend(added)
     for patch in cfg.patches:
         pou = pous.get(patch.pou.upper())
         if pou is None:
             raise PatchError(f"patch target {patch.pou} not found")
         body = pou.body if patch.method is None else pou.methods[patch.method.upper()].body
-        if patch.old not in body.src:
+        if patch.regex:
+            body.src, count = re.subn(patch.old, lambda _m, new=patch.new: new, body.src)
+            if count == 0:
+                raise PatchError(f"patch for {patch.pou}.{patch.method} is obsolete (no match) - remove it")
+        elif patch.old not in body.src:
             raise PatchError(f"patch for {patch.pou}.{patch.method} is obsolete (text not found) - remove it")
-        body.src = body.src.replace(patch.old, patch.new)
+        else:
+            body.src = body.src.replace(patch.old, patch.new)
         body._parsed = None
     for append in cfg.appends:
         pou = pous.get(append.pou.upper())

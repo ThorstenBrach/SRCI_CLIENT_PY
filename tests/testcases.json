@@ -109,10 +109,10 @@
  },
  {
   "id": "PM-03",
-  "test": "tests/sdk/test_methodology.py::test_pm03_abort_others",
-  "title": "A second command with ExecMode SEQUENCE_ABORT_OTHERS_PRIMARY aborts the active one -> first CommandAborted, second Done.",
+  "test": "tests/sdk/test_methodology.py::test_pm03_execution_mode",
+  "title": "The ExecutionMode in the telegram follows the inputs AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary, Parallel, Continuous, Trigger Once / Multiple).",
   "refs": [
-   "spec 5.6.4.5 ExecutionMode \"Sequence AbortOthers\""
+   "ST-FIX F51, spec table 5-77"
   ],
   "status": "active"
  },
@@ -126,9 +126,18 @@
  {
   "id": "SEQ-01",
   "test": "tests/sdk/test_methodology.py::test_seq01_secondary_sequence",
-  "title": "The primary sequence is interrupted, SetSequence(secondary), a command with ExecMode SEQUENCE_SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted.",
+  "title": "The primary sequence is interrupted, SetSequence(secondary), a command with SequenceFlag SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted.",
   "refs": [
    "Siemens \"SequenceFlag\", spec 5.6.4.5"
+  ],
+  "status": "active"
+ },
+ {
+  "id": "TMO-01",
+  "test": "tests/sdk/test_methodology.py::test_tmo01_no_response",
+  "title": "The RC never answers the command -> Error ERR_TIMEOUT_CMD after the command timeout (5 s), Busy FALSE; before the fix the block stayed Busy forever.",
+  "refs": [
+   "ST-FIX F53"
   ],
   "status": "active"
  },
