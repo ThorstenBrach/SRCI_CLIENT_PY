@@ -46,6 +46,17 @@ Status "fixed in Python" means: still to be fixed in the PLC library.
 | F38 | `MC_ReturnToPrimaryFB.CreateCommandPayload` | `AllowDifferences` is never copied into the command → always FALSE | table 6-332 | fixed (source patch) |
 | F39 | ParCmd/OutCmd of several FBs | parameters without a field in the telegram of the spec (e.g. `MovePickPlaceDirect.ReductionRate`, `MoveSuperImposed.*DiffRate`, `SetTriggerRegister.EvaluateStartCondition`, `StopSubprogram.SequenceFlag`, `OutCmd.FollowID`) – list `NOT_IN_TELEGRAM` in `tests/sdk/test_bilateral.py` | – | to be reviewed (older/newer draft or values of the PLC only) |
 | F40 | `MC_UnitMeasurementFB`, `MC_SyncToConveyorFB` `.OnApplyOutCmd` | `OutCmd` is only updated in state ACTIVE – the values of a response that is DONE at once are lost | – | as in ST |
+| F41 | defaults of `ParCmd` (`VelocityRate`, `AccelerationRate`, `DecelerationRate`, `JerkRate`, ...) | default `0.0` = "internal minimal" velocity/acceleration; the spec defines "<0 %: (default) use default" → a command with the default values moves with minimal dynamics or is rejected (SDK: DecelerationRate 0 → 0x8E03) | chapter 6, e.g. 6.3.2.3 | as in ST (test GEN-05 xfail) |
+| F42 | `MC_OpenBrakeFB` | Execute block; the spec defines OpenBrake with **Enable** (brakes stay open while Enable) | 6.x OpenBrake | as in ST |
+| F43 | `MC_FreeDriveFB` | output `Enabled` is never set (only `OutCmd.Enabled`) | – | as in ST |
+| F44 | defaults of several blocks | no valid default: ExchangeConfiguration.LifeSignTimeOut, SetSequence.TargetSequence, SetOperationMode.OperationMode, CollisionDetection.SequenceFlag, Read/WriteLoadData.LoadNo 0, SwitchLanguage/UserLogin (empty), ForceControl, ReadAnalogInput, MoveSpline, SetTriggerRegister | Siemens test "valid CMD with the default values" | to be reviewed |
+| F45 | interface of 23 blocks | inputs/outputs of the spec missing or named differently (list `KNOWN_MISSING` in `tests/unit/fb/test_interface_spec.py`, e.g. ReadActualPosition: spec Enable/ReadCartesianPosition/..., WaitTime.Time, GroupStop/SetSequence output Active) | "Associated command/response values" | to be reviewed |
+| F46 | `StopSubprogramOutCmd.OriginID`, `ReadRobotDataOutCmd.RCInterpreterVersion` | no comment | – | as in ST |
+| F47 | `MC_ExchangeConfigurationFB`, `MC_ReadMessagesFB`, `MC_ReadRobotDataFB` | without running RobotTask they stay Busy without error (all other blocks: error) | – | as in ST |
+| F48 | 77 blocks | an undefined `ExecMode` (e.g. 18) is neither checked by the block nor rejected by the RC | Siemens "AbortingMode is not defined" | as in ST |
+| F49 | `StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPlaceDirect/Linear.BlendingMode`, `WriteAnalogOutput.Unit`, `CollisionDetection.ProcessingMode/SequenceFlag` | undefined enum values are not checked | – | as in ST |
+| F50 | base of all Execute blocks | a falling edge of `Execute` before the end cancels the command: Execute for one cycle → nothing is sent; reset during the motion → motion runs, but `Done` is never shown | 5.5.x "Output status": the falling edge "does not stop or even influence the execution", outputs set for at least one cycle | as in ST (GEN-08 xfail) |
+| F51 | motion blocks: inputs `AbortingMode`, `SequenceFlag` | checked but not used: the telegram always has the ExecutionMode of the input `ExecMode` → `AbortingMode = ABORT` has no effect (the new command is buffered) | 5.6.4.5 | as in ST (PM-02 xfail; PM-03 with ExecMode passes) |
 
 ## Notes on the SRCI SDK (simulation)
 
@@ -73,6 +84,10 @@ Changes inside the private SDK copy are marked `SRCI_PY CUSTOM BEGIN/END` and li
   values set by the test). Every received command is decoded with these tables
   (`SdkSimulator.last_command`) – the bilateral tests (`tests/sdk/test_bilateral.py`) compare
   every ParCmd value with it and every response value with OutCmd.
+- Motion commands of the planner are only the types 2101..2298 (cam 2400..2402 are executed at once).
+- After SetSequence(secondary) the secondary commands need GroupContinue; after SetSequence(primary)
+  GroupContinue is rejected (0x8C02) and the interrupted primary command is not continued.
+- Enable-type functions of C-003 stay ACTIVE (response bit "Enabled") until the block is disabled.
 - `srci_sim_layout` (harness, not an SDK change) returns the layout of the SDK structures;
   `tests/sdk/test_payload_sdk.py` compares every payload with them.
 - The SDK checks the lifesign only for a *frozen* value (same lifesign for

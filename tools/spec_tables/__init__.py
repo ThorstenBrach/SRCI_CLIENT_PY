@@ -159,6 +159,46 @@ def parse_command_types(text: str) -> dict[str, int]:
     return types
 
 
+_IFACE_CAPTION = re.compile(r'Table (\d+-\d+): Associated (command|response) values of\s+"([^"]+)"')
+_IFACE_ROW = re.compile(
+    r"^\s{0,9}([A-Z][A-Za-z0-9_]*)(?:\s\d)?\s{2,}(\S+(?:\s\S+){0,3})\s{2,}.*?\s([MO])\s*$"
+)
+_IFACE_ROW_NO_MO = re.compile(r"^\s{0,9}([A-Z][A-Za-z0-9_]*)(?:\s\d)?\s{2,}([A-Z][A-Za-z0-9_\[\]]*)\s{2,}")
+
+
+def parse_interfaces(text: str) -> dict[str, dict[str, list[list[str]]]]:
+    """Inputs/outputs of every function block ("Associated command/response values - Application
+    Layer"): function -> {"inputs": [[name, type, M/O], ...], "outputs": [...]}."""
+    lines = text.splitlines()
+    result: dict[str, dict[str, list[list[str]]]] = {}
+    for i, line in enumerate(lines):
+        m = _IFACE_CAPTION.search(line)
+        if m is None or "...." in line:
+            continue
+        kind = "inputs" if m.group(2) == "command" else "outputs"
+        function = m.group(3).strip()
+        rows: list[list[str]] = []
+        for nxt in lines[i + 1 :]:
+            if _END.match(nxt):
+                break
+            if _NOISE.search(nxt) or ("Parameter" in nxt and "Data Type" in nxt):
+                continue
+            r = _IFACE_ROW.match(nxt)
+            if r:
+                rows.append([r.group(1), r.group(2).strip(), r.group(3)])
+                continue
+            r = _IFACE_ROW_NO_MO.match(nxt)
+            if r:
+                rows.append([r.group(1), r.group(2).strip(), ""])
+        result.setdefault(function, {"inputs": [], "outputs": []})[kind] = rows
+    return result
+
+
+def load_interfaces() -> dict[str, dict[str, list[list[str]]]]:
+    data = json.loads(JSON_PATH.read_text(encoding="utf-8"))
+    return dict(data["interfaces"])
+
+
 def load_command_types() -> dict[str, int]:
     data = json.loads(JSON_PATH.read_text(encoding="utf-8"))
     return dict(data["command_types"])
@@ -185,6 +225,7 @@ def main(argv: list[str] | None = None) -> int:
     text = Path(args[0]).read_text(encoding="utf-8")
     tables = parse_spec(text)
     types = parse_command_types(text)
+    interfaces = parse_interfaces(text)
     lines = [
         json.dumps(
             {
@@ -203,6 +244,8 @@ def main(argv: list[str] | None = None) -> int:
         + json.dumps(source)
         + ',\n"command_types":'
         + json.dumps(types, sort_keys=True)
+        + ',\n"interfaces":'
+        + json.dumps(interfaces, sort_keys=True, separators=(",", ":"))
         + ',\n"tables":[\n'
         + ",\n".join(lines)
         + "\n]}\n"

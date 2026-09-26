@@ -33,7 +33,7 @@ __all__ = [
     "sdk_transport",
 ]
 
-API_VERSION = 3  # 2: srci_sim_layout, 3: generated commands (C-003)
+API_VERSION = 4  # 2: srci_sim_layout, 3: generated commands (C-003), 4: command errors
 MAX_TELEGRAM_SIZE = 512
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -150,6 +150,7 @@ def _load(path: Path) -> ctypes.CDLL:
         ctypes.c_char_p,
     ]
     lib.srci_sim_clear_response_values.argtypes = [ctypes.c_void_p]
+    lib.srci_sim_set_command_error.argtypes = [ctypes.c_void_p, ctypes.c_uint16, ctypes.c_uint16]
     lib.srci_sim_set_all_functions_supported.argtypes = [ctypes.c_void_p, ctypes.c_int]
     version = lib.srci_sim_api_version()
     if version != API_VERSION:
@@ -301,6 +302,11 @@ class SdkSimulator:
         for name, value in values.items():
             text = str(int(value)) if isinstance(value, bool) else str(value)
             self._lib.srci_sim_set_response_value(self._h(), cmd_type, name.encode(), text.encode("latin-1"))
+
+    def set_command_error(self, cmd_type: int, error_code: int) -> None:
+        """Commands of ``cmd_type`` (not implemented by the SDK itself) are answered with
+        ``error_code`` (0: normal answer again)."""
+        self._lib.srci_sim_set_command_error(self._h(), cmd_type, error_code)
 
     def clear_responses(self) -> None:
         self._lib.srci_sim_clear_response_values(self._h())
