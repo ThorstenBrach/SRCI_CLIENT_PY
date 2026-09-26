@@ -40,6 +40,19 @@ mypy
 python -m tools.plcopen_gen   # regenerate types from third_party/robotlibrary/RobotLibrary.xml
 ```
 
+### SDK in the loop
+
+The SRCI SDK (robot controller side) is licensed and therefore **not** part of this
+repository. It is built locally together with a simulated robot (`srci_py_harness`
+in the private SDK folder) into `srci_sdk_sim.dll/.so`, which the tests load with
+`ctypes`. Default location: `../SRCI SDK/srci_py_harness/bin/`, or set
+`SRCI_SDK_SIM_LIB` / `SRCI_SDK_DIR`.
+
+```bash
+pytest -m sdk      # SDK in the loop tests (skipped if the library is missing)
+pytest -m tcp      # tests with local TCP sockets
+```
+
 ## License
 
 MIT – see [LICENSE](LICENSE).

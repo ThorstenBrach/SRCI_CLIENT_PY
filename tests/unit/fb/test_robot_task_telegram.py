@@ -6,55 +6,11 @@ Expected bytes are built from the tables of the SRCI profile V1.5.9 (5-82, 5-83,
 from __future__ import annotations
 
 import struct
-from typing import Any
 
 import pytest
 
-from srci.fb.General.MC_RobotTask.MC_RobotTaskFB_Telegram import MC_RobotTaskFB_Telegram
-from srci.types import (
-    AxesGroup,
-    CmdMessageState,
-    ComDirection,
-    SequenceFlag,
-    SystemTime,
-    TelegramRobToPlcFragment,
-    TelegramState,
-)
-
-
-class FakeACR:
-    def __init__(self) -> None:
-        self.responses: list[tuple[int, bytes]] = []
-
-    def AddRsp(self, Rsp: TelegramRobToPlcFragment) -> int:
-        start = Rsp.Header.PayloadPointer
-        self.responses.append(
-            (Rsp.Header.CmdID, bytes(Rsp.Command.Payload[start : start + Rsp.Header.PayloadLength]))
-        )
-        return 0
-
-
-class Host(MC_RobotTaskFB_Telegram):
-    def __init__(self) -> None:
-        super().__init__()
-        self.SystemTime = SystemTime()
-        self.logs: list[dict[str, Any]] = []
-        self._parCfg.Com.TelegramLengthPlcToRob = 64
-        self._parCfg.Com.TelegramLengthRobToPlc = 128
-
-    def _log(self, **kw: Any) -> None:
-        self.logs.append(kw)
-
-    CreateLogMessagePara1 = CreateLogMessagePara2 = CreateLogMessagePara3 = _log
-    CreateLogMessagePara4 = CreateLogMessagePara5 = _log
-
-
-def new_axes_group() -> tuple[AxesGroup, FakeACR]:
-    ag = AxesGroup()
-    acr = FakeACR()
-    ag.Acyclic.ActiveCommandRegister = acr
-    return ag, acr
-
+from srci.types import CmdMessageState, ComDirection, SequenceFlag, TelegramState
+from tests.helpers import Host, new_axes_group
 
 PLC_OPT = ["SubProgramData", "CartesianPosition", "JointPosition", "Force", "CartesianPositionExt",
            "JointPositionExt", "ForceExt"]  # fmt: skip

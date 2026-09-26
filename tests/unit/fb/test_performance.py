@@ -5,7 +5,8 @@ from __future__ import annotations
 import struct
 import time
 
-from tests.unit.fb.test_robot_task_telegram import Host, fill_header, new_axes_group, rc_header, rc_telegram
+from tests.helpers import Host, new_axes_group
+from tests.unit.fb.test_robot_task_telegram import fill_header, rc_header, rc_telegram
 
 
 def test_telegram_coding_budget() -> None:
