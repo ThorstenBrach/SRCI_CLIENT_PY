@@ -31,7 +31,7 @@ dev = [
 ]
 
 [project.urls]
-Source = "https://github.com/ThorstenBrach/SRCI_PY"
+Source = "https://github.com/ThorstenBrach/SRCI_CLIENT_PY"
 "PLC library" = "https://github.com/ThorstenBrach/SRCI"
 
 [tool.hatch.build.targets.wheel]
