@@ -8,14 +8,19 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
-      - run: ruff check .
-      - run: ruff format --check .
-      - run: mypy
+      - name: Tool versions
+        run: python --version && ruff --version && mypy --version
+      - name: ruff check
+        run: ruff check --output-format=github .
+      - name: ruff format
+        run: ruff format --check --diff .
+      - name: mypy
+        run: mypy
       - name: Generated code is up to date
         run: |
           python -m tools.plcopen_gen --check
@@ -33,8 +38,8 @@ jobs:
         python: ["3.12", "3.13", "3.14"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
       - run: pip install -e ".[dev]"
@@ -49,8 +54,8 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       - run: pip install build
@@ -92,18 +97,18 @@ jobs:
         run: |
           if [ -n "$KEY" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"
           else echo "::notice::SDK tests skipped: secret SDK_DEPLOY_KEY not set (docs/CI_SDK.md)"; fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         if: steps.key.outputs.ok == 'true'
       - name: Check out the private SDK
         if: steps.key.outputs.ok == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ vars.SDK_REPOSITORY || format('{0}/srci-sdk-private', github.repository_owner) }}
           ref: ${{ vars.SDK_REF || 'main' }}
           ssh-key: ${{ secrets.SDK_DEPLOY_KEY }}
           path: _sdk
           persist-credentials: false
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: steps.key.outputs.ok == 'true'
         with:
           python-version: "3.12"
