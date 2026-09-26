@@ -72,6 +72,18 @@ pytest -m sdk      # SDK in the loop tests (skipped if the library is missing)
 pytest -m tcp      # tests with local TCP sockets
 ```
 
+### Test cases and test report
+
+Every test has a unique, stable ID (`tests/testcases.json`); all test cases are listed and
+described in [docs/TestCases.md](docs/TestCases.md), known deviations of the PLC library in
+[docs/ST_FINDINGS.md](docs/ST_FINDINGS.md).
+
+```bash
+pytest --tc-report build/test-report    # TestReport.md + TestReport.html (quality evidence)
+python -m tools.test_report update      # assign IDs to new tests
+python -m tools.test_report catalog     # regenerate docs/TestCases.md
+```
+
 ## License
 
 MIT – see [LICENSE](LICENSE).

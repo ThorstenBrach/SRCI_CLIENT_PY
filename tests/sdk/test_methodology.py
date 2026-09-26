@@ -11,6 +11,10 @@ blocks of the library (docs/TestCases.md):
 * GEN-09 undefined ExecMode ("AbortingMode = 18"): Error
 * ERR-01 undefined value of an enum parameter: Error, command not executed
 * ERR-02 error reported by the RC: Error with the ErrorID of the RC
+* PM-01..03 buffered / aborting commands, SEQ-01 secondary sequence
+* REP-01 the same instance executed repeatedly
+* BUF-01 more commands in one cycle than the active command register holds, BUF-02 16 commands
+  in one cycle
 
 Known deviations are ``xfail`` with the finding of docs/ST_FINDINGS.md.
 """
@@ -338,8 +342,8 @@ GEN09_CHECKED = {  # blocks that reject an undefined AbortingMode / ExecMode
 
 @pytest.mark.parametrize("name", NAMES)
 def test_gen09_undefined_exec_mode(name: str) -> None:
-    """GEN-09 (Siemens x-09 "AbortingMode is not defined", AbortingMode = 18; ExecMode for blocks
-    without AbortingMode) -> Error."""
+    """GEN-09 (Siemens x-09 "AbortingMode is not defined"): undefined AbortingMode (18), or
+    ExecMode for blocks without AbortingMode -> Error, nothing sent."""
     if name not in GEN09_CHECKED:
         pytest.xfail("F48: ExecMode is not checked by the block and not rejected by the RC")
     with robot() as (_, h):
@@ -544,3 +548,77 @@ def test_seq01_secondary_sequence(name: str) -> None:
 
 
 CLASSES_ALL = dict(fb_classes())
+
+
+# ------------------------------------------------------------------ REP-01 / BUF-01 / BUF-02
+
+
+@pytest.mark.parametrize("name", EXECUTE)
+def test_rep01_repeated_execution(name: str) -> None:
+    """REP-01: the same instance is executed 5 times in a row (new rising edge after Done) ->
+    every execution sends one command and ends with Done."""
+    if name in GEN06_KNOWN:
+        pytest.xfail(GEN06_KNOWN[name])
+    with robot() as (sim, h):
+        sim.set_move_cycles(5)
+        fb = _motion(name, h) if name in MOTION else block(name, h)
+        start_log = len(sim.logs)
+        for run in range(5):
+            start(fb)
+            h.run(300, until=lambda: bool(fb.Done or fb.Error))
+            if fb.Error:
+                pytest.skip(f"command rejected by the RC ({fb.ErrorID:#x}), see test_bilateral")
+            assert fb.Done, (run, outputs(fb))
+            start(fb, False)
+            h.run(2)
+            assert not fb.Done and not fb.Busy, (run, outputs(fb))
+        count = commands(sim, cmd_type(name), start_log)
+        assert count >= 5 if name in GEN06_REPEAT else count == 5
+
+
+PLANNER = [n for n in MOTION if n not in MOTION_KNOWN and 2100 < cmd_type(n) < 2299]
+
+
+@pytest.mark.parametrize("name", PLANNER)
+def test_buf01_more_commands_than_register_entries(name: str) -> None:
+    """BUF-01 (Siemens "1 CMD called 50 times in one cycle"): more motion commands started in
+    one cycle than the active command register has entries -> the commands that fit are
+    buffered and executed, the others end with Error ERR_NO_FREE_ACR_ENTRY; no command stays
+    Busy."""
+    from srci.types import RobotLibraryErrorIdEnum
+
+    count = int(str(srci.parameters()["ACTIVE_CMD_REGISTER_ENTRIES_MAX"])) + 5
+    with robot() as (sim, h):
+        sim.set_move_cycles(3)
+        fbs = [_motion(name, h) for _ in range(count)]
+        for fb in fbs:
+            start(fb)
+        h.run(count * 10, until=lambda: all(fb.Done or fb.Error for fb in fbs))
+        assert all(fb.Done or fb.Error for fb in fbs), [
+            outputs(fb) for fb in fbs if not (fb.Done or fb.Error)
+        ]
+        errors = [fb for fb in fbs if fb.Error]
+        assert errors, "register overflow not reported"
+        assert {fb.ErrorID for fb in errors} == {RobotLibraryErrorIdEnum.ERR_NO_FREE_ACR_ENTRY}
+        assert sum(fb.Done for fb in fbs) >= count - 10
+
+
+@pytest.mark.parametrize("name", ["MC_GroupStopFB", "MC_GroupInterruptFB", "MC_WriteIntegersFB"])
+def test_buf02_more_than_15_commands_in_one_cycle(name: str) -> None:
+    """BUF-02 (Siemens "Call more than 15 CMDs in 1 Cycle"): 16 instances started in the same
+    cycle -> all commands are sent and every instance ends with Done or with the error of the
+    RC (a limit of the RC is not a limit of the client)."""
+    if name == "MC_GroupInterruptFB":
+        pytest.xfail("F52: more than 10 responses in one telegram -> the others are dropped, FB stays Busy")
+    with robot() as (sim, h):
+        start_log = len(sim.logs)
+        fbs = [h.add(CLASSES_ALL[name]()) for _ in range(16)]
+        for fb in fbs:
+            start(fb)
+        h.run(500, until=lambda: all(fb.Done or fb.Error for fb in fbs))
+        assert all(fb.Done or (fb.Error and fb.ErrorID) for fb in fbs), [outputs(fb) for fb in fbs]
+        assert commands(sim, _type_of(name), start_log) == 16
+
+
+def _type_of(name: str) -> int:
+    return int(send_calls(CLASSES_ALL[name])[0].value)

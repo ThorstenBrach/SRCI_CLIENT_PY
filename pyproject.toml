@@ -82,7 +82,7 @@ disallow_incomplete_defs = false
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "."]  # tests also run without "pip install -e ."
-addopts = "-ra --strict-markers"
+addopts = "-ra --strict-markers -p tools.test_report.plugin"
 markers = [
     "sdk: tests that need the compiled SRCI SDK simulator (skipped if not built)",
     "tcp: tests that open local TCP sockets",

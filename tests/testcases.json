@@ -1,0 +1,2048 @@
+[
+ {
+  "id": "BUF-01",
+  "test": "tests/sdk/test_methodology.py::test_buf01_more_commands_than_register_entries",
+  "title": "More motion commands started in one cycle than the active command register has entries -> the commands that fit are buffered and executed, the others end with Error ERR_NO_FREE_ACR_ENTRY; no command stays Busy.",
+  "refs": [
+   "Siemens \"1 CMD called 50 times in one cycle\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "BUF-02",
+  "test": "tests/sdk/test_methodology.py::test_buf02_more_than_15_commands_in_one_cycle",
+  "title": "16 instances started in the same cycle -> all commands are sent and every instance ends with Done or with the error of the RC (a limit of the RC is not a limit of the client).",
+  "refs": [
+   "Siemens \"Call more than 15 CMDs in 1 Cycle\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "ERR-01",
+  "test": "tests/sdk/test_methodology.py::test_err01_undefined_enum_value",
+  "title": "Undefined value of an enum parameter -> Error.",
+  "refs": [
+   "Siemens \"ErrorID\": \"Use ... that isn't defined\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "ERR-02",
+  "test": "tests/sdk/test_methodology.py::test_err02_error_of_the_rc",
+  "title": "The RC answers with an error -> Error, ErrorID of the RC.",
+  "refs": [
+   "Siemens \"ErrorID\": \"Error occurred during execution\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "GEN-04",
+  "test": "tests/sdk/test_methodology.py::test_gen04_not_executed",
+  "title": "Valid command, not executed -> all outputs FALSE / 0, nothing sent.",
+  "refs": [
+   "Siemens x-05"
+  ],
+  "status": "active"
+ },
+ {
+  "id": "GEN-05",
+  "test": "tests/sdk/test_methodology.py::test_gen05_default_values",
+  "title": "Valid command with the default values, positive edge -> Done / Enabled / Valid without error.",
+  "refs": [
+   "Siemens x-06"
+  ],
+  "status": "active"
+ },
+ {
+  "id": "GEN-06",
+  "test": "tests/sdk/test_methodology.py::test_gen06_continuous_execute",
+  "title": "Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge.",
+  "refs": [
+   "Siemens x-07"
+  ],
+  "status": "active"
+ },
+ {
+  "id": "GEN-07",
+  "test": "tests/sdk/test_methodology.py::test_gen07_axes_group_not_initialized",
+  "title": "RobotTask not running -> Error.",
+  "refs": [
+   "Siemens x-08 \"Axes group is not defined\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "GEN-08",
+  "test": "tests/sdk/test_methodology.py::test_gen08_execute_for_one_cycle",
+  "title": "Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle.",
+  "refs": [
+   "Siemens 1-13, spec 5.5.x \"Output status\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "GEN-09",
+  "test": "tests/sdk/test_methodology.py::test_gen09_undefined_exec_mode",
+  "title": "Undefined AbortingMode (18), or ExecMode for blocks without AbortingMode -> Error, nothing sent.",
+  "refs": [
+   "Siemens x-09 \"AbortingMode is not defined\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "PM-01",
+  "test": "tests/sdk/test_methodology.py::test_pm01_buffered",
+  "title": "Two commands of the same kind -> the second one is buffered until the first one is done, both are Done in this order.",
+  "refs": [
+   "Siemens \"ProcessingMode\"/\"AbortingMode = Buffer\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "PM-02",
+  "test": "tests/sdk/test_methodology.py::test_pm02_aborting",
+  "title": "A second command with AbortingMode ABORT aborts the active one -> first CommandAborted, second Done.",
+  "refs": [
+   "Siemens \"AbortingMode = Abort\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "PM-03",
+  "test": "tests/sdk/test_methodology.py::test_pm03_abort_others",
+  "title": "A second command with ExecMode SEQUENCE_ABORT_OTHERS_PRIMARY aborts the active one -> first CommandAborted, second Done.",
+  "refs": [
+   "spec 5.6.4.5 ExecutionMode \"Sequence AbortOthers\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "REP-01",
+  "test": "tests/sdk/test_methodology.py::test_rep01_repeated_execution",
+  "title": "The same instance is executed 5 times in a row (new rising edge after Done) -> every execution sends one command and ends with Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SEQ-01",
+  "test": "tests/sdk/test_methodology.py::test_seq01_secondary_sequence",
+  "title": "The primary sequence is interrupted, SetSequence(secondary), a command with ExecMode SEQUENCE_SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted.",
+  "refs": [
+   "Siemens \"SequenceFlag\", spec 5.6.4.5"
+  ],
+  "status": "active"
+ },
+ {
+  "id": "SDK-BIL-001",
+  "test": "tests/sdk/test_bilateral.py::test_send",
+  "title": "Every ParCmd value arrives in the SDK with the value and at the place of the specification.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-BIL-002",
+  "test": "tests/sdk/test_bilateral.py::test_recv",
+  "title": "Every value of the response of the SDK appears in OutCmd.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-PAY-001",
+  "test": "tests/sdk/test_payload_sdk.py::test_sdk_structures_are_checked",
+  "title": "Every function block with a command structure of the SDK is compared (no block left out)",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-PAY-002",
+  "test": "tests/sdk/test_payload_sdk.py::test_payloads_match_the_sdk",
+  "title": "Command payload of every function block matches the command structure of the SDK (offsets, types)",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-PAY-003",
+  "test": "tests/sdk/test_payload_sdk.py::test_layout_of_a_known_structure",
+  "title": "MoveAxesAbsolute: header (type UINT, 2 half bytes), emitter/listener, 4 UINT rates, ...",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-001",
+  "test": "tests/sdk/test_core_fbs.py::test_group_reset",
+  "title": "GroupReset is accepted and ends with Done",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-002",
+  "test": "tests/sdk/test_core_fbs.py::test_enable_and_disable_robot",
+  "title": "EnableRobot switches the robot on and off (RC state Enabled)",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-003",
+  "test": "tests/sdk/test_core_fbs.py::test_enable_robot_fails",
+  "title": "EnableRobot: an error of the RC is reported with its ErrorID",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-004",
+  "test": "tests/sdk/test_core_fbs.py::test_change_speed_override",
+  "title": "ChangeSpeedOverride changes the override of the RC",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-005",
+  "test": "tests/sdk/test_core_fbs.py::test_read_robot_data",
+  "title": "ReadRobotData returns the robot data of the RC (Valid)",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-006",
+  "test": "tests/sdk/test_core_fbs.py::test_exchange_configuration",
+  "title": "ExchangeConfiguration returns the configuration of the RC",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-007",
+  "test": "tests/sdk/test_core_fbs.py::test_set_sequence",
+  "title": "SetSequence switches to the secondary sequence and back",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-008",
+  "test": "tests/sdk/test_core_fbs.py::test_set_sequence_invalid_parameter",
+  "title": "SetSequence with an invalid target sequence ends with Error",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-009",
+  "test": "tests/sdk/test_core_fbs.py::test_read_messages",
+  "title": "ReadMessages reads the message buffer of the RC",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-010",
+  "test": "tests/sdk/test_core_fbs.py::test_read_actual_position",
+  "title": "ReadActualPosition returns the actual position of the simulated robot",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-011",
+  "test": "tests/sdk/test_core_fbs.py::test_read_actual_position_valid",
+  "title": "ReadActualPosition: Valid while enabled",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-012",
+  "test": "tests/sdk/test_core_fbs.py::test_move_axes_absolute",
+  "title": "MoveAxesAbsolute moves the robot to the target joint position (Done, position reached)",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-013",
+  "test": "tests/sdk/test_core_fbs.py::test_move_axes_absolute_before_enable",
+  "title": "Without power the command stays buffered (sequence interrupted), GroupContinue starts it.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-014",
+  "test": "tests/sdk/test_core_fbs.py::test_move_axes_absolute_deceleration_rate",
+  "title": "The SDK rejects every DecelerationRate except \"not set\" (validateDynamicsParameters, 0x8E03).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-015",
+  "test": "tests/sdk/test_core_fbs.py::test_buffered_moves",
+  "title": "Two buffered MoveAxesAbsolute are executed one after the other",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-016",
+  "test": "tests/sdk/test_core_fbs.py::test_move_direct_absolute",
+  "title": "MoveDirectAbsolute moves the robot to the target position",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-017",
+  "test": "tests/sdk/test_core_fbs.py::test_move_linear_absolute",
+  "title": "MoveLinearAbsolute moves the robot to the target position",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-018",
+  "test": "tests/sdk/test_core_fbs.py::test_group_interrupt_and_continue",
+  "title": "GroupInterrupt interrupts a motion, GroupContinue continues it to the target",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-019",
+  "test": "tests/sdk/test_core_fbs.py::test_group_stop",
+  "title": "GroupStop stops a motion (CommandAborted of the motion)",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-020",
+  "test": "tests/sdk/test_core_fbs.py::test_group_jog",
+  "title": "GroupJog moves the robot while enabled",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-021",
+  "test": "tests/sdk/test_core_fbs.py::test_interrupt_jog_return_to_primary_continue",
+  "title": "Interrupt, jog in the secondary sequence, ReturnToPrimary and continue",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-022",
+  "test": "tests/sdk/test_core_fbs.py::test_write_and_read_tool_data",
+  "title": "WriteToolData / ReadToolData round trip",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-023",
+  "test": "tests/sdk/test_core_fbs.py::test_write_tool_data_invalid_load",
+  "title": "ToolData.LoadNo 0 is rejected.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-024",
+  "test": "tests/sdk/test_core_fbs.py::test_write_tool_0_is_rejected",
+  "title": "WriteToolData of tool 0 (flange) is rejected by the RC",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-025",
+  "test": "tests/sdk/test_core_fbs.py::test_write_and_read_frame_data",
+  "title": "WriteFrameData / ReadFrameData round trip",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-026",
+  "test": "tests/sdk/test_core_fbs.py::test_write_and_read_load_data",
+  "title": "WriteLoadData / ReadLoadData round trip",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-027",
+  "test": "tests/sdk/test_core_fbs.py::test_write_and_read_sw_limits",
+  "title": "WriteRobotSWLimits / ReadRobotSWLimits round trip",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-028",
+  "test": "tests/sdk/test_core_fbs.py::test_write_and_read_default_dynamics",
+  "title": "WriteRobotDefaultDynamics / ReadRobotDefaultDynamics round trip",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-029",
+  "test": "tests/sdk/test_core_fbs.py::test_write_and_read_reference_dynamics",
+  "title": "WriteRobotReferenceDynamics / ReadRobotReferenceDynamics round trip",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-001",
+  "test": "tests/sdk/test_robot_task.py::test_initialized_without_synchronization",
+  "title": "RobotTask reaches Initialized without data synchronization",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-002",
+  "test": "tests/sdk/test_robot_task.py::test_synchronized_client_to_server",
+  "title": "Synchronization CLIENT_TO_SERVER writes the user data (tools, frames, loads, limits, dynamics) to the RC",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-003",
+  "test": "tests/sdk/test_robot_task.py::test_synchronized_tools_client_to_server",
+  "title": "Synchronization CLIENT_TO_SERVER: tool data arrive in the RC",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-004",
+  "test": "tests/sdk/test_robot_task.py::test_synchronized_server_to_client",
+  "title": "Synchronization SERVER_TO_CLIENT reaches Synchronized",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-005",
+  "test": "tests/sdk/test_robot_task.py::test_server_to_client_reads_rc_data",
+  "title": "The start-up phase of SERVER_TO_CLIENT copies the RC data into the user data.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-006",
+  "test": "tests/sdk/test_robot_task.py::test_invalid_telegram_length_is_an_error",
+  "title": "Invalid telegram length configured -> RobotTask error",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-007",
+  "test": "tests/sdk/test_robot_task.py::test_incompatible_srci_major_version",
+  "title": "The RC rejects the telegram version; after the init timeout (5 s) the state is the error.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-008",
+  "test": "tests/sdk/test_robot_task.py::test_lifesign_timeout_and_restart",
+  "title": "Lifesign timeout of the RC is detected, the RobotTask restarts and initializes again",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-009",
+  "test": "tests/sdk/test_robot_task.py::test_quick_restart",
+  "title": "Disable/enable of the RobotTask initializes again",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-010",
+  "test": "tests/sdk/test_robot_task.py::test_long_run_10000_cycles",
+  "title": "10000 cycles without error (long run)",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-011",
+  "test": "tests/sdk/test_robot_task.py::test_synchronized_over_tcp",
+  "title": "PLC gateway (TCP server) in front of the SDK, real time with 10 ms cycles.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-012",
+  "test": "tests/sdk/test_robot_task.py::test_logging_to_python",
+  "title": "Log messages of the library arrive in Python logging and in the system log",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-001",
+  "test": "tests/sdk/test_sdk_in_the_loop.py::test_sdk_library",
+  "title": "The SDK simulator library is found and has the expected C API version",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-002",
+  "test": "tests/sdk/test_sdk_in_the_loop.py::test_ri_handshake",
+  "title": "Handshake of the robot interface with the SDK (RI state machine)",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-003",
+  "test": "tests/sdk/test_sdk_in_the_loop.py::test_status_word_from_the_sdk",
+  "title": "ST-FIX F6/F7: little endian bit field, operation mode in bits 10..12.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-004",
+  "test": "tests/sdk/test_sdk_in_the_loop.py::test_wrong_major_version_is_rejected",
+  "title": "The SDK rejects a telegram with a wrong major version",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-005",
+  "test": "tests/sdk/test_sdk_in_the_loop.py::test_telegram_length_too_small_is_rejected",
+  "title": "The SDK rejects a telegram length that is too small",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-006",
+  "test": "tests/sdk/test_sdk_in_the_loop.py::test_sequence_position_matches_the_sdk",
+  "title": "ST-FIX F2 verified: the RC acknowledges the sequence number only at the right position.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-007",
+  "test": "tests/sdk/test_sdk_in_the_loop.py::test_cartesian_position_rc_to_plc",
+  "title": "Cartesian position of the RC arrives in the cyclic data of the client",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-008",
+  "test": "tests/sdk/test_sdk_in_the_loop.py::test_lifesign_is_mirrored_every_cycle",
+  "title": "The lifesign is mirrored by the RC in every cycle",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-009",
+  "test": "tests/sdk/test_sdk_in_the_loop.py::test_same_handshake_over_tcp",
+  "title": "SDK behind the PLC gateway simulator: identical results via TcpTransport.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-001",
+  "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
+  "title": "TCP transport: one request, one answer per cycle (lockstep)",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-002",
+  "test": "tests/tcp/test_tcp_transport.py::test_connects_on_first_exchange",
+  "title": "TCP transport connects on the first exchange",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-003",
+  "test": "tests/tcp/test_tcp_transport.py::test_answer_in_pieces_is_assembled",
+  "title": "An answer received in pieces is assembled",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-004",
+  "test": "tests/tcp/test_tcp_transport.py::test_wrong_telegram_size_is_rejected",
+  "title": "A telegram of the wrong size is rejected",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-005",
+  "test": "tests/tcp/test_tcp_transport.py::test_no_answer_times_out_and_next_cycle_reconnects",
+  "title": "No answer -> timeout, the next cycle reconnects",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-006",
+  "test": "tests/tcp/test_tcp_transport.py::test_late_answer_does_not_shift_the_stream",
+  "title": "Without framing a late answer would be taken as the answer of the next request.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-007",
+  "test": "tests/tcp/test_tcp_transport.py::test_partial_answer_then_silence_is_a_timeout",
+  "title": "Partial answer followed by silence is a timeout",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-008",
+  "test": "tests/tcp/test_tcp_transport.py::test_peer_closes_during_answer",
+  "title": "Peer closes the connection during the answer -> error, reconnect",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-009",
+  "test": "tests/tcp/test_tcp_transport.py::test_peer_closes_after_answer",
+  "title": "Peer closes the connection after the answer -> reconnect in the next cycle",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-010",
+  "test": "tests/tcp/test_tcp_transport.py::test_extra_bytes_violate_lockstep",
+  "title": "Extra bytes after the answer violate the lockstep -> error",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-011",
+  "test": "tests/tcp/test_tcp_transport.py::test_extra_byte_check_can_be_disabled",
+  "title": "The extra byte check can be disabled",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-012",
+  "test": "tests/tcp/test_tcp_transport.py::test_server_restart_on_same_port",
+  "title": "Server restart on the same port -> reconnect",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-013",
+  "test": "tests/tcp/test_tcp_transport.py::test_connect_refused_and_backoff",
+  "title": "Connection refused -> error and back-off before the next attempt",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-014",
+  "test": "tests/tcp/test_tcp_transport.py::test_reconnect_disabled",
+  "title": "Reconnect disabled -> the transport stays closed after an error",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-015",
+  "test": "tests/tcp/test_tcp_transport.py::test_exchange_after_close_raises",
+  "title": "Exchange after close raises an error",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-016",
+  "test": "tests/tcp/test_tcp_transport.py::test_many_cycles_with_random_faults",
+  "title": "Soak test: random delays/chunks/drops - every successful answer must match its request.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "TCP-017",
+  "test": "tests/tcp/test_tcp_transport.py::test_simulator_serves_one_client_after_another",
+  "title": "The PLC gateway simulator serves one client after another",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "GEN-01",
+  "test": "tests/unit/fb/test_interface_spec.py::test_interface_matches_the_specification",
+  "title": "Every input/output of the specification exists in the function block.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "GEN-03",
+  "test": "tests/unit/fb/test_interface_spec.py::test_parameters_are_documented",
+  "title": "Every field of ParCmd/OutCmd has a comment (taken from the PLC library into the generated types).",
+  "refs": [
+   "Siemens x-04 \"all parameters have a valid and useful comment\""
+  ],
+  "status": "active"
+ },
+ {
+  "id": "SPEC-IF-001",
+  "test": "tests/unit/fb/test_interface_spec.py::test_all_function_blocks_have_a_table",
+  "title": "Every function block has an interface table in the specification (except the listed ones)",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SPEC-PAY-001",
+  "test": "tests/unit/fb/test_payload_spec.py::test_all_function_blocks_are_checked",
+  "title": "Every function block is compared with the payload tables of the specification",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SPEC-PAY-002",
+  "test": "tests/unit/fb/test_payload_spec.py::test_payloads_match_the_specification",
+  "title": "Command payload of every function block matches the payload table of the specification",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SPEC-PAY-003",
+  "test": "tests/unit/fb/test_payload_spec.py::test_core_function_blocks_match",
+  "title": "Payload of the core function blocks matches the specification without deviation",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SPEC-PAY-004",
+  "test": "tests/unit/fb/test_payload_spec.py::test_command_types_match_the_specification",
+  "title": "ST-FIX F35: MoveLinearAbsoluteJ was sent as MoveLinearAbsolute, SoftSwitchTcp as ShiftPosition, MoveCircularAbsolute/Relative with the numbers of an older draft.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SPEC-PAY-005",
+  "test": "tests/unit/fb/test_payload_spec.py::test_compare_equal",
+  "title": "Payload comparison: identical layouts are equal",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SPEC-PAY-006",
+  "test": "tests/unit/fb/test_payload_spec.py::test_compare_detects_shift_kind_length_and_strings",
+  "title": "Payload comparison detects shifted offsets, wrong types, lengths and strings",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SPEC-PAY-007",
+  "test": "tests/unit/fb/test_payload_spec.py::test_sdk_fields_from_the_pattern",
+  "title": "SDK field layout is derived from the byte pattern of the simulator",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-001",
+  "test": "tests/unit/fb/test_performance.py::test_telegram_coding_budget",
+  "title": "Telegram coding budget",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-002",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_send_header_table_5_82",
+  "title": "Send header table 5 82",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-003",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_send_complete_telegram_with_fragment",
+  "title": "Send complete telegram with fragment",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-004",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_fragment_payload_pointer_offset",
+  "title": "Fragment payload pointer offset",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-005",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_tool_frame_only_with_cartesian_position_rc_to_plc",
+  "title": "ST-FIX F2: ToolNo/FrameNo (table 5-90) only if 'Cartesian Position' RC -> PLC is configured.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-006",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_send_cartesian_position_table_5_97",
+  "title": "ST-FIX F1: Config has two bytes, the position has 34 bytes.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-007",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_calculated_length_matches_written_bytes_plc_to_rob",
+  "title": "Calculated length matches written bytes plc to rob",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-008",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_second_sequence_starts_at_calculated_address",
+  "title": "Second sequence starts at calculated address",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-009",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_sequence_stops_at_telegram_limit",
+  "title": "Sequence stops at telegram limit",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-010",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_send_logging",
+  "title": "Send logging",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-011",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_receive_header_and_footer",
+  "title": "Receive header and footer",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-012",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_receive_sequence_with_response",
+  "title": "Receive sequence with response",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-013",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_same_ack_is_not_processed_twice",
+  "title": "Same ack is not processed twice",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-014",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_two_fragments_in_one_sequence",
+  "title": "Two fragments in one sequence",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-015",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_second_sequence_is_parsed_from_its_start_address",
+  "title": "ST-FIX F5: fragment index and payload pointer restart for the second sequence.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-016",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_invalid_fragment_pointer_is_logged",
+  "title": "Invalid fragment pointer is logged",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-017",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_invalid_sequence_length_is_logged",
+  "title": "Invalid sequence length is logged",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-018",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_receive_cartesian_position_table_5_89",
+  "title": "Receive cartesian position table 5 89",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-019",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_calculated_length_matches_read_bytes_rob_to_plc",
+  "title": "Calculated length matches read bytes rob to plc",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-020",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_payload_max_and_telegram_length",
+  "title": "Payload max and telegram length",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-021",
+  "test": "tests/unit/fb/test_robot_task_telegram.py::test_all_optional_combinations_fit_the_sizeof_table",
+  "title": "Spec tables 5-87/5-88: bytes required per optional cyclic block (RC -> PLC).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-022",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_add_golden",
+  "title": "Add golden",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-023",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_get_golden",
+  "title": "Get golden",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-024",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_roundtrip_random_values",
+  "title": "Roundtrip random values",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-025",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_values_out_of_range_raise",
+  "title": "Values out of range raise",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-026",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_real_overflow_raises",
+  "title": "Real overflow raises",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-027",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_write_past_payload_size_raises",
+  "title": "Write past payload size raises",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-028",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_payload_size_limits_buffer",
+  "title": "Payload size limits buffer",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-029",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_read_past_end_raises",
+  "title": "Read past end raises",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-030",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_reset_clears_payload",
+  "title": "Reset clears payload",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-031",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_empty_string_and_datablock_write_nothing",
+  "title": "Empty string and datablock write nothing",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-032",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_datablock_and_string",
+  "title": "Datablock and string",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-033",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_lifesign_footer",
+  "title": "Lifesign footer",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-034",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_half_bytes",
+  "title": "Half bytes",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-035",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_turn_number_example_of_the_spec",
+  "title": "Spec 1.5.9 table 5-26 (J1 -0, J2 +0, J3 -0, J4 +1, J5 +0, J6 -2, E1 +14).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-036",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_turn_nibble_roundtrip",
+  "title": "Turn nibble roundtrip",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-037",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_turn_e1_range",
+  "title": "Turn e1 range",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-038",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_arm_config_roundtrip",
+  "title": "Arm config roundtrip",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-039",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_sync_flags",
+  "title": "Sync flags",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-040",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_fragment_action_and_tracking_status",
+  "title": "Fragment action and tracking status",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-041",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_command_data_buffer",
+  "title": "Command data buffer",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-042",
+  "test": "tests/unit/fb/test_send_recv_data.py::test_response_data_buffer",
+  "title": "Response data buffer",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-001",
+  "test": "tests/unit/functions/test_convert_dt.py::test_iec_date_is_days_since_1990",
+  "title": "Iec date is days since 1990",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-002",
+  "test": "tests/unit/functions/test_convert_dt.py::test_timestamps",
+  "title": "Timestamps",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-003",
+  "test": "tests/unit/functions/test_convert_dt.py::test_system_time_from_clock",
+  "title": "System time from clock",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-004",
+  "test": "tests/unit/functions/test_convert_misc.py::test_version_encoding_table_5_86",
+  "title": "Version encoding table 5 86",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-005",
+  "test": "tests/unit/functions/test_convert_misc.py::test_half_bytes_and_uint",
+  "title": "Half bytes and uint",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-006",
+  "test": "tests/unit/functions/test_convert_misc.py::test_status_word_table_5_105",
+  "title": "ST-FIX F6: bit 13 CollisionDetected, 14 RestartRequested, 15..17 acceleration states.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-007",
+  "test": "tests/unit/functions/test_convert_misc.py::test_status_word_undefined_enum_values",
+  "title": "Status word undefined enum values",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-008",
+  "test": "tests/unit/functions/test_convert_misc.py::test_status_word_little_endian_on_the_wire",
+  "title": "The RC sends the status as little endian bit field (SDK) - GetDword + DwordToRaStatusWord.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-009",
+  "test": "tests/unit/functions/test_convert_misc.py::test_rc_supported_functions_mapping",
+  "title": "Rc supported functions mapping",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-010",
+  "test": "tests/unit/functions/test_convert_misc.py::test_axis_bytes",
+  "title": "Axis bytes",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-011",
+  "test": "tests/unit/functions/test_convert_misc.py::test_fragment_action_roundtrip",
+  "title": "Fragment action roundtrip",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-012",
+  "test": "tests/unit/functions/test_convert_misc.py::test_optional_cyclic_telegram_numbers",
+  "title": "Optional cyclic telegram numbers",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-013",
+  "test": "tests/unit/functions/test_convert_misc.py::test_arm_config_conversions",
+  "title": "Arm config conversions",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-014",
+  "test": "tests/unit/functions/test_convert_misc.py::test_sync_modes",
+  "title": "Sync modes",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-015",
+  "test": "tests/unit/functions/test_convert_misc.py::test_real_to_percent_int",
+  "title": "Real to percent int",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-016",
+  "test": "tests/unit/functions/test_convert_misc.py::test_percent_conversions",
+  "title": "Percent conversions",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-001",
+  "test": "tests/unit/iec/test_conv.py::test_numeric_conversions",
+  "title": "Numeric conversions",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-002",
+  "test": "tests/unit/iec/test_conv.py::test_real_is_rounded_to_single_precision",
+  "title": "Real is rounded to single precision",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-003",
+  "test": "tests/unit/iec/test_conv.py::test_to_string",
+  "title": "To string",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-004",
+  "test": "tests/unit/iec/test_conv.py::test_trunc",
+  "title": "Trunc",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-005",
+  "test": "tests/unit/iec/test_conv.py::test_unknown_conversion",
+  "title": "Unknown conversion",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-006",
+  "test": "tests/unit/iec/test_parameters_and_fb.py::test_parameter_values",
+  "title": "Parameter values",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-007",
+  "test": "tests/unit/iec/test_parameters_and_fb.py::test_configure_changes_array_sizes",
+  "title": "Configure changes array sizes",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-008",
+  "test": "tests/unit/iec/test_parameters_and_fb.py::test_configure_errors",
+  "title": "Configure errors",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-009",
+  "test": "tests/unit/iec/test_parameters_and_fb.py::test_function_block_initialisation_order",
+  "title": "Codesys: all variables first, then FB_init of the base, then FB_init of the derived FB.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-010",
+  "test": "tests/unit/iec/test_parameters_and_fb.py::test_new_instance_of_struct_members",
+  "title": "New instance of struct members",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-011",
+  "test": "tests/unit/iec/test_rt.py::test_wrap",
+  "title": "Wrap",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-012",
+  "test": "tests/unit/iec/test_rt.py::test_integer_division_truncates_towards_zero",
+  "title": "Integer division truncates towards zero",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-013",
+  "test": "tests/unit/iec/test_rt.py::test_integer_division_by_zero",
+  "title": "Integer division by zero",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-014",
+  "test": "tests/unit/iec/test_rt.py::test_for_end_value",
+  "title": "For end value",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-015",
+  "test": "tests/unit/iec/test_rt.py::test_st_range",
+  "title": "St range",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-016",
+  "test": "tests/unit/iec/test_rt.py::test_rol_ror",
+  "title": "Rol ror",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-017",
+  "test": "tests/unit/iec/test_rt.py::test_bounds",
+  "title": "Bounds",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-018",
+  "test": "tests/unit/iec/test_rt.py::test_limit_min_max",
+  "title": "Limit min max",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-019",
+  "test": "tests/unit/iec/test_rt.py::test_string_functions",
+  "title": "String functions",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-020",
+  "test": "tests/unit/iec/test_rt.py::test_is_valid_real",
+  "title": "Is valid real",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-021",
+  "test": "tests/unit/iec/test_rt.py::test_new_value",
+  "title": "New value",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-022",
+  "test": "tests/unit/iec/test_rt.py::test_copy_into_keeps_identity_and_copies_deep",
+  "title": "Copy into keeps identity and copies deep",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-023",
+  "test": "tests/unit/iec/test_rt.py::test_copy_into_base_type_from_derived",
+  "title": "``_cmdHeader := _command`` (derived structure assigned to its base).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-024",
+  "test": "tests/unit/iec/test_rt.py::test_copy_into_arrays",
+  "title": "Copy into arrays",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-025",
+  "test": "tests/unit/iec/test_rt.py::test_copy_value_is_deep",
+  "title": "Copy value is deep",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-026",
+  "test": "tests/unit/iec/test_rt.py::test_mem_image_layout_pack1_little_endian",
+  "title": "Mem image layout pack1 little endian",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-027",
+  "test": "tests/unit/iec/test_rt.py::test_mem_image_string_and_bool",
+  "title": "Mem image string and bool",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-028",
+  "test": "tests/unit/iec/test_rt.py::test_pointer_read_write_through_offsets",
+  "title": "Pointer read write through offsets",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-029",
+  "test": "tests/unit/iec/test_rt.py::test_pointer_to_member_and_element",
+  "title": "Pointer to member and element",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-030",
+  "test": "tests/unit/iec/test_rt.py::test_pointer_scalar_access",
+  "title": "Pointer scalar access",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-031",
+  "test": "tests/unit/iec/test_rt.py::test_mem_read_into_local",
+  "title": "Mem read into local",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-032",
+  "test": "tests/unit/iec/test_rt.py::test_memcpy_memset_memcmp_fast_and_byte_paths",
+  "title": "Memcpy memset memcmp fast and byte paths",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-033",
+  "test": "tests/unit/iec/test_rt.py::test_memcmp_nan_uses_byte_image",
+  "title": "Memcmp nan uses byte image",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-034",
+  "test": "tests/unit/iec/test_rt.py::test_memset_resets_pointers_and_instances",
+  "title": "Memset resets pointers and instances",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-035",
+  "test": "tests/unit/iec/test_rt.py::test_sizeof_value_of_variable_arrays",
+  "title": "Sizeof value of variable arrays",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-036",
+  "test": "tests/unit/iec/test_timers.py::test_clock_context",
+  "title": "Clock context",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-037",
+  "test": "tests/unit/iec/test_timers.py::test_ton",
+  "title": "Ton",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-038",
+  "test": "tests/unit/iec/test_timers.py::test_ton_zero_pt_and_changed_pt",
+  "title": "Ton zero pt and changed pt",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-039",
+  "test": "tests/unit/iec/test_timers.py::test_tof",
+  "title": "Tof",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-040",
+  "test": "tests/unit/iec/test_timers.py::test_tp",
+  "title": "Tp",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-041",
+  "test": "tests/unit/iec/test_timers.py::test_edges",
+  "title": "Edges",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-IEC-042",
+  "test": "tests/unit/iec/test_timers.py::test_set_and_check_timeout",
+  "title": "Set and check timeout",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-001",
+  "test": "tests/unit/runtime/test_runner.py::test_step_order_exchange_then_program",
+  "title": "Step order exchange then program",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-002",
+  "test": "tests/unit/runtime/test_runner.py::test_callable_program_and_clock_context",
+  "title": "Callable program and clock context",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-003",
+  "test": "tests/unit/runtime/test_runner.py::test_transport_error_keeps_last_input",
+  "title": "Transport error keeps last input",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-004",
+  "test": "tests/unit/runtime/test_runner.py::test_error_context",
+  "title": "Error context",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-005",
+  "test": "tests/unit/runtime/test_runner.py::test_fixed_period_without_drift",
+  "title": "Fixed period without drift",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-006",
+  "test": "tests/unit/runtime/test_runner.py::test_overrun_skips_missed_slots",
+  "title": "Overrun skips missed slots",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-007",
+  "test": "tests/unit/runtime/test_runner.py::test_lifesign_warning",
+  "title": "Lifesign warning",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-008",
+  "test": "tests/unit/runtime/test_runner.py::test_timers_in_program_use_runner_clock",
+  "title": "Timers in program use runner clock",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-009",
+  "test": "tests/unit/runtime/test_runner.py::test_calls_from_other_threads",
+  "title": "Calls from other threads",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-010",
+  "test": "tests/unit/runtime/test_runner.py::test_exception_in_program_is_raised_by_stop",
+  "title": "Exception in program is raised by stop",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-RUN-011",
+  "test": "tests/unit/runtime/test_runner.py::test_real_time_run_over_tcp",
+  "title": "10 ms cycle against the gateway simulator on localhost.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TR-001",
+  "test": "tests/unit/transport/test_transports.py::test_loopback_exchange_and_statistics",
+  "title": "Loopback exchange and statistics",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TR-002",
+  "test": "tests/unit/transport/test_transports.py::test_loopback_checks_sizes",
+  "title": "Loopback checks sizes",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TR-003",
+  "test": "tests/unit/transport/test_transports.py::test_context_manager",
+  "title": "Context manager",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TR-004",
+  "test": "tests/unit/transport/test_transports.py::test_reconnect_policy_backoff",
+  "title": "Reconnect policy backoff",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TR-005",
+  "test": "tests/unit/transport/test_transports.py::test_fault_errors",
+  "title": "Fault errors",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TR-006",
+  "test": "tests/unit/transport/test_transports.py::test_fault_corrupt_and_stale",
+  "title": "Fault corrupt and stale",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TR-007",
+  "test": "tests/unit/transport/test_transports.py::test_random_faults_are_reproducible",
+  "title": "Random faults are reproducible",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-001",
+  "test": "tests/unit/types/test_generated_types.py::test_generated_files_up_to_date",
+  "title": "Generated files up to date",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-002",
+  "test": "tests/unit/types/test_generated_types.py::test_generator_is_deterministic",
+  "title": "Generator is deterministic",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-003",
+  "test": "tests/unit/types/test_generated_types.py::test_counts_match_xml",
+  "title": "Counts match xml",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-004",
+  "test": "tests/unit/types/test_generated_types.py::test_every_xml_type_is_generated",
+  "title": "Every xml type is generated",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-005",
+  "test": "tests/unit/types/test_generated_types.py::test_enum_values_match_xml_and_fit_base",
+  "title": "Enum values match xml and fit base",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-006",
+  "test": "tests/unit/types/test_generated_types.py::test_enum_spot_checks",
+  "title": "Enum spot checks",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-007",
+  "test": "tests/unit/types/test_generated_types.py::test_struct_layout_matches_dataclass",
+  "title": "Struct layout matches dataclass",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-008",
+  "test": "tests/unit/types/test_generated_types.py::test_defaults_match_iec_types",
+  "title": "Defaults match iec types",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-009",
+  "test": "tests/unit/types/test_generated_types.py::test_defaults_are_independent",
+  "title": "Defaults are independent",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-010",
+  "test": "tests/unit/types/test_generated_types.py::test_type_hints_resolve",
+  "title": "Type hints resolve",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-011",
+  "test": "tests/unit/types/test_generated_types.py::test_struct_spot_checks",
+  "title": "Struct spot checks",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-012",
+  "test": "tests/unit/types/test_generated_types.py::test_constants",
+  "title": "Constants",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-013",
+  "test": "tests/unit/types/test_generated_types.py::test_xml_source_is_documented",
+  "title": "Xml source is documented",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-014",
+  "test": "tests/unit/types/test_iec_array.py::test_st_indices",
+  "title": "St indices",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-015",
+  "test": "tests/unit/types/test_iec_array.py::test_out_of_range",
+  "title": "Out of range",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-016",
+  "test": "tests/unit/types/test_iec_array.py::test_fixed_length",
+  "title": "Fixed length",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-017",
+  "test": "tests/unit/types/test_iec_array.py::test_copy_keeps_bounds",
+  "title": "Copy keeps bounds",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-018",
+  "test": "tests/unit/types/test_iec_misc.py::test_sizeof_pack_mode_1",
+  "title": "Sizeof pack mode 1",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-019",
+  "test": "tests/unit/types/test_iec_misc.py::test_bits_and_ranges",
+  "title": "Bits and ranges",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TYP-020",
+  "test": "tests/unit/types/test_iec_misc.py::test_enum_accepts_undefined_values_of_the_base_type",
+  "title": "Enum accepts undefined values of the base type",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-001",
+  "test": "tests/unit/tools/test_iec_literal.py::test_to_python",
+  "title": "To python",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-002",
+  "test": "tests/unit/tools/test_iec_literal.py::test_time_units",
+  "title": "Time units",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-003",
+  "test": "tests/unit/tools/test_iec_literal.py::test_invalid",
+  "title": "Invalid",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-004",
+  "test": "tests/unit/tools/test_overrides.py::test_srci_version_is_1_5",
+  "title": "Srci version is 1 5",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-005",
+  "test": "tests/unit/tools/test_overrides.py::test_overrides_apply_and_are_documented",
+  "title": "Overrides apply and are documented",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-006",
+  "test": "tests/unit/tools/test_overrides.py::test_obsolete_override_fails",
+  "title": "Obsolete override fails",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-007",
+  "test": "tests/unit/tools/test_overrides.py::test_unknown_target_fails",
+  "title": "Unknown target fails",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-008",
+  "test": "tests/unit/tools/test_sdk_custom_report.py::test_paired_and_documented",
+  "title": "Paired and documented",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-009",
+  "test": "tests/unit/tools/test_sdk_custom_report.py::test_undocumented_block",
+  "title": "Undocumented block",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-010",
+  "test": "tests/unit/tools/test_sdk_custom_report.py::test_unpaired_markers",
+  "title": "Unpaired markers",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-011",
+  "test": "tests/unit/tools/test_st2py.py::test_literals",
+  "title": "Literals",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-012",
+  "test": "tests/unit/tools/test_st2py.py::test_comments_and_pragmas_are_tokens",
+  "title": "Comments and pragmas are tokens",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-013",
+  "test": "tests/unit/tools/test_st2py.py::test_expression_precedence",
+  "title": "Expression precedence",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-014",
+  "test": "tests/unit/tools/test_st2py.py::test_postfix_expressions",
+  "title": "Postfix expressions",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-015",
+  "test": "tests/unit/tools/test_st2py.py::test_statements_and_comments",
+  "title": "Statements and comments",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-016",
+  "test": "tests/unit/tools/test_st2py.py::test_parse_errors",
+  "title": "Parse errors",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-017",
+  "test": "tests/unit/tools/test_st2py.py::test_interface_declarations",
+  "title": "Interface declarations",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-018",
+  "test": "tests/unit/tools/test_st2py.py::test_integer_wrap_and_division",
+  "title": "Integer wrap and division",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-019",
+  "test": "tests/unit/tools/test_st2py.py::test_non_short_circuit_and",
+  "title": "Non short circuit and",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-020",
+  "test": "tests/unit/tools/test_st2py.py::test_case_ranges_and_else",
+  "title": "Case ranges and else",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-021",
+  "test": "tests/unit/tools/test_st2py.py::test_case_on_enum",
+  "title": "Case on enum",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-022",
+  "test": "tests/unit/tools/test_st2py.py::test_for_loop_variable_after_loop",
+  "title": "For loop variable after loop",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-023",
+  "test": "tests/unit/tools/test_st2py.py::test_while_repeat_return",
+  "title": "While repeat return",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-024",
+  "test": "tests/unit/tools/test_st2py.py::test_strings_are_truncated",
+  "title": "Strings are truncated",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-025",
+  "test": "tests/unit/tools/test_st2py.py::test_struct_assignment_copies_and_input_copy",
+  "title": "Struct assignment copies and input copy",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-026",
+  "test": "tests/unit/tools/test_st2py.py::test_inout_struct_is_a_reference",
+  "title": "Inout struct is a reference",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-027",
+  "test": "tests/unit/tools/test_st2py.py::test_bit_access_and_enum_coercion",
+  "title": "Bit access and enum coercion",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-028",
+  "test": "tests/unit/tools/test_st2py.py::test_ref_alias_for_scalars",
+  "title": "Ref alias for scalars",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-029",
+  "test": "tests/unit/tools/test_st2py.py::test_fb_inputs_are_kept_between_calls_and_super",
+  "title": "Fb inputs are kept between calls and super",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-030",
+  "test": "tests/unit/tools/test_st2py.py::test_properties",
+  "title": "Properties",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-031",
+  "test": "tests/unit/tools/test_st2py.py::test_pointer_to_fb_and_null",
+  "title": "Pointer to fb and null",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-032",
+  "test": "tests/unit/tools/test_st2py.py::test_memory_functions_on_locals",
+  "title": "Memory functions on locals",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-033",
+  "test": "tests/unit/tools/test_st2py.py::test_sizeof_and_chained_assignment",
+  "title": "Sizeof and chained assignment",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-034",
+  "test": "tests/unit/tools/test_st2py.py::test_unknown_names_are_errors",
+  "title": "Unknown names are errors",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-035",
+  "test": "tests/unit/tools/test_st2py.py::test_source_patches",
+  "title": "Source patches",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-036",
+  "test": "tests/unit/tools/test_st2py.py::test_all_patches_applied",
+  "title": "All patches applied",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-037",
+  "test": "tests/unit/tools/test_st2py.py::test_mixin_methods_exist",
+  "title": "Mixin methods exist",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-038",
+  "test": "tests/unit/tools/test_st2py.py::test_generated_files_are_up_to_date",
+  "title": "Generated files are up to date",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-039",
+  "test": "tests/unit/tools/test_st2py.py::test_every_function_block_can_be_called",
+  "title": "Smoke test: create each FB and call it with a fresh AxesGroup (nothing executed).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-040",
+  "test": "tests/unit/tools/test_st2py_f28.py::test_f28_list_matches_the_generated_code",
+  "title": "F28 list matches the generated code",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-041",
+  "test": "tests/unit/tools/test_st2py_f28.py::test_write_tool_data_sends_tool_no",
+  "title": "ToolNo is the last payload parameter but the first element of _command.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-042",
+  "test": "tests/unit/tools/test_st_drift.py::test_units_and_hash_ignore_line_endings",
+  "title": "Units and hash ignore line endings",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-043",
+  "test": "tests/unit/tools/test_st_drift.py::test_report_and_update",
+  "title": "Report and update",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-044",
+  "test": "tests/unit/tools/test_st_drift.py::test_missing_unit_is_reported",
+  "title": "Missing unit is reported",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-045",
+  "test": "tests/unit/tools/test_test_report.py::test_every_test_has_an_id",
+  "title": "The registry tests/testcases.json is up to date (python -m tools.test_report update).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-046",
+  "test": "tests/unit/tools/test_test_report.py::test_ids_are_unique_and_stable",
+  "title": "Ids are unique and stable",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-047",
+  "test": "tests/unit/tools/test_test_report.py::test_pattern_id_and_reference_from_the_docstring",
+  "title": "Pattern id and reference from the docstring",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-048",
+  "test": "tests/unit/tools/test_test_report.py::test_report_from_results",
+  "title": "Report from results",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-049",
+  "test": "tests/unit/tools/test_test_report.py::test_findings_are_read_from_st_findings",
+  "title": "Findings are read from st findings",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-001",
+  "test": "tests/unit/test_logging_bridge.py::test_levels",
+  "title": "Levels",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-002",
+  "test": "tests/unit/test_logging_bridge.py::test_system_log_of_a_function_block",
+  "title": "System log of a function block",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-003",
+  "test": "tests/unit/test_logging_bridge.py::test_rc_messages_are_forwarded",
+  "title": "Rc messages are forwarded",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-004",
+  "test": "tests/unit/test_package.py::test_version_and_profile",
+  "title": "Version and profile",
+  "refs": [],
+  "status": "active"
+ }
+]
