@@ -1,0 +1,102 @@
+"""SRCI constants and library parameters - generated from the PLC library, DO NOT EDIT.
+
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 6d064f48fb9cb9c5)
+Regenerate with ``python -m tools.plcopen_gen``.
+"""
+# ruff: noqa
+# fmt: off
+from __future__ import annotations
+
+from typing import Final
+
+from srci.types import iec as _iec
+from srci.types._generated import enums as _e
+from srci.types._generated.structs import *  # noqa: F403
+
+__all__ = [
+    'RobotLibraryConstants',
+    'RobotLibraryDefines',
+    'RobotLibraryParameter',
+]
+
+
+class RobotLibraryConstants:
+    """Global variable list RobotLibraryConstants of the PLC library."""
+    SRCIVersion: Final[VersionStruct] = VersionStruct(MajorVersion=1, MinorVersion=3, PatchVersion=0)
+    """
+    Version of SRCI specification Bit 0-4 : Minor version = Features (0..31) Bit 5-7 : Major version
+    = Breaking change (0..07)
+    """
+    PLCLibraryVersion: Final[VersionStruct] = VersionStruct(MajorVersion=0, MinorVersion=0, PatchVersion=49)
+    """Version of the PLC library"""
+    AXES_GROUP_ID_MIN: Final[int] = 0
+    """Minimal axes group ID"""
+    AXES_GROUP_ID_MAX: Final[int] = 15
+    """Maximal axes groups ID"""
+    OK: Final[int] = 0
+    """OK = 0"""
+    RUNNING: Final[int] = 1
+    """Running = 1"""
+    HAS_ERROR: Final[int] = -1
+    """HasError = -1"""
+    XNULL: Final[int] = 0
+    """Null pointer"""
+    NULL_POINTER: Final[object | None] = None
+    """Null pointer"""
+    REAL_CONVERSION_FACTOR: Final[float] = 100.0
+    """Real conversion factor ( REAL * 100 -> TO_INT )"""
+    ACTIVE_CMD: Final[int] = 1
+    """Active command"""
+    BUFFER_CMD: Final[int] = 2
+    """Buffered command"""
+    MAX_ADD_TEXT_LENGTH: Final[int] = 40
+    """Maximal length of additional text"""
+
+
+class RobotLibraryDefines:
+    """Global variable list RobotLibraryDefines of the PLC library."""
+    MaxTypeNameLength: Final[int] = 0
+    """Maximal length of type name"""
+
+
+class RobotLibraryParameter:
+    """Global variable list RobotLibraryParameter of the PLC library."""
+    TOOL_MAX: Final[int] = 16
+    """Maximal amount of tools"""
+    FRAME_MAX: Final[int] = 16
+    """Maximal amount of frames"""
+    LOAD_MAX: Final[int] = 16
+    """Maximal amount of loads"""
+    WORK_AREAS_MAX: Final[int] = 16
+    """Maximal amount of work areas"""
+    SYSTEM_LOG_MAX: Final[int] = 32
+    """Maximal amount of system logs"""
+    MESSAGE_LOG_MAX: Final[int] = 100
+    """Maximal amount of message logs"""
+    MESSAGE_TEXT_LEN: Final[int] = 255
+    """Maximum string length for message texts"""
+    LIST_ENTRIES_MAX: Final[int] = 100
+    """Maximal amount of List entries"""
+    PARAMETER_PAYLOAD_MAX: Final[int] = 255
+    """Maximal amount of bytes for the parameter payload"""
+    RESPONSE_PAYLOAD_MAX: Final[int] = 255
+    """Maximal amount of bytes for the response payload"""
+    SUB_PROGRAM_DATA_MAX: Final[int] = 189
+    """Maximal amount of bytes that can be exchanged with the sub program on the RC"""
+    SPLINE_DATA_MAX: Final[int] = 64
+    """Maximal amount of spline data"""
+    ACTIVE_CMD_REGISTER_ENTRIES_MAX: Final[int] = 50
+    """Maximal amount of entries in the Active Command Register"""
+    MESSAGE_CODES_MAX: Final[int] = 15
+    """Maximal amount of message codes"""
+    FRAGMENT_MAX: Final[int] = 9
+    """Maximal amount of fragments"""
+    SWAP_BYTE_ORDER: Final[bool] = True
+    """Flag to indicate that the byte order must be changed"""
+    INVALID_FRAMES_CHECK_TIMEOUT: Final[int] = 60000
+    """Timeout for checking for invalid frames"""
+    ACR_USAGE_WARNING_LIMIT: Final[float] = 80.0
+    """Warning limit for ACR registers running low"""
+
+
+_ = _iec  # keep import for type descriptors
