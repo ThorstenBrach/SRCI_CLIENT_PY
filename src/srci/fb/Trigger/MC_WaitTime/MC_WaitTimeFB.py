@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_WaitTimeFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-01
+#
+#  Description:
+#    Set wait command between motion commands
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Set wait command between motion commands
 
 ST-Source: POUs/Trigger/MC_WaitTime/MC_WaitTimeFB.st

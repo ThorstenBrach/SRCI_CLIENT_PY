@@ -1,3 +1,27 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_RobotTaskFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-01
+#
+#  Description:
+#    Handles multiple mechanisms required for operation of the interface. For maximal
+#    performance, this FB must be called after the function FB's, so that the data can be
+#    written to the fieldbus in the same cycle as the start of FB occours
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Handles multiple mechanisms required for operation of the interface. For maximal performance, this FB must be called after the function FB's, so that the data can be written to the fieldbus in the same cycle as the start of FB occours
 
 ST-Source: POUs/General/MC_RobotTask/MC_RobotTaskFB.st

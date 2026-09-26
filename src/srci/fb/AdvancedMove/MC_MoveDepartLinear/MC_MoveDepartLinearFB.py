@@ -1,3 +1,26 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_MoveDepartLinearFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-01
+#
+#  Description:
+#    Linear Move from actual position to destination through auxiliary position, defined by
+#    offset in all dimensions (movement to target position linear)
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Linear Move from actual position to destination through auxiliary position, defined by offset in all dimensions (movement to target position linear)
 
 ST-Source: POUs/AdvancedMove/MC_MoveDepartLinear/MC_MoveDepartLinearFB.st

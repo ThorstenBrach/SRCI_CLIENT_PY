@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      tools.plcopen_gen.emitter
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    Emit Python source code for the generated SRCI types.
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Emit Python source code for the generated SRCI types."""
 
 from __future__ import annotations
@@ -9,6 +31,8 @@ from dataclasses import dataclass
 from enum import EnumMeta, IntEnum
 from types import SimpleNamespace
 from typing import Any
+
+from tools.file_header import GENERATED_DATE, render
 
 from .iec_literal import LiteralError, to_python
 from .model import (
@@ -391,6 +415,8 @@ class Generator:
 
     def header(self, what: str) -> str:
         return (
+            render(f"srci.types ({what})", GENERATED_DATE, f"SRCI {what}, generated from the PLC library")
+            + "\n"
             f'"""SRCI {what} - generated from the PLC library, DO NOT EDIT.\n\n'
             f"{self.source_note}\n"
             'Regenerate with ``python -m tools.plcopen_gen``.\n"""\n'

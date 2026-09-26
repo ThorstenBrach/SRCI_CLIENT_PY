@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_ActivateWorkAreaFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-01
+#
+#  Description:
+#    Enable/Disable work areas of RC and check if TCP is inside/outside of active work area
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Enable/Disable work areas of RC and check if TCP is inside/outside of active work area
 
 ST-Source: POUs/WorkAreas/MC_ActivateWorkArea/MC_ActivateWorkAreaFB.st

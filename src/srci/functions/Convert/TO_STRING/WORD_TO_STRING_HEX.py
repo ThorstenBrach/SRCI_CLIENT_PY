@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      WORD_TO_STRING_HEX
+#  Author:      Thorsten Brach
+#  Date:        2024-12-13
+#
+#  Description:
+#
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """WORD_TO_STRING_HEX
 
 ST-Source: Functions/Convert/TO_STRING/WORD_TO_STRING_HEX.st

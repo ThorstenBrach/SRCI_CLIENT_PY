@@ -38,7 +38,7 @@ Source = "https://github.com/ThorstenBrach/SRCI_CLIENT_PY"
 packages = ["src/srci"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/srci", "examples", "docs", "README.md", "LICENSE", "pyproject.toml"]
+include = ["src/srci", "examples", "docs", "README.md", "CHANGELOG.md", "LICENSE", "pyproject.toml"]
 
 # ---------------------------------------------------------------- ruff
 [tool.ruff]

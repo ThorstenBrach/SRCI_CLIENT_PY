@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      tools.st2py.module
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    Emit a complete Python module for a POU.
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Emit a complete Python module for a POU."""
 
 from __future__ import annotations
@@ -5,6 +27,7 @@ from __future__ import annotations
 import ast as py
 from collections.abc import Iterator
 
+from tools.file_header import render, st_fields
 from tools.plcopen_gen.emitter import py_name
 
 from . import ast as A
@@ -143,7 +166,9 @@ class ModuleEmitter(PouEmitter):
 
     def module_header(self) -> str:
         doc = (" ".join(self.pou.header.doc) or self.pou.name).replace("\\", "\\\\").replace('"', '\\"')
+        author, date = st_fields(self.pou.decl)
         lines = [
+            render(self.pou.name, date, " ".join(self.pou.header.doc), author),
             f'"""{doc}',
             "",
             f"ST-Source: {self.pou.st_path}",

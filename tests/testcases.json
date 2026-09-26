@@ -2328,6 +2328,55 @@
   "status": "active"
  },
  {
+  "id": "UT-TOOL-058",
+  "test": "tests/unit/tools/test_file_header.py::test_render_like_the_st_header",
+  "title": "Render like the st header",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-059",
+  "test": "tests/unit/tools/test_file_header.py::test_author_and_date_from_the_st_source",
+  "title": "Author and date from the st source",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-060",
+  "test": "tests/unit/tools/test_file_header.py::test_add_header_keeps_the_content",
+  "title": "Add header keeps the content",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-061",
+  "test": "tests/unit/tools/test_file_header.py::test_every_python_file_has_the_header",
+  "title": "Every python file has the header",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-062",
+  "test": "tests/unit/tools/test_release_notes.py::test_section_of_a_version",
+  "title": "Section of a version",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-063",
+  "test": "tests/unit/tools/test_release_notes.py::test_tag_must_match_the_package_version",
+  "title": "Tag must match the package version",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-064",
+  "test": "tests/unit/tools/test_release_notes.py::test_package_version_is_the_one_of_srci",
+  "title": "Package version is the one of srci",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-PKG-001",
   "test": "tests/unit/test_logging_bridge.py::test_levels",
   "title": "Levels",

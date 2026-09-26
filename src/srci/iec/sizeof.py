@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      srci.iec.sizeof
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    ``SIZEOF`` for the generated types (``pack_mode 1`` like in the PLC library).
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """``SIZEOF`` for the generated types (``pack_mode 1`` like in the PLC library)."""
 
 from __future__ import annotations

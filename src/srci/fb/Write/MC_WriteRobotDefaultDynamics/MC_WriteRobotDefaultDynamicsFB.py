@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_WriteRobotDefaultDynamicsFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-01
+#
+#  Description:
+#    Write default values of dynamic parameters used by move commands
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Write default values of dynamic parameters used by move commands
 
 ST-Source: POUs/Write/MC_WriteRobotDefaultDynamics/MC_WriteRobotDefaultDynamicsFB.st

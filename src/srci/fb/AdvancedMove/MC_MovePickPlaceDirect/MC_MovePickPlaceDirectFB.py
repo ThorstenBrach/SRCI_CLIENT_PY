@@ -1,3 +1,26 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_MovePickPlaceDirectFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-01
+#
+#  Description:
+#    Commands interpolated movement of robot arm on a partly undefined path from actual
+#    position
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Commands interpolated movement of robot arm on a partly undefined path from actual position
 
 ST-Source: POUs/AdvancedMove/MC_MovePickPlaceDirect/MC_MovePickPlaceDirectFB.st

@@ -1,3 +1,26 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_MoveDepartDirectFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-01
+#
+#  Description:
+#    Direct Move from actual position to destination through auxiliary position defined by
+#    offset in all dimensions (movement to the target position PTP)
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Direct Move from actual position to destination through auxiliary position defined by offset in all dimensions (movement to the target position PTP)
 
 ST-Source: POUs/AdvancedMove/MC_MoveDepartDirect/MC_MoveDepartDirectFB.st

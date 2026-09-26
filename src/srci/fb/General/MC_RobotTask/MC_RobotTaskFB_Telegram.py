@@ -1,3 +1,26 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_RobotTaskFB_Telegram
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    Telegram coding of MC_RobotTaskFB: ``CreateSendPayload*``, ``ParseRecvPayload*``,
+#    ``Calculate*``.
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Telegram coding of MC_RobotTaskFB: ``CreateSendPayload*``, ``ParseRecvPayload*``, ``Calculate*``.
 
 ``MC_RobotTaskFB`` of the PLC library has ~9000 lines. The Python port splits it by

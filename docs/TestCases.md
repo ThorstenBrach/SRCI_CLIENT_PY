@@ -36,9 +36,9 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
-| [UT-TOOL](#ut-tool) | Code generators and tools | 57 | 201 |
+| [UT-TOOL](#ut-tool) | Code generators and tools | 64 | 208 |
 | [UT-PKG](#ut-pkg) | Package, logging | 10 | 10 |
-| | **Total** | **338** | **3532** |
+| | **Total** | **345** | **3539** |
 
 ## Test methodology
 
@@ -556,6 +556,13 @@ Code generators and tools
 | UT-TOOL-055 | All passed | 1 | `test_all_passed` |
 | UT-TOOL-056 | Missing file fails | 1 | `test_missing_file_fails` |
 | UT-TOOL-057 | SRCI_REQUIRE_SDK=1: a missing SDK library stops the session (no silent skip in CI). | 1 | `test_require_sdk_fails_without_library` |
+| UT-TOOL-058 | Render like the st header | 1 | `test_render_like_the_st_header` |
+| UT-TOOL-059 | Author and date from the st source | 1 | `test_author_and_date_from_the_st_source` |
+| UT-TOOL-060 | Add header keeps the content | 1 | `test_add_header_keeps_the_content` |
+| UT-TOOL-061 | Every python file has the header | 1 | `test_every_python_file_has_the_header` |
+| UT-TOOL-062 | Section of a version | 1 | `test_section_of_a_version` |
+| UT-TOOL-063 | Tag must match the package version | 1 | `test_tag_must_match_the_package_version` |
+| UT-TOOL-064 | Package version is the one of srci | 1 | `test_package_version_is_the_one_of_srci` |
 
 ## UT-PKG
 

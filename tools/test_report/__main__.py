@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      tools.test_report.__main__
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    Command line of tools.test_report (see the package docstring).
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Command line of tools.test_report (see the package docstring)."""
 
 from __future__ import annotations

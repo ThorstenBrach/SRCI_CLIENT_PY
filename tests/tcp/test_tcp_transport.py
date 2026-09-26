@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      tests.tcp.test_tcp_transport
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    TcpTransport against the PLC gateway simulator (real sockets on localhost).
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """TcpTransport against the PLC gateway simulator (real sockets on localhost)."""
 
 from __future__ import annotations

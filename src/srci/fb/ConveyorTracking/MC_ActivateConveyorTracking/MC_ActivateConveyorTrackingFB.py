@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_ActivateConveyorTrackingFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-11
+#
+#  Description:
+#    Activate conveyor tracking mode
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Activate conveyor tracking mode
 
 ST-Source: POUs/ConveyorTracking/MC_ActivateConveyorTracking/MC_ActivateConveyorTrackingFB.st

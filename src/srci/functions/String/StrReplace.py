@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      StrReplace
+#  Author:      Thorsten Brach
+#  Date:        2024-12-18
+#
+#  Description:
+#    Returns a given string where a given substing is replaced by another substring
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Returns a given string where a given substing is replaced by another substring
 
 ST-Source: Functions/String/StrReplace.st

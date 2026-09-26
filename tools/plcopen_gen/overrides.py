@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      tools.plcopen_gen.overrides
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    Documented deviations from RobotLibrary.xml.
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Documented deviations from RobotLibrary.xml.
 
 Use only for known bugs in the PLC library that are not yet fixed in the XML export.

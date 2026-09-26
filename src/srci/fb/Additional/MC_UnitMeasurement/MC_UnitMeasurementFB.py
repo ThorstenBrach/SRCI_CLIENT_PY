@@ -1,3 +1,26 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_UnitMeasurementFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-01
+#
+#  Description:
+#    Measure the length of objects in the cartesian space, execution time for specified
+#    section of a job or signal output time of a specified signal
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Measure the length of objects in the cartesian space, execution time for specified section of a job or signal output time of a specified signal
 
 ST-Source: POUs/Additional/MC_UnitMeasurement/MC_UnitMeasurementFB.st

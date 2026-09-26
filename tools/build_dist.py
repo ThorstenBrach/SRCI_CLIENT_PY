@@ -1,3 +1,26 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      tools.build_dist
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    Offline build of the wheel and the sdist (``python -m tools.build_dist [--outdir
+#    dist]``).
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Offline build of the wheel and the sdist (``python -m tools.build_dist [--outdir dist]``).
 
 The normal build is ``python -m build`` (backend hatchling, see pyproject.toml). This script
@@ -105,7 +128,7 @@ def build_wheel(outdir: Path, version: str) -> Path:
 def build_sdist(outdir: Path, version: str) -> Path:
     base = f"srci_client-{version}"
     path = outdir / f"{base}.tar.gz"
-    include = ["src/srci", "examples", "docs", "README.md", "LICENSE", "pyproject.toml"]
+    include = ["src/srci", "examples", "docs", "README.md", "CHANGELOG.md", "LICENSE", "pyproject.toml"]
     with tarfile.open(path, "w:gz") as tar:
 
         def add(arcname: str, data: bytes) -> None:

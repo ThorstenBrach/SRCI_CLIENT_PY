@@ -1,3 +1,26 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      srci.api.client
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    ``SrciClient``: run a :class:`RobotProgram` step by step from a sequential Python
+#    script.
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """``SrciClient``: run a :class:`RobotProgram` step by step from a sequential Python script.
 
 A PLC calls its program in a fixed cycle; a Python script wants to write "enable, move,

@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      tools.plcopen_gen.__main__
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    CLI: ``python -m tools.plcopen_gen [--check] [--xml PATH] [--out DIR]``.
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """CLI: ``python -m tools.plcopen_gen [--check] [--xml PATH] [--out DIR]``."""
 
 from __future__ import annotations

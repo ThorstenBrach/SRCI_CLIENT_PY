@@ -1,3 +1,26 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      StrPadRight
+#  Author:      Thorsten Brach
+#  Date:        2024-12-18
+#
+#  Description:
+#    Returns the given string, filled up on the right side to the given total length with the
+#    given substring
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Returns the given string, filled up on the right side to the given total length with the given substring
 
 ST-Source: Functions/String/StrPadRight.st

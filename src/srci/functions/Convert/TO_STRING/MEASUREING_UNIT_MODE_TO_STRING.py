@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MEASUREING_UNIT_MODE_TO_STRING
+#  Author:      Thorsten Brach
+#  Date:        2025-01-24
+#
+#  Description:
+#
+#
+#  Copyright:
+#    (C) 2025 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """MEASUREING_UNIT_MODE_TO_STRING
 
 ST-Source: Functions/Convert/TO_STRING/MEASUREING_UNIT_MODE_TO_STRING.st

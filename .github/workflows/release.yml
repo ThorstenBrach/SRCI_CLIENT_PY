@@ -1,0 +1,42 @@
+name: create release # how it appears in the github UI
+
+# A tag vX.Y.Z (e.g. v0.1.0, v0.2.0rc1) creates a GitHub release with wheel and source package.
+# Before tagging: version in pyproject.toml + src/srci/__init__.py and a section "## [X.Y.Z]" in
+# CHANGELOG.md (the release body). Versions with a/b/rc/dev are published as pre-release.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: 🚀 Github release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]" build
+      - name: Tag = package version, release notes from CHANGELOG.md
+        run: python -m tools.release_notes "${{ github.ref_name }}" > release-notes.md
+      - name: Tests (without the SDK - the SDK tests run in the CI workflow)
+        run: pytest -q
+      - name: Build wheel and source package
+        run: python -m build
+      - name: Pre-release?
+        id: pre
+        run: |
+          python -c "import re,sys; print('prerelease=' + ('true' if re.search(r'(a|b|rc|dev)[0-9]*$', sys.argv[1]) else 'false'))" "${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+      - name: 🚀 Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          body_path: release-notes.md
+          prerelease: ${{ steps.pre.outputs.prerelease == 'true' }}
+          files: |
+            dist/*.whl
+            dist/*.tar.gz

@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_CalculateFrameFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-09
+#
+#  Description:
+#    Calculate frame with three-point method
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Calculate frame with three-point method
 
 ST-Source: POUs/Calculation/MC_CalculateFrame/MC_CalculateFrameFB.st

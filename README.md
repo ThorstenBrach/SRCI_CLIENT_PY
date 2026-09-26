@@ -1,26 +1,45 @@
-# SRCI for Python
+[![CI](https://github.com/ThorstenBrach/SRCI_CLIENT_PY/actions/workflows/ci.yml/badge.svg)](https://github.com/ThorstenBrach/SRCI_CLIENT_PY/actions/workflows/ci.yml)
+[![create release](https://github.com/ThorstenBrach/SRCI_CLIENT_PY/actions/workflows/release.yml/badge.svg)](https://github.com/ThorstenBrach/SRCI_CLIENT_PY/actions/workflows/release.yml)
 
-Python client for the **Standard Robot Command Interface (SRCI)**, profile V1.5.9.
+# Standard Robot Command Interface (SRCI) – Python client
 
-This is a port of the open SRCI PLC library for Codesys/TwinCAT
-([ThorstenBrach/SRCI](https://github.com/ThorstenBrach/SRCI)). Function blocks,
-methods, step numbers and error ids mirror the PLC library 1:1, so that fixes
-can be ported between both implementations (see [docs/PORTING.md](docs/PORTING.md)).
+![SRCI](https://raw.githubusercontent.com/wiki/ThorstenBrach/SRCI/Images/SRCI_Logo_small.png)
 
-> Status: rewrite in progress (branch `rewrite`). The previous experimental port
-> is preserved on branch `legacy` / tag `legacy-v0`.
+**This is an open Python client implementation of the SRCI interface, based on SRCI specification V1.5.9 (Dec 2024).**
 
-## Installation
+The Standard Robot Command Interface (SRCI) is an open, manufacturer-independent standard, designed to enable seamless integration and control of robots in PLC-based automation environments. It provides a consistent communication framework that simplifies the programming and operation of industrial and collaborative robots — regardless of the specific PLC or robot brand involved.
+
+This library brings the SRCI client to Python. Function blocks, parameters, outputs and error IDs are the same as in the open SRCI PLC library for Codesys and TwinCAT ([ThorstenBrach/SRCI](https://github.com/ThorstenBrach/SRCI)), so programs and know-how can be transferred between PLC and Python.
+
+More information about SRCI :
+
+👉 General Info : https://www.profibus.com/technologies/robotics-srci
+
+👉 PLC library and Wiki : https://github.com/ThorstenBrach/SRCI/wiki
+
+# Status
+
+All functions of the SRCI Core Profile are implemented and tested automatically on Linux and Windows with Python 3.12 – 3.14, including tests against a simulated robot controller.
+
+Despite this progress, the software is still some way off from being ready for practical use.
+Tests with real robots and further optimizations are required to ensure the functionality.
+
+# Software delivery
+
+The library is a pure Python package (`srci-client`, import `srci`) without runtime dependencies, Python ≥ 3.12.
+Wheel and source package are attached to every [release](https://github.com/ThorstenBrach/SRCI_CLIENT_PY/releases):
 
 ```bash
-pip install srci_client-<version>-py3-none-any.whl   # wheel built with "python -m build"
-pip install -e .                                     # or from a clone of the repository
+pip install srci_client-<version>-py3-none-any.whl
 ```
 
-The wheel can also be built without any build dependency: `python -m tools.build_dist`
-(writes `dist/`). Python ≥ 3.12, no runtime dependencies.
+or from a clone of the repository:
 
-## Quick start
+```bash
+pip install -e .
+```
+
+# Quick start
 
 ```python
 from srci.api import SrciClient
@@ -28,7 +47,7 @@ from srci.fb import MC_EnableRobotFB, MC_GroupResetFB, MC_MoveAxesAbsoluteFB
 from srci.transport import TcpTransport
 
 with SrciClient(TcpTransport("192.168.0.10", 5000, 256, 256)) as client:
-    client.wait_initialized()  # MC_RobotTaskFB: handshake with the RC
+    client.wait_initialized()  # handshake with the robot controller
     client.execute(MC_GroupResetFB())
     enable = client.enable(MC_EnableRobotFB())
     move = MC_MoveAxesAbsoluteFB()
@@ -37,25 +56,13 @@ with SrciClient(TcpTransport("192.168.0.10", 5000, 256, 256)) as client:
     client.disable(enable)
 ```
 
-* `srci.fb` – all function blocks of the PLC library (`MC_…FB`, same inputs/outputs as in the PLC)
+* `srci.fb` – all function blocks (`MC_…FB`, same inputs and outputs as in the PLC library)
 * `srci.types` – all data types and enums
-* `srci.api.RobotProgram` – RobotTask + user data + command blocks (one "PLC program"),
+* `srci.api.RobotProgram` – RobotTask + user data + function blocks (one "PLC program"),
   `srci.api.SrciClient` – runs it from a sequential script, `srci.runtime.Runner` – cyclic in a thread
 
-**Example:** [examples/core_profile](examples/core_profile) executes every function of the profile
-"Core" and explains the library step by step ([README](examples/core_profile/README.md)).
-
-## How the port is made
-
-The data types, function blocks and functions are **generated** from the PLCopen XML
-export of the PLC library (`third_party/robotlibrary/RobotLibrary.xml`): a small
-ST → Python transpiler (`tools/st2py`) keeps names, step chains and comments of the
-ST code. Only the telegram coding and the send/receive buffers are hand written.
-Deviations (bug fixes) are documented in `tools/st2py/config.py` and
-[docs/ST_FINDINGS.md](docs/ST_FINDINGS.md).
-
-Library parameters (like the library parameters of a Codesys project) are set before
-the first function block is created:
+Library parameters (like the library parameters of a Codesys project) are set before the first
+function block is created:
 
 ```python
 import srci
@@ -63,24 +70,26 @@ import srci
 srci.configure(TOOL_MAX=20, FRAME_MAX=20, LOAD_MAX=20)
 ```
 
-## How it talks to the robot
+**Example:** [examples/core_profile](examples/core_profile) executes every function of the profile
+"Core" and explains the library step by step ([README](examples/core_profile/README.md)).
 
-SRCI is transported over PROFINET. A PLC acts as gateway: it exchanges the
-PROFINET process data with the robot controller and forwards the raw SRCI
-byte array to Python over TCP/IP.
+# How it talks to the robot
+
+SRCI is transported over PROFINET. A PLC acts as gateway: it exchanges the PROFINET process
+data with the robot controller and forwards the raw SRCI telegram to Python over TCP/IP.
 
 ```
 Python (srci)  --TCP, raw telegram-->  PLC gateway  --PROFINET-->  Robot controller
                <--one reply per request--
 ```
 
-* Python is the cycle master: it sends one telegram per cycle, the PLC answers
-  each received telegram with exactly one telegram (lockstep).
-* No extra framing: telegram lengths are fixed by configuration on both sides.
-* The transport is exchangeable (`srci.transport.Transport`); the library core can
-  also be used without any transport (`cycle(in_bytes) -> out_bytes`).
+* Python is the cycle master: it sends one telegram per cycle, the PLC answers each received
+  telegram with exactly one telegram (lockstep).
+* No extra framing: the telegram lengths are fixed by configuration on both sides.
+* The transport is exchangeable (`srci.transport.Transport`); the library core can also be used
+  without any transport (`program.step(in_bytes) -> out_bytes`).
 
-## Development
+# Development
 
 ```bash
 python -m venv .venv
@@ -90,42 +99,27 @@ pip install -e ".[dev]"
 pytest                        # tests
 ruff check . && ruff format --check .
 mypy
-python -m tools.plcopen_gen   # regenerate types from third_party/robotlibrary/RobotLibrary.xml
-python -m tools.st2py         # regenerate function blocks and functions
 ```
 
-### SDK in the loop
+Some tests run against a simulated robot controller that is built from a licensed SRCI SDK. The
+SDK is not part of this repository; without it these tests are skipped.
 
-The SRCI SDK (robot controller side) is licensed and therefore **not** part of this
-repository. It is built locally together with a simulated robot (`srci_py_harness`
-in the private SDK folder) into `srci_sdk_sim.dll/.so`, which the tests load with
-`ctypes`. Default location: `../SRCI SDK/srci_py_harness/bin/`, or set
-`SRCI_SDK_SIM_LIB` / `SRCI_SDK_DIR`.
+Every test has a unique, stable ID; all test cases are described in
+[docs/TestCases.md](docs/TestCases.md). `pytest --tc-report build/test-report` writes a test
+report (Markdown + HTML).
 
-```bash
-pytest -m sdk      # SDK in the loop tests (skipped if the library is missing)
-pytest -m tcp      # tests with local TCP sockets
-```
+Releases are created automatically for tags `vX.Y.Z` (see [CHANGELOG.md](CHANGELOG.md)).
 
-In CI the job `sdk` checks the SDK out of a private repository, builds it and runs these tests
-without showing anything of the SDK in the logs – see [docs/CI_SDK.md](docs/CI_SDK.md).
+# License
 
-### Test cases and test report
+The library is licensed under the MIT license.
 
-Every test has a unique, stable ID (`tests/testcases.json`); all test cases are listed and
-described in [docs/TestCases.md](docs/TestCases.md), known deviations of the PLC library in
-[docs/ST_FINDINGS.md](docs/ST_FINDINGS.md).
+# Disclaimer and Delimitation
 
-```bash
-pytest --tc-report build/test-report    # TestReport.md + TestReport.html (quality evidence)
-python -m tools.test_report update      # assign IDs to new tests
-python -m tools.test_report catalog     # regenerate docs/TestCases.md
-```
+The developed software is based on the SRCI technology of "PROFIBUS and PROFINET International" (PI), but it is not an official publication of PI. It is a privately initiated project, created and currently maintained by me — but it is open to contributors for further development, improvement and ongoing maintenance.
 
-## License
+The use of PI technology only serves to ensure the interoperability and functionality of the SRCI interface. There is no connection or partnership between this project and the PI organization.
 
-MIT – see [LICENSE](LICENSE).
+This project is provided without any guarantee and can be used for private and commercial purposes. Any use is at the user’s own risk and responsibility.
 
-The developed software is based on the SRCI technology of "PROFIBUS and PROFINET
-International" (PI), but it is not an official publication of PI.
-This project is provided without any guarantee. Any use is at the user's own risk.
+[![Donate with PayPal](https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png)](https://www.paypal.com/donate/?hosted_button_id=ERN6VH9WA95J6)

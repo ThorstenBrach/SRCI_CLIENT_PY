@@ -1,3 +1,26 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      MC_MoveDirectAbsoluteFB
+#  Author:      Thorsten Brach
+#  Date:        2024-06-01
+#
+#  Description:
+#    Move Joints to an absolute cartesian position (Absolute cartesian PTP) (Joint
+#    interpolated movement)
+#
+#  Copyright:
+#    (C) 2024 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Move Joints to an absolute cartesian position (Absolute cartesian PTP) (Joint interpolated movement)
 
 ST-Source: POUs/BasicMove/MC_MoveDirectAbsolute/MC_MoveDirectAbsoluteFB.st

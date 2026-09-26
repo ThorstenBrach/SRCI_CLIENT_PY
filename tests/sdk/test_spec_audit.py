@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      tests.sdk.test_spec_audit
+#  Author:      Thorsten Brach
+#  Date:        2026-09-26
+#
+#  Description:
+#    Findings of the specification audit (docs/ST_FINDINGS.md F61 ...) against the SRCI SDK.
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """Findings of the specification audit (docs/ST_FINDINGS.md F61 ...) against the SRCI SDK.
 
 Every test names its finding; the fixes are ST-FIX patches (tools/st2py/config.py) or hand
