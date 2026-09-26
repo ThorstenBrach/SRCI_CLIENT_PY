@@ -2377,6 +2377,27 @@
   "status": "active"
  },
  {
+  "id": "UT-TOOL-065",
+  "test": "tests/unit/tools/test_export_xml.py::test_fixed_xml_contains_every_correction",
+  "title": "Without any correction the generators produce from the fixed XML the same types and function blocks as from the original XML with all corrections.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-066",
+  "test": "tests/unit/tools/test_export_xml.py::test_fixed_xml_keeps_format_and_object_ids",
+  "title": "Fixed xml keeps format and object ids",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-067",
+  "test": "tests/unit/tools/test_export_xml.py::test_fixed_xml_declares_added_variables_twice",
+  "title": "Added variables are in the plain text and in the structured interface.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-PKG-001",
   "test": "tests/unit/test_logging_bridge.py::test_levels",
   "title": "Levels",

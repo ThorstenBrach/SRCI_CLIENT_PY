@@ -134,9 +134,10 @@ def apply_patches(pous: dict[str, Pou], cfg: Config) -> None:
         body._parsed = None
 
 
-def load(xml: Path, cfg: Config) -> tuple[TypeEnv, dict[str, Target]]:
+def load(xml: Path, cfg: Config, overrides: bool = True) -> tuple[TypeEnv, dict[str, Target]]:
     lib = parse_library(xml)
-    apply_overrides(lib)
+    if overrides:  # False: types without the corrections (XML that contains them, see export_xml)
+        apply_overrides(lib)
     digest = hashlib.sha256(xml.read_bytes()).hexdigest()
     gen = Generator(lib, digest)
     pous = load_pous(xml)
@@ -150,8 +151,10 @@ def module_path(module: str) -> Path:
     return SRC / Path(*module.split(".")).with_suffix(".py")
 
 
-def generate(xml: Path, cfg: Config, only: set[str] | None = None) -> tuple[dict[Path, str], list[str]]:
-    env, reg = load(xml, cfg)
+def generate(
+    xml: Path, cfg: Config, only: set[str] | None = None, overrides: bool = True
+) -> tuple[dict[Path, str], list[str]]:
+    env, reg = load(xml, cfg, overrides)
     files: dict[Path, str] = {}
     errors: list[str] = []
     for key, pou in sorted(env.pous.items()):
