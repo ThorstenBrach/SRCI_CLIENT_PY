@@ -5656,11 +5656,6 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if not self.Enable:
                     # Reset active command register
                     AxesGroup.Acyclic.ActiveCommandRegister.Reset()
-                    # ST-FIX F23: the RC is still initialized from the previous enable (ACR, SEQ/ACK)
-                    # -> reset the interface on the RC as well
-                    self._restartReset = AxesGroup.Cyclic.RobToPlc.TelegramState == TelegramState.INITIALIZED
-                    if self._restartReset:
-                        AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESET
                     # reset internal variables
                     self.Reset(AxesGroup=AxesGroup)
                     # Reset step counter

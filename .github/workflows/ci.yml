@@ -20,6 +20,7 @@ jobs:
         run: |
           python -m tools.plcopen_gen --check
           python -m tools.st2py --check
+          python -m tools.st2py.fix_guide --check
       - name: Test case registry and docs/TestCases.md are up to date
         run: python -m tools.test_report check
 

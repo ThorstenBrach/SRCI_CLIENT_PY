@@ -1535,8 +1535,8 @@ CONFIG = Config(
         SourcePatch(
             "MC_RobotTaskFB",
             "OnExecRun",
-            "         AxesGroup.Acyclic.ActiveCommandRegister.Reset();\n",
-            "         AxesGroup.Acyclic.ActiveCommandRegister.Reset();\n"
+            "         // Reset Active command register\n         AxesGroup.Acyclic.ActiveCommandRegister.Reset();\n",
+            "         // Reset Active command register\n         AxesGroup.Acyclic.ActiveCommandRegister.Reset();\n"
             "         // ST-FIX F23: the RC is still initialized from the previous enable (ACR, SEQ/ACK)\n"
             "         // -> reset the interface on the RC as well\n"
             "         _restartReset := AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.INITIALIZED;\n"

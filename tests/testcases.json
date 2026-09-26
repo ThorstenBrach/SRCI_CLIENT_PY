@@ -2062,6 +2062,27 @@
   "status": "active"
  },
  {
+  "id": "UT-TOOL-050",
+  "test": "tests/unit/tools/test_fix_guide.py::test_guide_is_up_to_date",
+  "title": "Regenerate with ``python -m tools.st2py.fix_guide``.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-051",
+  "test": "tests/unit/tools/test_fix_guide.py::test_hand_written_fixes_are_described",
+  "title": "Every ST-FIX of hand written Python has an ST description in fix_guide_manual.md.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-052",
+  "test": "tests/unit/tools/test_fix_guide.py::test_every_step_changes_the_st_text",
+  "title": "Every step changes the st text",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-PKG-001",
   "test": "tests/unit/test_logging_bridge.py::test_levels",
   "title": "Levels",

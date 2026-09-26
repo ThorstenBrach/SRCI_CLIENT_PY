@@ -36,9 +36,9 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
-| [UT-TOOL](#ut-tool) | Code generators and tools | 49 | 193 |
+| [UT-TOOL](#ut-tool) | Code generators and tools | 52 | 196 |
 | [UT-PKG](#ut-pkg) | Package, logging | 4 | 4 |
-| | **Total** | **294** | **3468** |
+| | **Total** | **297** | **3471** |
 
 ## Test methodology
 
@@ -518,6 +518,9 @@ Code generators and tools
 | UT-TOOL-047 | Pattern id and reference from the docstring | 1 | `test_pattern_id_and_reference_from_the_docstring` |
 | UT-TOOL-048 | Report from results | 1 | `test_report_from_results` |
 | UT-TOOL-049 | Findings are read from st findings | 1 | `test_findings_are_read_from_st_findings` |
+| UT-TOOL-050 | Regenerate with ``python -m tools.st2py.fix_guide``. | 1 | `test_guide_is_up_to_date` |
+| UT-TOOL-051 | Every ST-FIX of hand written Python has an ST description in fix_guide_manual.md. | 1 | `test_hand_written_fixes_are_described` |
+| UT-TOOL-052 | Every step changes the st text | 1 | `test_every_step_changes_the_st_text` |
 
 ## UT-PKG
 

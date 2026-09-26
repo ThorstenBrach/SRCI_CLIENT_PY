@@ -3,6 +3,7 @@
 Found while porting. Reference: SRCI profile V1.5.9 (2024-12-04) and the SRCI SDK.
 The Python code marks every deviation with `ST-FIX <id>`; tests in `tests/unit` cover them.
 Status "fixed in Python" means: still to be fixed in the PLC library.
+How to fix them in ST (exact ST diffs, generated from the corrections): [ST_Finding_Solve_Guide.md](ST_Finding_Solve_Guide.md).
 
 | ID | Where (ST) | Problem | Spec / SDK | Python |
 |---|---|---|---|---|
