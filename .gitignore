@@ -32,3 +32,8 @@ sdk_harness/build*/
 *.zip
 Tmp/
 .xfer/
+
+# SRCI SDK is licensed and must NOT be published - it is used from a local path only
+third_party/srci_sdk/
+sdk_harness/
+*SRCI SDK*/

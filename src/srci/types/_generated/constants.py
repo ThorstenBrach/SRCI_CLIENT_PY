@@ -22,10 +22,11 @@ __all__ = [
 
 class RobotLibraryConstants:
     """Global variable list RobotLibraryConstants of the PLC library."""
-    SRCIVersion: Final[VersionStruct] = VersionStruct(MajorVersion=1, MinorVersion=3, PatchVersion=0)
+    SRCIVersion: Final[VersionStruct] = VersionStruct(MajorVersion=1, MinorVersion=5, PatchVersion=0)
     """
     Version of SRCI specification Bit 0-4 : Minor version = Features (0..31) Bit 5-7 : Major version
-    = Breaking change (0..07)
+    = Breaking change (0..07) [Override: PLC library still says 1.3.0, but implements SRCI 1.5 (SDK:
+    SRCI_VERSION 1.5)]
     """
     PLCLibraryVersion: Final[VersionStruct] = VersionStruct(MajorVersion=0, MinorVersion=0, PatchVersion=49)
     """Version of the PLC library"""

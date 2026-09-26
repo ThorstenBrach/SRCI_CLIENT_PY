@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from .emitter import Generator
+from .overrides import apply_overrides
 from .parser import parse_library
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -19,7 +20,9 @@ def generate(xml: Path) -> dict[str, str]:
     """Return ``{file name: source}`` for all generated modules."""
     digest = hashlib.sha256(xml.read_bytes()).hexdigest()
     note = f"Source: third_party/robotlibrary/{xml.name} (sha256 {digest[:16]})"
-    gen = Generator(parse_library(xml), note)
+    lib = parse_library(xml)
+    apply_overrides(lib)
+    gen = Generator(lib, note)
     return {
         "__init__.py": gen.emit_init(),
         "enums.py": gen.emit_enums(),
