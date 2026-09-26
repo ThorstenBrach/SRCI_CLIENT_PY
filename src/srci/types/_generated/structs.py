@@ -616,14 +616,14 @@ __all__ = [
 
 
 @_dataclass(kw_only=True, slots=True)
-class AbortMeasuringInputOutCmd():
+class AbortMeasuringInputOutCmd:
     """AbortMeasuringInputOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class AbortMeasuringInputParCmd():
+class AbortMeasuringInputParCmd:
     """AbortMeasuringInputParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -635,7 +635,7 @@ class AbortMeasuringInputParCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RspHeader():
+class RspHeader:
     """RspHeader"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -663,7 +663,7 @@ class AbortMeasuringInputRecvData(RspHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class CmdHeader():
+class CmdHeader:
     """CmdHeader"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -690,7 +690,7 @@ class AbortMeasuringInputSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ActivateNextCommandOutCmd():
+class ActivateNextCommandOutCmd:
     """ActivateNextCommandOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -709,7 +709,7 @@ class ActivateNextCommandOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ActivateNextCommandParCmd():
+class ActivateNextCommandParCmd:
     """ActivateNextCommandParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -765,14 +765,14 @@ class ActivateNextCommandSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class AvoidSingularityOutCmd():
+class AvoidSingularityOutCmd:
     """AvoidSingularityOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class AvoidSingularityParCmd():
+class AvoidSingularityParCmd:
     """AvoidSingularityParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -801,7 +801,7 @@ class AvoidSingularitySendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class BrakeTestOutCmd():
+class BrakeTestOutCmd:
     """BrakeTestOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -832,7 +832,7 @@ class BrakeTestOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class BrakeTestParCmd():
+class BrakeTestParCmd:
     """BrakeTestParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -897,7 +897,7 @@ class BrakeTestSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class CallSubprogramOutCmd():
+class CallSubprogramOutCmd:
     """CallSubprogramOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -932,7 +932,7 @@ class CallSubprogramOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class CallSubprogramParCmd():
+class CallSubprogramParCmd:
     """CallSubprogramParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1015,14 +1015,14 @@ class CallSubprogramSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class CollisionDetectionOutCmd():
+class CollisionDetectionOutCmd:
     """CollisionDetectionOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class CollisionDetectionParCmd():
+class CollisionDetectionParCmd:
     """CollisionDetectionParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1131,7 +1131,7 @@ class CollisionDetectionSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ExchangeConfigurationOutCmd():
+class ExchangeConfigurationOutCmd:
     """ExchangeConfigurationOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1183,7 +1183,7 @@ class ExchangeConfigurationOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ExchangeConfigurationParCmd():
+class ExchangeConfigurationParCmd:
     """ExchangeConfigurationParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1323,7 +1323,7 @@ class ExchangeConfigurationSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class FreeDriveOutCmd():
+class FreeDriveOutCmd:
     """FreeDriveOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1332,7 +1332,7 @@ class FreeDriveOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class FreeDriveParCmd():
+class FreeDriveParCmd:
     """FreeDriveParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1357,7 +1357,7 @@ class FreeDriveSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MeasuringInputOutCmd():
+class MeasuringInputOutCmd:
     """MeasuringInputOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1371,7 +1371,7 @@ class MeasuringInputOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MeasuringInputParCmd():
+class MeasuringInputParCmd:
     """MeasuringInputParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1423,7 +1423,7 @@ class MeasuringInputSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class OpenBrakeOutCmd():
+class OpenBrakeOutCmd:
     """OpenBrakeOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1443,7 +1443,7 @@ class OpenBrakeOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class OpenBrakeParCmd():
+class OpenBrakeParCmd:
     """OpenBrakeParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1497,14 +1497,14 @@ class OpenBrakeSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class PathAccuracyModeOutCmd():
+class PathAccuracyModeOutCmd:
     """PathAccuracyModeOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class PathAccuracyModeParCmd():
+class PathAccuracyModeParCmd:
     """PathAccuracyModeParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1529,7 +1529,7 @@ class PathAccuracyModeSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadCallSubprogramCyclicOutCmd():
+class ReadCallSubprogramCyclicOutCmd:
     """ReadCallSubprogramCyclicOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1538,14 +1538,14 @@ class ReadCallSubprogramCyclicOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadCallSubprogramCyclicParCmd():
+class ReadCallSubprogramCyclicParCmd:
     """ReadCallSubprogramCyclicParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class ShiftPositionOutCmd():
+class ShiftPositionOutCmd:
     """ShiftPositionOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1554,7 +1554,7 @@ class ShiftPositionOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ShiftPositionParCmd():
+class ShiftPositionParCmd:
     """ShiftPositionParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1643,7 +1643,7 @@ class ShiftPositionSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SoftSwitchTcpOutCmd():
+class SoftSwitchTcpOutCmd:
     """SoftSwitchTcpOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1652,7 +1652,7 @@ class SoftSwitchTcpOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SoftSwitchTcpParCmd():
+class SoftSwitchTcpParCmd:
     """SoftSwitchTcpParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1773,7 +1773,7 @@ class SoftSwitchTcpSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class StopSubprogramOutCmd():
+class StopSubprogramOutCmd:
     """StopSubprogramOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1786,7 +1786,7 @@ class StopSubprogramOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class StopSubprogramParCmd():
+class StopSubprogramParCmd:
     """StopSubprogramParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1867,7 +1867,7 @@ class StopSubprogramSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class UnitMeasurementOutCmd():
+class UnitMeasurementOutCmd:
     """UnitMeasurementOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1890,7 +1890,7 @@ class UnitMeasurementOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class UnitMeasurementParCmd():
+class UnitMeasurementParCmd:
     """UnitMeasurementParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1976,14 +1976,14 @@ class UnitMeasurementSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteCallSubprogramCyclicOutCmd():
+class WriteCallSubprogramCyclicOutCmd:
     """WriteCallSubprogramCyclicOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteCallSubprogramCyclicParCmd():
+class WriteCallSubprogramCyclicParCmd:
     """WriteCallSubprogramCyclicParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -1992,7 +1992,7 @@ class WriteCallSubprogramCyclicParCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveApproachDirectOutCmd():
+class MoveApproachDirectOutCmd:
     """MoveApproachDirectOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -2012,7 +2012,7 @@ class MoveApproachDirectOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveApproachDirectParCmd():
+class MoveApproachDirectParCmd:
     """MoveApproachDirectParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -2231,7 +2231,7 @@ class MoveApproachDirectSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveApproachLinearOutCmd():
+class MoveApproachLinearOutCmd:
     """MoveApproachLinearOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -2251,7 +2251,7 @@ class MoveApproachLinearOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveApproachLinearParCmd():
+class MoveApproachLinearParCmd:
     """MoveApproachLinearParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -2470,7 +2470,7 @@ class MoveApproachLinearSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveAxesRelativeOutCmd():
+class MoveAxesRelativeOutCmd:
     """MoveAxesRelativeOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -2484,7 +2484,7 @@ class MoveAxesRelativeOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveAxesRelativeParCmd():
+class MoveAxesRelativeParCmd:
     """MoveAxesRelativeParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -2639,7 +2639,7 @@ class MoveAxesRelativeSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveCircularAbsoluteOutCmd():
+class MoveCircularAbsoluteOutCmd:
     """MoveCircularAbsoluteOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -2659,7 +2659,7 @@ class MoveCircularAbsoluteOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveCircularAbsoluteParCmd():
+class MoveCircularAbsoluteParCmd:
     """MoveCircularAbsoluteParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -2900,7 +2900,7 @@ class MoveCircularAbsoluteSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveCircularCamOutCmd():
+class MoveCircularCamOutCmd:
     """MoveCircularCamOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -2915,7 +2915,7 @@ class MoveCircularCamOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveCircularCamParCmd():
+class MoveCircularCamParCmd:
     """MoveCircularCamParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -3154,7 +3154,7 @@ class MoveCircularCamSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveCircularRelativeOutCmd():
+class MoveCircularRelativeOutCmd:
     """MoveCircularRelativeOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -3174,7 +3174,7 @@ class MoveCircularRelativeOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveCircularRelativeParCmd():
+class MoveCircularRelativeParCmd:
     """MoveCircularRelativeParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -3413,7 +3413,7 @@ class MoveCircularRelativeSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveDepartDirectOutCmd():
+class MoveDepartDirectOutCmd:
     """MoveDepartDirectOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -3433,7 +3433,7 @@ class MoveDepartDirectOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveDepartDirectParCmd():
+class MoveDepartDirectParCmd:
     """MoveDepartDirectParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -3648,7 +3648,7 @@ class MoveDepartDirectSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveDepartLinearOutCmd():
+class MoveDepartLinearOutCmd:
     """MoveDepartLinearOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -3668,7 +3668,7 @@ class MoveDepartLinearOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveDepartLinearParCmd():
+class MoveDepartLinearParCmd:
     """MoveDepartLinearParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -3883,7 +3883,7 @@ class MoveDepartLinearSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveDirectOffsetOutCmd():
+class MoveDirectOffsetOutCmd:
     """MoveDirectOffsetOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -3903,7 +3903,7 @@ class MoveDirectOffsetOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveDirectOffsetParCmd():
+class MoveDirectOffsetParCmd:
     """MoveDirectOffsetParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -4100,7 +4100,7 @@ class MoveDirectOffsetSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveDirectRelativeOutCmd():
+class MoveDirectRelativeOutCmd:
     """MoveDirectRelativeOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -4120,7 +4120,7 @@ class MoveDirectRelativeOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveDirectRelativeParCmd():
+class MoveDirectRelativeParCmd:
     """MoveDirectRelativeParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -4299,7 +4299,7 @@ class MoveDirectRelativeSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveLinearAbsoluteJOutCmd():
+class MoveLinearAbsoluteJOutCmd:
     """MoveLinearAbsoluteJOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -4319,7 +4319,7 @@ class MoveLinearAbsoluteJOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveLinearAbsoluteJParCmd():
+class MoveLinearAbsoluteJParCmd:
     """MoveLinearAbsoluteJParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -4488,7 +4488,7 @@ class MoveLinearAbsoluteJSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveLinearCamOutCmd():
+class MoveLinearCamOutCmd:
     """MoveLinearCamOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -4503,7 +4503,7 @@ class MoveLinearCamOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveLinearCamParCmd():
+class MoveLinearCamParCmd:
     """MoveLinearCamParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -4682,7 +4682,7 @@ class MoveLinearCamSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveLinearOffsetOutCmd():
+class MoveLinearOffsetOutCmd:
     """MoveLinearOffsetOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -4702,7 +4702,7 @@ class MoveLinearOffsetOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveLinearOffsetParCmd():
+class MoveLinearOffsetParCmd:
     """MoveLinearOffsetParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -4899,7 +4899,7 @@ class MoveLinearOffsetSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveLinearRelativeOutCmd():
+class MoveLinearRelativeOutCmd:
     """MoveLinearRelativeOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -4919,7 +4919,7 @@ class MoveLinearRelativeOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveLinearRelativeParCmd():
+class MoveLinearRelativeParCmd:
     """MoveLinearRelativeParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5104,7 +5104,7 @@ class MoveLinearRelativeSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MovePickPlaceDirectOutCmd():
+class MovePickPlaceDirectOutCmd:
     """MovePickPlaceDirectOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5124,7 +5124,7 @@ class MovePickPlaceDirectOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MovePickPlaceDirectParCmd():
+class MovePickPlaceDirectParCmd:
     """MovePickPlaceDirectParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5363,7 +5363,7 @@ class MovePickPlaceDirectSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MovePickPlaceLinearOutCmd():
+class MovePickPlaceLinearOutCmd:
     """MovePickPlaceLinearOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5383,7 +5383,7 @@ class MovePickPlaceLinearOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MovePickPlaceLinearParCmd():
+class MovePickPlaceLinearParCmd:
     """MovePickPlaceLinearParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5616,14 +5616,14 @@ class MovePickPlaceLinearSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ChangeSpeedOverrideOutCmd():
+class ChangeSpeedOverrideOutCmd:
     """ChangeSpeedOverrideOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class ChangeSpeedOverrideParCmd():
+class ChangeSpeedOverrideParCmd:
     """ChangeSpeedOverrideParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5654,14 +5654,14 @@ class ChangeSpeedOverrideSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class GroupContinueOutCmd():
+class GroupContinueOutCmd:
     """GroupContinueOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class GroupContinueParCmd():
+class GroupContinueParCmd:
     """GroupContinueParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5682,14 +5682,14 @@ class GroupContinueSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class GroupInterruptOutCmd():
+class GroupInterruptOutCmd:
     """GroupInterruptOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class GroupInterruptParCmd():
+class GroupInterruptParCmd:
     """GroupInterruptParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5710,7 +5710,7 @@ class GroupInterruptSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class GroupJogOutCmd():
+class GroupJogOutCmd:
     """GroupJogOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5724,7 +5724,7 @@ class GroupJogOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class GroupJogParCmd():
+class GroupJogParCmd:
     """GroupJogParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5814,14 +5814,14 @@ class GroupJogSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class GroupStopOutCmd():
+class GroupStopOutCmd:
     """GroupStopOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class GroupStopParCmd():
+class GroupStopParCmd:
     """GroupStopParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5842,7 +5842,7 @@ class GroupStopSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveAxesAbsoluteOutCmd():
+class MoveAxesAbsoluteOutCmd:
     """MoveAxesAbsoluteOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -5856,7 +5856,7 @@ class MoveAxesAbsoluteOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveAxesAbsoluteParCmd():
+class MoveAxesAbsoluteParCmd:
     """MoveAxesAbsoluteParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6013,7 +6013,7 @@ class MoveAxesAbsoluteSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveDirectAbsoluteOutCmd():
+class MoveDirectAbsoluteOutCmd:
     """MoveDirectAbsoluteOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6033,7 +6033,7 @@ class MoveDirectAbsoluteOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveDirectAbsoluteParCmd():
+class MoveDirectAbsoluteParCmd:
     """MoveDirectAbsoluteParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6212,7 +6212,7 @@ class MoveDirectAbsoluteSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveLinearAbsoluteOutCmd():
+class MoveLinearAbsoluteOutCmd:
     """MoveLinearAbsoluteOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6232,7 +6232,7 @@ class MoveLinearAbsoluteOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveLinearAbsoluteParCmd():
+class MoveLinearAbsoluteParCmd:
     """MoveLinearAbsoluteParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6420,7 +6420,7 @@ class MoveLinearAbsoluteSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReturnToPrimaryOutCmd():
+class ReturnToPrimaryOutCmd:
     """ReturnToPrimaryOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6439,7 +6439,7 @@ class ReturnToPrimaryOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReturnToPrimaryParCmd():
+class ReturnToPrimaryParCmd:
     """ReturnToPrimaryParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6573,7 +6573,7 @@ class ReturnToPrimarySendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class CalculateCartesianPositionOutCmd():
+class CalculateCartesianPositionOutCmd:
     """CalculateCartesianPositionOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6586,7 +6586,7 @@ class CalculateCartesianPositionOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class CalculateCartesianPositionParCmd():
+class CalculateCartesianPositionParCmd:
     """CalculateCartesianPositionParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6625,7 +6625,7 @@ class CalculateCartesianPositionSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class CalculateForwardKinematicOutCmd():
+class CalculateForwardKinematicOutCmd:
     """CalculateForwardKinematicOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6638,7 +6638,7 @@ class CalculateForwardKinematicOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class CalculateForwardKinematicParCmd():
+class CalculateForwardKinematicParCmd:
     """CalculateForwardKinematicParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6677,7 +6677,7 @@ class CalculateForwardKinematicSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class CalculateFrameOutCmd():
+class CalculateFrameOutCmd:
     """CalculateFrameOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6695,7 +6695,7 @@ class CalculateFrameOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class CalculateFrameParCmd():
+class CalculateFrameParCmd:
     """CalculateFrameParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6784,7 +6784,7 @@ class CalculateFrameSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class CalculateInverseKinematicOutCmd():
+class CalculateInverseKinematicOutCmd:
     """CalculateInverseKinematicOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6793,7 +6793,7 @@ class CalculateInverseKinematicOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class CalculateInverseKinematicParCmd():
+class CalculateInverseKinematicParCmd:
     """CalculateInverseKinematicParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6828,7 +6828,7 @@ class CalculateInverseKinematicSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class CalculateToolOutCmd():
+class CalculateToolOutCmd:
     """CalculateToolOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6847,7 +6847,7 @@ class CalculateToolOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class CalculateToolParCmd():
+class CalculateToolParCmd:
     """CalculateToolParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6902,7 +6902,7 @@ class CalculateToolSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class LoadMeasurementAutomaticOutCmd():
+class LoadMeasurementAutomaticOutCmd:
     """LoadMeasurementAutomaticOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -6915,7 +6915,7 @@ class LoadMeasurementAutomaticOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class LoadMeasurementAutomaticParCmd():
+class LoadMeasurementAutomaticParCmd:
     """LoadMeasurementAutomaticParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7004,7 +7004,7 @@ class LoadMeasurementAutomaticSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class LoadMeasurementSequentialOutCmd():
+class LoadMeasurementSequentialOutCmd:
     """LoadMeasurementSequentialOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7017,7 +7017,7 @@ class LoadMeasurementSequentialOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class LoadMeasurementSequentialParCmd():
+class LoadMeasurementSequentialParCmd:
     """LoadMeasurementSequentialParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7052,7 +7052,7 @@ class LoadMeasurementSequentialSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ActivateConveyorTrackingOutCmd():
+class ActivateConveyorTrackingOutCmd:
     """ActivateConveyorTrackingOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7066,7 +7066,7 @@ class ActivateConveyorTrackingOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ActivateConveyorTrackingParCmd():
+class ActivateConveyorTrackingParCmd:
     """ActivateConveyorTrackingParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7105,14 +7105,14 @@ class ActivateConveyorTrackingSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ConfigureConveyorOutCmd():
+class ConfigureConveyorOutCmd:
     """ConfigureConveyorOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class ConfigureConveyorParCmd():
+class ConfigureConveyorParCmd:
     """ConfigureConveyorParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7173,7 +7173,7 @@ class ConfigureConveyorSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RedefineTrackingPosOutCmd():
+class RedefineTrackingPosOutCmd:
     """RedefineTrackingPosOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7192,7 +7192,7 @@ class RedefineTrackingPosOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RedefineTrackingPosParCmd():
+class RedefineTrackingPosParCmd:
     """RedefineTrackingPosParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7289,7 +7289,7 @@ class RedefineTrackingPosSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SyncToConveyorOutCmd():
+class SyncToConveyorOutCmd:
     """SyncToConveyorOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7312,7 +7312,7 @@ class SyncToConveyorOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SyncToConveyorParCmd():
+class SyncToConveyorParCmd:
     """SyncToConveyorParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7415,7 +7415,7 @@ class SyncToConveyorSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ForceControlOutCmd():
+class ForceControlOutCmd:
     """ForceControlOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7424,7 +7424,7 @@ class ForceControlOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ForceControlParCmd():
+class ForceControlParCmd:
     """ForceControlParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7618,7 +7618,7 @@ class ForceControlSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ForceLimitOutCmd():
+class ForceLimitOutCmd:
     """ForceLimitOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7632,7 +7632,7 @@ class ForceLimitOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ForceLimitParCmd():
+class ForceLimitParCmd:
     """ForceLimitParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7765,7 +7765,7 @@ class ForceLimitSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadActualForceOutCmd():
+class ReadActualForceOutCmd:
     """ReadActualForceOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7790,7 +7790,7 @@ class ReadActualForceOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadActualForceParCmd():
+class ReadActualForceParCmd:
     """ReadActualForceParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7872,14 +7872,14 @@ class ReadActualForceSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class EnableRobotOutCmd():
+class EnableRobotOutCmd:
     """EnableRobotOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class EnableRobotParCmd():
+class EnableRobotParCmd:
     """EnableRobotParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7928,14 +7928,14 @@ class EnableRobotSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class GroupResetOutCmd():
+class GroupResetOutCmd:
     """GroupResetOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class GroupResetParCmd():
+class GroupResetParCmd:
     """GroupResetParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7956,7 +7956,7 @@ class GroupResetSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RestartControllerOutCmd():
+class RestartControllerOutCmd:
     """RestartControllerOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7965,7 +7965,7 @@ class RestartControllerOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RestartControllerParCmd():
+class RestartControllerParCmd:
     """RestartControllerParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -7988,7 +7988,7 @@ class RestartControllerSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotTaskParCfgCom():
+class RobotTaskParCfgCom:
     """RobotTaskParCfgCom"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8012,7 +8012,7 @@ class RobotTaskParCfgCom():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotTaskParCfgPlc():
+class RobotTaskParCfgPlc:
     """RobotTaskParCfgPlc"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8025,7 +8025,7 @@ class RobotTaskParCfgPlc():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupParameterPlcParameter():
+class AxesGroupParameterPlcParameter:
     """AxesGroupParameterPlcParameter"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8053,7 +8053,7 @@ class RobotTaskParCfgPlcParameter(AxesGroupParameterPlcParameter):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotTaskParCfgRob():
+class RobotTaskParCfgRob:
     """RobotTaskParCfgRob"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8064,7 +8064,7 @@ class RobotTaskParCfgRob():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotTaskParCfgRobParameter():
+class RobotTaskParCfgRobParameter:
     """RobotTaskParCfgRobParameter"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8108,7 +8108,7 @@ class RobotTaskParCfgRobParameter():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotTaskParCfg():
+class RobotTaskParCfg:
     """RobotTaskParCfg"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8121,14 +8121,14 @@ class RobotTaskParCfg():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetOperationModeOutCmd():
+class SetOperationModeOutCmd:
     """SetOperationModeOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetOperationModeParCmd():
+class SetOperationModeParCmd:
     """SetOperationModeParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8153,14 +8153,14 @@ class SetOperationModeSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetSequenceOutCmd():
+class SetSequenceOutCmd:
     """SetSequenceOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetSequenceParCmd():
+class SetSequenceParCmd:
     """SetSequenceParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8185,7 +8185,7 @@ class SetSequenceSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SwitchLanguageOutCmd():
+class SwitchLanguageOutCmd:
     """SwitchLanguageOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8194,7 +8194,7 @@ class SwitchLanguageOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SwitchLanguageParCmd():
+class SwitchLanguageParCmd:
     """SwitchLanguageParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8221,14 +8221,14 @@ class SwitchLanguageSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class UserLoginOutCmd():
+class UserLoginOutCmd:
     """UserLoginOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class UserLoginParCmd():
+class UserLoginParCmd:
     """UserLoginParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8265,7 +8265,7 @@ class UserLoginSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadActualPositionOutCmd():
+class ReadActualPositionOutCmd:
     """ReadActualPositionOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8298,7 +8298,7 @@ class ReadActualPositionOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadActualPositionParCmd():
+class ReadActualPositionParCmd:
     """ReadActualPositionParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8389,7 +8389,7 @@ class ReadActualPositionSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadActualPositionCyclicOutCmd():
+class ReadActualPositionCyclicOutCmd:
     """ReadActualPositionCyclicOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8426,7 +8426,7 @@ class ReadActualPositionCyclicOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadActualPositionCyclicParCmd():
+class ReadActualPositionCyclicParCmd:
     """ReadActualPositionCyclicParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8457,7 +8457,7 @@ class ReadActualPositionCyclicParCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadActualTCPVelocityOutCmd():
+class ReadActualTCPVelocityOutCmd:
     """ReadActualTCPVelocityOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8481,7 +8481,7 @@ class ReadActualTCPVelocityOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadActualTCPVelocityParCmd():
+class ReadActualTCPVelocityParCmd:
     """ReadActualTCPVelocityParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8536,7 +8536,7 @@ class ReadActualTCPVelocitySendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadAnalogInputOutCmd():
+class ReadAnalogInputOutCmd:
     """ReadAnalogInputOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8559,7 +8559,7 @@ class ReadAnalogInputOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadAnalogInputParCmd():
+class ReadAnalogInputParCmd:
     """ReadAnalogInputParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8624,7 +8624,7 @@ class ReadAnalogInputSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadDHParameterOutCmd():
+class ReadDHParameterOutCmd:
     """ReadDHParameterOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8633,7 +8633,7 @@ class ReadDHParameterOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadDHParameterParCmd():
+class ReadDHParameterParCmd:
     """ReadDHParameterParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8666,7 +8666,7 @@ class ReadDHParameterSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadDigitalInputsOutCmd():
+class ReadDigitalInputsOutCmd:
     """ReadDigitalInputsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8687,7 +8687,7 @@ class ReadDigitalInputsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadDigitalInputsParCmd():
+class ReadDigitalInputsParCmd:
     """ReadDigitalInputsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8750,7 +8750,7 @@ class ReadDigitalInputsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadDigitalOutputsOutCmd():
+class ReadDigitalOutputsOutCmd:
     """ReadDigitalOutputsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8771,7 +8771,7 @@ class ReadDigitalOutputsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadDigitalOutputsParCmd():
+class ReadDigitalOutputsParCmd:
     """ReadDigitalOutputsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8834,7 +8834,7 @@ class ReadDigitalOutputsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadFrameDataOutCmd():
+class ReadFrameDataOutCmd:
     """ReadFrameDataOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8845,7 +8845,7 @@ class ReadFrameDataOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadFrameDataParCmd():
+class ReadFrameDataParCmd:
     """ReadFrameDataParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8878,7 +8878,7 @@ class ReadFrameDataSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadIntegersOutCmd():
+class ReadIntegersOutCmd:
     """ReadIntegersOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8898,7 +8898,7 @@ class ReadIntegersOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadIntegersParCmd():
+class ReadIntegersParCmd:
     """ReadIntegersParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8960,7 +8960,7 @@ class ReadIntegersSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadLoadDataOutCmd():
+class ReadLoadDataOutCmd:
     """ReadLoadDataOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -8971,7 +8971,7 @@ class ReadLoadDataOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadLoadDataParCmd():
+class ReadLoadDataParCmd:
     """ReadLoadDataParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9008,7 +9008,7 @@ class ReadLoadDataSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadMessagesOutCmd():
+class ReadMessagesOutCmd:
     """ReadMessagesOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9031,7 +9031,7 @@ class ReadMessagesOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadMessagesParCmd():
+class ReadMessagesParCmd:
     """ReadMessagesParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9080,7 +9080,7 @@ class ReadMessagesSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadRealsOutCmd():
+class ReadRealsOutCmd:
     """ReadRealsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9100,7 +9100,7 @@ class ReadRealsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadRealsParCmd():
+class ReadRealsParCmd:
     """ReadRealsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9162,7 +9162,7 @@ class ReadRealsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadRobotDataOutCmd():
+class ReadRobotDataOutCmd:
     """ReadRobotDataOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9197,7 +9197,7 @@ class ReadRobotDataOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadRobotDataParCmd():
+class ReadRobotDataParCmd:
     """ReadRobotDataParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9250,7 +9250,7 @@ class ReadRobotDataSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadRobotDefaultDynamicsOutCmd():
+class ReadRobotDefaultDynamicsOutCmd:
     """ReadRobotDefaultDynamicsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9259,7 +9259,7 @@ class ReadRobotDefaultDynamicsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadRobotDefaultDynamicsParCmd():
+class ReadRobotDefaultDynamicsParCmd:
     """ReadRobotDefaultDynamicsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9304,7 +9304,7 @@ class ReadRobotDefaultDynamicsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadRobotReferenceDynamicsOutCmd():
+class ReadRobotReferenceDynamicsOutCmd:
     """ReadRobotReferenceDynamicsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9313,7 +9313,7 @@ class ReadRobotReferenceDynamicsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadRobotReferenceDynamicsParCmd():
+class ReadRobotReferenceDynamicsParCmd:
     """ReadRobotReferenceDynamicsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9358,7 +9358,7 @@ class ReadRobotReferenceDynamicsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadRobotSWLimitsOutCmd():
+class ReadRobotSWLimitsOutCmd:
     """ReadRobotSWLimitsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9367,7 +9367,7 @@ class ReadRobotSWLimitsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadRobotSWLimitsParCmd():
+class ReadRobotSWLimitsParCmd:
     """ReadRobotSWLimitsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9392,7 +9392,7 @@ class ReadRobotSWLimitsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadSystemVariableOutCmd():
+class ReadSystemVariableOutCmd:
     """ReadSystemVariableOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9429,7 +9429,7 @@ class ReadSystemVariableOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadSystemVariableParCmd():
+class ReadSystemVariableParCmd:
     """ReadSystemVariableParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9540,7 +9540,7 @@ class ReadSystemVariableSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadToolDataOutCmd():
+class ReadToolDataOutCmd:
     """ReadToolDataOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9551,7 +9551,7 @@ class ReadToolDataOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadToolDataParCmd():
+class ReadToolDataParCmd:
     """ReadToolDataParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9590,7 +9590,7 @@ class ReadToolDataSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SearchHardStopOutCmd():
+class SearchHardStopOutCmd:
     """SearchHardStopOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9607,7 +9607,7 @@ class SearchHardStopOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SearchHardStopParCmd():
+class SearchHardStopParCmd:
     """SearchHardStopParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9754,7 +9754,7 @@ class SearchHardStopSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SearchHardStopJOutCmd():
+class SearchHardStopJOutCmd:
     """SearchHardStopJOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9771,7 +9771,7 @@ class SearchHardStopJOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SearchHardStopJParCmd():
+class SearchHardStopJParCmd:
     """SearchHardStopJParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9891,14 +9891,14 @@ class SearchHardStopJSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class CreateSplineOutCmd():
+class CreateSplineOutCmd:
     """CreateSplineOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class CreateSplineParCmd():
+class CreateSplineParCmd:
     """CreateSplineParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9937,14 +9937,14 @@ class CreateSplineSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class DeleteSplineOutCmd():
+class DeleteSplineOutCmd:
     """DeleteSplineOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class DeleteSplineParCmd():
+class DeleteSplineParCmd:
     """DeleteSplineParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9969,7 +9969,7 @@ class DeleteSplineSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class DynamicSplineOutCmd():
+class DynamicSplineOutCmd:
     """DynamicSplineOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -9998,7 +9998,7 @@ class DynamicSplineOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class DynamicSplineParCmd():
+class DynamicSplineParCmd:
     """DynamicSplineParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10099,7 +10099,7 @@ class DynamicSplineSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveSplineOutCmd():
+class MoveSplineOutCmd:
     """MoveSplineOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10116,7 +10116,7 @@ class MoveSplineOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveSplineParCmd():
+class MoveSplineParCmd:
     """MoveSplineParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10183,7 +10183,7 @@ class MoveSplineSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveSuperImposedOutCmd():
+class MoveSuperImposedOutCmd:
     """MoveSuperImposedOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10210,7 +10210,7 @@ class MoveSuperImposedOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveSuperImposedParCmd():
+class MoveSuperImposedParCmd:
     """MoveSuperImposedParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10352,7 +10352,7 @@ class MoveSuperImposedSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveSuperImposedDynamicOutCmd():
+class MoveSuperImposedDynamicOutCmd:
     """MoveSuperImposedDynamicOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10369,7 +10369,7 @@ class MoveSuperImposedDynamicOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MoveSuperImposedDynamicParCmd():
+class MoveSuperImposedDynamicParCmd:
     """MoveSuperImposedDynamicParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10472,7 +10472,7 @@ class MoveSuperImposedDynamicSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReactAtTriggerOutCmd():
+class ReactAtTriggerOutCmd:
     """ReactAtTriggerOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10491,7 +10491,7 @@ class ReactAtTriggerOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReactAtTriggerParCmd():
+class ReactAtTriggerParCmd:
     """ReactAtTriggerParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10552,7 +10552,7 @@ class ReactAtTriggerSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetTriggerErrorOutCmd():
+class SetTriggerErrorOutCmd:
     """SetTriggerErrorOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10576,7 +10576,7 @@ class SetTriggerErrorOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetTriggerErrorParCmd():
+class SetTriggerErrorParCmd:
     """SetTriggerErrorParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10665,7 +10665,7 @@ class SetTriggerErrorSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetTriggerLimitOutCmd():
+class SetTriggerLimitOutCmd:
     """SetTriggerLimitOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10689,7 +10689,7 @@ class SetTriggerLimitOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetTriggerLimitParCmd():
+class SetTriggerLimitParCmd:
     """SetTriggerLimitParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10806,7 +10806,7 @@ class SetTriggerLimitSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetTriggerMotionOutCmd():
+class SetTriggerMotionOutCmd:
     """SetTriggerMotionOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10830,7 +10830,7 @@ class SetTriggerMotionOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetTriggerMotionParCmd():
+class SetTriggerMotionParCmd:
     """SetTriggerMotionParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10936,7 +10936,7 @@ class SetTriggerMotionSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetTriggerRegisterOutCmd():
+class SetTriggerRegisterOutCmd:
     """SetTriggerRegisterOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -10960,7 +10960,7 @@ class SetTriggerRegisterOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetTriggerRegisterParCmd():
+class SetTriggerRegisterParCmd:
     """SetTriggerRegisterParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11088,7 +11088,7 @@ class SetTriggerRegisterSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetTriggerUserOutCmd():
+class SetTriggerUserOutCmd:
     """SetTriggerUserOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11112,7 +11112,7 @@ class SetTriggerUserOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SetTriggerUserParCmd():
+class SetTriggerUserParCmd:
     """SetTriggerUserParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11200,7 +11200,7 @@ class SetTriggerUserSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WaitForTriggerOutCmd():
+class WaitForTriggerOutCmd:
     """WaitForTriggerOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11219,7 +11219,7 @@ class WaitForTriggerOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class WaitForTriggerParCmd():
+class WaitForTriggerParCmd:
     """WaitForTriggerParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11288,7 +11288,7 @@ class WaitForTriggerSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WaitTimeOutCmd():
+class WaitTimeOutCmd:
     """WaitTimeOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11297,7 +11297,7 @@ class WaitTimeOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class WaitTimeParCmd():
+class WaitTimeParCmd:
     """WaitTimeParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11340,14 +11340,14 @@ class WaitTimeSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ActivateWorkAreaOutCmd():
+class ActivateWorkAreaOutCmd:
     """ActivateWorkAreaOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class ActivateWorkAreaParCmd():
+class ActivateWorkAreaParCmd:
     """ActivateWorkAreaParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11376,7 +11376,7 @@ class ActivateWorkAreaSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class MonitorWorkAreaOutCmd():
+class MonitorWorkAreaOutCmd:
     """MonitorWorkAreaOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11387,7 +11387,7 @@ class MonitorWorkAreaOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MonitorWorkAreaParCmd():
+class MonitorWorkAreaParCmd:
     """MonitorWorkAreaParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11418,7 +11418,7 @@ class MonitorWorkAreaSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadWorkAreaOutCmd():
+class ReadWorkAreaOutCmd:
     """ReadWorkAreaOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11429,7 +11429,7 @@ class ReadWorkAreaOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReadWorkAreaParCmd():
+class ReadWorkAreaParCmd:
     """ReadWorkAreaParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11462,14 +11462,14 @@ class ReadWorkAreaSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteWorkAreaOutCmd():
+class WriteWorkAreaOutCmd:
     """WriteWorkAreaOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteWorkAreaParCmd():
+class WriteWorkAreaParCmd:
     """WriteWorkAreaParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11502,7 +11502,7 @@ class WriteWorkAreaSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteAnalogOutputOutCmd():
+class WriteAnalogOutputOutCmd:
     """WriteAnalogOutputOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11520,7 +11520,7 @@ class WriteAnalogOutputOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteAnalogOutputParCmd():
+class WriteAnalogOutputParCmd:
     """WriteAnalogOutputParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11591,7 +11591,7 @@ class WriteAnalogOutputSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteDigitalOutputsOutCmd():
+class WriteDigitalOutputsOutCmd:
     """WriteDigitalOutputsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11609,7 +11609,7 @@ class WriteDigitalOutputsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteDigitalOutputsParCmd():
+class WriteDigitalOutputsParCmd:
     """WriteDigitalOutputsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11680,14 +11680,14 @@ class WriteDigitalOutputsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteFrameDataOutCmd():
+class WriteFrameDataOutCmd:
     """WriteFrameDataOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteFrameDataParCmd():
+class WriteFrameDataParCmd:
     """WriteFrameDataParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11718,7 +11718,7 @@ class WriteFrameDataSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteIntegersOutCmd():
+class WriteIntegersOutCmd:
     """WriteIntegersOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11736,7 +11736,7 @@ class WriteIntegersOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteIntegersParCmd():
+class WriteIntegersParCmd:
     """WriteIntegersParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11803,14 +11803,14 @@ class WriteIntegersSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteLoadDataOutCmd():
+class WriteLoadDataOutCmd:
     """WriteLoadDataOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteLoadDataParCmd():
+class WriteLoadDataParCmd:
     """WriteLoadDataParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11845,7 +11845,7 @@ class WriteLoadDataSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteRealsOutCmd():
+class WriteRealsOutCmd:
     """WriteRealsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11863,7 +11863,7 @@ class WriteRealsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteRealsParCmd():
+class WriteRealsParCmd:
     """WriteRealsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11930,7 +11930,7 @@ class WriteRealsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteRobotDefaultDynamicsOutCmd():
+class WriteRobotDefaultDynamicsOutCmd:
     """WriteRobotDefaultDynamicsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -11939,7 +11939,7 @@ class WriteRobotDefaultDynamicsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteRobotDefaultDynamicsParCmd():
+class WriteRobotDefaultDynamicsParCmd:
     """WriteRobotDefaultDynamicsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12004,7 +12004,7 @@ class WriteRobotDefaultDynamicsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteRobotReferenceDynamicsOutCmd():
+class WriteRobotReferenceDynamicsOutCmd:
     """WriteRobotReferenceDynamicsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12013,7 +12013,7 @@ class WriteRobotReferenceDynamicsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteRobotReferenceDynamicsParCmd():
+class WriteRobotReferenceDynamicsParCmd:
     """WriteRobotReferenceDynamicsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12039,7 +12039,7 @@ class WriteRobotReferenceDynamicsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteRobotSWLimitsOutCmd():
+class WriteRobotSWLimitsOutCmd:
     """WriteRobotSWLimitsOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12048,7 +12048,7 @@ class WriteRobotSWLimitsOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteRobotSWLimitsParCmd():
+class WriteRobotSWLimitsParCmd:
     """WriteRobotSWLimitsParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12079,7 +12079,7 @@ class WriteRobotSWLimitsSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteSystemVariableOutCmd():
+class WriteSystemVariableOutCmd:
     """WriteSystemVariableOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12100,7 +12100,7 @@ class WriteSystemVariableOutCmd():
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteSystemVariableParCmd():
+class WriteSystemVariableParCmd:
     """WriteSystemVariableParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12230,14 +12230,14 @@ class WriteSystemVariableSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteToolDataOutCmd():
+class WriteToolDataOutCmd:
     """WriteToolDataOutCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
 
 
 @_dataclass(kw_only=True, slots=True)
-class WriteToolDataParCmd():
+class WriteToolDataParCmd:
     """WriteToolDataParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12268,7 +12268,7 @@ class WriteToolDataSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
-class SplineDataSend():
+class SplineDataSend:
     """SplineDataSend"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12311,7 +12311,7 @@ class SplineDataSend():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupAcyclic():
+class AxesGroupAcyclic:
     """AxesGroupAcyclic"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12320,7 +12320,7 @@ class AxesGroupAcyclic():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupAcyclicAcrEntry():
+class AxesGroupAcyclicAcrEntry:
     """AxesGroupAcyclicAcrEntry"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12337,7 +12337,7 @@ class AxesGroupAcyclicAcrEntry():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupAcyclicAcrEntryCmdBuffer():
+class AxesGroupAcyclicAcrEntryCmdBuffer:
     """AxesGroupAcyclicAcrEntryCmdBuffer"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12354,7 +12354,7 @@ class AxesGroupAcyclicAcrEntryCmdBuffer():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupAcyclicAcrEntryRspBuffer():
+class AxesGroupAcyclicAcrEntryRspBuffer:
     """AxesGroupAcyclicAcrEntryRspBuffer"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12370,7 +12370,7 @@ class AxesGroupAcyclicAcrEntryRspBuffer():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupAcyclicExecutionOrderList():
+class AxesGroupAcyclicExecutionOrderList:
     """AxesGroupAcyclicExecutionOrderList"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12381,7 +12381,7 @@ class AxesGroupAcyclicExecutionOrderList():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupCyclic():
+class AxesGroupCyclic:
     """AxesGroupCyclic"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12392,7 +12392,7 @@ class AxesGroupCyclic():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupCyclicPlcToRob():
+class AxesGroupCyclicPlcToRob:
     """AxesGroupCyclicPlcToRob"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12442,7 +12442,7 @@ class AxesGroupCyclicPlcToRob():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupCyclicRobToPlc():
+class AxesGroupCyclicRobToPlc:
     """AxesGroupCyclicRobToPlc"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12464,7 +12464,7 @@ class AxesGroupCyclicRobToPlc():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotCartesianPositionBase():
+class RobotCartesianPositionBase:
     """RobotCartesianPositionBase"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12507,7 +12507,7 @@ class AxesGroupCyclicOptionalDataCartesianPosition(RobotCartesianPositionShort):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotCartesianPositionExt():
+class RobotCartesianPositionExt:
     """RobotCartesianPositionExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12533,7 +12533,7 @@ class AxesGroupCyclicOptionalDataCartesianPositionExt(RobotCartesianPositionExt)
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotJointCurrentShort():
+class RobotJointCurrentShort:
     """RobotJointCurrentShort"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12561,7 +12561,7 @@ class AxesGroupCyclicOptionalDataCurrent(RobotJointCurrentShort):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotJointCurrentExt():
+class RobotJointCurrentExt:
     """RobotJointCurrentExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12589,7 +12589,7 @@ class AxesGroupCyclicOptionalDataCurrentExt(RobotJointCurrentExt):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotCartesianForceShort():
+class RobotCartesianForceShort:
     """RobotCartesianForceShort"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12617,7 +12617,7 @@ class AxesGroupCyclicOptionalDataForce(RobotCartesianForceShort):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotCartesianForceExt():
+class RobotCartesianForceExt:
     """RobotCartesianForceExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12645,7 +12645,7 @@ class AxesGroupCyclicOptionalDataForceExt(RobotCartesianForceExt):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotJointPositionShort():
+class RobotJointPositionShort:
     """RobotJointPositionShort"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12675,7 +12675,7 @@ class AxesGroupCyclicOptionalDataJointPosition(RobotJointPositionShort):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotJointPositionExt():
+class RobotJointPositionExt:
     """RobotJointPositionExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12701,7 +12701,7 @@ class AxesGroupCyclicOptionalDataJointPositionExt(RobotJointPositionExt):
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotSubProgramData():
+class RobotSubProgramData:
     """RobotSubProgramData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12719,7 +12719,7 @@ class AxesGroupCyclicOptionalDataSubProgram(RobotSubProgramData):
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupCyclicOptionalData():
+class AxesGroupCyclicOptionalData:
     """AxesGroupCyclicOptionalData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12730,7 +12730,7 @@ class AxesGroupCyclicOptionalData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupCyclicOptionalDataPlcToRob():
+class AxesGroupCyclicOptionalDataPlcToRob:
     """AxesGroupCyclicOptionalDataPlcToRob"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12764,7 +12764,7 @@ class AxesGroupCyclicOptionalDataPlcToRob():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupCyclicOptionalDataRobToPlc():
+class AxesGroupCyclicOptionalDataRobToPlc:
     """AxesGroupCyclicOptionalDataRobToPlc"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12802,7 +12802,7 @@ class AxesGroupCyclicOptionalDataRobToPlc():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupMessageLog():
+class AxesGroupMessageLog:
     """AxesGroupMessageLog"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12821,7 +12821,7 @@ class AxesGroupMessageLog():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupParameterOptionalCyclic():
+class AxesGroupParameterOptionalCyclic:
     """AxesGroupParameterOptionalCyclic"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12832,7 +12832,7 @@ class AxesGroupParameterOptionalCyclic():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupParameterOptionalCyclicPlcToRob():
+class AxesGroupParameterOptionalCyclicPlcToRob:
     """AxesGroupParameterOptionalCyclicPlcToRob"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12887,7 +12887,7 @@ class AxesGroupParameterOptionalCyclicPlcToRob():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupParameterOptionalCyclicRobToPlc():
+class AxesGroupParameterOptionalCyclicRobToPlc:
     """AxesGroupParameterOptionalCyclicRobToPlc"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12942,7 +12942,7 @@ class AxesGroupParameterOptionalCyclicRobToPlc():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupParameterPlc():
+class AxesGroupParameterPlc:
     """AxesGroupParameterPlc"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -12953,7 +12953,7 @@ class AxesGroupParameterPlc():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupParameterPlcOptionalCyclic():
+class AxesGroupParameterPlcOptionalCyclic:
     """AxesGroupParameterPlcOptionalCyclic"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13008,7 +13008,7 @@ class AxesGroupParameterPlcOptionalCyclic():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupParameterRob():
+class AxesGroupParameterRob:
     """AxesGroupParameterRob"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13019,7 +13019,7 @@ class AxesGroupParameterRob():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupParameterRobOptionalCyclic():
+class AxesGroupParameterRobOptionalCyclic:
     """AxesGroupParameterRobOptionalCyclic"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13074,7 +13074,7 @@ class AxesGroupParameterRobOptionalCyclic():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupParameterRobParameter():
+class AxesGroupParameterRobParameter:
     """AxesGroupParameterRobParameter"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13133,7 +13133,7 @@ class AxesGroupParameterRobParameter():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupParameter():
+class AxesGroupParameter:
     """AxesGroupParameter"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13144,7 +13144,7 @@ class AxesGroupParameter():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupStateDataChanged():
+class AxesGroupStateDataChanged:
     """AxesGroupStateDataChanged"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13165,7 +13165,7 @@ class AxesGroupStateDataChanged():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupStateSynchronizing():
+class AxesGroupStateSynchronizing:
     """AxesGroupStateSynchronizing"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13186,7 +13186,7 @@ class AxesGroupStateSynchronizing():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupStateSyncState():
+class AxesGroupStateSyncState:
     """AxesGroupStateSyncState"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13225,7 +13225,7 @@ class AxesGroupStateSyncState():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupStateSyncStateNo():
+class AxesGroupStateSyncStateNo:
     """AxesGroupStateSyncStateNo"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13240,7 +13240,7 @@ class AxesGroupStateSyncStateNo():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupStateSyncStatePlc():
+class AxesGroupStateSyncStatePlc:
     """AxesGroupStateSyncStatePlc"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13251,7 +13251,7 @@ class AxesGroupStateSyncStatePlc():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupStateSyncStateRob():
+class AxesGroupStateSyncStateRob:
     """AxesGroupStateSyncStateRob"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13262,7 +13262,7 @@ class AxesGroupStateSyncStateRob():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroupState():
+class AxesGroupState:
     """AxesGroupState"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13345,7 +13345,7 @@ class AxesGroupState():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxesGroup():
+class AxesGroup:
     """AxesGroup"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13366,7 +13366,7 @@ class AxesGroup():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxisExternalUnit():
+class AxisExternalUnit:
     """AxisExternalUnit"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13385,7 +13385,7 @@ class AxisExternalUnit():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxisExternalUsed():
+class AxisExternalUsed:
     """AxisExternalUsed"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13404,7 +13404,7 @@ class AxisExternalUsed():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxisJointUnit():
+class AxisJointUnit:
     """AxisJointUnit"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13423,7 +13423,7 @@ class AxisJointUnit():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AxisJointUsed():
+class AxisJointUsed:
     """AxisJointUsed"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13442,7 +13442,7 @@ class AxisJointUsed():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotCartesianForce():
+class RobotCartesianForce:
     """RobotCartesianForce"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13490,7 +13490,7 @@ class RobotCartesianPosition(RobotCartesianPositionShort):
 
 
 @_dataclass(kw_only=True, slots=True)
-class LogParameter():
+class LogParameter:
     """LogParameter"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13505,7 +13505,7 @@ class LogParameter():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotCoordinateSystemParameters():
+class RobotCoordinateSystemParameters:
     """RobotCoordinateSystemParameters"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13516,7 +13516,7 @@ class RobotCoordinateSystemParameters():
 
 
 @_dataclass(kw_only=True, slots=True)
-class Frame():
+class Frame:
     """Frame"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13527,7 +13527,7 @@ class Frame():
 
 
 @_dataclass(kw_only=True, slots=True)
-class FrameData():
+class FrameData:
     """FrameData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13550,7 +13550,7 @@ class FrameData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class Load():
+class Load:
     """Load"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13561,7 +13561,7 @@ class Load():
 
 
 @_dataclass(kw_only=True, slots=True)
-class LoadData():
+class LoadData:
     """LoadData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13590,7 +13590,7 @@ class LoadData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SplineData():
+class SplineData:
     """SplineData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13633,7 +13633,7 @@ class SplineData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class Tool():
+class Tool:
     """Tool"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13644,7 +13644,7 @@ class Tool():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ToolData():
+class ToolData:
     """ToolData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13671,7 +13671,7 @@ class ToolData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class UserData():
+class UserData:
     """UserData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13879,7 +13879,7 @@ class UserData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotWorkArea():
+class RobotWorkArea:
     """RobotWorkArea"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13890,7 +13890,7 @@ class RobotWorkArea():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotWorkAreaData():
+class RobotWorkAreaData:
     """RobotWorkAreaData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13968,7 +13968,7 @@ class RobotWorkAreaData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotWorkAreaDataLimitCartesian():
+class RobotWorkAreaDataLimitCartesian:
     """RobotWorkAreaDataLimitCartesian"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13979,7 +13979,7 @@ class RobotWorkAreaDataLimitCartesian():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotWorkAreaDataLimitJoint():
+class RobotWorkAreaDataLimitJoint:
     """RobotWorkAreaDataLimitJoint"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -13998,7 +13998,7 @@ class RobotWorkAreaDataLimitJoint():
 
 
 @_dataclass(kw_only=True, slots=True)
-class CyclicStateData():
+class CyclicStateData:
     """CyclicStateData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14012,7 +14012,7 @@ class CyclicStateData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class IEC_TIMESTAMP():
+class IEC_TIMESTAMP:
     """IEC_TIMESTAMP"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14023,7 +14023,7 @@ class IEC_TIMESTAMP():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SystemTime():
+class SystemTime:
     """SystemTime"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14034,7 +14034,7 @@ class SystemTime():
 
 
 @_dataclass(kw_only=True, slots=True)
-class DefaultDynamics():
+class DefaultDynamics:
     """DefaultDynamics"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14063,7 +14063,7 @@ class DefaultDynamics():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ReferenceDynamics():
+class ReferenceDynamics:
     """ReferenceDynamics"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14092,7 +14092,7 @@ class ReferenceDynamics():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotDynamics():
+class RobotDynamics:
     """RobotDynamics"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14121,7 +14121,7 @@ class RobotDynamics():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotJointCurrent():
+class RobotJointCurrent:
     """RobotJointCurrent"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14152,7 +14152,7 @@ class RobotJointCurrent():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotJointPosition():
+class RobotJointPosition:
     """RobotJointPosition"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14183,7 +14183,7 @@ class RobotJointPosition():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AlarmMessage():
+class AlarmMessage:
     """AlarmMessage"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14200,7 +14200,7 @@ class AlarmMessage():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ArmConfigParameter():
+class ArmConfigParameter:
     """ArmConfigParameter"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14213,7 +14213,7 @@ class ArmConfigParameter():
 
 
 @_dataclass(kw_only=True, slots=True)
-class AuxOffset():
+class AuxOffset:
     """AuxOffset"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14232,7 +14232,7 @@ class AuxOffset():
 
 
 @_dataclass(kw_only=True, slots=True)
-class CoordinateSystem():
+class CoordinateSystem:
     """CoordinateSystem"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14243,7 +14243,7 @@ class CoordinateSystem():
 
 
 @_dataclass(kw_only=True, slots=True)
-class DataEnableSync():
+class DataEnableSync:
     """DataEnableSync"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14276,7 +14276,7 @@ class DataEnableSync():
 
 
 @_dataclass(kw_only=True, slots=True)
-class DataInSync():
+class DataInSync:
     """DataInSync"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14297,7 +14297,7 @@ class DataInSync():
 
 
 @_dataclass(kw_only=True, slots=True)
-class DHParameter():
+class DHParameter:
     """DHParameter"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14319,7 +14319,7 @@ class DHParameter():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ExecutionModeAllowed():
+class ExecutionModeAllowed:
     """ExecutionModeAllowed"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14334,7 +14334,7 @@ class ExecutionModeAllowed():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ExternalAxesFlags():
+class ExternalAxesFlags:
     """ExternalAxesFlags"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14357,7 +14357,7 @@ class ExternalAxesFlags():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ForceStatus():
+class ForceStatus:
     """ForceStatus"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14380,7 +14380,7 @@ class ForceStatus():
 
 
 @_dataclass(kw_only=True, slots=True)
-class FragmentAction():
+class FragmentAction:
     """FragmentAction"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14406,7 +14406,7 @@ class FragmentAction():
 
 
 @_dataclass(kw_only=True, slots=True)
-class JogControl():
+class JogControl:
     """JogControl"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14533,7 +14533,7 @@ class JogControl():
 
 
 @_dataclass(kw_only=True, slots=True)
-class MeasuringInputResult():
+class MeasuringInputResult:
     """MeasuringInputResult"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14551,7 +14551,7 @@ class MeasuringInputResult():
 
 
 @_dataclass(kw_only=True, slots=True)
-class ProcessingModeAllowed():
+class ProcessingModeAllowed:
     """ProcessingModeAllowed"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14593,7 +14593,7 @@ class ProcessingModeAllowed():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RaStatusWord():
+class RaStatusWord:
     """RaStatusWord"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14672,7 +14672,7 @@ class RaStatusWord():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RCSupportedFunctions():
+class RCSupportedFunctions:
     """RCSupportedFunctions"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -14992,7 +14992,7 @@ class RCSupportedFunctions():
 
 
 @_dataclass(kw_only=True, slots=True)
-class RobotAxesFlags():
+class RobotAxesFlags:
     """RobotAxesFlags"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15015,7 +15015,7 @@ class RobotAxesFlags():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SWLimits():
+class SWLimits:
     """SWLimits"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15072,7 +15072,7 @@ class SWLimits():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SynchronizationModes():
+class SynchronizationModes:
     """SynchronizationModes"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15093,7 +15093,7 @@ class SynchronizationModes():
 
 
 @_dataclass(kw_only=True, slots=True)
-class SyncUserInteraction():
+class SyncUserInteraction:
     """SyncUserInteraction"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15114,7 +15114,7 @@ class SyncUserInteraction():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TrackingStatus():
+class TrackingStatus:
     """TrackingStatus"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15143,7 +15143,7 @@ class TrackingStatus():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TurnNumber():
+class TurnNumber:
     """TurnNumber"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15164,7 +15164,7 @@ class TurnNumber():
 
 
 @_dataclass(kw_only=True, slots=True)
-class VersionStruct():
+class VersionStruct:
     """VersionStruct"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15177,7 +15177,7 @@ class VersionStruct():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCommand():
+class TelegramPlcToRobCommand:
     """TelegramPlcToRobCommand"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15188,7 +15188,7 @@ class TelegramPlcToRobCommand():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCommandHeader():
+class TelegramPlcToRobCommandHeader:
     """TelegramPlcToRobCommandHeader"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15203,7 +15203,7 @@ class TelegramPlcToRobCommandHeader():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicData():
+class TelegramPlcToRobCyclicData:
     """TelegramPlcToRobCyclicData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15214,7 +15214,7 @@ class TelegramPlcToRobCyclicData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicOptionalCartesianPosition():
+class TelegramPlcToRobCyclicOptionalCartesianPosition:
     """TelegramPlcToRobCyclicOptionalCartesianPosition"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15245,7 +15245,7 @@ class TelegramPlcToRobCyclicOptionalCartesianPosition():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicOptionalCartesianPositionExt():
+class TelegramPlcToRobCyclicOptionalCartesianPositionExt:
     """TelegramPlcToRobCyclicOptionalCartesianPositionExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15262,7 +15262,7 @@ class TelegramPlcToRobCyclicOptionalCartesianPositionExt():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicOptionalCurrent():
+class TelegramPlcToRobCyclicOptionalCurrent:
     """TelegramPlcToRobCyclicOptionalCurrent"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15281,7 +15281,7 @@ class TelegramPlcToRobCyclicOptionalCurrent():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicOptionalCurrentExt():
+class TelegramPlcToRobCyclicOptionalCurrentExt:
     """TelegramPlcToRobCyclicOptionalCurrentExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15300,7 +15300,7 @@ class TelegramPlcToRobCyclicOptionalCurrentExt():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicOptionalForce():
+class TelegramPlcToRobCyclicOptionalForce:
     """TelegramPlcToRobCyclicOptionalForce"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15319,7 +15319,7 @@ class TelegramPlcToRobCyclicOptionalForce():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicOptionalForceExt():
+class TelegramPlcToRobCyclicOptionalForceExt:
     """TelegramPlcToRobCyclicOptionalForceExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15338,7 +15338,7 @@ class TelegramPlcToRobCyclicOptionalForceExt():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicOptionalJointPosition():
+class TelegramPlcToRobCyclicOptionalJointPosition:
     """TelegramPlcToRobCyclicOptionalJointPosition"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15359,7 +15359,7 @@ class TelegramPlcToRobCyclicOptionalJointPosition():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicOptionalJointPositionExt():
+class TelegramPlcToRobCyclicOptionalJointPositionExt:
     """TelegramPlcToRobCyclicOptionalJointPositionExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15376,7 +15376,7 @@ class TelegramPlcToRobCyclicOptionalJointPositionExt():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicOptionalSubProgramData():
+class TelegramPlcToRobCyclicOptionalSubProgramData:
     """TelegramPlcToRobCyclicOptionalSubProgramData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15385,7 +15385,7 @@ class TelegramPlcToRobCyclicOptionalSubProgramData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobCyclicOptionalData():
+class TelegramPlcToRobCyclicOptionalData:
     """TelegramPlcToRobCyclicOptionalData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15423,7 +15423,7 @@ class TelegramPlcToRobCyclicOptionalData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobFooter():
+class TelegramPlcToRobFooter:
     """TelegramPlcToRobFooter"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15434,7 +15434,7 @@ class TelegramPlcToRobFooter():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobFragment():
+class TelegramPlcToRobFragment:
     """TelegramPlcToRobFragment"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15445,7 +15445,7 @@ class TelegramPlcToRobFragment():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobFragmentHeader():
+class TelegramPlcToRobFragmentHeader:
     """TelegramPlcToRobFragmentHeader"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15462,7 +15462,7 @@ class TelegramPlcToRobFragmentHeader():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobHeader():
+class TelegramPlcToRobHeader:
     """TelegramPlcToRobHeader"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15498,7 +15498,7 @@ class TelegramPlcToRobHeader():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobSequence():
+class TelegramPlcToRobSequence:
     """TelegramPlcToRobSequence"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15509,7 +15509,7 @@ class TelegramPlcToRobSequence():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRobSequenceHeader():
+class TelegramPlcToRobSequenceHeader:
     """TelegramPlcToRobSequenceHeader"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15520,7 +15520,7 @@ class TelegramPlcToRobSequenceHeader():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramPlcToRob():
+class TelegramPlcToRob:
     """TelegramPlcToRob"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15537,7 +15537,7 @@ class TelegramPlcToRob():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCommand():
+class TelegramRobToPlcCommand:
     """TelegramRobToPlcCommand"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15548,7 +15548,7 @@ class TelegramRobToPlcCommand():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCommandHeader():
+class TelegramRobToPlcCommandHeader:
     """TelegramRobToPlcCommandHeader"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15563,7 +15563,7 @@ class TelegramRobToPlcCommandHeader():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCyclicOptionalCartesianPosition():
+class TelegramRobToPlcCyclicOptionalCartesianPosition:
     """TelegramRobToPlcCyclicOptionalCartesianPosition"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15606,7 +15606,7 @@ class TelegramRobToPlcCyclicOptionalCartesianPosition():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCyclicOptionalCartesianPositionExt():
+class TelegramRobToPlcCyclicOptionalCartesianPositionExt:
     """TelegramRobToPlcCyclicOptionalCartesianPositionExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15623,7 +15623,7 @@ class TelegramRobToPlcCyclicOptionalCartesianPositionExt():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCyclicOptionalCurrent():
+class TelegramRobToPlcCyclicOptionalCurrent:
     """TelegramRobToPlcCyclicOptionalCurrent"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15642,7 +15642,7 @@ class TelegramRobToPlcCyclicOptionalCurrent():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCyclicOptionalCurrentExt():
+class TelegramRobToPlcCyclicOptionalCurrentExt:
     """TelegramRobToPlcCyclicOptionalCurrentExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15661,7 +15661,7 @@ class TelegramRobToPlcCyclicOptionalCurrentExt():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCyclicOptionalForce():
+class TelegramRobToPlcCyclicOptionalForce:
     """TelegramRobToPlcCyclicOptionalForce"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15680,7 +15680,7 @@ class TelegramRobToPlcCyclicOptionalForce():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCyclicOptionalForceExt():
+class TelegramRobToPlcCyclicOptionalForceExt:
     """TelegramRobToPlcCyclicOptionalForceExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15699,7 +15699,7 @@ class TelegramRobToPlcCyclicOptionalForceExt():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCyclicOptionalJointPosition():
+class TelegramRobToPlcCyclicOptionalJointPosition:
     """TelegramRobToPlcCyclicOptionalJointPosition"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15722,7 +15722,7 @@ class TelegramRobToPlcCyclicOptionalJointPosition():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCyclicOptionalJointPositionExt():
+class TelegramRobToPlcCyclicOptionalJointPositionExt:
     """TelegramRobToPlcCyclicOptionalJointPositionExt"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15739,7 +15739,7 @@ class TelegramRobToPlcCyclicOptionalJointPositionExt():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCyclicOptionalSubProgramData():
+class TelegramRobToPlcCyclicOptionalSubProgramData:
     """TelegramRobToPlcCyclicOptionalSubProgramData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15748,7 +15748,7 @@ class TelegramRobToPlcCyclicOptionalSubProgramData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcCyclicOptionalData():
+class TelegramRobToPlcCyclicOptionalData:
     """TelegramRobToPlcCyclicOptionalData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15788,7 +15788,7 @@ class TelegramRobToPlcCyclicOptionalData():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcFooter():
+class TelegramRobToPlcFooter:
     """TelegramRobToPlcFooter"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15799,7 +15799,7 @@ class TelegramRobToPlcFooter():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcFragment():
+class TelegramRobToPlcFragment:
     """TelegramRobToPlcFragment"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15810,7 +15810,7 @@ class TelegramRobToPlcFragment():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcFragmentHeader():
+class TelegramRobToPlcFragmentHeader:
     """TelegramRobToPlcFragmentHeader"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15827,7 +15827,7 @@ class TelegramRobToPlcFragmentHeader():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcHeader():
+class TelegramRobToPlcHeader:
     """TelegramRobToPlcHeader"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15849,7 +15849,7 @@ class TelegramRobToPlcHeader():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcSequence():
+class TelegramRobToPlcSequence:
     """TelegramRobToPlcSequence"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15860,7 +15860,7 @@ class TelegramRobToPlcSequence():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlcSequenceHeader():
+class TelegramRobToPlcSequenceHeader:
     """TelegramRobToPlcSequenceHeader"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15871,7 +15871,7 @@ class TelegramRobToPlcSequenceHeader():
 
 
 @_dataclass(kw_only=True, slots=True)
-class TelegramRobToPlc():
+class TelegramRobToPlc:
     """TelegramRobToPlc"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
@@ -15886,7 +15886,7 @@ class TelegramRobToPlc():
 
 
 @_dataclass(kw_only=True, slots=True)
-class Telegram():
+class Telegram:
     """Telegram"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]

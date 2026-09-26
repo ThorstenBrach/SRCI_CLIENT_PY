@@ -38,6 +38,7 @@ __all__ = [
     "EnumType",
     "IecArray",
     "IecField",
+    "IecIntEnum",
     "IecStruct",
     "IecType",
     "InstanceType",
@@ -150,6 +151,29 @@ class ArrayType:
     @property
     def count(self) -> int:
         return self.upper - self.lower + 1
+
+
+class IecIntEnum(IntEnum):
+    """Base class of the generated enums.
+
+    Like an ST enum variable, a value received from the robot controller may be any
+    number of the base type, even if no member is defined for it (e.g. operation mode 0
+    after an RC start). Such values become pseudo members named ``UNDEFINED_<value>``
+    instead of raising ``ValueError``.
+    """
+
+    @classmethod
+    def _missing_(cls, value: object) -> IecIntEnum | None:
+        if not isinstance(value, int) or isinstance(value, bool):
+            return None
+        base = _ENUM_BASE.get(cls)
+        if base is not None and not (base.min <= value <= base.max):
+            return None
+        member = int.__new__(cls, value)
+        member._name_ = f"UNDEFINED_{value}"
+        member._value_ = value
+        cls._value2member_map_[value] = member  # same object for the same value
+        return member
 
 
 _ENUM_BASE: dict[type[IntEnum], Elementary] = {}

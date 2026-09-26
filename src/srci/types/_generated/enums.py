@@ -7,8 +7,6 @@ Regenerate with ``python -m tools.plcopen_gen``.
 # fmt: off
 from __future__ import annotations
 
-from enum import IntEnum
-
 from srci.types import iec as _iec
 
 __all__ = [
@@ -102,7 +100,7 @@ __all__ = [
 ]
 
 
-class ArmConfigElbow(IntEnum):
+class ArmConfigElbow(_iec.IecIntEnum):
     """ArmConfigElbow (INT)"""
     USE_CONFIG = 0
     """Use config in position"""
@@ -119,7 +117,7 @@ class ArmConfigElbow(IntEnum):
 _iec.register_enum(ArmConfigElbow, _iec.INT)
 
 
-class ArmConfigShoulder(IntEnum):
+class ArmConfigShoulder(_iec.IecIntEnum):
     """ArmConfigShoulder (INT)"""
     USE_CONFIG = 0
     """Use config in position"""
@@ -136,7 +134,7 @@ class ArmConfigShoulder(IntEnum):
 _iec.register_enum(ArmConfigShoulder, _iec.INT)
 
 
-class ArmConfigWrist(IntEnum):
+class ArmConfigWrist(_iec.IecIntEnum):
     """ArmConfigWrist (INT)"""
     USE_CONFIG = 0
     """Use config in position"""
@@ -153,7 +151,7 @@ class ArmConfigWrist(IntEnum):
 _iec.register_enum(ArmConfigWrist, _iec.INT)
 
 
-class RobotLibraryErrorIdEnum(IntEnum):
+class RobotLibraryErrorIdEnum(_iec.IecIntEnum):
     """RobotLibraryErrorIdEnum (WORD)"""
     NO_ERROR = 0
     ERR_INVALID_STEP = 1
@@ -1105,7 +1103,7 @@ class RobotLibraryErrorIdEnum(IntEnum):
 _iec.register_enum(RobotLibraryErrorIdEnum, _iec.WORD)
 
 
-class RobotLibraryInfoIdEnum(IntEnum):
+class RobotLibraryInfoIdEnum(_iec.IecIntEnum):
     """RobotLibraryInfoIdEnum (WORD)"""
     NO_INFO = 0
     INFO_COLLISION_DETECTED = 27649
@@ -1292,7 +1290,7 @@ class RobotLibraryInfoIdEnum(IntEnum):
 _iec.register_enum(RobotLibraryInfoIdEnum, _iec.WORD)
 
 
-class RobotLibraryWarningIdEnum(IntEnum):
+class RobotLibraryWarningIdEnum(_iec.IecIntEnum):
     """RobotLibraryWarningIdEnum (WORD)"""
     NO_WARNING = 0
     WARN_HIGHPRIORITY_IGNORED_SEQ_MODE = 29441
@@ -1503,7 +1501,7 @@ class RobotLibraryWarningIdEnum(IntEnum):
 _iec.register_enum(RobotLibraryWarningIdEnum, _iec.WORD)
 
 
-class SequenceFlag(IntEnum):
+class SequenceFlag(_iec.IecIntEnum):
     """SequenceFlag (USINT)"""
     NO_SEQUENCE = 0
     """
@@ -1520,7 +1518,7 @@ class SequenceFlag(IntEnum):
 _iec.register_enum(SequenceFlag, _iec.USINT)
 
 
-class MessageLevel(IntEnum):
+class MessageLevel(_iec.IecIntEnum):
     """MessageLevel (USINT)"""
     DEBUG = 4
     """Debugging messages, Informative messages, Warning messages, Error messages, Fatal error messages"""
@@ -1535,7 +1533,7 @@ class MessageLevel(IntEnum):
 _iec.register_enum(MessageLevel, _iec.USINT)
 
 
-class PriorityLevel(IntEnum):
+class PriorityLevel(_iec.IecIntEnum):
     """PriorityLevel (BYTE)"""
     VERY_HIGH = 1
     """priority level is very high"""
@@ -1550,7 +1548,7 @@ class PriorityLevel(IntEnum):
 _iec.register_enum(PriorityLevel, _iec.BYTE)
 
 
-class AxisUnit(IntEnum):
+class AxisUnit(_iec.IecIntEnum):
     """AxisUnit (USINT)"""
     DEG = 0
     """Axis unit is in degree [°]"""
@@ -1561,7 +1559,7 @@ class AxisUnit(IntEnum):
 _iec.register_enum(AxisUnit, _iec.USINT)
 
 
-class CircPlane(IntEnum):
+class CircPlane(_iec.IecIntEnum):
     """CircPlane (SINT)"""
     XZ_PLANE = 0
     """x-z-plane"""
@@ -1574,7 +1572,7 @@ class CircPlane(IntEnum):
 _iec.register_enum(CircPlane, _iec.SINT)
 
 
-class ComDirection(IntEnum):
+class ComDirection(_iec.IecIntEnum):
     """ComDirection (INT)"""
     PLC_TO_ROB = 0
     """communication direction PLC to Robot"""
@@ -1585,7 +1583,7 @@ class ComDirection(IntEnum):
 _iec.register_enum(ComDirection, _iec.INT)
 
 
-class ControlHalfByte(IntEnum):
+class ControlHalfByte(_iec.IecIntEnum):
     """ControlHalfByte (BYTE)"""
     NONE = 0
     """Default value, no control active"""
@@ -1610,7 +1608,7 @@ class ControlHalfByte(IntEnum):
 _iec.register_enum(ControlHalfByte, _iec.BYTE)
 
 
-class ErrorReaction(IntEnum):
+class ErrorReaction(_iec.IecIntEnum):
     """ErrorReaction (USINT)"""
     ABORT_AND_MOVE = 0
     """
@@ -1629,7 +1627,7 @@ class ErrorReaction(IntEnum):
 _iec.register_enum(ErrorReaction, _iec.USINT)
 
 
-class LoadMeasurementSteps(IntEnum):
+class LoadMeasurementSteps(_iec.IecIntEnum):
     """LoadMeasurementSteps (USINT)"""
     RESET = 0
     """• 0: Reset (default) Delete all positions saved on the RC"""
@@ -1648,7 +1646,7 @@ class LoadMeasurementSteps(IntEnum):
 _iec.register_enum(LoadMeasurementSteps, _iec.USINT)
 
 
-class PathChoice(IntEnum):
+class PathChoice(_iec.IecIntEnum):
     """PathChoice (BYTE)"""
     CLOCKWISE = 0
     """Clockwise movement of the circular path"""
@@ -1659,7 +1657,7 @@ class PathChoice(IntEnum):
 _iec.register_enum(PathChoice, _iec.BYTE)
 
 
-class ReferenceElement(IntEnum):
+class ReferenceElement(_iec.IecIntEnum):
     """ReferenceElement (USINT)"""
     NOT_USED = 0
     """0 (default): Not used"""
@@ -1680,7 +1678,7 @@ class ReferenceElement(IntEnum):
 _iec.register_enum(ReferenceElement, _iec.USINT)
 
 
-class Severity(IntEnum):
+class Severity(_iec.IecIntEnum):
     """Severity (SINT)"""
     DEACTIVATE = 0
     """No events will be logged"""
@@ -1699,7 +1697,7 @@ class Severity(IntEnum):
 _iec.register_enum(Severity, _iec.SINT)
 
 
-class SyncDirection(IntEnum):
+class SyncDirection(_iec.IecIntEnum):
     """SyncDirection (INT)"""
     NO_SYNC = 0
     """No synchronization will be executed"""
@@ -1714,7 +1712,7 @@ class SyncDirection(IntEnum):
 _iec.register_enum(SyncDirection, _iec.INT)
 
 
-class SyncReaction(IntEnum):
+class SyncReaction(_iec.IecIntEnum):
     """SyncReaction (USINT)"""
     NO_REACTION = 0
     """• System behavior unaffected"""
@@ -1740,7 +1738,7 @@ class SyncReaction(IntEnum):
 _iec.register_enum(SyncReaction, _iec.USINT)
 
 
-class SyncTime(IntEnum):
+class SyncTime(_iec.IecIntEnum):
     """SyncTime (DINT)"""
     DURING_START_UP = 0
     """Synchronization during startup"""
@@ -1751,7 +1749,7 @@ class SyncTime(IntEnum):
 _iec.register_enum(SyncTime, _iec.DINT)
 
 
-class TriggerCondition(IntEnum):
+class TriggerCondition(_iec.IecIntEnum):
     """TriggerCondition (SINT)"""
     TARGET_POSITION_TIME_MS = -5
     """5: Time in ms - point reference is target position"""
@@ -1780,7 +1778,7 @@ class TriggerCondition(IntEnum):
 _iec.register_enum(TriggerCondition, _iec.SINT)
 
 
-class UnitLimitAxis(IntEnum):
+class UnitLimitAxis(_iec.IecIntEnum):
     """UnitLimitAxis (USINT)"""
     PERCENTAGE = 0
     """Percentage (%) (default)"""
@@ -1793,7 +1791,7 @@ class UnitLimitAxis(IntEnum):
 _iec.register_enum(UnitLimitAxis, _iec.USINT)
 
 
-class AbortingMode(IntEnum):
+class AbortingMode(_iec.IecIntEnum):
     """AbortingMode (SINT)"""
     BUFFER = 0
     """
@@ -1810,7 +1808,7 @@ class AbortingMode(IntEnum):
 _iec.register_enum(AbortingMode, _iec.SINT)
 
 
-class BlendingMode(IntEnum):
+class BlendingMode(_iec.IecIntEnum):
     """BlendingMode (USINT)"""
     EXACT_STOP = 0
     """Appended, buffered, no blending"""
@@ -1831,7 +1829,7 @@ class BlendingMode(IntEnum):
 _iec.register_enum(BlendingMode, _iec.USINT)
 
 
-class CircMode(IntEnum):
+class CircMode(_iec.IecIntEnum):
     """CircMode (SINT)"""
     BORDER = 0
     """"AuxPoint" defines a point on the circle crossed on the path from the starting to the end point."""
@@ -1853,7 +1851,7 @@ class CircMode(IntEnum):
 _iec.register_enum(CircMode, _iec.SINT)
 
 
-class CollisionReactionMode(IntEnum):
+class CollisionReactionMode(_iec.IecIntEnum):
     """CollisionReactionMode (USINT)"""
     STANDING_STILL = 0
     """Standing still"""
@@ -1864,7 +1862,7 @@ class CollisionReactionMode(IntEnum):
 _iec.register_enum(CollisionReactionMode, _iec.USINT)
 
 
-class ConnectionMode(IntEnum):
+class ConnectionMode(_iec.IecIntEnum):
     """ConnectionMode (SINT)"""
     RC_CONNECTED = 0
     """Encoder is connected to RC"""
@@ -1875,7 +1873,7 @@ class ConnectionMode(IntEnum):
 _iec.register_enum(ConnectionMode, _iec.SINT)
 
 
-class DefinitionMode(IntEnum):
+class DefinitionMode(_iec.IecIntEnum):
     """DefinitionMode (USINT)"""
     Center = 1
     """ZeroPoint describes center point of body"""
@@ -1886,7 +1884,7 @@ class DefinitionMode(IntEnum):
 _iec.register_enum(DefinitionMode, _iec.USINT)
 
 
-class DetectionMode(IntEnum):
+class DetectionMode(_iec.IecIntEnum):
     """DetectionMode (USINT)"""
     TORQUE = 0
     """Torque (default)"""
@@ -1901,7 +1899,7 @@ class DetectionMode(IntEnum):
 _iec.register_enum(DetectionMode, _iec.USINT)
 
 
-class ErrorTriggerMode(IntEnum):
+class ErrorTriggerMode(_iec.IecIntEnum):
     """ErrorTriggerMode (SINT)"""
     ANY_COMMAND = 0
     """Any command (default)"""
@@ -1928,7 +1926,7 @@ class ErrorTriggerMode(IntEnum):
 _iec.register_enum(ErrorTriggerMode, _iec.SINT)
 
 
-class ExecutionMode(IntEnum):
+class ExecutionMode(_iec.IecIntEnum):
     """ExecutionMode (USINT)"""
     SEQUENCE_PRIMARY = 0
     """Command is buffered in sequence buffer and executed once"""
@@ -1966,7 +1964,7 @@ class ExecutionMode(IntEnum):
 _iec.register_enum(ExecutionMode, _iec.USINT)
 
 
-class FrameCalculationMode(IntEnum):
+class FrameCalculationMode(_iec.IecIntEnum):
     """FrameCalculationMode (SINT)"""
     THREE_POINT_METHOD = 0
     """0: Three-Point-method (default)"""
@@ -1979,7 +1977,7 @@ class FrameCalculationMode(IntEnum):
 _iec.register_enum(FrameCalculationMode, _iec.SINT)
 
 
-class FunctionMode(IntEnum):
+class FunctionMode(_iec.IecIntEnum):
     """FunctionMode (INT)"""
     enum_member = 0
 
@@ -1987,7 +1985,7 @@ class FunctionMode(IntEnum):
 _iec.register_enum(FunctionMode, _iec.INT)
 
 
-class InterpolationMode(IntEnum):
+class InterpolationMode(_iec.IecIntEnum):
     """InterpolationMode (USINT)"""
     Linear_interpolation = 0
     """Linear interpolation"""
@@ -1998,7 +1996,7 @@ class InterpolationMode(IntEnum):
 _iec.register_enum(InterpolationMode, _iec.USINT)
 
 
-class JogMode(IntEnum):
+class JogMode(_iec.IecIntEnum):
     """JogMode (USINT)"""
     JOG_FRAME = 0
     """
@@ -2020,7 +2018,7 @@ class JogMode(IntEnum):
 _iec.register_enum(JogMode, _iec.USINT)
 
 
-class LimitMode(IntEnum):
+class LimitMode(_iec.IecIntEnum):
     """LimitMode (USINT)"""
     NO_LIMIT_DEFINED = 0
     """
@@ -2039,7 +2037,7 @@ class LimitMode(IntEnum):
 _iec.register_enum(LimitMode, _iec.USINT)
 
 
-class LoadMeasurementMode(IntEnum):
+class LoadMeasurementMode(_iec.IecIntEnum):
     """LoadMeasurementMode (USINT)"""
     ONE_POSITION = 0
     """0: One Position (default) Use one defined position and optional axes ranges"""
@@ -2054,7 +2052,7 @@ class LoadMeasurementMode(IntEnum):
 _iec.register_enum(LoadMeasurementMode, _iec.USINT)
 
 
-class LogonMode(IntEnum):
+class LogonMode(_iec.IecIntEnum):
     """LogonMode (SINT)"""
     PASSWORD_ONLY = 0
     """Password only (default)"""
@@ -2067,7 +2065,7 @@ class LogonMode(IntEnum):
 _iec.register_enum(LogonMode, _iec.SINT)
 
 
-class MeasuringIoMode(IntEnum):
+class MeasuringIoMode(_iec.IecIntEnum):
     """MeasuringIoMode (USINT)"""
     MEASUREMENT_AT_NEXT_RISING_EDGE = 0
     """Measurement at next rising edge • Output "MeasuredPosition_1" used"""
@@ -2093,7 +2091,7 @@ class MeasuringIoMode(IntEnum):
 _iec.register_enum(MeasuringIoMode, _iec.USINT)
 
 
-class MeasuringUnitMode(IntEnum):
+class MeasuringUnitMode(_iec.IecIntEnum):
     """MeasuringUnitMode (USINT)"""
     VECTOR_LENGTH = 0
     """
@@ -2109,7 +2107,7 @@ class MeasuringUnitMode(IntEnum):
 _iec.register_enum(MeasuringUnitMode, _iec.USINT)
 
 
-class OperationMode(IntEnum):
+class OperationMode(_iec.IecIntEnum):
     """OperationMode (USINT)"""
     T1_LOCAL = 1
     """
@@ -2152,7 +2150,7 @@ class OperationMode(IntEnum):
 _iec.register_enum(OperationMode, _iec.USINT)
 
 
-class OrientationMode(IntEnum):
+class OrientationMode(_iec.IecIntEnum):
     """OrientationMode (SINT)"""
     LINEAR_INTERPOLATED = 1
     """Change orientation continuously in a linear way"""
@@ -2167,7 +2165,7 @@ class OrientationMode(IntEnum):
 _iec.register_enum(OrientationMode, _iec.SINT)
 
 
-class OriMode(IntEnum):
+class OriMode(_iec.IecIntEnum):
     """OriMode (USINT)"""
     LINEAR_INTERPOLATED = 1
     """Change orientation continuously in a linear way"""
@@ -2182,7 +2180,7 @@ class OriMode(IntEnum):
 _iec.register_enum(OriMode, _iec.USINT)
 
 
-class ProcessingMode(IntEnum):
+class ProcessingMode(_iec.IecIntEnum):
     """ProcessingMode (USINT)"""
     BUFFERED = 0
     """Command is buffered in sequence buffer and executed once"""
@@ -2224,7 +2222,7 @@ class ProcessingMode(IntEnum):
 _iec.register_enum(ProcessingMode, _iec.USINT)
 
 
-class ResistanceForceMode(IntEnum):
+class ResistanceForceMode(_iec.IecIntEnum):
     """ResistanceForceMode (USINT)"""
     RESISTANCE_FORCE_TCP = 0
     """
@@ -2241,7 +2239,7 @@ class ResistanceForceMode(IntEnum):
 _iec.register_enum(ResistanceForceMode, _iec.USINT)
 
 
-class ReturnMode(IntEnum):
+class ReturnMode(_iec.IecIntEnum):
     """ReturnMode (BYTE)"""
     INTERRUPT_POSITION = 0
     """Interrupt position"""
@@ -2252,7 +2250,7 @@ class ReturnMode(IntEnum):
 _iec.register_enum(ReturnMode, _iec.BYTE)
 
 
-class SensorConnectionMode(IntEnum):
+class SensorConnectionMode(_iec.IecIntEnum):
     """SensorConnectionMode (USINT)"""
     RC_SENSOR_ALGORITHM = 0
     """RC sensor and algorithm Force-Torque-Sensor connected to RC Control algorithm in RC"""
@@ -2265,7 +2263,7 @@ class SensorConnectionMode(IntEnum):
 _iec.register_enum(SensorConnectionMode, _iec.USINT)
 
 
-class SingularityAvoidanceMode(IntEnum):
+class SingularityAvoidanceMode(_iec.IecIntEnum):
     """SingularityAvoidanceMode (USINT)"""
     NO_CHANGE = 0
     """
@@ -2281,7 +2279,7 @@ class SingularityAvoidanceMode(IntEnum):
 _iec.register_enum(SingularityAvoidanceMode, _iec.USINT)
 
 
-class SplineMode(IntEnum):
+class SplineMode(_iec.IecIntEnum):
     """SplineMode (UINT)"""
     DISCRETE_POINTS = 0
     """0: Discrete Points"""
@@ -2298,7 +2296,7 @@ class SplineMode(IntEnum):
 _iec.register_enum(SplineMode, _iec.UINT)
 
 
-class StepMode(IntEnum):
+class StepMode(_iec.IecIntEnum):
     """StepMode (USINT)"""
     DEACTIVATE = 0
     """StepMode is deactivated"""
@@ -2317,7 +2315,7 @@ class StepMode(IntEnum):
 _iec.register_enum(StepMode, _iec.USINT)
 
 
-class StopMode(IntEnum):
+class StopMode(_iec.IecIntEnum):
     """StopMode (USINT)"""
     STOP_JOB_ID = 0
     """
@@ -2339,7 +2337,7 @@ class StopMode(IntEnum):
 _iec.register_enum(StopMode, _iec.USINT)
 
 
-class SyncInMode(IntEnum):
+class SyncInMode(_iec.IecIntEnum):
     """SyncInMode (USINT)"""
     IN_SYNC_IN_ZONE = 0
     """
@@ -2357,7 +2355,7 @@ class SyncInMode(IntEnum):
 _iec.register_enum(SyncInMode, _iec.USINT)
 
 
-class SyncMode(IntEnum):
+class SyncMode(_iec.IecIntEnum):
     """SyncMode (USINT)"""
     NO_SYNCHRONIZATION = 0
     """No synchronization will be executed"""
@@ -2372,7 +2370,7 @@ class SyncMode(IntEnum):
 _iec.register_enum(SyncMode, _iec.USINT)
 
 
-class ThresholdMode(IntEnum):
+class ThresholdMode(_iec.IecIntEnum):
     """ThresholdMode (USINT)"""
     AUTOMATIC = 0
     """Automatic."""
@@ -2383,7 +2381,7 @@ class ThresholdMode(IntEnum):
 _iec.register_enum(ThresholdMode, _iec.USINT)
 
 
-class ToolCalculationMode(IntEnum):
+class ToolCalculationMode(_iec.IecIntEnum):
     """ToolCalculationMode (SINT)"""
     TWO_POINT_Z_METHOD = 0
     """0: Two Point + Z-Method (default)"""
@@ -2404,7 +2402,7 @@ class ToolCalculationMode(IntEnum):
 _iec.register_enum(ToolCalculationMode, _iec.SINT)
 
 
-class TrajectoryMode(IntEnum):
+class TrajectoryMode(_iec.IecIntEnum):
     """TrajectoryMode (USINT)"""
     INVALID = 0
     """Invalid (default)"""
@@ -2417,7 +2415,7 @@ class TrajectoryMode(IntEnum):
 _iec.register_enum(TrajectoryMode, _iec.USINT)
 
 
-class TransformMode(IntEnum):
+class TransformMode(_iec.IecIntEnum):
     """TransformMode (SINT)"""
     MIRROR_AT_POINT = 0
     """
@@ -2457,7 +2455,7 @@ class TransformMode(IntEnum):
 _iec.register_enum(TransformMode, _iec.SINT)
 
 
-class TriggerModeIo(IntEnum):
+class TriggerModeIo(_iec.IecIntEnum):
     """TriggerModeIo (SINT)"""
     INVALID = 0
     """Invalid (default)"""
@@ -2546,7 +2544,7 @@ class TriggerModeIo(IntEnum):
 _iec.register_enum(TriggerModeIo, _iec.SINT)
 
 
-class TriggerModeLimit(IntEnum):
+class TriggerModeLimit(_iec.IecIntEnum):
     """TriggerModeLimit (SINT)"""
     INVALID = 0
     """0: Invalid (default)"""
@@ -2563,7 +2561,7 @@ class TriggerModeLimit(IntEnum):
 _iec.register_enum(TriggerModeLimit, _iec.SINT)
 
 
-class TriggerModeMeasurement(IntEnum):
+class TriggerModeMeasurement(_iec.IecIntEnum):
     """TriggerModeMeasurement (USINT)"""
     NO_TRIGGER = 0
     """(default) No trigger related behavior"""
@@ -2582,7 +2580,7 @@ class TriggerModeMeasurement(IntEnum):
 _iec.register_enum(TriggerModeMeasurement, _iec.USINT)
 
 
-class TriggerReactionMode(IntEnum):
+class TriggerReactionMode(_iec.IecIntEnum):
     """TriggerReactionMode (SINT)"""
     NO_REACTION = 0
     """No reaction (default)."""
@@ -2608,7 +2606,7 @@ class TriggerReactionMode(IntEnum):
 _iec.register_enum(TriggerReactionMode, _iec.SINT)
 
 
-class TurnMode(IntEnum):
+class TurnMode(_iec.IecIntEnum):
     """TurnMode (USINT)"""
     USE_TURN_NUMBER = 0
     """Use TurnNumber in position"""
@@ -2621,7 +2619,7 @@ class TurnMode(IntEnum):
 _iec.register_enum(TurnMode, _iec.USINT)
 
 
-class WorkAreaReactionMode(IntEnum):
+class WorkAreaReactionMode(_iec.IecIntEnum):
     """WorkAreaReactionMode (USINT)"""
     NO_REACTION = 0
     """0: No reaction (default) • RC reports violation • Robot is not stopped"""
@@ -2637,7 +2635,7 @@ class WorkAreaReactionMode(IntEnum):
 _iec.register_enum(WorkAreaReactionMode, _iec.USINT)
 
 
-class ActiveCommandRegisterState(IntEnum):
+class ActiveCommandRegisterState(_iec.IecIntEnum):
     """ActiveCommandRegisterState (INT)"""
     IS_FREE = 0
     """IS_FREE denotes not used but available resources (empty slots in the ACR)."""
@@ -2657,7 +2655,7 @@ class ActiveCommandRegisterState(IntEnum):
 _iec.register_enum(ActiveCommandRegisterState, _iec.INT)
 
 
-class BufferStateCmd(IntEnum):
+class BufferStateCmd(_iec.IecIntEnum):
     """BufferStateCmd (INT)"""
     EMPTY = 0
     """PDF Page 353"""
@@ -2670,7 +2668,7 @@ class BufferStateCmd(IntEnum):
 _iec.register_enum(BufferStateCmd, _iec.INT)
 
 
-class BufferStateRsp(IntEnum):
+class BufferStateRsp(_iec.IecIntEnum):
     """BufferStateRsp (INT)"""
     EMPTY = 0
     """PDF Seite 353"""
@@ -2682,7 +2680,7 @@ class BufferStateRsp(IntEnum):
 _iec.register_enum(BufferStateRsp, _iec.INT)
 
 
-class CmdMessageState(IntEnum):
+class CmdMessageState(_iec.IecIntEnum):
     """CmdMessageState (USINT)"""
     EMPTY = 0
     """No operation or process is active"""
@@ -2709,7 +2707,7 @@ class CmdMessageState(IntEnum):
 _iec.register_enum(CmdMessageState, _iec.USINT)
 
 
-class InitializationState(IntEnum):
+class InitializationState(_iec.IecIntEnum):
     """InitializationState (INT)"""
     DEFAULT = 0
     """Default"""
@@ -2748,7 +2746,7 @@ class InitializationState(IntEnum):
 _iec.register_enum(InitializationState, _iec.INT)
 
 
-class RaPowerState(IntEnum):
+class RaPowerState(_iec.IecIntEnum):
     """RaPowerState (USINT)"""
     NOT_ENABLED = 0
     """Robot drives disabled. Robot cannot be moved"""
@@ -2759,7 +2757,7 @@ class RaPowerState(IntEnum):
 _iec.register_enum(RaPowerState, _iec.USINT)
 
 
-class RaSequenceState(IntEnum):
+class RaSequenceState(_iec.IecIntEnum):
     """RaSequenceState (USINT)"""
     IDLE = 0
     """Robot can be moved by incoming command"""
@@ -2772,7 +2770,7 @@ class RaSequenceState(IntEnum):
 _iec.register_enum(RaSequenceState, _iec.USINT)
 
 
-class RiState(IntEnum):
+class RiState(_iec.IecIntEnum):
     """RiState (USINT)"""
     NOT_INITIALIZED = 0
     """RI is not initialized"""
@@ -2785,7 +2783,7 @@ class RiState(IntEnum):
 _iec.register_enum(RiState, _iec.USINT)
 
 
-class TelegramState(IntEnum):
+class TelegramState(_iec.IecIntEnum):
     """TelegramState (USINT)"""
     UNDEFINED = 0
     """Default"""
@@ -2826,7 +2824,7 @@ class TelegramState(IntEnum):
 _iec.register_enum(TelegramState, _iec.USINT)
 
 
-class AreaType(IntEnum):
+class AreaType(_iec.IecIntEnum):
     """AreaType (USINT)"""
     AXES = 0
     """0: Axes"""
@@ -2841,7 +2839,7 @@ class AreaType(IntEnum):
 _iec.register_enum(AreaType, _iec.USINT)
 
 
-class AxesGroupParameterCmdEntries(IntEnum):
+class AxesGroupParameterCmdEntries(_iec.IecIntEnum):
     """AxesGroupParameterCmdEntries (UINT)"""
     RobotTask = 0
     """Handles multiple mechanisms required for operation of the interface"""
@@ -3099,7 +3097,7 @@ class AxesGroupParameterCmdEntries(IntEnum):
 _iec.register_enum(AxesGroupParameterCmdEntries, _iec.UINT)
 
 
-class CmdType(IntEnum):
+class CmdType(_iec.IecIntEnum):
     """CmdType (UINT)"""
     RobotTask = 0
     """Handles multiple mechanisms required for operation of the interface"""
@@ -3355,7 +3353,7 @@ class CmdType(IntEnum):
 _iec.register_enum(CmdType, _iec.UINT)
 
 
-class ConveyorType(IntEnum):
+class ConveyorType(_iec.IecIntEnum):
     """ConveyorType (USINT)"""
     LINEAR_CONVEYOR_TRACKING = 0
     """Linear Conveyor Tracking (default)"""
@@ -3366,7 +3364,7 @@ class ConveyorType(IntEnum):
 _iec.register_enum(ConveyorType, _iec.USINT)
 
 
-class DataType(IntEnum):
+class DataType(_iec.IecIntEnum):
     """DataType (USINT)"""
     TYPE_BOOL = 1
     """BOOL"""
@@ -3399,7 +3397,7 @@ class DataType(IntEnum):
 _iec.register_enum(DataType, _iec.USINT)
 
 
-class MessageType(IntEnum):
+class MessageType(_iec.IecIntEnum):
     """MessageType (USINT)"""
     RI = 1
     """RI related messages"""
@@ -3414,7 +3412,7 @@ class MessageType(IntEnum):
 _iec.register_enum(MessageType, _iec.USINT)
 
 
-class ReferenceType(IntEnum):
+class ReferenceType(_iec.IecIntEnum):
     """ReferenceType (USINT)"""
     TOOL = 0
     """
@@ -3431,7 +3429,7 @@ class ReferenceType(IntEnum):
 _iec.register_enum(ReferenceType, _iec.USINT)
 
 
-class UnitType(IntEnum):
+class UnitType(_iec.IecIntEnum):
     """UnitType (USINT)"""
     VOLT = 0
     """Volt"""

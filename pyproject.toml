@@ -52,7 +52,13 @@ ignore = [
     "N815", # mixedCase class attributes mirror ST
     "N816",
     "N999", # module names may mirror ST POU names
+    "N801", # class names mirror ST POU names (MC_GroupStopFB)
+    "SIM300", # upper case ST field names are no constants (SEQ_ACK)
+    "SIM108", # ported ST IF/ELSE blocks stay readable 1:1
 ]
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 140  # ST-Source marker comments
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["N", "B011"]

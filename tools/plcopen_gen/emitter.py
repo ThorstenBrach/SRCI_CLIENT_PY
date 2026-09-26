@@ -348,7 +348,7 @@ class Generator:
 
     def emit_enums(self) -> str:
         out = [self.header("enumerations")]
-        out.append("from __future__ import annotations\n\nfrom enum import IntEnum\n\n")
+        out.append("from __future__ import annotations\n\n")
         out.append("from srci.types import iec as _iec\n\n")
         names = list(self.lib.enums)
         enum_aliases: list[tuple[str, str]] = []
@@ -370,7 +370,7 @@ class Generator:
 
     def _emit_enum(self, enum: EnumDef) -> str:
         cls = self.enum_classes[enum.name]
-        lines = [f"\n\nclass {enum.name}(IntEnum):\n"]
+        lines = [f"\n\nclass {enum.name}(_iec.IecIntEnum):\n"]
         lines.append(_doc(enum.doc or f"{enum.name} ({enum.base})", "    "))
         for v in enum.values:
             lines.append(f"    {v.name} = {cls[v.name].value}\n")
@@ -419,8 +419,8 @@ class Generator:
         for s in order:
             field_names = {py_name(f.name) for f in self.all_fields(s)}
             conflicts = field_names & type_names
-            base = s.extends or ""
-            out.append(f"\n\n@_dataclass(kw_only=True, slots=True)\nclass {s.name}({base}):\n")
+            base = f"({s.extends})" if s.extends else ""
+            out.append(f"\n\n@_dataclass(kw_only=True, slots=True)\nclass {s.name}{base}:\n")
             out.append(_doc(s.doc or s.name, "    "))
             out.append("\n    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]\n")
             for f in s.fields:
