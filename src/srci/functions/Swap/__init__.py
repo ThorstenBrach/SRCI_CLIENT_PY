@@ -1,0 +1,1 @@
+"""Swap (generated package)."""

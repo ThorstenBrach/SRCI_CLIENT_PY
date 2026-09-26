@@ -140,17 +140,51 @@ class StringType:
         return self.length + 1
 
 
+def library_parameter(name: str) -> int:
+    """Current value of ``RobotLibraryParameter.<name>`` (see :func:`srci.configure`)."""
+    from srci.types._generated.constants import RobotLibraryParameter
+
+    value = getattr(RobotLibraryParameter, name)
+    return int(value)
+
+
+@dataclass(frozen=True, slots=True)
+class Param:
+    """Array bound that depends on a library parameter, e.g. ``RobotLibraryParameter.TOOL_MAX - 1``.
+
+    Like the library parameters of a Codesys library the value is chosen by the user of the
+    library (:func:`srci.configure`) before the first function block is created.
+    """
+
+    name: str
+    offset: int = 0
+
+    def __index__(self) -> int:
+        return library_parameter(self.name) + self.offset
+
+    __int__ = __index__
+
+    def __repr__(self) -> str:
+        sign = f" {'+' if self.offset >= 0 else '-'} {abs(self.offset)}" if self.offset else ""
+        return f"RobotLibraryParameter.{self.name}{sign}"
+
+
+def array_len(lower: int | Param, upper: int | Param) -> int:
+    """Number of elements of ``ARRAY[lower..upper]``."""
+    return int(upper) - int(lower) + 1
+
+
 @dataclass(frozen=True, slots=True)
 class ArrayType:
-    """``ARRAY[lower..upper] OF element``."""
+    """``ARRAY[lower..upper] OF element`` (bounds may depend on library parameters)."""
 
-    lower: int
-    upper: int
+    lower: int | Param
+    upper: int | Param
     element: IecType
 
     @property
     def count(self) -> int:
-        return self.upper - self.lower + 1
+        return int(self.upper) - int(self.lower) + 1
 
 
 class IecIntEnum(IntEnum):
@@ -225,6 +259,24 @@ class InstanceType:
 
 
 IecType = Elementary | StringType | ArrayType | EnumType | StructType | PointerType | InstanceType
+
+
+def new_instance(name: str) -> Any:
+    """New function block instance for a member of a structure (e.g. ``R_TRIG``).
+
+    The function blocks live in ``srci.iec.standard`` and ``srci.fb``; they are imported
+    on first use (the structures must not import them at module level).
+    """
+    import importlib
+
+    if name in ("R_TRIG", "F_TRIG", "TON", "TOF", "TP"):
+        module = "srci.iec.standard"
+    else:
+        from srci.fb._registry import FB_MODULES
+
+        module = FB_MODULES[name]
+    cls = getattr(importlib.import_module(module), name)
+    return cls()
 
 
 @dataclass(frozen=True, slots=True)

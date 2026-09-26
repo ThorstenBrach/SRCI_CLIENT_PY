@@ -7,7 +7,7 @@ Regenerate with ``python -m tools.plcopen_gen``.
 # fmt: off
 from __future__ import annotations
 
-from typing import Final
+from typing import ClassVar, Final
 
 from srci.types import iec as _iec
 from srci.types._generated import enums as _e
@@ -56,47 +56,47 @@ class RobotLibraryConstants:
 
 class RobotLibraryDefines:
     """Global variable list RobotLibraryDefines of the PLC library."""
-    MaxTypeNameLength: Final[int] = 0
+    MaxTypeNameLength: ClassVar[int] = 0
     """Maximal length of type name"""
 
 
 class RobotLibraryParameter:
     """Global variable list RobotLibraryParameter of the PLC library."""
-    TOOL_MAX: Final[int] = 16
+    TOOL_MAX: ClassVar[int] = 16
     """Maximal amount of tools"""
-    FRAME_MAX: Final[int] = 16
+    FRAME_MAX: ClassVar[int] = 16
     """Maximal amount of frames"""
-    LOAD_MAX: Final[int] = 16
+    LOAD_MAX: ClassVar[int] = 16
     """Maximal amount of loads"""
-    WORK_AREAS_MAX: Final[int] = 16
+    WORK_AREAS_MAX: ClassVar[int] = 16
     """Maximal amount of work areas"""
-    SYSTEM_LOG_MAX: Final[int] = 32
+    SYSTEM_LOG_MAX: ClassVar[int] = 32
     """Maximal amount of system logs"""
-    MESSAGE_LOG_MAX: Final[int] = 100
+    MESSAGE_LOG_MAX: ClassVar[int] = 100
     """Maximal amount of message logs"""
-    MESSAGE_TEXT_LEN: Final[int] = 255
+    MESSAGE_TEXT_LEN: ClassVar[int] = 255
     """Maximum string length for message texts"""
-    LIST_ENTRIES_MAX: Final[int] = 100
+    LIST_ENTRIES_MAX: ClassVar[int] = 100
     """Maximal amount of List entries"""
-    PARAMETER_PAYLOAD_MAX: Final[int] = 255
+    PARAMETER_PAYLOAD_MAX: ClassVar[int] = 255
     """Maximal amount of bytes for the parameter payload"""
-    RESPONSE_PAYLOAD_MAX: Final[int] = 255
+    RESPONSE_PAYLOAD_MAX: ClassVar[int] = 255
     """Maximal amount of bytes for the response payload"""
-    SUB_PROGRAM_DATA_MAX: Final[int] = 189
+    SUB_PROGRAM_DATA_MAX: ClassVar[int] = 189
     """Maximal amount of bytes that can be exchanged with the sub program on the RC"""
-    SPLINE_DATA_MAX: Final[int] = 64
+    SPLINE_DATA_MAX: ClassVar[int] = 64
     """Maximal amount of spline data"""
-    ACTIVE_CMD_REGISTER_ENTRIES_MAX: Final[int] = 50
+    ACTIVE_CMD_REGISTER_ENTRIES_MAX: ClassVar[int] = 50
     """Maximal amount of entries in the Active Command Register"""
-    MESSAGE_CODES_MAX: Final[int] = 15
+    MESSAGE_CODES_MAX: ClassVar[int] = 15
     """Maximal amount of message codes"""
-    FRAGMENT_MAX: Final[int] = 9
+    FRAGMENT_MAX: ClassVar[int] = 9
     """Maximal amount of fragments"""
-    SWAP_BYTE_ORDER: Final[bool] = True
+    SWAP_BYTE_ORDER: ClassVar[bool] = True
     """Flag to indicate that the byte order must be changed"""
-    INVALID_FRAMES_CHECK_TIMEOUT: Final[int] = 60000
+    INVALID_FRAMES_CHECK_TIMEOUT: ClassVar[int] = 60000
     """Timeout for checking for invalid frames"""
-    ACR_USAGE_WARNING_LIMIT: Final[float] = 80.0
+    ACR_USAGE_WARNING_LIMIT: ClassVar[float] = 80.0
     """Warning limit for ACR registers running low"""
 
 

@@ -185,7 +185,7 @@ def test_datablock_and_string() -> None:
     r = receiver(b"Hello\x00xyz")
     assert r.GetString(9) == "Hello"
     r = receiver(b"abc\x00")
-    assert r.GetDataBlock(4, IsString=True) == b"abc"
+    assert r.GetDataBlock(Size=4, IsString=True) == b"abc"
 
 
 # ---------------------------------------------------------------- footer / lifesign

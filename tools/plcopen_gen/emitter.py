@@ -35,6 +35,30 @@ _ELEM_PY = {
 }
 
 
+# standard function blocks of IEC 61131-3 used in structures
+STANDARD_FBS = {"R_TRIG", "F_TRIG", "TON", "TOF", "TP"}
+
+
+# library parameters that the user may change at runtime (srci.configure)
+CONFIGURABLE_GROUPS = {"RobotLibraryParameter"}
+
+_PARAM_BOUND = re.compile(r"^\s*RobotLibraryParameter\.(\w+)\s*(?:([+-])\s*(\d+))?\s*$", re.IGNORECASE)
+
+
+def param_bound(expr: str) -> tuple[str, int] | None:
+    """``'RobotLibraryParameter.TOOL_MAX - 1'`` -> ``('TOOL_MAX', -1)``."""
+    text = expr.strip()
+    while text.startswith("(") and text.endswith(")"):
+        text = text[1:-1]
+    m = _PARAM_BOUND.match(text)
+    if m is None:
+        if "robotlibraryparameter" in expr.lower():
+            raise GenError(f"unsupported parameter dependent array bound {expr!r}")
+        return None
+    offset = int(m.group(3) or 0) * (-1 if m.group(2) == "-" else 1)
+    return m.group(1).upper(), offset
+
+
 class GenError(Exception):
     pass
 
@@ -57,6 +81,21 @@ class RArray:
     lower: int
     upper: int
     element: Resolved
+    # bounds that depend on a library parameter: (parameter name, offset)
+    lower_param: tuple[str, int] | None = None
+    upper_param: tuple[str, int] | None = None
+
+    def bound_code(self, which: str) -> str:
+        """Python code of a bound (``_iec.Param(...)`` for parameter dependent bounds)."""
+        param = self.lower_param if which == "lower" else self.upper_param
+        value = self.lower if which == "lower" else self.upper
+        if param is None:
+            return str(value)
+        return f"_iec.Param({param[0]!r}, {param[1]})" if param[1] else f"_iec.Param({param[0]!r})"
+
+    @property
+    def dynamic(self) -> bool:
+        return self.lower_param is not None or self.upper_param is not None
 
 
 @dataclass(frozen=True)
@@ -206,7 +245,13 @@ class Generator:
         if isinstance(t, StringRef):
             return RString(self.eval_int(t.length_expr))
         if isinstance(t, ArrayRef):
-            return RArray(self.eval_int(t.lower_expr), self.eval_int(t.upper_expr), self.resolve(t.element))
+            return RArray(
+                self.eval_int(t.lower_expr),
+                self.eval_int(t.upper_expr),
+                self.resolve(t.element),
+                param_bound(t.lower_expr),
+                param_bound(t.upper_expr),
+            )
         if isinstance(t, PointerRef):
             return RPointer(t.target)
         name = self.type_names.get(t.name.lower(), t.name)
@@ -247,7 +292,7 @@ class Generator:
         if isinstance(r, RString):
             return f"_iec.StringType({r.length})"
         if isinstance(r, RArray):
-            return f"_iec.ArrayType({r.lower}, {r.upper}, {self.descriptor(r.element)})"
+            return f"_iec.ArrayType({r.bound_code('lower')}, {r.bound_code('upper')}, {self.descriptor(r.element)})"
         if isinstance(r, REnum):
             return f"_iec.EnumType(_e.{r.name})"
         if isinstance(r, RStruct):
@@ -323,16 +368,23 @@ class Generator:
             items.extend([None] * (count - len(items)))
             codes = [self._default(r.element, v) for v in items]
             mutable_elems = any(m for _, m in codes)
+            count_code = str(count)
+            if r.dynamic:
+                if init is not None:
+                    raise GenError("initial values for an array with parameter dependent bounds")
+                count_code = f"_iec.array_len({r.bound_code('lower')}, {r.bound_code('upper')})"
             if all(c == codes[0][0] for c, _ in codes):
                 if mutable_elems:
-                    body = f"[{codes[0][0]} for _ in range({count})]"
+                    body = f"[{codes[0][0]} for _ in range({count_code})]"
                 else:
-                    body = f"[{codes[0][0]}] * {count}"
+                    body = f"[{codes[0][0]}] * {count_code}"
             else:
                 body = "[" + ", ".join(c for c, _ in codes) + "]"
             if r.lower != 0:
                 body = f"_iec.IecArray({r.lower}, {body})"
             return body, True
+        if isinstance(r, RInstance) and (r.name in self.lib.function_blocks or r.name in STANDARD_FBS):
+            return f"_iec.new_instance({r.name!r})", True
         return "None", False
 
     # ------------------------------------------------------------------ modules
@@ -449,7 +501,7 @@ class Generator:
         out = [self.header("constants and library parameters")]
         out.append(
             "from __future__ import annotations\n\n"
-            "from typing import Final\n\n"
+            "from typing import ClassVar, Final\n\n"
             "from srci.types import iec as _iec\n"
             "from srci.types._generated import enums as _e\n"
             "from srci.types._generated.structs import *  # noqa: F403\n\n"
@@ -466,7 +518,12 @@ class Generator:
                 r = self.resolve(c.type)
                 code, _ = self.default(r, c.init, f"{group.name}.{c.name}")
                 ann = self.annotation(r, set())
-                out.append(f"    {c.name}: Final[{ann}] = {code}\n")
+                typ = (
+                    f"Final[{ann}]"
+                    if group.constant and group.name not in CONFIGURABLE_GROUPS
+                    else f"ClassVar[{ann}]"
+                )
+                out.append(f"    {c.name}: {typ} = {code}\n")
                 out.append(_doc(c.doc, "    "))
         out.append("\n\n_ = _iec  # keep import for type descriptors\n")
         return "".join(out)

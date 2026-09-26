@@ -47,7 +47,8 @@ class MC_RobotTaskFB_Telegram:
         def CreateLogMessagePara4(self, **kwargs: Any) -> None: ...
         def CreateLogMessagePara5(self, **kwargs: Any) -> None: ...
 
-    def __init__(self) -> None:
+    def _init_vars_(self) -> None:
+        # called by srci.iec.fb.FunctionBlock (variables of the telegram part)
         self.Telegram = Telegram()
         self.SendData = RobotLibrarySendDataFB()
         self.RecvData = RobotLibraryRecvDataFB()
@@ -424,7 +425,7 @@ class MC_RobotTaskFB_Telegram:
                             return
 
                     # Add Response to ACR
-                    AxesGroup.Acyclic.ActiveCommandRegister.AddRsp(frag)
+                    AxesGroup.Acyclic.ActiveCommandRegister.AddRsp(Rsp=frag)
 
                     # Only for debugging - header is part of the payload itself
                     payload = frag.Command.Payload

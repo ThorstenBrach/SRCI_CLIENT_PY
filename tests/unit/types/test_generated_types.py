@@ -127,8 +127,14 @@ def check_value(value: Any, t: iec.IecType, where: str) -> None:
             assert isinstance(value, iec.IecArray) and value.lower == t.lower, where
         for i, item in enumerate(value):
             check_value(item, t.element, f"{where}[{i}]")
-    elif isinstance(t, iec.PointerType | iec.InstanceType):
+    elif isinstance(t, iec.PointerType):
         assert value is None, where
+    elif isinstance(t, iec.InstanceType):
+        # function block instances are created (interfaces stay None)
+        if t.name.startswith("I") and t.name[1].isupper():
+            assert value is None, where
+        else:
+            assert type(value).__name__ == t.name, where
 
 
 def check_struct(obj: Any, where: str) -> None:

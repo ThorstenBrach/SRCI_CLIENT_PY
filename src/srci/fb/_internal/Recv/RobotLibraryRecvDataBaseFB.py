@@ -7,6 +7,7 @@ from __future__ import annotations
 import struct
 
 from srci.errors import PayloadUnderflowError
+from srci.iec.rt import Ptr
 from srci.iec.types import bit
 from srci.types import (
     ArmConfigElbow,
@@ -92,11 +93,17 @@ class RobotLibraryRecvDataBaseFB:
     def GetByte(self) -> int:
         return self._read(1)[0]
 
-    def GetDataBlock(self, Size: int, IsString: bool = False) -> bytes:
-        """Read ``Size`` bytes (``Size - 1`` if ``IsString``). ST copies into ``pData``."""
+    def GetDataBlock(self, pData: Ptr | None = None, Size: int = 0, IsString: bool = False) -> bytes:
+        """Read ``Size`` bytes (``Size - 1`` if ``IsString``) and copy them to ``pData``.
+
+        The bytes are also returned (ST: nothing is read if ``pData`` is NULL).
+        """
         if IsString:
             Size -= 1
-        return self._read(Size)
+        data = self._read(Size)
+        if pData is not None and Size > 0:
+            pData.write(data)
+        return data
 
     def GetDataInSync(self) -> DataInSync:
         tmp = self.GetByte()

@@ -1,0 +1,36 @@
+"""CIRC_MODE_TO_STRING
+
+ST-Source: Functions/Convert/TO_STRING/CIRC_MODE_TO_STRING.st
+Generated from the PLC library by ``python -m tools.st2py`` - DO NOT EDIT.
+"""
+
+# ruff: noqa
+# fmt: off
+# mypy: disable-error-code="no-any-return,assignment,arg-type,attr-defined,union-attr,operator,index,misc,override,call-arg,comparison-overlap,return-value,has-type,name-defined,no-untyped-def,var-annotated,valid-type,call-overload,unreachable,truthy-function"
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from srci.functions.String.StrReplace import StrReplace
+from srci.iec.conv import SINT_TO_STRING
+from srci.iec.rt import CONCAT, trunc_str
+from srci.types import CircMode
+
+__all__ = ['CIRC_MODE_TO_STRING']
+
+
+def CIRC_MODE_TO_STRING(*, Value: CircMode = CircMode.BORDER) -> str:
+    CIRC_MODE_TO_STRING: str = ''
+
+    match Value:
+        case CircMode.BORDER:
+            CIRC_MODE_TO_STRING = trunc_str(StrReplace(Str='BORDER ({0})', SubStr1='{0}', SubStr2=SINT_TO_STRING(Value)), 80)
+        case CircMode.CENTER:
+            CIRC_MODE_TO_STRING = trunc_str(StrReplace(Str='CENTER ({0})', SubStr1='{0}', SubStr2=SINT_TO_STRING(Value)), 80)
+        case CircMode.CENTER_WITH_ANGLE:
+            CIRC_MODE_TO_STRING = trunc_str(StrReplace(Str='CENTER_WITH_ANGLE ({0})', SubStr1='{0}', SubStr2=SINT_TO_STRING(Value)), 80)
+        case CircMode.RADIUS:
+            CIRC_MODE_TO_STRING = trunc_str(StrReplace(Str='RADIUS ({0})', SubStr1='{0}', SubStr2=SINT_TO_STRING(Value)), 80)
+        case _:
+            CIRC_MODE_TO_STRING = trunc_str(CONCAT('CIRC_MODE_TO_STRING Function: Error -> no parsing for value ', SINT_TO_STRING(Value)), 80)
+    return CIRC_MODE_TO_STRING

@@ -187,6 +187,10 @@ def parse_library(path: Path) -> Library:
         else:
             lib.aliases[name] = AliasDef(name, parse_type(base_type), _type_doc(dt))
 
+    pous = root.find(f"{NS}types/{NS}pous")
+    if pous is not None:
+        lib.function_blocks = {p.get("name", "") for p in pous if p.get("pouType") == "functionBlock"}
+
     for gv in root.iter(f"{NS}globalVars"):
         consts: list[ConstDef] = []
         for v in gv.findall(f"{NS}variable"):
@@ -196,5 +200,5 @@ def parse_library(path: Path) -> Library:
             consts.append(
                 ConstDef(v.get("name", ""), parse_type(t), _init(v), _text(v.find(f"{NS}documentation")))
             )
-        lib.const_groups.append(ConstGroup(gv.get("name", ""), consts))
+        lib.const_groups.append(ConstGroup(gv.get("name", ""), consts, gv.get("constant") == "true"))
     return lib

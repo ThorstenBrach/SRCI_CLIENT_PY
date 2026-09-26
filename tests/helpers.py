@@ -22,7 +22,7 @@ class FakeACR:
 
 class Host(MC_RobotTaskFB_Telegram):
     def __init__(self) -> None:
-        super().__init__()
+        self._init_vars_()
         self.SystemTime = SystemTime()
         self.logs: list[dict[str, Any]] = []
         self._parCfg.Com.TelegramLengthPlcToRob = 64

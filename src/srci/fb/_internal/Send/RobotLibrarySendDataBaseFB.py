@@ -8,6 +8,7 @@ import struct
 
 from srci.errors import PayloadOverflowError, ValueRangeError
 from srci.functions.Convert.Misc import CombineHalfBytes
+from srci.iec.rt import Ptr
 from srci.iec.types import check_range, set_bit
 from srci.types import (
     ArmConfigElbow,
@@ -98,8 +99,13 @@ class RobotLibrarySendDataBaseFB:
     def AddByte(self, Value: int) -> int:
         return self._add(Value, BYTE, ">B")
 
-    def AddDataBlock(self, Value: bytes | bytearray | list[int], Size: int | None = None) -> int:
-        """Copy a block of bytes (ST: ``pValue``/``Size``). ``Size`` defaults to ``len(Value)``."""
+    def AddDataBlock(self, pValue: Ptr | bytes | bytearray | list[int], Size: int | None = None) -> int:
+        """Copy a block of bytes (``pValue``: pointer or the bytes). ``Size`` defaults to ``len``."""
+        if isinstance(pValue, Ptr):
+            size = pValue.size - pValue.offset if Size is None else Size
+            Value: bytes | bytearray | list[int] = pValue.read(size) if size > 0 else b""
+        else:
+            Value = pValue
         size = len(Value) if Size is None else Size
         if size == 0 or len(Value) == 0:
             return self.PayloadLen  # ST: RETURN without changing anything

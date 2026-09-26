@@ -924,7 +924,7 @@ class CallSubprogramOutCmd:
     The requested subprogram on the RC is in progress. Movement of the axes trough this subprogram
     is possible.
     """
-    ReturnData: list[int] = _field(default_factory=lambda: [0] * 190)
+    ReturnData: list[int] = _field(default_factory=lambda: [0] * _iec.array_len(0, _iec.Param('SUB_PROGRAM_DATA_MAX')))
     """
     Acyclic output parameters of the subprogram Array length adjusts to transmitted data (max 190
     bytes)
@@ -944,7 +944,7 @@ class CallSubprogramParCmd:
     Triggero - Start executing when the trigger function with the identical EmitterID is triggered.
     Always positive. For more information, see chapter 5.5.12 Triggers
     """
-    Data: list[int] = _field(default_factory=lambda: [0] * 190)
+    Data: list[int] = _field(default_factory=lambda: [0] * _iec.array_len(0, _iec.Param('SUB_PROGRAM_DATA_MAX')))
     """
     Acyclic input parameters of the subprogram Array length adjusts to transmitted data (max 190
     bytes)
@@ -977,7 +977,7 @@ class CallSubprogramRecvData(RspHeader):
     The requested subprogram on the RC is in progress. Movement of the axes trough this subprogram
     is possible.
     """
-    ReturnData: list[int] = _field(default_factory=lambda: [0] * 190)
+    ReturnData: list[int] = _field(default_factory=lambda: [0] * _iec.array_len(0, _iec.Param('SUB_PROGRAM_DATA_MAX')))
     """
     Acyclic output parameters of the subprogram Array length adjusts to transmitted data (max 190
     bytes)
@@ -1007,7 +1007,7 @@ class CallSubprogramSendData(CmdHeader):
     """Reserve"""
     JobID: int = 0
     """Program number of the subprogram in the RC"""
-    Data: list[int] = _field(default_factory=lambda: [0] * 190)
+    Data: list[int] = _field(default_factory=lambda: [0] * _iec.array_len(0, _iec.Param('SUB_PROGRAM_DATA_MAX')))
     """
     Acyclic input parameters of the subprogram Array length adjusts to transmitted data (max 190
     bytes)
@@ -9906,7 +9906,7 @@ class CreateSplineParCmd:
     """Define the method to calculate the path trajectory for the spline movement"""
     SplineID: int = 0
     """Index of the spline trajectory to be created"""
-    SplineData: _iec.IecArray[_s.SplineData] = _field(default_factory=lambda: _iec.IecArray(1, [SplineData() for _ in range(64)]))
+    SplineData: _iec.IecArray[_s.SplineData] = _field(default_factory=lambda: _iec.IecArray(1, [SplineData() for _ in range(_iec.array_len(1, _iec.Param('SPLINE_DATA_MAX')))]))
     """
     Contains all data relevant to the spline trajectory • Cartesian position • Coordinate systems •
     Dynamic parameters For more information refer to chapter 5.5.13.3
@@ -9929,7 +9929,7 @@ class CreateSplineSendData(CmdHeader):
     """Define the method to calculate the path trajectory for the spline movement"""
     SplineID: int = 0
     """Index of the spline trajectory to be created"""
-    SplineData: _iec.IecArray[SplineDataSend] = _field(default_factory=lambda: _iec.IecArray(1, [SplineDataSend() for _ in range(64)]))
+    SplineData: _iec.IecArray[SplineDataSend] = _field(default_factory=lambda: _iec.IecArray(1, [SplineDataSend() for _ in range(_iec.array_len(1, _iec.Param('SPLINE_DATA_MAX')))]))
     """
     Contains all data relevant to the spline trajectory • Cartesian position • Coordinate systems •
     Dynamic parameters For more information refer to chapter 5.5.13.3
@@ -10021,7 +10021,7 @@ class DynamicSplineParCmd:
     defines the time for the movement to reach the target position Error is sent by the RC, if the
     time cannot be kept.
     """
-    SplineData: _iec.IecArray[_s.SplineData] = _field(default_factory=lambda: _iec.IecArray(1, [SplineData() for _ in range(64)]))
+    SplineData: _iec.IecArray[_s.SplineData] = _field(default_factory=lambda: _iec.IecArray(1, [SplineData() for _ in range(_iec.array_len(1, _iec.Param('SPLINE_DATA_MAX')))]))
     """
     Contains all data relevant to the spline trajectory • Cartesian position • Coordinate systems •
     Dynamic parameters For more information refer to chapter 5.5.13.3
@@ -10091,7 +10091,7 @@ class DynamicSplineSendData(CmdHeader):
     Starts calculation and spline motion when equal or greater to number of buffered spline
     positions
     """
-    SplineData: _iec.IecArray[SplineDataSend] = _field(default_factory=lambda: _iec.IecArray(1, [SplineDataSend() for _ in range(64)]))
+    SplineData: _iec.IecArray[SplineDataSend] = _field(default_factory=lambda: _iec.IecArray(1, [SplineDataSend() for _ in range(_iec.array_len(1, _iec.Param('SPLINE_DATA_MAX')))]))
     """
     Contains all data relevant to the spline trajectory • Cartesian position • Coordinate systems •
     Dynamic parameters For more information refer to chapter 5.5.13.3
@@ -10582,7 +10582,7 @@ class SetTriggerErrorParCmd:
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
     Mode: _e.ErrorTriggerMode = _e.ErrorTriggerMode.ANY_COMMAND
     """Defines error origin through which the associated Action will be triggered"""
-    MessageCodes: list[int] = _field(default_factory=lambda: [0] * 16)
+    MessageCodes: list[int] = _field(default_factory=lambda: [0] * _iec.array_len(0, _iec.Param('MESSAGE_CODES_MAX')))
     """
     Defines message codes through which the associated Action will be triggered (relates to Mode 6
     and 7)
@@ -10657,7 +10657,7 @@ class SetTriggerErrorSendData(CmdHeader):
     Defines if parametrization messages are included (relates to Mode 0 to 5) • FALSE (default): Do
     not include incorrect parametrization • TRUE: Include incorrect parametrization
     """
-    MessageCodes: list[int] = _field(default_factory=lambda: [0] * 16)
+    MessageCodes: list[int] = _field(default_factory=lambda: [0] * _iec.array_len(0, _iec.Param('MESSAGE_CODES_MAX')))
     """
     Defines message codes through which the associated Action will be triggered (relates to Mode 6
     and 7)
@@ -12315,7 +12315,7 @@ class AxesGroupAcyclic:
     """AxesGroupAcyclic"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
-    ActiveCommandRegister: Any = None
+    ActiveCommandRegister: Any = _field(default_factory=lambda: _iec.new_instance('ActiveCommandRegisterFB'))
     """Active command register"""
 
 
@@ -12345,7 +12345,7 @@ class AxesGroupAcyclicAcrEntryCmdBuffer:
     """Timestamp"""
     State: _e.BufferStateCmd = _e.BufferStateCmd.EMPTY
     """Buffer state"""
-    Payload: list[int] = _field(default_factory=lambda: [0] * 256)
+    Payload: list[int] = _field(default_factory=lambda: [0] * _iec.array_len(0, _iec.Param('PARAMETER_PAYLOAD_MAX')))
     """Payload defined by type per CMD definition. Processed by Appl. Layer Task."""
     PayloadLen: int = 0
     """Payload length"""
@@ -12361,7 +12361,7 @@ class AxesGroupAcyclicAcrEntryRspBuffer:
     Timestamp: SystemTime = _field(default_factory=lambda: SystemTime())
     """Timestamp"""
     State: _e.BufferStateRsp = _e.BufferStateRsp.EMPTY
-    Payload: list[int] = _field(default_factory=lambda: [0] * 256)
+    Payload: list[int] = _field(default_factory=lambda: [0] * _iec.array_len(0, _iec.Param('RESPONSE_PAYLOAD_MAX')))
     """Payload defined by type per CMD definition. Processed by Appl. Layer Task."""
     PayloadLen: int = 0
     """Payload length"""
@@ -12374,9 +12374,9 @@ class AxesGroupAcyclicExecutionOrderList:
     """AxesGroupAcyclicExecutionOrderList"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
-    Command: _iec.IecArray[int] = _field(default_factory=lambda: _iec.IecArray(1, [0] * 50))
+    Command: _iec.IecArray[int] = _field(default_factory=lambda: _iec.IecArray(1, [0] * _iec.array_len(1, _iec.Param('ACTIVE_CMD_REGISTER_ENTRIES_MAX'))))
     """Command"""
-    Response: _iec.IecArray[int] = _field(default_factory=lambda: _iec.IecArray(1, [0] * 50))
+    Response: _iec.IecArray[int] = _field(default_factory=lambda: _iec.IecArray(1, [0] * _iec.array_len(1, _iec.Param('ACTIVE_CMD_REGISTER_ENTRIES_MAX'))))
     """Response"""
 
 
@@ -12812,9 +12812,9 @@ class AxesGroupMessageLog:
     """Amount of message log entries"""
     LogLevel: _e.Severity = _e.Severity.DEACTIVATE
     """Logging level"""
-    SystemLog: list[str] = _field(default_factory=lambda: [''] * 33)
+    SystemLog: list[str] = _field(default_factory=lambda: [''] * _iec.array_len(0, _iec.Param('SYSTEM_LOG_MAX')))
     """System log"""
-    Messages: list[AlarmMessage] = _field(default_factory=lambda: [AlarmMessage() for _ in range(101)])
+    Messages: list[AlarmMessage] = _field(default_factory=lambda: [AlarmMessage() for _ in range(_iec.array_len(0, _iec.Param('MESSAGE_LOG_MAX')))])
     """Message Log"""
     ExternalLogger: Any = None
     """Interface to an external logger"""
@@ -13148,13 +13148,13 @@ class AxesGroupStateDataChanged:
     """AxesGroupStateDataChanged"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
-    Tool: list[bool] = _field(default_factory=lambda: [False] * 16)
+    Tool: list[bool] = _field(default_factory=lambda: [False] * _iec.array_len(0, _iec.Param('TOOL_MAX', -1)))
     """indicates that tool data has changed"""
-    Frame: list[bool] = _field(default_factory=lambda: [False] * 16)
+    Frame: list[bool] = _field(default_factory=lambda: [False] * _iec.array_len(0, _iec.Param('FRAME_MAX', -1)))
     """indicates that frame data has changed"""
-    Load: list[bool] = _field(default_factory=lambda: [False] * 16)
+    Load: list[bool] = _field(default_factory=lambda: [False] * _iec.array_len(0, _iec.Param('LOAD_MAX', -1)))
     """indicates that load data has changed"""
-    WorkArea: list[bool] = _field(default_factory=lambda: [False] * 16)
+    WorkArea: list[bool] = _field(default_factory=lambda: [False] * _iec.array_len(0, _iec.Param('WORK_AREAS_MAX', -1)))
     """indicates that work area has changed"""
     DefaultDynamics: bool = False
     """indicates that default dynamic has changed"""
@@ -13316,15 +13316,15 @@ class AxesGroupState:
     """Robot is initialized"""
     OnlineChange: bool = False
     """Online Change detected"""
-    OnlineChange_R: Any = None
+    OnlineChange_R: Any = _field(default_factory=lambda: _iec.new_instance('R_TRIG'))
     """Rising edge for Online Change detected"""
-    OnlineChange_F: Any = None
+    OnlineChange_F: Any = _field(default_factory=lambda: _iec.new_instance('F_TRIG'))
     """Falling edge for Online Change detected"""
     GroupReset: bool = False
     """GroupReset active"""
-    GroupReset_R: Any = None
+    GroupReset_R: Any = _field(default_factory=lambda: _iec.new_instance('R_TRIG'))
     """Rising edge for GroupReset"""
-    GroupReset_F: Any = None
+    GroupReset_F: Any = _field(default_factory=lambda: _iec.new_instance('F_TRIG'))
     """Falling edge for GroupReset"""
     SequenceCountSend: int = 0
     """Counter of sequences to send"""
@@ -13353,7 +13353,7 @@ class AxesGroup:
     """Parameter"""
     State: AxesGroupState = _field(default_factory=lambda: AxesGroupState())
     """RI state information (see chapter 5.5.3)"""
-    MessageLog: Any = None
+    MessageLog: Any = _field(default_factory=lambda: _iec.new_instance('AxesGroupMessageLogFB'))
     """RC, RA, RI, and CMD warnings and errors (see chapter 5.5.11)"""
     Cyclic: AxesGroupCyclic = _field(default_factory=lambda: AxesGroupCyclic())
     """Cyclic data exchanged between server and client (see chapter 5.6.6.5)"""
@@ -13361,7 +13361,7 @@ class AxesGroup:
     """Optional cyclic data exchanged between server and client (see chapter 5.6.6.2)"""
     Acyclic: AxesGroupAcyclic = _field(default_factory=lambda: AxesGroupAcyclic())
     """Execution order list and ACR entries (see chapter 5.6.4.2)"""
-    SystemData: Any = None
+    SystemData: Any = _field(default_factory=lambda: _iec.new_instance('AxesGroupSystemDataFB'))
     """System data like ToolData, FrameData, LoadData etc."""
 
 
@@ -15183,7 +15183,7 @@ class TelegramPlcToRobCommand:
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
     Header: TelegramPlcToRobCommandHeader = _field(default_factory=lambda: TelegramPlcToRobCommandHeader())
     """Header"""
-    Payload: list[int] = _field(default_factory=lambda: [0] * 256)
+    Payload: list[int] = _field(default_factory=lambda: [0] * _iec.array_len(0, _iec.Param('PARAMETER_PAYLOAD_MAX')))
     """Payload"""
 
 
@@ -15504,7 +15504,7 @@ class TelegramPlcToRobSequence:
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
     Header: TelegramPlcToRobSequenceHeader = _field(default_factory=lambda: TelegramPlcToRobSequenceHeader())
     """Header"""
-    Fragment: list[TelegramPlcToRobFragment] = _field(default_factory=lambda: [TelegramPlcToRobFragment() for _ in range(10)])
+    Fragment: list[TelegramPlcToRobFragment] = _field(default_factory=lambda: [TelegramPlcToRobFragment() for _ in range(_iec.array_len(0, _iec.Param('FRAGMENT_MAX')))])
     """Fragment"""
 
 
@@ -15543,7 +15543,7 @@ class TelegramRobToPlcCommand:
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
     Header: TelegramRobToPlcCommandHeader = _field(default_factory=lambda: TelegramRobToPlcCommandHeader())
     """Header"""
-    Payload: list[int] = _field(default_factory=lambda: [0] * 256)
+    Payload: list[int] = _field(default_factory=lambda: [0] * _iec.array_len(0, _iec.Param('RESPONSE_PAYLOAD_MAX')))
     """Payload"""
 
 
@@ -15855,7 +15855,7 @@ class TelegramRobToPlcSequence:
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
     Header: TelegramRobToPlcSequenceHeader = _field(default_factory=lambda: TelegramRobToPlcSequenceHeader())
     """Header"""
-    Fragment: list[TelegramRobToPlcFragment] = _field(default_factory=lambda: [TelegramRobToPlcFragment() for _ in range(10)])
+    Fragment: list[TelegramRobToPlcFragment] = _field(default_factory=lambda: [TelegramRobToPlcFragment() for _ in range(_iec.array_len(0, _iec.Param('FRAGMENT_MAX')))])
     """Fragment"""
 
 
@@ -15973,12 +15973,12 @@ CallSubprogramOutCmd._IEC_FIELDS_ = (
     _iec.IecField('OriginID', _iec.INT),
     _iec.IecField('InvocationCounter', _iec.USINT),
     _iec.IecField('InProgress', _iec.BOOL),
-    _iec.IecField('ReturnData', _iec.ArrayType(0, 189, _iec.BYTE)),
+    _iec.IecField('ReturnData', _iec.ArrayType(0, _iec.Param('SUB_PROGRAM_DATA_MAX'), _iec.BYTE)),
 )
 CallSubprogramParCmd._IEC_FIELDS_ = (
     _iec.IecField('JobID', _iec.UINT),
     _iec.IecField('ListenerID', _iec.SINT),
-    _iec.IecField('Data', _iec.ArrayType(0, 189, _iec.BYTE)),
+    _iec.IecField('Data', _iec.ArrayType(0, _iec.Param('SUB_PROGRAM_DATA_MAX'), _iec.BYTE)),
 )
 CallSubprogramRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
     _iec.IecField('InvocationCounter', _iec.USINT),
@@ -15986,14 +15986,14 @@ CallSubprogramRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
     _iec.IecField('OriginID', _iec.INT),
     _iec.IecField('Progress', _iec.UINT),
     _iec.IecField('InProgress', _iec.BOOL),
-    _iec.IecField('ReturnData', _iec.ArrayType(0, 189, _iec.BYTE)),
+    _iec.IecField('ReturnData', _iec.ArrayType(0, _iec.Param('SUB_PROGRAM_DATA_MAX'), _iec.BYTE)),
 )
 CallSubprogramSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
     _iec.IecField('EmitterID', _iec.ArrayType(0, 3, _iec.SINT)),
     _iec.IecField('ListenerID', _iec.SINT),
     _iec.IecField('Reserve', _iec.BYTE),
     _iec.IecField('JobID', _iec.UINT),
-    _iec.IecField('Data', _iec.ArrayType(0, 189, _iec.BYTE)),
+    _iec.IecField('Data', _iec.ArrayType(0, _iec.Param('SUB_PROGRAM_DATA_MAX'), _iec.BYTE)),
 )
 CollisionDetectionOutCmd._IEC_FIELDS_ = (
 )
@@ -18331,14 +18331,14 @@ CreateSplineOutCmd._IEC_FIELDS_ = (
 CreateSplineParCmd._IEC_FIELDS_ = (
     _iec.IecField('Mode', _iec.EnumType(_e.SplineMode)),
     _iec.IecField('SplineID', _iec.SINT),
-    _iec.IecField('SplineData', _iec.ArrayType(1, 64, _iec.StructType(SplineData))),
+    _iec.IecField('SplineData', _iec.ArrayType(1, _iec.Param('SPLINE_DATA_MAX'), _iec.StructType(SplineData))),
 )
 CreateSplineRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
 )
 CreateSplineSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
     _iec.IecField('Mode', _iec.UINT),
     _iec.IecField('SplineID', _iec.SINT),
-    _iec.IecField('SplineData', _iec.ArrayType(1, 64, _iec.StructType(SplineDataSend))),
+    _iec.IecField('SplineData', _iec.ArrayType(1, _iec.Param('SPLINE_DATA_MAX'), _iec.StructType(SplineDataSend))),
 )
 DeleteSplineOutCmd._IEC_FIELDS_ = (
 )
@@ -18363,7 +18363,7 @@ DynamicSplineParCmd._IEC_FIELDS_ = (
     _iec.IecField('BlendingMode', _iec.EnumType(_e.BlendingMode)),
     _iec.IecField('BlendingParameter', _iec.ArrayType(0, 1, _iec.REAL)),
     _iec.IecField('MoveTime', _iec.TIME),
-    _iec.IecField('SplineData', _iec.ArrayType(1, 64, _iec.StructType(SplineData))),
+    _iec.IecField('SplineData', _iec.ArrayType(1, _iec.Param('SPLINE_DATA_MAX'), _iec.StructType(SplineData))),
     _iec.IecField('StartPosition', _iec.INT),
 )
 DynamicSplineRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
@@ -18380,7 +18380,7 @@ DynamicSplineSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
     _iec.IecField('BlendingParameter', _iec.ArrayType(0, 1, _iec.REAL)),
     _iec.IecField('MoveTime', _iec.UINT),
     _iec.IecField('StartPosition', _iec.INT),
-    _iec.IecField('SplineData', _iec.ArrayType(1, 64, _iec.StructType(SplineDataSend))),
+    _iec.IecField('SplineData', _iec.ArrayType(1, _iec.Param('SPLINE_DATA_MAX'), _iec.StructType(SplineDataSend))),
 )
 MoveSplineOutCmd._IEC_FIELDS_ = (
     _iec.IecField('ActualIndex', _iec.SINT),
@@ -18501,7 +18501,7 @@ SetTriggerErrorOutCmd._IEC_FIELDS_ = (
 )
 SetTriggerErrorParCmd._IEC_FIELDS_ = (
     _iec.IecField('Mode', _iec.EnumType(_e.ErrorTriggerMode)),
-    _iec.IecField('MessageCodes', _iec.ArrayType(0, 15, _iec.DWORD)),
+    _iec.IecField('MessageCodes', _iec.ArrayType(0, _iec.Param('MESSAGE_CODES_MAX'), _iec.DWORD)),
     _iec.IecField('IncludeParameterValidation', _iec.BOOL),
     _iec.IecField('ListenerID', _iec.SINT),
     _iec.IecField('EmitterID', _iec.SINT),
@@ -18517,7 +18517,7 @@ SetTriggerErrorSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
     _iec.IecField('Reserve', _iec.SINT),
     _iec.IecField('Mode', _iec.SINT),
     _iec.IecField('IncludeParameterValidation', _iec.BOOL),
-    _iec.IecField('MessageCodes', _iec.ArrayType(0, 15, _iec.DWORD)),
+    _iec.IecField('MessageCodes', _iec.ArrayType(0, _iec.Param('MESSAGE_CODES_MAX'), _iec.DWORD)),
 )
 SetTriggerLimitOutCmd._IEC_FIELDS_ = (
     _iec.IecField('OriginID', _iec.INT),
@@ -18962,20 +18962,20 @@ AxesGroupAcyclicAcrEntry._IEC_FIELDS_ = (
 AxesGroupAcyclicAcrEntryCmdBuffer._IEC_FIELDS_ = (
     _iec.IecField('Timestamp', _iec.StructType(SystemTime)),
     _iec.IecField('State', _iec.EnumType(_e.BufferStateCmd)),
-    _iec.IecField('Payload', _iec.ArrayType(0, 255, _iec.BYTE)),
+    _iec.IecField('Payload', _iec.ArrayType(0, _iec.Param('PARAMETER_PAYLOAD_MAX'), _iec.BYTE)),
     _iec.IecField('PayloadLen', _iec.UDINT),
     _iec.IecField('PayLoadPtr', _iec.UINT),
 )
 AxesGroupAcyclicAcrEntryRspBuffer._IEC_FIELDS_ = (
     _iec.IecField('Timestamp', _iec.StructType(SystemTime)),
     _iec.IecField('State', _iec.EnumType(_e.BufferStateRsp)),
-    _iec.IecField('Payload', _iec.ArrayType(0, 255, _iec.BYTE)),
+    _iec.IecField('Payload', _iec.ArrayType(0, _iec.Param('RESPONSE_PAYLOAD_MAX'), _iec.BYTE)),
     _iec.IecField('PayloadLen', _iec.UDINT),
     _iec.IecField('PayLoadPtr', _iec.DWORD),
 )
 AxesGroupAcyclicExecutionOrderList._IEC_FIELDS_ = (
-    _iec.IecField('Command', _iec.ArrayType(1, 50, _iec.UINT)),
-    _iec.IecField('Response', _iec.ArrayType(1, 50, _iec.UINT)),
+    _iec.IecField('Command', _iec.ArrayType(1, _iec.Param('ACTIVE_CMD_REGISTER_ENTRIES_MAX'), _iec.UINT)),
+    _iec.IecField('Response', _iec.ArrayType(1, _iec.Param('ACTIVE_CMD_REGISTER_ENTRIES_MAX'), _iec.UINT)),
 )
 AxesGroupCyclic._IEC_FIELDS_ = (
     _iec.IecField('PlcToRob', _iec.StructType(AxesGroupCyclicPlcToRob)),
@@ -19132,8 +19132,8 @@ AxesGroupMessageLog._IEC_FIELDS_ = (
     _iec.IecField('SystemLogEntries', _iec.UINT),
     _iec.IecField('MessagesEntries', _iec.UINT),
     _iec.IecField('LogLevel', _iec.EnumType(_e.Severity)),
-    _iec.IecField('SystemLog', _iec.ArrayType(0, 32, _iec.StringType(255))),
-    _iec.IecField('Messages', _iec.ArrayType(0, 100, _iec.StructType(AlarmMessage))),
+    _iec.IecField('SystemLog', _iec.ArrayType(0, _iec.Param('SYSTEM_LOG_MAX'), _iec.StringType(255))),
+    _iec.IecField('Messages', _iec.ArrayType(0, _iec.Param('MESSAGE_LOG_MAX'), _iec.StructType(AlarmMessage))),
     _iec.IecField('ExternalLogger', _iec.InstanceType('IMessageLogger')),
 )
 AxesGroupParameterOptionalCyclic._IEC_FIELDS_ = (
@@ -19249,10 +19249,10 @@ AxesGroupParameter._IEC_FIELDS_ = (
     _iec.IecField('Rob', _iec.StructType(AxesGroupParameterRob)),
 )
 AxesGroupStateDataChanged._IEC_FIELDS_ = (
-    _iec.IecField('Tool', _iec.ArrayType(0, 15, _iec.BOOL)),
-    _iec.IecField('Frame', _iec.ArrayType(0, 15, _iec.BOOL)),
-    _iec.IecField('Load', _iec.ArrayType(0, 15, _iec.BOOL)),
-    _iec.IecField('WorkArea', _iec.ArrayType(0, 15, _iec.BOOL)),
+    _iec.IecField('Tool', _iec.ArrayType(0, _iec.Param('TOOL_MAX', -1), _iec.BOOL)),
+    _iec.IecField('Frame', _iec.ArrayType(0, _iec.Param('FRAME_MAX', -1), _iec.BOOL)),
+    _iec.IecField('Load', _iec.ArrayType(0, _iec.Param('LOAD_MAX', -1), _iec.BOOL)),
+    _iec.IecField('WorkArea', _iec.ArrayType(0, _iec.Param('WORK_AREAS_MAX', -1), _iec.BOOL)),
     _iec.IecField('DefaultDynamics', _iec.BOOL),
     _iec.IecField('ReferenceDynamics', _iec.BOOL),
     _iec.IecField('SwLimits', _iec.BOOL),
@@ -20044,7 +20044,7 @@ VersionStruct._IEC_FIELDS_ = (
 )
 TelegramPlcToRobCommand._IEC_FIELDS_ = (
     _iec.IecField('Header', _iec.StructType(TelegramPlcToRobCommandHeader)),
-    _iec.IecField('Payload', _iec.ArrayType(0, 255, _iec.BYTE)),
+    _iec.IecField('Payload', _iec.ArrayType(0, _iec.Param('PARAMETER_PAYLOAD_MAX'), _iec.BYTE)),
 )
 TelegramPlcToRobCommandHeader._IEC_FIELDS_ = (
     _iec.IecField('CmdType', _iec.EnumType(_e.CmdType)),
@@ -20168,7 +20168,7 @@ TelegramPlcToRobHeader._IEC_FIELDS_ = (
 )
 TelegramPlcToRobSequence._IEC_FIELDS_ = (
     _iec.IecField('Header', _iec.StructType(TelegramPlcToRobSequenceHeader)),
-    _iec.IecField('Fragment', _iec.ArrayType(0, 9, _iec.StructType(TelegramPlcToRobFragment))),
+    _iec.IecField('Fragment', _iec.ArrayType(0, _iec.Param('FRAGMENT_MAX'), _iec.StructType(TelegramPlcToRobFragment))),
 )
 TelegramPlcToRobSequenceHeader._IEC_FIELDS_ = (
     _iec.IecField('SEQ_ACK', _iec.UINT),
@@ -20183,7 +20183,7 @@ TelegramPlcToRob._IEC_FIELDS_ = (
 )
 TelegramRobToPlcCommand._IEC_FIELDS_ = (
     _iec.IecField('Header', _iec.StructType(TelegramRobToPlcCommandHeader)),
-    _iec.IecField('Payload', _iec.ArrayType(0, 255, _iec.BYTE)),
+    _iec.IecField('Payload', _iec.ArrayType(0, _iec.Param('RESPONSE_PAYLOAD_MAX'), _iec.BYTE)),
 )
 TelegramRobToPlcCommandHeader._IEC_FIELDS_ = (
     _iec.IecField('ParSeq', _iec.BYTE),
@@ -20307,7 +20307,7 @@ TelegramRobToPlcHeader._IEC_FIELDS_ = (
 )
 TelegramRobToPlcSequence._IEC_FIELDS_ = (
     _iec.IecField('Header', _iec.StructType(TelegramRobToPlcSequenceHeader)),
-    _iec.IecField('Fragment', _iec.ArrayType(0, 9, _iec.StructType(TelegramRobToPlcFragment))),
+    _iec.IecField('Fragment', _iec.ArrayType(0, _iec.Param('FRAGMENT_MAX'), _iec.StructType(TelegramRobToPlcFragment))),
 )
 TelegramRobToPlcSequenceHeader._IEC_FIELDS_ = (
     _iec.IecField('SEQ_ACK', _iec.UINT),

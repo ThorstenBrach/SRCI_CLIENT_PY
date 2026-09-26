@@ -1,0 +1,1 @@
+"""LogFBs (generated package)."""

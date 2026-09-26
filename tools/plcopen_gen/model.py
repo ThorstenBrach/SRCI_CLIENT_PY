@@ -113,6 +113,7 @@ class ConstDef:
 class ConstGroup:
     name: str
     constants: list[ConstDef]
+    constant: bool = True  # VAR_GLOBAL CONSTANT (else writable global variables)
 
 
 @dataclass
@@ -121,3 +122,4 @@ class Library:
     structs: dict[str, StructDef] = field(default_factory=dict)
     aliases: dict[str, AliasDef] = field(default_factory=dict)
     const_groups: list[ConstGroup] = field(default_factory=list)
+    function_blocks: set[str] = field(default_factory=set)  # names of the FB POUs (not interfaces)
