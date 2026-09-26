@@ -45,6 +45,8 @@ All deviations are listed in `tools/st2py/config.py` and `docs/ST_FINDINGS.md`:
 * **Source patches** (`SourcePatch`): small textual corrections of the ST source before
   transpiling, each with the finding id. A patch fails when its text no longer occurs in
   the ST code (e.g. after the fix was made in the PLC library) and must then be removed.
+* **Appended statements** (`BodyAppend`): ST text appended to a method, e.g.
+  `CheckAddParameter := TRUE;` for the function blocks of finding F28.
 * **Hand written methods** (`Mixin`): the telegram coding of `MC_RobotTaskFB`
   (`CreateSendPayload*`, `ParseRecvPayload*`, `Calculate*`) with ST-FIX F1, F2, F5 lives in
   `MC_RobotTaskFB_Telegram.py` and is used instead of the transpiled methods.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Any
 
 from srci.fb.General.MC_RobotTask.MC_RobotTaskFB import MC_RobotTaskFB
 from srci.runtime.systemtime import system_time_now
@@ -60,6 +61,8 @@ class RobotTaskHarness:
         self.enable = True
         self.cycles = 0
         self.history: list[tuple[int, bool, bool, bool, int]] = []
+        # function blocks of the "PLC program", called before the RobotTask in every cycle
+        self.fbs: list[Callable[[], None]] = []
 
     def sync(self, mode: SyncMode, *items: str, after_startup: bool = True) -> None:
         modes = self.cfg.Plc.Parameter.SynchronizationModes
@@ -92,7 +95,9 @@ class RobotTaskHarness:
         )
 
     def cycle(self) -> None:
-        """One PLC cycle: call the RobotTask, exchange the telegrams."""
+        """One PLC cycle: call the function blocks and the RobotTask, exchange the telegrams."""
+        for fb in self.fbs:
+            fb()
         self.call()
         self.rin[:] = self.transport.exchange(bytes(self.rout))
         self.cycles += 1
@@ -101,6 +106,13 @@ class RobotTaskHarness:
         state = (self.cycles, self.rt.Initialized, self.rt.Synchronized, self.rt.Error, int(self.rt.ErrorID))
         if not self.history or self.history[-1][1:] != state[1:]:
             self.history.append(state)
+
+    def add(self, fb: Any, **inputs: Any) -> Any:
+        """Call ``fb`` (with ``AxesGroup``) in every cycle; inputs are set as attributes."""
+        for name, value in inputs.items():
+            setattr(fb, name, value)
+        self.fbs.append(lambda: fb(AxesGroup=self.ag))
+        return fb
 
     def run(self, cycles: int, until: Callable[[], bool] | None = None) -> int:
         """Run ``cycles`` cycles (or until ``until()`` is true); returns the cycles run."""

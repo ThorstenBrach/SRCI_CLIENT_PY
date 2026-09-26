@@ -116,6 +116,9 @@ class MC_MoveDirectOffsetFB(RobotLibraryBaseExecuteFB):
         DataLen = LIMIT(1, 161 - PayloadPtr, 161)
         # Compare Payload-Array with Null-Byte-Array
         CheckAddParameter = SysDepMemCmp(pData1=ADR(Payload, None, _iec.ArrayType(1, 161, _iec.BYTE)) + PayloadPtr, pData2=ADR(Null, None, _iec.ArrayType(1, 161, _iec.BYTE)), DataLen=DataLen) != RobotLibraryConstants.OK
+
+        # ST-FIX F28: payload order differs from the structure layout -> always add the parameter
+        CheckAddParameter = True
         return CheckAddParameter
 
     def CheckFunctionSupported(self, *, AxesGroup: _T.AxesGroup) -> bool:  # PROTECTED

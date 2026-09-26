@@ -422,15 +422,15 @@ class MC_ReadToolDataFB(RobotLibraryBaseExecuteFB):
         # {warning 'ToDo: value are swapped in comparation to Specification V1.3'}
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
-            # Get Response.DataChanged
-            self._response.DataChanged = ResponseData.GetBool()
+            # Get Response.ToolData.ToolNoReturn (ST-FIX F27)
+            self._response.ToolNoReturn = ResponseData.GetUsint()
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
-            # Get Response.ToolData.ToolNoReturn
-            self._response.ToolNoReturn = ResponseData.GetUsint()
+            # Get Response.DataChanged (ST-FIX F27)
+            self._response.DataChanged = ResponseData.GetBool()
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 

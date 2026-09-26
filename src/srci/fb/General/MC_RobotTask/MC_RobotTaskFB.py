@@ -5519,8 +5519,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
             case 8:
                 self.Initialized = not self.Error and (not self.Synchronized)  # {warning 'ToDo'}
-                self.Initialized = not self.Synchronized
 
+                # ST-FIX F29: the next line overwrote the error check above
+                # Initialized := NOT Synchronized;
                 # Wait for task disable
                 if not self.Enable:
                     # Reset active command register

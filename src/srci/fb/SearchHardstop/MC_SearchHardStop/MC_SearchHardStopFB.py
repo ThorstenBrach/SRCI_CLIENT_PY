@@ -115,6 +115,9 @@ class MC_SearchHardStopFB(RobotLibraryBaseExecuteFB):
         DataLen = LIMIT(1, 107 - PayloadPtr, 107)
         # Compare Payload-Array with Null-Byte-Array
         CheckAddParameter = SysDepMemCmp(pData1=ADR(Payload, None, _iec.ArrayType(1, 107, _iec.BYTE)) + PayloadPtr, pData2=ADR(Null, None, _iec.ArrayType(1, 107, _iec.BYTE)), DataLen=DataLen) != RobotLibraryConstants.OK
+
+        # ST-FIX F28: payload order differs from the structure layout -> always add the parameter
+        CheckAddParameter = True
         return CheckAddParameter
 
     def CheckFunctionSupported(self, *, AxesGroup: _T.AxesGroup) -> bool:  # PROTECTED

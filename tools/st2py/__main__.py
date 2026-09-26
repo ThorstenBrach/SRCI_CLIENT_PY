@@ -42,6 +42,13 @@ def apply_patches(pous: dict[str, Pou], cfg: Config) -> None:
             raise PatchError(f"patch for {patch.pou}.{patch.method} is obsolete (text not found) - remove it")
         body.src = body.src.replace(patch.old, patch.new)
         body._parsed = None
+    for append in cfg.appends:
+        pou = pous.get(append.pou.upper())
+        if pou is None or append.method.upper() not in pou.methods:
+            raise PatchError(f"append target {append.pou}.{append.method} not found")
+        body = pou.methods[append.method.upper()].body
+        body.src = body.src.rstrip() + "\n\n" + append.text
+        body._parsed = None
 
 
 def load(xml: Path, cfg: Config) -> tuple[TypeEnv, dict[str, Target]]:

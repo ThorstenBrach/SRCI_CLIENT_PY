@@ -30,6 +30,11 @@ Status "fixed in Python" means: still to be fixed in the PLC library.
 | F22 | `MC_ReadMessagesFB.ParseResponsePayload` | reads the 255 byte message text at offset 20 of the 256 byte response buffer (`GetDataBlock` copies behind the buffer) | – | fixed in `GetDataBlock`: missing bytes are 0 |
 | F23 | `RobotLibraryBaseEnableFB` / `MC_RobotTaskFB.Reset` | disabling the RobotTask starts the cancel of the enable FBs (`_cancel`, 5 s timeout); a new enable within this time lets the pending cancel reset `MC_ReadMessagesFB` after its first response → start-up hangs in step 3 | – | as in ST (xfail test); restart after > 5 s works |
 | F24 | `MC_RobotTaskFB.HandleSync` | a data set enabled for synchronisation whose functions the RC does not support (e.g. work areas in the SDK) keeps `Synchronized` FALSE forever | 5.6.7.1: "…or not supported by the RC does not impact the RI state Synchronized" | as in ST |
+| F25 | `Valid` output of `MC_ReadActualPositionFB` (and `MC_ReadActualTCPVelocity`, `MC_ReadActualForce`, `MC_ReadAnalogInput`, `MC_ReadDigitalInputs/Outputs`, `MC_ReadIntegers`, `MC_ReadReals`, `MC_ReadSystemVariable`, `MC_CallSubprogram`, `MC_ActivateConveyorTracking`, `MC_SetTriggerLimit`) | `Valid` is never set to TRUE | 6.1.5: `Valid` like `Done` (TRUE while updated in `Continuous`) | as in ST (xfail test) |
+| F26 | `CheckParameterValid` of 31 FBs | `IF ProcessingMode < BUFFERED AND ProcessingMode > TRIGGER_MULTIPLE` is never TRUE | – | as in ST (harmless, the next check catches invalid values) |
+| F27 | `MC_ReadToolDataFB`, `MC_ReadFrameDataFB` `.ParseResponsePayload` | `DataChanged` parsed before the index (ToDo "swapped compared to V1.3") → `ToolNoReturn`/`FrameNoReturn` = DataChanged; the sync updates the wrong tool/frame | tables 6-184/6-190 (and SDK): index, then DataChanged (as `MC_ReadLoadDataFB`) | fixed (source patch) |
+| F28 | `CheckAddParameter` of 32 FBs (list `F28_POUS` in `tools/st2py/config.py`) | a parameter is omitted when the bytes of `_command` **behind the payload position** are zero; this assumes payload order = structure layout. Where it differs non-zero parameters are dropped, e.g. `WriteToolData`: `ToolNo` (payload end, structure start) not sent → SDK 0x8D35; `WriteRobotSWLimits`: upper limits not sent (structure J1Lower, J1Upper, …; payload all lower, then all upper); `MC_EnableRobotFB.HoldToRun`; `E2..E6` of positions | – | fixed: `CheckAddParameter := TRUE` (complete payload); `tests/unit/tools/test_st2py_f28.py` recomputes the list |
+| F29 | `MC_RobotTaskFB.OnExecRun` step 8 | `Initialized := NOT ERROR AND NOT Synchronized; Initialized := NOT Synchronized;` – the 2nd line (ToDo) overwrites the first → after an error (e.g. init lost 0x80A2) `Initialized` and `CMDsEnabled` are TRUE again, FBs stay Busy forever | – | fixed (2nd line removed): FBs end with `ERR_COMMANDS_NOT_ENABLED` |
 
 ## Notes on the SRCI SDK (simulation)
 
@@ -39,6 +44,14 @@ Changes inside the private SDK copy are marked `SRCI_PY CUSTOM BEGIN/END` and li
 - **C-001** `SRCI::readRobotData` left `rcSupportedFunctions` 0, so a client never uses
   optional functions (e.g. the data synchronisation). The simulation reports the commands
   the SDK implements.
+- **C-002** `SRCI::log`: a FATAL message changes the RI state while `logLock` is held; the state
+  change logs again → deadlock of the SDK (e.g. `initiateEnable` fails). Fixed in the private copy,
+  should be reported to the SDK maintainers.
+- `validateDynamicsParameters` accepts only `DecelerationRate` "not set" (`-1.0` → 16#FFFF),
+  every other value → 0x8E03.
+- `WriteToolData` requires `ToolData.LoadNo` ≥ 1 (0x8D17).
+- Without power a motion command stays buffered (sequence interrupted); after `EnableRobot` it
+  needs `GroupContinue`.
 - The SDK checks the lifesign only for a *frozen* value (same lifesign for
   `LifeSignTimeOut` ms real time), not for missing telegrams.
 

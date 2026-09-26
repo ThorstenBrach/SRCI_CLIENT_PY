@@ -105,6 +105,9 @@ class MC_WriteIntegersFB(RobotLibraryBaseExecuteFB):
         DataLen = LIMIT(1, 32 - PayloadPtr, 32)
         # Compare Payload-Array with Null-Byte-Array
         CheckAddParameter = SysDepMemCmp(pData1=ADR(Payload, None, _iec.ArrayType(1, 32, _iec.BYTE)) + PayloadPtr, pData2=ADR(Null, None, _iec.ArrayType(1, 32, _iec.BYTE)), DataLen=DataLen) != RobotLibraryConstants.OK
+
+        # ST-FIX F28: payload order differs from the structure layout -> always add the parameter
+        CheckAddParameter = True
         return CheckAddParameter
 
     def CheckFunctionSupported(self, *, AxesGroup: _T.AxesGroup) -> bool:  # PROTECTED

@@ -19,6 +19,16 @@ class SourcePatch:
 
 
 @dataclass(frozen=True)
+class BodyAppend:
+    """ST text appended to the body of a method (e.g. to override its result)."""
+
+    pou: str
+    method: str
+    text: str
+    reason: str
+
+
+@dataclass(frozen=True)
 class Mixin:
     """Hand written methods of a POU (``ST-FIX`` or Python specific)."""
 
@@ -31,11 +41,76 @@ class Mixin:
 @dataclass
 class Config:
     patches: list[SourcePatch] = field(default_factory=list)
+    appends: list[BodyAppend] = field(default_factory=list)
     mixins: dict[str, Mixin] = field(default_factory=dict)  # POU name -> mixin
 
     @property
     def hand_methods(self) -> dict[str, dict[str, Mixin]]:
         return {pou: {m.upper(): mix for m in mix.methods} for pou, mix in self.mixins.items()}
+
+
+def _swap_no_and_data_changed(
+    pou: str, comment: str, var: str, table: str
+) -> tuple[SourcePatch, SourcePatch]:
+    """F27: the response has the index (USINT) before the DataChanged byte, the ST code parses them swapped."""
+    reason = f"F27: index before DataChanged in the response (spec table {table}), ST parses them swapped"
+    return (
+        SourcePatch(
+            pou,
+            "ParseResponsePayload",
+            f"  // Get Response.{comment}\n _response.{var} := ResponseData.GetUsint();",
+            "  // Get Response.DataChanged (ST-FIX F27)\n _response.DataChanged := ResponseData.GetBool();",
+            reason,
+        ),
+        SourcePatch(
+            pou,
+            "ParseResponsePayload",
+            "  // Get Response.DataChanged\n _response.DataChanged := ResponseData.GetBool();",
+            f"  // Get Response.{comment} (ST-FIX F27)\n _response.{var} := ResponseData.GetUsint();",
+            reason,
+        ),
+    )
+
+
+# F28: CheckAddParameter omits a parameter when the bytes of the command structure behind the
+# payload position are zero. That only works when the payload has the order of the structure;
+# for these function blocks it has not (e.g. ToolNo is the last parameter of WriteToolData but
+# the first element of the structure) -> non-zero parameters are omitted. Python always sends
+# the complete payload. tests/unit/tools/test_st2py_f28.py checks this list against the code.
+F28_POUS = (
+    "MC_CalculateInverseKinematicFB",
+    "MC_EnableRobotFB",
+    "MC_MoveApproachDirectFB",
+    "MC_MoveApproachLinearFB",
+    "MC_MoveAxesAbsoluteFB",
+    "MC_MoveAxesRelativeFB",
+    "MC_MoveCircularAbsoluteFB",
+    "MC_MoveCircularCamFB",
+    "MC_MoveCircularRelativeFB",
+    "MC_MoveDepartDirectFB",
+    "MC_MoveDepartLinearFB",
+    "MC_MoveDirectAbsoluteFB",
+    "MC_MoveDirectOffsetFB",
+    "MC_MoveDirectRelativeFB",
+    "MC_MoveLinearAbsoluteFB",
+    "MC_MoveLinearAbsoluteJFB",
+    "MC_MoveLinearCamFB",
+    "MC_MoveLinearOffsetFB",
+    "MC_MoveLinearRelativeFB",
+    "MC_MovePickPlaceDirectFB",
+    "MC_MovePickPlaceLinearFB",
+    "MC_MoveSuperImposedDynamicFB",
+    "MC_MoveSuperImposedFB",
+    "MC_ReadSystemVariableFB",
+    "MC_SearchHardStopFB",
+    "MC_SearchHardStopJFB",
+    "MC_WriteIntegersFB",
+    "MC_WriteLoadDataFB",
+    "MC_WriteRealsFB",
+    "MC_WriteRobotSWLimitsFB",
+    "MC_WriteToolDataFB",
+    "MC_WriteWorkAreaFB",
+)
 
 
 CONFIG = Config(
@@ -124,6 +199,26 @@ CONFIG = Config(
             "FOR _idx := Rsp.Header.PayloadPointer TO  Rsp.Header.PayloadPointer + Rsp.Header.PayloadLength -1",
             "F19: fragments after the first one (PayloadPointer > 0) were not copied into the response buffer",
         ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "OnExecRun",
+            "       Initialized := NOT Synchronized;\n",
+            "       // ST-FIX F29: the next line overwrote the error check above\n"
+            "       // Initialized := NOT Synchronized;\n",
+            "F29: Initialized (and CMDsEnabled) became TRUE again after an error (init lost)",
+        ),
+        *_swap_no_and_data_changed("MC_ReadToolDataFB", "ToolData.ToolNoReturn", "ToolNoReturn", "6-190"),
+        *_swap_no_and_data_changed("MC_ReadFrameDataFB", "FrameNoReturn", "FrameNoReturn", "6-184"),
+    ],
+    appends=[
+        BodyAppend(
+            pou,
+            "CheckAddParameter",
+            "// ST-FIX F28: payload order differs from the structure layout -> always add the parameter\n"
+            "CheckAddParameter := TRUE;\n",
+            "F28: CheckAddParameter omits non-zero parameters when the payload order differs from _command",
+        )
+        for pou in F28_POUS
     ],
     mixins={
         "MC_RobotTaskFB": Mixin(

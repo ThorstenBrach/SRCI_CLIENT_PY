@@ -37,3 +37,8 @@ Tmp/
 third_party/srci_sdk/
 sdk_harness/
 *SRCI SDK*/
+# compiled SDK simulator (contains the SDK) - never commit, wherever it is copied to
+*.dll
+*.so
+*.dylib
+srci_sdk_sim*

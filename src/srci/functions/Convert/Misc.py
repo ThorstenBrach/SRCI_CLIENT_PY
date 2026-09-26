@@ -340,7 +340,7 @@ def REAL_TO_PERCENT_INT(Value: float, IsOptional: bool = False) -> int:
 def REAL_TO_PERCENT_UINT(Value: float, IsOptional: bool = False) -> int:
     if Value == -1.0 and IsOptional:
         return 0xFFFF
-    return _round_iec(Value * _FACTOR)
+    return _round_iec(Value * _FACTOR) & 0xFFFF  # REAL_TO_UINT: out-of-range values wrap like on the PLC
 
 
 # ST-Source: Functions/Convert/Misc/PERCENT_INT_TO_REAL.st  sha256: 53df6f10d702dea5

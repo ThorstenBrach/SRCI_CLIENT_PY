@@ -408,15 +408,15 @@ class MC_ReadFrameDataFB(RobotLibraryBaseExecuteFB):
         # {warning 'ToDo: value are swapped in comparation to Specification V1.3'}
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
-            # Get Response.DataChanged
-            self._response.DataChanged = ResponseData.GetBool()
+            # Get Response.FrameNoReturn (ST-FIX F27)
+            self._response.FrameNoReturn = ResponseData.GetUsint()
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
-            # Get Response.FrameNoReturn
-            self._response.FrameNoReturn = ResponseData.GetUsint()
+            # Get Response.DataChanged (ST-FIX F27)
+            self._response.DataChanged = ResponseData.GetBool()
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
