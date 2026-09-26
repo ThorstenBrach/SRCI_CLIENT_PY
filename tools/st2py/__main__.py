@@ -51,7 +51,7 @@ def apply_patches(pous: dict[str, Pou], cfg: Config) -> None:
             raise PatchError(f"patch target {patch.pou} not found")
         body = pou.body if patch.method is None else pou.methods[patch.method.upper()].body
         if patch.regex:
-            body.src, count = re.subn(patch.old, lambda _m, new=patch.new: new, body.src)
+            body.src, count = re.subn(patch.old, patch.new.replace("\\", "\\\\"), body.src)
             if count == 0:
                 raise PatchError(f"patch for {patch.pou}.{patch.method} is obsolete (no match) - remove it")
         elif patch.old not in body.src:
