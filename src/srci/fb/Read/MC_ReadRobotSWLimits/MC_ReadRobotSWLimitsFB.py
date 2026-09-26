@@ -49,10 +49,14 @@ class MC_ReadRobotSWLimitsFB(RobotLibraryBaseExecuteFB):
         self._command: ReadRobotSWLimitsSendData = ReadRobotSWLimitsSendData()
         # response data received
         self._response: ReadRobotSWLimitsRecvData = ReadRobotSWLimitsRecvData()
+        # VAR_INPUT
+        self.UpdateSystemData: bool = True  #  ST-FIX F16: FALSE for the internal instances of MC_RobotTaskFB (synchronisation)
 
-    def __call__(self, *, ParCmd: ReadRobotSWLimitsParCmd | None = None, Execute: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
+    def __call__(self, *, ParCmd: ReadRobotSWLimitsParCmd | None = None, UpdateSystemData: bool | None = None, Execute: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if ParCmd is not None:
             copy_into(self.ParCmd, ParCmd)
+        if UpdateSystemData is not None:
+            self.UpdateSystemData = UpdateSystemData
         if Execute is not None:
             self.Execute = Execute
         if Name is not None:
@@ -218,7 +222,9 @@ class MC_ReadRobotSWLimitsFB(RobotLibraryBaseExecuteFB):
                     # Done, Aborted or Error ?
                     if self._response.State >= CmdMessageState.DONE:
                         # Update the WorAreas in user defined system datas
-                        AxesGroup.SystemData.UpdateSWLimits(LimitValues=self.OutCmd.LimitValues)
+                        # ST-FIX F16
+                        if self.UpdateSystemData and self._response.State == CmdMessageState.DONE:
+                            AxesGroup.SystemData.UpdateSWLimits(LimitValues=self.OutCmd.LimitValues)
                         # set timeout
                         SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
                         # inc step counter

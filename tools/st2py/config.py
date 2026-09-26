@@ -996,6 +996,142 @@ F49_CHECKS = (
 )
 
 
+# ---------------------------------------------------------------- synchronisation (F16, F20, F21)
+_SYNC_READS = (
+    ("ToolData", "UpdateToolData"),
+    ("FrameData", "UpdateFrameData"),
+    ("LoadData", "UpdateLoadData"),
+    ("WorkArea", "UpdateWorAreas"),
+    ("RobotSWLimits", "UpdateSWLimits"),
+    ("RobotDefaultDynamics", "UpdateDefaultDynamics"),
+    ("RobotReferenceDynamics", "UpdateReferenceDynamics"),
+)
+# handler method -> RC function of the write command
+_SYNC_HANDLERS = (
+    ("HandleSyncToolData", "WriteToolData"),
+    ("HandleSyncFrameData", "WriteFrameData"),
+    ("HandleSyncLoadData", "WriteLoadData"),
+    ("HandleSyncWorkArea", "WriteWorkArea"),
+    ("HandleSyncRobotSWLimits", "WriteRobotSWLimits"),
+    ("HandleSyncRobotDefaultDynamics", "WriteRobotDefaultDynamics"),
+    ("HandleSyncRobotReferenceDynamics", "WriteRobotReferenceDynamics"),
+)
+_F16_REASON = (
+    "F16: the internal read commands of the synchronisation overwrote the user data with the RC data "
+    "before the comparison (and on error with the undefined OutCmd)"
+)
+SYNC_VARS = tuple(
+    VarAppend(
+        f"MC_Read{name}FB",
+        "VAR_INPUT\n  UpdateSystemData : BOOL := TRUE; // ST-FIX F16: FALSE for the internal instances "
+        "of MC_RobotTaskFB (synchronisation)\nEND_VAR",
+        _F16_REASON,
+    )
+    for name, _ in _SYNC_READS
+)
+SYNC_PATCHES = (
+    *(
+        SourcePatch(
+            f"MC_Read{name}FB",
+            "OnExecRun",
+            rf"(AxesGroup\.SystemData\.{update}\([^;]*\);)",
+            "IF UpdateSystemData AND ( _response.State = CmdMessageState.DONE ) // ST-FIX F16\nTHEN\n\\1\nEND_IF",
+            _F16_REASON,
+            regex=True,
+            template=True,
+        )
+        for name, update in _SYNC_READS
+    ),
+    SourcePatch(
+        "MC_RobotTaskFB",
+        None,
+        r"(_read(?:ToolData|FrameData|LoadData|WorkArea|RobotSWLimits|RobotDefaultDynamics"
+        r"|RobotReferenceDynamics)\s*\()",
+        "\\1 UpdateSystemData := FALSE, // ST-FIX F16\n",
+        _F16_REASON,
+        regex=True,
+        template=True,
+    ),
+    *(
+        SourcePatch(
+            "MC_RobotTaskFB",
+            method,
+            r"(?s)(\n  21 :.*?)_rStep := 10;",
+            "\\1// ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)\n"
+            f"IF AxesGroup.State.RobotData.RCSupportedFunctions.{write} THEN _rStep := 30; ELSE _rStep := 10; END_IF",
+            "F20: SERVER_TO_CLIENT never reset DataChanged on the RC -> RC never in sync",
+            regex=True,
+            template=True,
+        )
+        for method, write in _SYNC_HANDLERS
+    ),
+    *(
+        SourcePatch(
+            "MC_RobotTaskFB",
+            method,
+            "IgnoreTimestamp := FALSE",
+            "IgnoreTimestamp := TRUE (* ST-FIX F57 *)",
+            "F57: the internal copy holds the timestamp of the RC (start-up read) -> with the timestamp "
+            "every data set counted as changed on the PLC (both sides changed, no synchronisation)",
+        )
+        for method, _ in _SYNC_HANDLERS
+    ),
+    *(
+        SourcePatch(
+            "MC_RobotTaskFB",
+            method,
+            r"(SetWarning\(\s*WarningID\s*:=\s*RobotLibraryWarningIdEnum\.WARN_\w+_SYNC_BOTH_SIDES_CHANGED,"
+            r"\s*Overwrite\s*:=\s*TRUE\s*\);)",
+            "// ST-FIX F58: CLIENT_TO_SERVER / SERVER_TO_CLIENT decide the direction also if both sides changed\n"
+            f"CASE AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.{mode}[SyncTime.AFTER_START_UP] OF\n"
+            "  SyncMode.CLIENT_TO_SERVER : _rStep := 11;\n"
+            "  SyncMode.SERVER_TO_CLIENT : _rStep := 12;\n"
+            "ELSE\n"
+            "  \\1\n"
+            "END_CASE",
+            "F58: data changed on both sides stopped the synchronisation also with a fixed direction",
+            regex=True,
+            template=True,
+        )
+        for (method, _), mode in zip(
+            _SYNC_HANDLERS,
+            ("Tool", "Frame", "Load", "WorkAreas", "SWLimits", "DefaultDynamics", "ReferenceDynamics"),
+            strict=True,
+        )
+    ),
+    *(
+        p
+        for kind in ("Tool", "Frame")
+        for p in (
+            SourcePatch(
+                "MC_RobotTaskFB",
+                f"HandleSync{kind}Data",
+                f"_rSyncIdx := DINT_TO_USINT(AxesGroup.SystemData.{kind}DataMin);",
+                f"_rSyncIdx := LIMIT(1, DINT_TO_USINT(AxesGroup.SystemData.{kind}DataMin), "
+                f"AxesGroup.State.Unified{kind}Index); // ST-FIX F21: index 0 is fixed on the RC",
+                f"F21: the synchronisation wrote {kind.lower()} 0 (fixed on the RC, spec 5.5.4) - as LoadData",
+            ),
+            SourcePatch(
+                "MC_RobotTaskFB",
+                f"HandleSync{kind}Data",
+                f"FOR _rSyncIdx := 0 TO AxesGroup.State.Unified{kind}Index",
+                f"FOR _rSyncIdx := 1 TO AxesGroup.State.Unified{kind}Index // ST-FIX F21: index 0 is fixed on the RC",
+                f"F21: the synchronisation wrote {kind.lower()} 0 (fixed on the RC, spec 5.5.4) - as LoadData",
+            ),
+            SourcePatch(
+                "MC_RobotTaskFB",
+                f"HandleSync{kind}Data",
+                rf"LIMIT\(0,(\s*AxesGroup\.State\.SyncStateRc\.UnSyncNo\.{kind},)",
+                "LIMIT(1,\\1 // ST-FIX F21: index 0 is fixed on the RC\n",
+                f"F21: the synchronisation wrote {kind.lower()} 0 (fixed on the RC, spec 5.5.4) - as LoadData",
+                regex=True,
+                template=True,
+            ),
+        )
+    ),
+)
+
+
 CONFIG = Config(
     patches=[
         SourcePatch(
@@ -1277,6 +1413,157 @@ CONFIG = Config(
             "F56: the Seq number wrapped from 254 to 0; an Ack of 0 equals the Ack of the telegrams "
             "without new data -> the response of that sequence was ignored (command lost)",
         ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSync",
+            "HandleSyncRobotSWLimits         ( AxesGroup := AxesGroup, SwLimits          := SwLimits);\n"
+            "HandleSyncToolData              ( AxesGroup := AxesGroup, ToolData          := ToolData);",
+            "HandleSyncRobotSWLimits         ( AxesGroup := AxesGroup, SwLimits          := SwLimits);\n"
+            "// ST-FIX F13: HandleSyncToolData was called a second time here",
+            "F13: HandleSyncToolData was called twice per cycle",
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "OnExecRun",
+            "ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE ) OR\n",
+            "ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE ) AND // ST-FIX F15\n",
+            "F15: the range check with OR was always TRUE -> ErrorID := TelegramState also for states without error",
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSyncFrameData",
+            "FOR _idx := AxesGroup.SystemData.FrameDataMin TO AxesGroup.SystemData.FrameDataMax",
+            "FOR _idx := AxesGroup.SystemData.FrameDataMin TO MIN(AxesGroup.SystemData.FrameDataMax, "
+            "RobotLibraryParameter.FRAME_MAX - 1) // ST-FIX F18",
+            "F18: the copy loop ran over the bounds of the user array on the internal array [0..FRAME_MAX-1]",
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSyncLoadData",
+            "FOR _idx := AxesGroup.SystemData.LoadDataMin TO AxesGroup.SystemData.LoadDataMax",
+            "FOR _idx := AxesGroup.SystemData.LoadDataMin TO MIN(AxesGroup.SystemData.LoadDataMax, "
+            "RobotLibraryParameter.LOAD_MAX - 1) // ST-FIX F18",
+            "F18: the copy loop ran over the bounds of the user array on the internal array [0..LOAD_MAX-1]",
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSyncToolData",
+            "FOR _idx := AxesGroup.SystemData.ToolDataMin TO AxesGroup.SystemData.ToolDataMax",
+            "FOR _idx := AxesGroup.SystemData.ToolDataMin TO MIN(AxesGroup.SystemData.ToolDataMax, "
+            "RobotLibraryParameter.TOOL_MAX - 1) // ST-FIX F18",
+            "F18: the copy loop ran over the bounds of the user array on the internal array [0..TOOL_MAX-1]",
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSyncWorkArea",
+            "FOR _idx := AxesGroup.SystemData.WorkAreasMin TO AxesGroup.SystemData.WorkAreasMax",
+            "FOR _idx := AxesGroup.SystemData.WorkAreasMin TO MIN(AxesGroup.SystemData.WorkAreasMax, "
+            "RobotLibraryParameter.WORK_AREAS_MAX - 1) // ST-FIX F18",
+            "F18: the copy loop ran over the bounds of the user array on the internal array [0..WORK_AREAS_MAX-1]",
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSync",
+            r"(?<!// OR )\(\s*NOT AxesGroup\.State\.DataEnableSync\.EnableSync(?i:Frame)\s*\);",
+            "( NOT AxesGroup.State.DataEnableSync.EnableSyncFrame ) OR // ST-FIX F24: not supported by the RC\n"
+            "( AxesGroup.State.Initialized AND NOT ( AxesGroup.State.RobotData.RCSupportedFunctions.ReadFrameData AND "
+            "AxesGroup.State.RobotData.RCSupportedFunctions.WriteFrameData ));",
+            "F24: a data set the RC does not support kept Synchronized FALSE (spec 5.6.7.1)",
+            regex=True,
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSync",
+            r"(?<!// OR )\(\s*NOT AxesGroup\.State\.DataEnableSync\.EnableSync(?i:Tool)\s*\);",
+            "( NOT AxesGroup.State.DataEnableSync.EnableSyncTool ) OR // ST-FIX F24: not supported by the RC\n"
+            "( AxesGroup.State.Initialized AND NOT ( AxesGroup.State.RobotData.RCSupportedFunctions.ReadToolData AND "
+            "AxesGroup.State.RobotData.RCSupportedFunctions.WriteToolData ));",
+            "F24: a data set the RC does not support kept Synchronized FALSE (spec 5.6.7.1)",
+            regex=True,
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSync",
+            r"(?<!// OR )\(\s*NOT AxesGroup\.State\.DataEnableSync\.EnableSync(?i:Load)\s*\);",
+            "( NOT AxesGroup.State.DataEnableSync.EnableSyncLoad ) OR // ST-FIX F24: not supported by the RC\n"
+            "( AxesGroup.State.Initialized AND NOT ( AxesGroup.State.RobotData.RCSupportedFunctions.ReadLoadData AND "
+            "AxesGroup.State.RobotData.RCSupportedFunctions.WriteLoadData ));",
+            "F24: a data set the RC does not support kept Synchronized FALSE (spec 5.6.7.1)",
+            regex=True,
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSync",
+            r"(?<!// OR )\(\s*NOT AxesGroup\.State\.DataEnableSync\.EnableSync(?i:WorkArea)\s*\);",
+            "( NOT AxesGroup.State.DataEnableSync.EnableSyncWorkArea ) OR // ST-FIX F24: not supported by the RC\n"
+            "( AxesGroup.State.Initialized AND NOT ( AxesGroup.State.RobotData.RCSupportedFunctions.ReadWorkArea AND "
+            "AxesGroup.State.RobotData.RCSupportedFunctions.WriteWorkArea ));",
+            "F24: a data set the RC does not support kept Synchronized FALSE (spec 5.6.7.1)",
+            regex=True,
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSync",
+            r"(?<!// OR )\(\s*NOT AxesGroup\.State\.DataEnableSync\.EnableSync(?i:SwLimits)\s*\);",
+            "( NOT AxesGroup.State.DataEnableSync.EnableSyncSwLimits ) OR // ST-FIX F24: not supported by the RC\n"
+            "( AxesGroup.State.Initialized AND NOT ( AxesGroup.State.RobotData.RCSupportedFunctions.ReadRobotSWLimits AND "
+            "AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotSWLimits ));",
+            "F24: a data set the RC does not support kept Synchronized FALSE (spec 5.6.7.1)",
+            regex=True,
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSync",
+            r"(?<!// OR )\(\s*NOT AxesGroup\.State\.DataEnableSync\.EnableSync(?i:DefaultDynamics)\s*\);",
+            "( NOT AxesGroup.State.DataEnableSync.EnableSyncDefaultDynamics ) OR // ST-FIX F24: not supported by the RC\n"
+            "( AxesGroup.State.Initialized AND NOT ( AxesGroup.State.RobotData.RCSupportedFunctions.ReadRobotDefaultDynamics AND "
+            "AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotDefaultDynamics ));",
+            "F24: a data set the RC does not support kept Synchronized FALSE (spec 5.6.7.1)",
+            regex=True,
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSync",
+            r"(?<!// OR )\(\s*NOT AxesGroup\.State\.DataEnableSync\.EnableSync(?i:ReferenceDynamics)\s*\);",
+            "( NOT AxesGroup.State.DataEnableSync.EnableSyncReferenceDynamics ) OR // ST-FIX F24: not supported by the RC\n"
+            "( AxesGroup.State.Initialized AND NOT ( AxesGroup.State.RobotData.RCSupportedFunctions.ReadRobotReferenceDynamics AND "
+            "AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotReferenceDynamics ));",
+            "F24: a data set the RC does not support kept Synchronized FALSE (spec 5.6.7.1)",
+            regex=True,
+        ),
+        *SYNC_PATCHES,
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "OnExecRun",
+            "         AxesGroup.Acyclic.ActiveCommandRegister.Reset();\n",
+            "         AxesGroup.Acyclic.ActiveCommandRegister.Reset();\n"
+            "         // ST-FIX F23: the RC is still initialized from the previous enable (ACR, SEQ/ACK)\n"
+            "         // -> reset the interface on the RC as well\n"
+            "         _restartReset := AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.INITIALIZED;\n"
+            "         IF _restartReset THEN AxesGroup.Cyclic.PlcToRob.Control := ControlHalfByte.RESET; END_IF\n",
+            "F23: a restart while the RC was still initialized kept the old ACR and SEQ/ACK on the RC",
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "OnExecRun",
+            r"(?s)(  01:  )(CASE AxesGroup\.Cyclic\.RobToPlc\.TelegramState\s+OF.*?END_CASE)",
+            "\\1// ST-FIX F23: wait until the RC left the state INITIALIZED of the previous enable\n"
+            "IF _restartReset THEN\n"
+            "  IF AxesGroup.Cyclic.RobToPlc.TelegramState <> TelegramState.INITIALIZED THEN _restartReset := FALSE; END_IF\n"
+            "ELSE\n\\2\nEND_IF",
+            "F23: a restart while the RC was still initialized kept the old ACR and SEQ/ACK on the RC",
+            regex=True,
+            template=True,
+        ),
+        SourcePatch(
+            "RobotLibraryBaseEnableFB",
+            "OnCall",
+            "// On execution started\nIF ( _enable_R.Q )\nTHEN\n",
+            "// On execution started\nIF ( _enable_R.Q )\nTHEN\n"
+            "  // ST-FIX F23: a new enable ends a pending cancel / error clear of the previous enable\n"
+            "  _cancel := FALSE;\n  _stepCancel := 0;\n  _clearError := FALSE;\n  _stepClearError := 0;\n",
+            "F23: a pending cancel (5 s) of the previous enable reset the block after the new enable",
+        ),
         *_swap_no_and_data_changed("MC_ReadToolDataFB", "ToolData.ToolNoReturn", "ToolNoReturn", "6-190"),
         *_swap_no_and_data_changed("MC_ReadFrameDataFB", "FrameNoReturn", "FrameNoReturn", "6-184"),
     ],
@@ -1320,6 +1607,12 @@ CONFIG = Config(
     ],
     variables=[
         *(p for p in F45_OUTPUTS if isinstance(p, VarAppend)),
+        *SYNC_VARS,
+        VarAppend(
+            "MC_RobotTaskFB",
+            "VAR\n  _restartReset : BOOL; // ST-FIX F23: interface reset on the RC requested by a restart\nEND_VAR",
+            "F23: a restart while the RC was still initialized kept the old ACR and SEQ/ACK on the RC",
+        ),
         VarAppend(
             "MC_DynamicSplineFB",
             "VAR\n  _pointIndex : DINT := 1;\n  _pointCount : DINT;\n  _emptyPoint : SplineData;\nEND_VAR",

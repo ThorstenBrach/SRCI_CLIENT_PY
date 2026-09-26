@@ -44,10 +44,15 @@ class RobotTaskHarness:
         self.rt = MC_RobotTaskFB()
         self.ag = AxesGroup()
         self.tools = [Tool() for _ in range(self.count)]
+        for tool in self.tools:
+            tool.Data.LoadNo = 1  # valid user data (the RC rejects load 0 in a tool)
         self.frames = [Frame() for _ in range(self.count)]
         self.loads = [Load() for _ in range(self.count)]
         self.areas = [RobotWorkArea() for _ in range(self.work_areas)]
         self.sw_limits = SWLimits()
+        for j in range(1, 7):  # valid user data (the RC rejects all-zero limits, SDK 0x8D15)
+            setattr(self.sw_limits, f"J{j}LowerLimit", -170.0)
+            setattr(self.sw_limits, f"J{j}UpperLimit", 170.0)
         self.default_dynamics = DefaultDynamics()
         self.reference_dynamics = ReferenceDynamics()
         self.user_data = UserData()

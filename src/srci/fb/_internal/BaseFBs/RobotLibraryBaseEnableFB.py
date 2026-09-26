@@ -87,6 +87,11 @@ class RobotLibraryBaseEnableFB(RobotLibraryBaseFB):
 
         # On execution started
         if self._enable_R.Q:
+            # ST-FIX F23: a new enable ends a pending cancel / error clear of the previous enable
+            self._cancel = False
+            self._stepCancel = 0
+            self._clearError = False
+            self._stepClearError = 0
             self.OnExecStart(AxesGroup=AxesGroup)
 
         # On execution cancel

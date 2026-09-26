@@ -73,6 +73,7 @@ def test_synchronized_client_to_server(sdk: SdkSimulator, clock: FakeClock) -> N
     n = h.run(300, until=lambda: synchronized(h))
     assert h.rt.Synchronized and not h.rt.Error, h.history
     assert n < 100
+    h.run(3)  # the RC takes the RI state from the next telegram
     assert sdk.states.ri_state == RI_STATE_SYNCHRONIZED
     rc = h.ag.State.SyncStateRc.InSync
     plc = h.ag.State.SyncStatePlc.InSync
@@ -82,9 +83,16 @@ def test_synchronized_client_to_server(sdk: SdkSimulator, clock: FakeClock) -> N
     assert h.rt.Synchronized and not h.rt.Error and not h.rt.WarningID
 
 
-@pytest.mark.xfail(
-    strict=True, reason="F21: the synchronization writes tool/frame/load 0 (flange), the RC rejects it"
-)
+def test_client_to_server_keeps_the_plc_data(sdk: SdkSimulator, clock: FakeClock) -> None:
+    """F16: the internal start-up read must not overwrite the user data with the RC data."""
+    h = harness(sdk, clock)
+    h.sync(SyncMode.CLIENT_TO_SERVER, "SWLimits")
+    h.run(300, until=lambda: synchronized(h))
+    assert h.rt.Synchronized and not h.rt.Error, h.history
+    assert h.sw_limits.J1LowerLimit == -170.0 and h.sw_limits.J1UpperLimit == 170.0
+    assert any("WriteSWLimits" in log.text for log in sdk.logs)
+
+
 def test_synchronized_tools_client_to_server(sdk: SdkSimulator, clock: FakeClock) -> None:
     h = harness(sdk, clock)
     h.sync(SyncMode.CLIENT_TO_SERVER, "Tool", "Frame", "Load", *DATA_SETS)
@@ -92,9 +100,6 @@ def test_synchronized_tools_client_to_server(sdk: SdkSimulator, clock: FakeClock
     assert h.rt.Synchronized and not h.rt.Error, h.history
 
 
-@pytest.mark.xfail(
-    strict=True, reason="F20: SERVER_TO_CLIENT never resets DataChanged on the RC (spec 5.6.7.4.2)"
-)
 def test_synchronized_server_to_client(sdk: SdkSimulator, clock: FakeClock) -> None:
     h = harness(sdk, clock)
     h.sync(SyncMode.SERVER_TO_CLIENT, *DATA_SETS)
@@ -157,7 +162,7 @@ def test_lifesign_timeout_and_restart(sdk: SdkSimulator, clock: FakeClock) -> No
     h.run(20)
     assert h.rt.Error and h.rt.ErrorID == RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2
     assert not h.rt.Synchronized
-    # the user acknowledges by disabling the RobotTask (longer than the cancel timeout, see F23)
+    # the user acknowledges by disabling the RobotTask (a quick restart: test_quick_restart, F23)
     h.enable = False
     h.run(CANCEL_TIMEOUT_CYCLES)
     assert not h.rt.Error and not h.rt.Busy
@@ -166,7 +171,6 @@ def test_lifesign_timeout_and_restart(sdk: SdkSimulator, clock: FakeClock) -> No
     assert h.rt.Synchronized and not h.rt.Error, h.history
 
 
-@pytest.mark.xfail(strict=True, reason="F23: a restart within the cancel timeout (5 s) blocks ReadMessages")
 def test_quick_restart(sdk: SdkSimulator, clock: FakeClock) -> None:
     h = harness(sdk, clock)
     h.run(100, until=lambda: bool(h.rt.Initialized))

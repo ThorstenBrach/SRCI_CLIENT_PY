@@ -336,6 +336,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         # Empty Execution-Order-List entry
         # {attribute 'hide'}
         self.EMPTY_EOL_ENTRY: int = 0
+        # VAR
+        self._restartReset: bool = False  #  ST-FIX F23: interface reset on the RC requested by a restart
         # VAR_INST of HandleAliveBit
         self._HandleAliveBit_First: bool = True
         # VAR_INST of HandleInvalidFrames
@@ -428,13 +430,20 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         self._exchangeConfiguration(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
         self._readRobotData(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
         self._readMessages(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
-        self._readToolData(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
-        self._readFrameData(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
-        self._readLoadData(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
-        self._readWorkArea(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
-        self._readRobotSWLimits(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
-        self._readRobotDefaultDynamics(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
-        self._readRobotReferenceDynamics(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
+        # ST-FIX F16
+        self._readToolData(UpdateSystemData=False, Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
+        # ST-FIX F16
+        self._readFrameData(UpdateSystemData=False, Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
+        # ST-FIX F16
+        self._readLoadData(UpdateSystemData=False, Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
+        # ST-FIX F16
+        self._readWorkArea(UpdateSystemData=False, Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
+        # ST-FIX F16
+        self._readRobotSWLimits(UpdateSystemData=False, Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
+        # ST-FIX F16
+        self._readRobotDefaultDynamics(UpdateSystemData=False, Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
+        # ST-FIX F16
+        self._readRobotReferenceDynamics(UpdateSystemData=False, Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
         self._writeToolData(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
         self._writeFrameData(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
         self._writeLoadData(Name=self.RobotName, ExecMode=ExecutionMode.PARALLEL, Priority=PriorityLevel.NORMAL, AxesGroup=self.AxesGroup)
@@ -1589,25 +1598,32 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         self.HandleSyncRobotDefaultDynamics(AxesGroup=AxesGroup, DefaultDynamics=DefaultDynamics)
         self.HandleSyncRobotReferenceDynamics(AxesGroup=AxesGroup, ReferenceDynamics=ReferenceDynamics)
         self.HandleSyncRobotSWLimits(AxesGroup=AxesGroup, SWLimits=SWLimits)
-        self.HandleSyncToolData(AxesGroup=AxesGroup, ToolData=ToolData)
+        # ST-FIX F13: HandleSyncToolData was called a second time here
         self.HandleSyncWorkArea(AxesGroup=AxesGroup, WorkAreas=WorkAreas)
 
         # check any synchronisation activated ?
         _dataEnableSyncAny = (((((AxesGroup.State.DataEnableSync.EnableSyncFrame or AxesGroup.State.DataEnableSync.EnableSyncTool) or AxesGroup.State.DataEnableSync.EnableSyncLoad) or AxesGroup.State.DataEnableSync.EnableSyncWorkArea) or AxesGroup.State.DataEnableSync.EnableSyncSWLimits) or AxesGroup.State.DataEnableSync.EnableSyncDefaultDynamics) or AxesGroup.State.DataEnableSync.EnableSyncReferenceDynamics
 
-        _inSyncFrameOk = AxesGroup.State.SyncStatePlc.InSync.Frame and AxesGroup.State.SyncStateRc.InSync.Frame or not AxesGroup.State.DataEnableSync.EnableSyncFrame
+        # ST-FIX F24: not supported by the RC
+        _inSyncFrameOk = (AxesGroup.State.SyncStatePlc.InSync.Frame and AxesGroup.State.SyncStateRc.InSync.Frame or not AxesGroup.State.DataEnableSync.EnableSyncFrame) or (AxesGroup.State.Initialized and (not (AxesGroup.State.RobotData.RCSupportedFunctions.ReadFrameData and AxesGroup.State.RobotData.RCSupportedFunctions.WriteFrameData)))
 
-        _inSyncToolOk = AxesGroup.State.SyncStatePlc.InSync.Tool and AxesGroup.State.SyncStateRc.InSync.Tool or not AxesGroup.State.DataEnableSync.EnableSyncTool
+        # ST-FIX F24: not supported by the RC
+        _inSyncToolOk = (AxesGroup.State.SyncStatePlc.InSync.Tool and AxesGroup.State.SyncStateRc.InSync.Tool or not AxesGroup.State.DataEnableSync.EnableSyncTool) or (AxesGroup.State.Initialized and (not (AxesGroup.State.RobotData.RCSupportedFunctions.ReadToolData and AxesGroup.State.RobotData.RCSupportedFunctions.WriteToolData)))
 
-        _inSyncLoadOk = AxesGroup.State.SyncStatePlc.InSync.Load and AxesGroup.State.SyncStateRc.InSync.Load or not AxesGroup.State.DataEnableSync.EnableSyncLoad
+        # ST-FIX F24: not supported by the RC
+        _inSyncLoadOk = (AxesGroup.State.SyncStatePlc.InSync.Load and AxesGroup.State.SyncStateRc.InSync.Load or not AxesGroup.State.DataEnableSync.EnableSyncLoad) or (AxesGroup.State.Initialized and (not (AxesGroup.State.RobotData.RCSupportedFunctions.ReadLoadData and AxesGroup.State.RobotData.RCSupportedFunctions.WriteLoadData)))
 
-        _inSyncWorkAreaOk = AxesGroup.State.SyncStatePlc.InSync.WorkArea and AxesGroup.State.SyncStateRc.InSync.WorkArea or not AxesGroup.State.DataEnableSync.EnableSyncWorkArea
+        # ST-FIX F24: not supported by the RC
+        _inSyncWorkAreaOk = (AxesGroup.State.SyncStatePlc.InSync.WorkArea and AxesGroup.State.SyncStateRc.InSync.WorkArea or not AxesGroup.State.DataEnableSync.EnableSyncWorkArea) or (AxesGroup.State.Initialized and (not (AxesGroup.State.RobotData.RCSupportedFunctions.ReadWorkArea and AxesGroup.State.RobotData.RCSupportedFunctions.WriteWorkArea)))
 
-        _inSyncSwLimitsOk = AxesGroup.State.SyncStatePlc.InSync.SwLimits and AxesGroup.State.SyncStateRc.InSync.SwLimits or not AxesGroup.State.DataEnableSync.EnableSyncSWLimits
+        # ST-FIX F24: not supported by the RC
+        _inSyncSwLimitsOk = (AxesGroup.State.SyncStatePlc.InSync.SwLimits and AxesGroup.State.SyncStateRc.InSync.SwLimits or not AxesGroup.State.DataEnableSync.EnableSyncSWLimits) or (AxesGroup.State.Initialized and (not (AxesGroup.State.RobotData.RCSupportedFunctions.ReadRobotSWLimits and AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotSWLimits)))
 
-        _inSyncDefaultDynamicOk = AxesGroup.State.SyncStatePlc.InSync.DefaultDynamics and AxesGroup.State.SyncStateRc.InSync.DefaultDynamics or not AxesGroup.State.DataEnableSync.EnableSyncDefaultDynamics
+        # ST-FIX F24: not supported by the RC
+        _inSyncDefaultDynamicOk = (AxesGroup.State.SyncStatePlc.InSync.DefaultDynamics and AxesGroup.State.SyncStateRc.InSync.DefaultDynamics or not AxesGroup.State.DataEnableSync.EnableSyncDefaultDynamics) or (AxesGroup.State.Initialized and (not (AxesGroup.State.RobotData.RCSupportedFunctions.ReadRobotDefaultDynamics and AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotDefaultDynamics)))
 
-        _InSyncReferenceDynamicOk = AxesGroup.State.SyncStatePlc.InSync.ReferenceDynamics and AxesGroup.State.SyncStateRc.InSync.ReferenceDynamics or not AxesGroup.State.DataEnableSync.EnableSyncReferenceDynamics
+        # ST-FIX F24: not supported by the RC
+        _InSyncReferenceDynamicOk = (AxesGroup.State.SyncStatePlc.InSync.ReferenceDynamics and AxesGroup.State.SyncStateRc.InSync.ReferenceDynamics or not AxesGroup.State.DataEnableSync.EnableSyncReferenceDynamics) or (AxesGroup.State.Initialized and (not (AxesGroup.State.RobotData.RCSupportedFunctions.ReadRobotReferenceDynamics and AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotReferenceDynamics)))
 
         self.Synchronized = ((((((_inSyncFrameOk and _inSyncToolOk) and _inSyncLoadOk) and _inSyncWorkAreaOk) and _inSyncSwLimitsOk) and _inSyncDefaultDynamicOk) and _InSyncReferenceDynamicOk) and _dataEnableSyncAny
 
@@ -1665,7 +1681,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='SyncFrameData: Start initial reading of FrameData from RC', Para1='')
 
                     # init frame number
-                    self._syncIdxFrameData = DINT_TO_USINT(AxesGroup.SystemData.FrameDataMin)
+                    self._syncIdxFrameData = LIMIT(1, DINT_TO_USINT(AxesGroup.SystemData.FrameDataMin), AxesGroup.State.UnifiedFrameIndex)  # ST-FIX F21: index 0 is fixed on the RC
                     # init count of unsynchronized elements
                     AxesGroup.State.SyncStatePlc.UnSyncNo.Frame = 0
                     # set timeout
@@ -1770,7 +1786,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                         match AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Frame[SyncTime.DURING_START_UP]:
 
                             case SyncMode.SERVER_TO_CLIENT:
-                                for _idx in range(AxesGroup.SystemData.FrameDataMin, AxesGroup.SystemData.FrameDataMax + 1):
+                                # ST-FIX F18
+                                for _idx in range(AxesGroup.SystemData.FrameDataMin, MIN(AxesGroup.SystemData.FrameDataMax, RobotLibraryParameter.FRAME_MAX - 1) + 1):
                                     # Overwrite PLC data with RC data
                                     copy_into(FrameData[_idx], self._frameData[_idx])
 
@@ -1795,12 +1812,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             case SyncMode.CLIENT_TO_SERVER:
 
                                 # Check conflicts to solve ?
-                                for self._syncIdxFrameData in range(0, AxesGroup.State.UnifiedFrameIndex + 1):
+                                # ST-FIX F21: index 0 is fixed on the RC
+                                for self._syncIdxFrameData in range(1, AxesGroup.State.UnifiedFrameIndex + 1):
                                     if AxesGroup.State.DataChanged.Frame[self._syncIdxFrameData]:
                                         _found = True
                                         break
                                 else:
-                                    self._syncIdxFrameData = st_for_end(0, AxesGroup.State.UnifiedFrameIndex)
+                                    self._syncIdxFrameData = st_for_end(1, AxesGroup.State.UnifiedFrameIndex)
 
                                 if _found:
                                     # Reset plc in sync flag
@@ -1889,9 +1907,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 AxesGroup.State.SyncStatePlc.UnSyncNo.Frame = 0
 
                 # Check all frame datas
-                for self._syncIdxFrameData in range(0, AxesGroup.State.UnifiedFrameIndex + 1):
+                # ST-FIX F21: index 0 is fixed on the RC
+                for self._syncIdxFrameData in range(1, AxesGroup.State.UnifiedFrameIndex + 1):
                     # compare frame data
-                    AxesGroup.State.DataChanged.Frame[self._syncIdxFrameData] = not IsFrameDataEqual(Data1=FrameData[self._syncIdxFrameData].Data, Data2=self._frameData[self._syncIdxFrameData].Data, IgnoreTimestamp=False)
+                    # ST-FIX F57
+                    AxesGroup.State.DataChanged.Frame[self._syncIdxFrameData] = not IsFrameDataEqual(Data1=FrameData[self._syncIdxFrameData].Data, Data2=self._frameData[self._syncIdxFrameData].Data, IgnoreTimestamp=True)
 
                     # Check Frame data changed ?
                     if AxesGroup.State.DataChanged.Frame[self._syncIdxFrameData]:
@@ -1934,7 +1954,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 else:
                     # datas changeḍ on both sides ? -> Warning
                     if not AxesGroup.State.SyncStatePlc.InSync.Frame and (not AxesGroup.State.SyncStateRc.InSync.Frame):
-                        self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_FRAME_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
+                        # ST-FIX F58: CLIENT_TO_SERVER / SERVER_TO_CLIENT decide the direction also if both sides changed
+                        match AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP]:
+                            case SyncMode.CLIENT_TO_SERVER:
+                                self._stepSyncFrameData = 11
+                            case SyncMode.SERVER_TO_CLIENT:
+                                self._stepSyncFrameData = 12
+                            case _:
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_FRAME_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
 
             # ------------------------------------------
             # SyncMode : CLIENT_TO_SERVER
@@ -1942,7 +1969,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             case 11:
                 if not AxesGroup.State.SyncStatePlc.InSync.Frame:
                     # search for changed index
-                    for self._syncIdxFrameData in range(0, AxesGroup.State.UnifiedFrameIndex + 1):
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    for self._syncIdxFrameData in range(1, AxesGroup.State.UnifiedFrameIndex + 1):
                         if AxesGroup.State.DataChanged.Frame[self._syncIdxFrameData]:
                             # set timeout
                             SetTimeout(PT=self._timeoutSyncFrameData, rTimer=self._timerSyncFrameData)
@@ -1950,7 +1978,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             self._stepSyncFrameData = 30  # -> write PLC data to RC
                             break
                     else:
-                        self._syncIdxFrameData = st_for_end(0, AxesGroup.State.UnifiedFrameIndex)
+                        self._syncIdxFrameData = st_for_end(1, AxesGroup.State.UnifiedFrameIndex)
 
                     # Create log entry
                     self.CreateLogMessagePara3(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='SyncFrameData: Synchronization of Frame[{1}] triggered by PLC, SyncMode = {2}, SyncTime = {3}, SyncDirection = PLC -> RC', Para1=DINT_TO_STRING(self._syncIdxFrameData), Para2=SYNC_MODE_TO_STRING(Value=AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP]), Para3=SYNC_TIME_TO_STRING(Value=SyncTime.AFTER_START_UP))
@@ -1959,7 +1987,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 # Conflict triggered by RC ?
                 if not AxesGroup.State.SyncStateRc.InSync.Frame:
                     # get changed index
-                    self._syncIdxFrameData = LIMIT(0, AxesGroup.State.SyncStateRc.UnSyncNo.Frame, AxesGroup.State.UnifiedFrameIndex)
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    self._syncIdxFrameData = LIMIT(1, AxesGroup.State.SyncStateRc.UnSyncNo.Frame, AxesGroup.State.UnifiedFrameIndex)
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncFrameData, rTimer=self._timerSyncFrameData)
                     # inc step counter
@@ -1980,7 +2009,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             case 12:
                 if not AxesGroup.State.SyncStatePlc.InSync.Frame:
                     # search for changed index
-                    for self._syncIdxFrameData in range(0, AxesGroup.State.UnifiedFrameIndex + 1):
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    for self._syncIdxFrameData in range(1, AxesGroup.State.UnifiedFrameIndex + 1):
                         if AxesGroup.State.DataChanged.Frame[self._syncIdxFrameData]:
                             # set timeout
                             SetTimeout(PT=self._timeoutSyncFrameData, rTimer=self._timerSyncFrameData)
@@ -1988,7 +2018,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             self._stepSyncFrameData = 20  # -> read RC data and write it to PLC
                             break
                     else:
-                        self._syncIdxFrameData = st_for_end(0, AxesGroup.State.UnifiedFrameIndex)
+                        self._syncIdxFrameData = st_for_end(1, AxesGroup.State.UnifiedFrameIndex)
 
                     # Create log entry
                     self.CreateLogMessagePara3(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='SyncFrameData: Synchronization of Frame[{1}] triggered by PLC, SyncMode = {2}, SyncTime = {3}, SyncDirection = RC -> PLC', Para1=DINT_TO_STRING(self._syncIdxFrameData), Para2=SYNC_MODE_TO_STRING(Value=AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP]), Para3=SYNC_TIME_TO_STRING(Value=SyncTime.AFTER_START_UP))
@@ -1997,7 +2027,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 # Conflict triggered by RC ?
                 if not AxesGroup.State.SyncStateRc.InSync.Frame:
                     # get changed index
-                    self._syncIdxFrameData = LIMIT(0, AxesGroup.State.SyncStateRc.UnSyncNo.Frame, AxesGroup.State.UnifiedFrameIndex)
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    self._syncIdxFrameData = LIMIT(1, AxesGroup.State.SyncStateRc.UnSyncNo.Frame, AxesGroup.State.UnifiedFrameIndex)
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncFrameData, rTimer=self._timerSyncFrameData)
                     # inc step counter
@@ -2018,7 +2049,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             case 13:
                 if not AxesGroup.State.SyncStatePlc.InSync.Frame:
                     # search for changed index
-                    for self._syncIdxFrameData in range(0, AxesGroup.State.UnifiedFrameIndex + 1):
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    for self._syncIdxFrameData in range(1, AxesGroup.State.UnifiedFrameIndex + 1):
                         if AxesGroup.State.DataChanged.Frame[self._syncIdxFrameData]:
                             # set timeout
                             SetTimeout(PT=self._timeoutSyncFrameData, rTimer=self._timerSyncFrameData)
@@ -2026,7 +2058,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             self._stepSyncFrameData = 30  # -> write PLC data to RC
                             break
                     else:
-                        self._syncIdxFrameData = st_for_end(0, AxesGroup.State.UnifiedFrameIndex)
+                        self._syncIdxFrameData = st_for_end(1, AxesGroup.State.UnifiedFrameIndex)
 
                     # Create log entry
                     self.CreateLogMessagePara3(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='SyncFrameData: Synchronization of Frame[{1}] triggered by PLC, SyncMode = {2}, SyncTime = {3}, SyncDirection = PLC -> RC', Para1=DINT_TO_STRING(self._syncIdxFrameData), Para2=SYNC_MODE_TO_STRING(Value=AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP]), Para3=SYNC_TIME_TO_STRING(Value=SyncTime.AFTER_START_UP))
@@ -2035,7 +2067,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 # Conflict triggered by RC ?
                 if not AxesGroup.State.SyncStateRc.InSync.Frame:
                     # get changed index
-                    self._syncIdxFrameData = LIMIT(0, AxesGroup.State.SyncStateRc.UnSyncNo.Frame, AxesGroup.State.UnifiedFrameIndex)
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    self._syncIdxFrameData = LIMIT(1, AxesGroup.State.SyncStateRc.UnSyncNo.Frame, AxesGroup.State.UnifiedFrameIndex)
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncFrameData, rTimer=self._timerSyncFrameData)
                     # inc step counter
@@ -2087,7 +2120,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncFrameData, rTimer=self._timerSyncFrameData)
                     # inc step counter
-                    self._stepSyncFrameData = 10  # -> jump to after startup
+                    # ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
+                    if AxesGroup.State.RobotData.RCSupportedFunctions.WriteFrameData:  # -> jump to after startup
+                        self._stepSyncFrameData = 30
+                    else:
+                        self._stepSyncFrameData = 10
                 else:
                     # check error ?
                     if self._readFrameData.Error:
@@ -2310,7 +2347,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
                             case SyncMode.SERVER_TO_CLIENT:
                                 # Overwrite PLC data with RC data
-                                for _idx in range(AxesGroup.SystemData.LoadDataMin, AxesGroup.SystemData.LoadDataMax + 1):
+                                # ST-FIX F18
+                                for _idx in range(AxesGroup.SystemData.LoadDataMin, MIN(AxesGroup.SystemData.LoadDataMax, RobotLibraryParameter.LOAD_MAX - 1) + 1):
                                     # Overwrite PLC data with RC data
                                     copy_into(LoadData[_idx], self._loadData[_idx])
 
@@ -2439,7 +2477,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 # !!! Attention : 0 is not allowed - LoadData starts with 1 !!!
                 for self._syncIdxLoadData in range(_idxStart, AxesGroup.State.UnifiedLoadIndex + 1):
                     # compare Load data
-                    AxesGroup.State.DataChanged.Load[self._syncIdxLoadData] = not IsLoadDataEqual(Data1=LoadData[self._syncIdxLoadData].Data, Data2=self._loadData[self._syncIdxLoadData].Data, IgnoreTimestamp=False)
+                    # ST-FIX F57
+                    AxesGroup.State.DataChanged.Load[self._syncIdxLoadData] = not IsLoadDataEqual(Data1=LoadData[self._syncIdxLoadData].Data, Data2=self._loadData[self._syncIdxLoadData].Data, IgnoreTimestamp=True)
 
                     # Check Load data changed ?
                     if AxesGroup.State.DataChanged.Load[self._syncIdxLoadData]:
@@ -2482,7 +2521,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 else:
                     # datas changeḍ on both sides ? -> Warning
                     if not AxesGroup.State.SyncStatePlc.InSync.Load and (not AxesGroup.State.SyncStateRc.InSync.Load):
-                        self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_LOAD_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
+                        # ST-FIX F58: CLIENT_TO_SERVER / SERVER_TO_CLIENT decide the direction also if both sides changed
+                        match AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP]:
+                            case SyncMode.CLIENT_TO_SERVER:
+                                self._stepSyncLoadData = 11
+                            case SyncMode.SERVER_TO_CLIENT:
+                                self._stepSyncLoadData = 12
+                            case _:
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_LOAD_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
 
             # ------------------------------------------
             # SyncMode : CLIENT_TO_SERVER
@@ -2647,7 +2693,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncLoadData, rTimer=self._timerSyncLoadData)
                     # inc step counter
-                    self._stepSyncLoadData = 10  # -> jump to after startup
+                    # ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
+                    if AxesGroup.State.RobotData.RCSupportedFunctions.WriteLoadData:  # -> jump to after startup
+                        self._stepSyncLoadData = 30
+                    else:
+                        self._stepSyncLoadData = 10
                 else:
                     # check error ?
                     if self._readLoadData.Error:
@@ -2932,7 +2982,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     return
 
                 # compare DefaultDynamics data
-                AxesGroup.State.DataChanged.DefaultDynamics = not IsDefaultDynamicsEqual(Data1=DefaultDynamics, Data2=self._defaultDynamics, IgnoreTimestamp=False)
+                # ST-FIX F57
+                AxesGroup.State.DataChanged.DefaultDynamics = not IsDefaultDynamicsEqual(Data1=DefaultDynamics, Data2=self._defaultDynamics, IgnoreTimestamp=True)
 
                 # Check DefaultDynamics data changed ?
                 if AxesGroup.State.DataChanged.DefaultDynamics:
@@ -2973,7 +3024,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 else:
                     # datas changeḍ on both sides ? -> Warning
                     if not AxesGroup.State.SyncStatePlc.InSync.DefaultDynamics and (not AxesGroup.State.SyncStateRc.InSync.DefaultDynamics):
-                        self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_DEFAULT_DYNAMICS_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
+                        # ST-FIX F58: CLIENT_TO_SERVER / SERVER_TO_CLIENT decide the direction also if both sides changed
+                        match AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP]:
+                            case SyncMode.CLIENT_TO_SERVER:
+                                self._stepSyncDefaultDynamics = 11
+                            case SyncMode.SERVER_TO_CLIENT:
+                                self._stepSyncDefaultDynamics = 12
+                            case _:
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_DEFAULT_DYNAMICS_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
 
             # ------------------------------------------
             # SyncMode : CLIENT_TO_SERVER
@@ -3097,7 +3155,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncDefaultDynamics, rTimer=self._timerSyncDefaultDynamics)
                     # inc step counter
-                    self._stepSyncDefaultDynamics = 10  # -> jump to after startup
+                    # ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
+                    if AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotDefaultDynamics:  # -> jump to after startup
+                        self._stepSyncDefaultDynamics = 30
+                    else:
+                        self._stepSyncDefaultDynamics = 10
                 else:
                     # check error ?
                     if self._readRobotDefaultDynamics.Error:
@@ -3372,7 +3434,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     return
 
                 # compare ReferenceDynamics data
-                AxesGroup.State.DataChanged.ReferenceDynamics = not IsReferenceDynamicsEqual(Data1=ReferenceDynamics, Data2=self._referenceDynamics, IgnoreTimestamp=False)
+                # ST-FIX F57
+                AxesGroup.State.DataChanged.ReferenceDynamics = not IsReferenceDynamicsEqual(Data1=ReferenceDynamics, Data2=self._referenceDynamics, IgnoreTimestamp=True)
 
                 # Check ReferenceDynamics data changed ?
                 if AxesGroup.State.DataChanged.ReferenceDynamics:
@@ -3413,7 +3476,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 else:
                     # datas changeḍ on both sides ? -> Warning
                     if not AxesGroup.State.SyncStatePlc.InSync.ReferenceDynamics and (not AxesGroup.State.SyncStateRc.InSync.ReferenceDynamics):
-                        self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_REFERENCE_DYNAMICS_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
+                        # ST-FIX F58: CLIENT_TO_SERVER / SERVER_TO_CLIENT decide the direction also if both sides changed
+                        match AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP]:
+                            case SyncMode.CLIENT_TO_SERVER:
+                                self._stepSyncReferenceDynamics = 11
+                            case SyncMode.SERVER_TO_CLIENT:
+                                self._stepSyncReferenceDynamics = 12
+                            case _:
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_REFERENCE_DYNAMICS_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
 
             # ------------------------------------------
             # SyncMode : CLIENT_TO_SERVER
@@ -3537,7 +3607,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncReferenceDynamics, rTimer=self._timerSyncReferenceDynamics)
                     # inc step counter
-                    self._stepSyncReferenceDynamics = 10  # -> jump to after startup
+                    # ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
+                    if AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotReferenceDynamics:  # -> jump to after startup
+                        self._stepSyncReferenceDynamics = 30
+                    else:
+                        self._stepSyncReferenceDynamics = 10
                 else:
                     # check error ?
                     if self._readRobotReferenceDynamics.Error:
@@ -3818,7 +3892,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     return
 
                 # compare SwLimits data
-                AxesGroup.State.DataChanged.SwLimits = not IsSwLimitsEqual(Data1=SWLimits, Data2=self._swLimits, IgnoreTimestamp=False)
+                # ST-FIX F57
+                AxesGroup.State.DataChanged.SwLimits = not IsSwLimitsEqual(Data1=SWLimits, Data2=self._swLimits, IgnoreTimestamp=True)
 
                 # Check SwLimits data changed ?
                 if AxesGroup.State.DataChanged.SwLimits:
@@ -3859,7 +3934,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 else:
                     # datas changeḍ on both sides ? -> Warning
                     if not AxesGroup.State.SyncStatePlc.InSync.SwLimits and (not AxesGroup.State.SyncStateRc.InSync.SwLimits):
-                        self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_SW_LIMITS_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
+                        # ST-FIX F58: CLIENT_TO_SERVER / SERVER_TO_CLIENT decide the direction also if both sides changed
+                        match AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP]:
+                            case SyncMode.CLIENT_TO_SERVER:
+                                self._stepSyncSWLimits = 11
+                            case SyncMode.SERVER_TO_CLIENT:
+                                self._stepSyncSWLimits = 12
+                            case _:
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_SW_LIMITS_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
 
             # ------------------------------------------
             # SyncMode : CLIENT_TO_SERVER
@@ -3983,7 +4065,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncSWLimits, rTimer=self._timerSyncSWLimits)
                     # inc step counter
-                    self._stepSyncSWLimits = 10  # -> jump to after startup
+                    # ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
+                    if AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotSWLimits:  # -> jump to after startup
+                        self._stepSyncSWLimits = 30
+                    else:
+                        self._stepSyncSWLimits = 10
                 else:
                     # check error ?
                     if self._readRobotSWLimits.Error:
@@ -4089,7 +4175,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='SyncToolData: Start initial reading of ToolData from RC', Para1='')
 
                     # init tool number
-                    self._syncIdxToolData = DINT_TO_USINT(AxesGroup.SystemData.ToolDataMin)
+                    self._syncIdxToolData = LIMIT(1, DINT_TO_USINT(AxesGroup.SystemData.ToolDataMin), AxesGroup.State.UnifiedToolIndex)  # ST-FIX F21: index 0 is fixed on the RC
                     # init count of unsynchronized elements
                     AxesGroup.State.SyncStatePlc.UnSyncNo.Tool = 0
                     # set timeout
@@ -4194,7 +4280,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                         match AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Tool[SyncTime.DURING_START_UP]:
 
                             case SyncMode.SERVER_TO_CLIENT:
-                                for _idx in range(AxesGroup.SystemData.ToolDataMin, AxesGroup.SystemData.ToolDataMax + 1):
+                                # ST-FIX F18
+                                for _idx in range(AxesGroup.SystemData.ToolDataMin, MIN(AxesGroup.SystemData.ToolDataMax, RobotLibraryParameter.TOOL_MAX - 1) + 1):
                                     # Overwrite PLC data with RC data
                                     copy_into(ToolData[_idx], self._toolData[_idx])
                                 # Reset data changed flags
@@ -4218,12 +4305,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             case SyncMode.CLIENT_TO_SERVER:
 
                                 # Check conflicts to solve ?
-                                for self._syncIdxToolData in range(0, AxesGroup.State.UnifiedToolIndex + 1):
+                                # ST-FIX F21: index 0 is fixed on the RC
+                                for self._syncIdxToolData in range(1, AxesGroup.State.UnifiedToolIndex + 1):
                                     if AxesGroup.State.DataChanged.Tool[self._syncIdxToolData]:
                                         _found = True
                                         break
                                 else:
-                                    self._syncIdxToolData = st_for_end(0, AxesGroup.State.UnifiedToolIndex)
+                                    self._syncIdxToolData = st_for_end(1, AxesGroup.State.UnifiedToolIndex)
 
                                 if _found:
                                     # Reset plc in sync flag
@@ -4312,9 +4400,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 AxesGroup.State.SyncStatePlc.UnSyncNo.Tool = 0
 
                 # Check all tool datas
-                for self._syncIdxToolData in range(0, AxesGroup.State.UnifiedToolIndex + 1):
+                # ST-FIX F21: index 0 is fixed on the RC
+                for self._syncIdxToolData in range(1, AxesGroup.State.UnifiedToolIndex + 1):
                     # compare tool data
-                    AxesGroup.State.DataChanged.Tool[self._syncIdxToolData] = not IsToolDataEqual(Data1=ToolData[self._syncIdxToolData].Data, Data2=self._toolData[self._syncIdxToolData].Data, IgnoreTimestamp=False)
+                    # ST-FIX F57
+                    AxesGroup.State.DataChanged.Tool[self._syncIdxToolData] = not IsToolDataEqual(Data1=ToolData[self._syncIdxToolData].Data, Data2=self._toolData[self._syncIdxToolData].Data, IgnoreTimestamp=True)
 
                     # Check Tool data changed ?
                     if AxesGroup.State.DataChanged.Tool[self._syncIdxToolData]:
@@ -4357,7 +4447,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 else:
                     # datas changeḍ on both sides ? -> Warning
                     if not AxesGroup.State.SyncStatePlc.InSync.Tool and (not AxesGroup.State.SyncStateRc.InSync.Tool):
-                        self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_TOOL_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
+                        # ST-FIX F58: CLIENT_TO_SERVER / SERVER_TO_CLIENT decide the direction also if both sides changed
+                        match AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP]:
+                            case SyncMode.CLIENT_TO_SERVER:
+                                self._stepSyncToolData = 11
+                            case SyncMode.SERVER_TO_CLIENT:
+                                self._stepSyncToolData = 12
+                            case _:
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_TOOL_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
 
             # ------------------------------------------
             # SyncMode : CLIENT_TO_SERVER
@@ -4365,7 +4462,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             case 11:
                 if not AxesGroup.State.SyncStatePlc.InSync.Tool:
                     # search for changed index
-                    for self._syncIdxToolData in range(0, AxesGroup.State.UnifiedToolIndex + 1):
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    for self._syncIdxToolData in range(1, AxesGroup.State.UnifiedToolIndex + 1):
                         if AxesGroup.State.DataChanged.Tool[self._syncIdxToolData]:
                             # set timeout
                             SetTimeout(PT=self._timeoutSyncToolData, rTimer=self._timerSyncToolData)
@@ -4373,7 +4471,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             self._stepSyncToolData = 30  # -> write PLC data to RC
                             break
                     else:
-                        self._syncIdxToolData = st_for_end(0, AxesGroup.State.UnifiedToolIndex)
+                        self._syncIdxToolData = st_for_end(1, AxesGroup.State.UnifiedToolIndex)
 
                     # Create log entry
                     self.CreateLogMessagePara3(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='SyncToolData: Synchronization of Tool[{1}] triggered by PLC, SyncMode = {2}, SyncTime = {3}, SyncDirection = PLC -> RC', Para1=DINT_TO_STRING(self._syncIdxToolData), Para2=SYNC_MODE_TO_STRING(Value=AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP]), Para3=SYNC_TIME_TO_STRING(Value=SyncTime.AFTER_START_UP))
@@ -4382,7 +4480,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 # Conflict triggered by RC ?
                 if not AxesGroup.State.SyncStateRc.InSync.Tool:
                     # get changed index
-                    self._syncIdxToolData = LIMIT(0, AxesGroup.State.SyncStateRc.UnSyncNo.Tool, AxesGroup.State.UnifiedToolIndex)
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    self._syncIdxToolData = LIMIT(1, AxesGroup.State.SyncStateRc.UnSyncNo.Tool, AxesGroup.State.UnifiedToolIndex)
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncToolData, rTimer=self._timerSyncToolData)
                     # inc step counter
@@ -4403,7 +4502,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             case 12:
                 if not AxesGroup.State.SyncStatePlc.InSync.Tool:
                     # search for changed index
-                    for self._syncIdxToolData in range(0, AxesGroup.State.UnifiedToolIndex + 1):
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    for self._syncIdxToolData in range(1, AxesGroup.State.UnifiedToolIndex + 1):
                         if AxesGroup.State.DataChanged.Tool[self._syncIdxToolData]:
                             # set timeout
                             SetTimeout(PT=self._timeoutSyncToolData, rTimer=self._timerSyncToolData)
@@ -4411,7 +4511,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             self._stepSyncToolData = 20  # -> read RC data and write it to PLC
                             break
                     else:
-                        self._syncIdxToolData = st_for_end(0, AxesGroup.State.UnifiedToolIndex)
+                        self._syncIdxToolData = st_for_end(1, AxesGroup.State.UnifiedToolIndex)
 
                     # Create log entry
                     self.CreateLogMessagePara3(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='SyncToolData: Synchronization of Tool[{1}] triggered by PLC, SyncMode = {2}, SyncTime = {3}, SyncDirection = RC -> PLC', Para1=DINT_TO_STRING(self._syncIdxToolData), Para2=SYNC_MODE_TO_STRING(Value=AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP]), Para3=SYNC_TIME_TO_STRING(Value=SyncTime.AFTER_START_UP))
@@ -4420,7 +4520,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 # Conflict triggered by RC ?
                 if not AxesGroup.State.SyncStateRc.InSync.Tool:
                     # get changed index
-                    self._syncIdxToolData = LIMIT(0, AxesGroup.State.SyncStateRc.UnSyncNo.Tool, AxesGroup.State.UnifiedToolIndex)
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    self._syncIdxToolData = LIMIT(1, AxesGroup.State.SyncStateRc.UnSyncNo.Tool, AxesGroup.State.UnifiedToolIndex)
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncToolData, rTimer=self._timerSyncToolData)
                     # inc step counter
@@ -4441,7 +4542,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             case 13:
                 if not AxesGroup.State.SyncStatePlc.InSync.Tool:
                     # search for changed index
-                    for self._syncIdxToolData in range(0, AxesGroup.State.UnifiedToolIndex + 1):
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    for self._syncIdxToolData in range(1, AxesGroup.State.UnifiedToolIndex + 1):
                         if AxesGroup.State.DataChanged.Tool[self._syncIdxToolData]:
                             # set timeout
                             SetTimeout(PT=self._timeoutSyncToolData, rTimer=self._timerSyncToolData)
@@ -4449,7 +4551,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             self._stepSyncToolData = 30  # -> write PLC data to RC
                             break
                     else:
-                        self._syncIdxToolData = st_for_end(0, AxesGroup.State.UnifiedToolIndex)
+                        self._syncIdxToolData = st_for_end(1, AxesGroup.State.UnifiedToolIndex)
 
                     # Create log entry
                     self.CreateLogMessagePara3(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='SyncToolData: Synchronization of Tool[{1}] triggered by PLC, SyncMode = {2}, SyncTime = {3}, SyncDirection = PLC -> RC', Para1=DINT_TO_STRING(self._syncIdxToolData), Para2=SYNC_MODE_TO_STRING(Value=AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP]), Para3=SYNC_TIME_TO_STRING(Value=SyncTime.AFTER_START_UP))
@@ -4458,7 +4560,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 # Conflict triggered by RC ?
                 if not AxesGroup.State.SyncStateRc.InSync.Tool:
                     # get changed index
-                    self._syncIdxToolData = LIMIT(0, AxesGroup.State.SyncStateRc.UnSyncNo.Tool, AxesGroup.State.UnifiedToolIndex)
+                    # ST-FIX F21: index 0 is fixed on the RC
+                    self._syncIdxToolData = LIMIT(1, AxesGroup.State.SyncStateRc.UnSyncNo.Tool, AxesGroup.State.UnifiedToolIndex)
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncToolData, rTimer=self._timerSyncToolData)
                     # inc step counter
@@ -4510,7 +4613,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncToolData, rTimer=self._timerSyncToolData)
                     # inc step counter
-                    self._stepSyncToolData = 10  # -> jump to after startup
+                    # ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
+                    if AxesGroup.State.RobotData.RCSupportedFunctions.WriteToolData:  # -> jump to after startup
+                        self._stepSyncToolData = 30
+                    else:
+                        self._stepSyncToolData = 10
                 else:
                     # check error ?
                     if self._readToolData.Error:
@@ -4731,7 +4838,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
                             case SyncMode.SERVER_TO_CLIENT:
                                 # Overwrite PLC data with RC data
-                                for _idx in range(AxesGroup.SystemData.WorkAreasMin, AxesGroup.SystemData.WorkAreasMax + 1):
+                                # ST-FIX F18
+                                for _idx in range(AxesGroup.SystemData.WorkAreasMin, MIN(AxesGroup.SystemData.WorkAreasMax, RobotLibraryParameter.WORK_AREAS_MAX - 1) + 1):
                                     # Overwrite PLC data with RC data
                                     copy_into(WorkAreas[_idx], WorkAreas[_idx])
 
@@ -4852,7 +4960,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 # Check all WorkArea datas
                 for self._syncIdxWorkArea in range(0, AxesGroup.State.UnifiedWorkAreaIndex + 1):
                     # compare WorkArea data
-                    AxesGroup.State.DataChanged.WorkArea[self._syncIdxWorkArea] = not IsWorkAreaEqual(Data1=WorkAreas[self._syncIdxWorkArea].Data, Data2=self._workAreas[self._syncIdxWorkArea].Data, IgnoreTimestamp=False)
+                    # ST-FIX F57
+                    AxesGroup.State.DataChanged.WorkArea[self._syncIdxWorkArea] = not IsWorkAreaEqual(Data1=WorkAreas[self._syncIdxWorkArea].Data, Data2=self._workAreas[self._syncIdxWorkArea].Data, IgnoreTimestamp=True)
 
                     # Check WorkArea data changed ?
                     if AxesGroup.State.DataChanged.WorkArea[self._syncIdxWorkArea]:
@@ -4895,7 +5004,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 else:
                     # datas changeḍ on both sides ? -> Warning
                     if not AxesGroup.State.SyncStatePlc.InSync.WorkArea and (not AxesGroup.State.SyncStateRc.InSync.WorkArea):
-                        self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_WORK_AREA_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
+                        # ST-FIX F58: CLIENT_TO_SERVER / SERVER_TO_CLIENT decide the direction also if both sides changed
+                        match AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP]:
+                            case SyncMode.CLIENT_TO_SERVER:
+                                self._stepSyncWorkArea = 11
+                            case SyncMode.SERVER_TO_CLIENT:
+                                self._stepSyncWorkArea = 12
+                            case _:
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_WORK_AREA_SYNC_BOTH_SIDES_CHANGED, Overwrite=True)
 
             # ------------------------------------------
             # SyncMode : CLIENT_TO_SERVER
@@ -5048,7 +5164,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     # set timeout
                     SetTimeout(PT=self._timeoutSyncWorkArea, rTimer=self._timerSyncWorkArea)
                     # inc step counter
-                    self._stepSyncWorkArea = 10  # -> jump to after startup
+                    # ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
+                    if AxesGroup.State.RobotData.RCSupportedFunctions.WriteWorkArea:  # -> jump to after startup
+                        self._stepSyncWorkArea = 30
+                    else:
+                        self._stepSyncWorkArea = 10
                 else:
                     # check error ?
                     if self._readWorkArea.Error:
@@ -5317,6 +5437,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     AxesGroup.Cyclic.PlcToRob.FastStop = 0
                     # Reset Active command register
                     AxesGroup.Acyclic.ActiveCommandRegister.Reset()
+                    # ST-FIX F23: the RC is still initialized from the previous enable (ACR, SEQ/ACK)
+                    # -> reset the interface on the RC as well
+                    self._restartReset = AxesGroup.Cyclic.RobToPlc.TelegramState == TelegramState.INITIALIZED
+                    if self._restartReset:
+                        AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESET
 
                     # check parameter valid
                     if self.CheckParameterValid(AxesGroup=AxesGroup):
@@ -5326,51 +5451,56 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                         self._stepCmd = self._stepCmd + 1
 
             case 1:
-                match AxesGroup.Cyclic.RobToPlc.TelegramState:
+                if self._restartReset:
+                    if AxesGroup.Cyclic.RobToPlc.TelegramState != TelegramState.INITIALIZED:
+                        self._restartReset = False
+                else:
+                    match AxesGroup.Cyclic.RobToPlc.TelegramState:
 
-                    case TelegramState.UNDEFINED:
-                        pass
+                        case TelegramState.UNDEFINED:
+                            pass
 
-                    case _ if TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE <= AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_172_TELEGRAM_NUMBER_NOT_SUPPORTED:
-                        # clear error
-                        AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.ACK_ERROR
-                        AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESET  # always a reset, so that on the robot side the ACR is reseted
+                        case _ if TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE <= AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_172_TELEGRAM_NUMBER_NOT_SUPPORTED:
+                            # clear error
+                            AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.ACK_ERROR
+                            AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESET  # always a reset, so that on the robot side the ACR is reseted
 
-                    case TelegramState.ERROR_173_SERVER_CONNECTION_LOST:
-                        # Reset interface including the ACR register on server side
-                        AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESET
+                        case TelegramState.ERROR_173_SERVER_CONNECTION_LOST:
+                            # Reset interface including the ACR register on server side
+                            AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESET
 
-                    case TelegramState.READY_TO_RESUME:
-                        # Resume
-                        AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESUME
+                        case TelegramState.READY_TO_RESUME:
+                            # Resume
+                            AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESUME
 
-                    case TelegramState.READY_FOR_INITIALIZATION:
-                        # Request initialization
-                        AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.INITIALIZE
+                        case TelegramState.READY_FOR_INITIALIZATION:
+                            # Request initialization
+                            AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.INITIALIZE
 
-                    case TelegramState.INITIALIZED:
-                        # Reset Telegram Control
-                        AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.NONE
+                        case TelegramState.INITIALIZED:
+                            # Reset Telegram Control
+                            AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.NONE
 
-                        # Check SRCI Version is compatible ?
-                        if AxesGroup.Cyclic.RobToPlc.SRCIVersion.MajorVersion == RobotLibraryConstants.SRCIVersion.MajorVersion:
-                            # set timeout
-                            SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
-                            # inc step counter
-                            self._stepCmd = self._stepCmd + 1
-                        else:
-                            # set error
-                            self.ErrorID = RobotLibraryErrorIdEnum.ERR_SRCI_MAJOR_VERSION_INCOMPATIBLE_0x80A4
+                            # Check SRCI Version is compatible ?
+                            if AxesGroup.Cyclic.RobToPlc.SRCIVersion.MajorVersion == RobotLibraryConstants.SRCIVersion.MajorVersion:
+                                # set timeout
+                                SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
+                                # inc step counter
+                                self._stepCmd = self._stepCmd + 1
+                            else:
+                                # set error
+                                self.ErrorID = RobotLibraryErrorIdEnum.ERR_SRCI_MAJOR_VERSION_INCOMPATIBLE_0x80A4
+                                self.ErrorAddTxt = trunc_str(CONCAT('_stepCmd = ', DINT_TO_STRING(self._stepCmd)), 40)
+                        case _:
+                            # TelegrammState in error
+                            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0xA2, Overwrite=True)
                             self.ErrorAddTxt = trunc_str(CONCAT('_stepCmd = ', DINT_TO_STRING(self._stepCmd)), 40)
-                    case _:
-                        # TelegrammState in error
-                        self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0xA2, Overwrite=True)
-                        self.ErrorAddTxt = trunc_str(CONCAT('_stepCmd = ', DINT_TO_STRING(self._stepCmd)), 40)
 
                 # timeout exceeded ?
                 if CheckTimeout(rTimer=self._timerCmd) == RobotLibraryConstants.OK:
                     # Check Telegram State error ?
-                    if AxesGroup.Cyclic.RobToPlc.TelegramState >= TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE or AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_173_SERVER_CONNECTION_LOST:
+                    # ST-FIX F15
+                    if AxesGroup.Cyclic.RobToPlc.TelegramState >= TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE and AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_173_SERVER_CONNECTION_LOST:
                         self.ErrorID = AxesGroup.Cyclic.RobToPlc.TelegramState
                         self.ErrorAddTxt = trunc_str(CONCAT('_stepCmd = ', DINT_TO_STRING(self._stepCmd)), 40)
                     else:
@@ -5526,6 +5656,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if not self.Enable:
                     # Reset active command register
                     AxesGroup.Acyclic.ActiveCommandRegister.Reset()
+                    # ST-FIX F23: the RC is still initialized from the previous enable (ACR, SEQ/ACK)
+                    # -> reset the interface on the RC as well
+                    self._restartReset = AxesGroup.Cyclic.RobToPlc.TelegramState == TelegramState.INITIALIZED
+                    if self._restartReset:
+                        AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESET
                     # reset internal variables
                     self.Reset(AxesGroup=AxesGroup)
                     # Reset step counter

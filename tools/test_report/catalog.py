@@ -94,10 +94,13 @@ def render(entries: list[dict[str, Any]], counts: Counter[str]) -> str:
         out.append(f"| [{code}](#{code.lower()}) | {names[code]} | {len(items)} | {instances} |")
     out += [f"| | **Total** | **{total_cases}** | **{total_instances}** |", ""]
 
-    order = ["GEN", "ERR", "PM", "SEQ", "REP", "BUF"]
+    order = ["GEN", "ERR", "PM", "SEQ", "REP", "BUF", "TMO"]
     methodology = sorted(
         (e for e in active if registry.PATTERN_ID.match(str(e["id"]))),
-        key=lambda e: (order.index(str(e["id"]).split("-")[0]), str(e["id"])),
+        key=lambda e: (
+            order.index(p) if (p := str(e["id"]).split("-")[0]) in order else len(order),
+            str(e["id"]),
+        ),
     )
     out += [
         "## Test methodology",

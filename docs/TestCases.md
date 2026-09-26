@@ -21,16 +21,16 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 
 | Area | Description | Test cases | Instances |
 |---|---|---:|---:|
-| [MET](#met) | Methodology tests of all function blocks against the SDK | 15 | 1211 |
+| [MET](#met) | Methodology tests of all function blocks against the SDK | 16 | 1273 |
 | [SDK-BIL](#sdk-bil) | Bilateral tests: client payload decoded by the SDK and back | 2 | 224 |
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
-| [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 29 | 29 |
-| [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 12 | 12 |
+| [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 30 | 30 |
+| [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 9 | 10 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
-| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 42 | 127 |
+| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 45 | 131 |
 | [UT-FN](#ut-fn) | Functions of the library | 16 | 20 |
 | [UT-IEC](#ut-iec) | IEC 61131-3 runtime (data types, timers, conversions) | 42 | 96 |
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 49 | 193 |
 | [UT-PKG](#ut-pkg) | Package, logging | 4 | 4 |
-| | **Total** | **288** | **3400** |
+| | **Total** | **294** | **3468** |
 
 ## Test methodology
 
@@ -50,21 +50,22 @@ the library, also to the ones without a Siemens template:
 |---|---|---:|---|
 | GEN-01 | Every input/output of the specification exists in the function block. | 113 |  |
 | GEN-03 | Every field of ParCmd/OutCmd has a comment (taken from the PLC library into the generated types). | 1 | Siemens x-04 "all parameters have a valid and useful comment" |
-| GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 107 | Siemens x-05 |
-| GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error. | 107 | Siemens x-06 |
+| GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 109 | Siemens x-05 |
+| GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command. | 109 | Siemens x-06 |
 | GEN-06 | Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge. | 92 | Siemens x-07 |
-| GEN-07 | RobotTask not running -> Error. | 107 | Siemens x-08 "Axes group is not defined" |
+| GEN-07 | RobotTask not running -> Error (blocks of the start-up: after the command timeout). | 109 | Siemens x-08 "Axes group is not defined" |
 | GEN-08 | Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle. | 92 | Siemens 1-13, spec 5.5.x "Output status" |
-| GEN-09 | Undefined AbortingMode (18), or ExecMode for blocks without AbortingMode -> Error, nothing sent. | 107 | Siemens x-09 "AbortingMode is not defined" |
-| ERR-01 | Undefined value of an enum parameter -> Error. | 300 | Siemens "ErrorID": "Use ... that isn't defined" |
-| ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 107 | Siemens "ErrorID": "Error occurred during execution" |
+| GEN-09 | Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent. | 109 | Siemens x-09 "AbortingMode is not defined", ST-FIX F48 |
+| ERR-01 | Undefined value of an enum parameter -> Error. | 309 | Siemens "ErrorID": "Use ... that isn't defined" |
+| ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 109 | Siemens "ErrorID": "Error occurred during execution" |
 | PM-01 | Two commands of the same kind -> the second one is buffered until the first one is done, both are Done in this order. | 20 | Siemens "ProcessingMode"/"AbortingMode = Buffer" |
 | PM-02 | A second command with AbortingMode ABORT aborts the active one -> first CommandAborted, second Done. | 20 | Siemens "AbortingMode = Abort" |
-| PM-03 | A second command with ExecMode SEQUENCE_ABORT_OTHERS_PRIMARY aborts the active one -> first CommandAborted, second Done. | 20 | spec 5.6.4.5 ExecutionMode "Sequence AbortOthers" |
-| SEQ-01 | The primary sequence is interrupted, SetSequence(secondary), a command with ExecMode SEQUENCE_SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted. | 20 | Siemens "SequenceFlag", spec 5.6.4.5 |
+| PM-03 | The ExecutionMode in the telegram follows the inputs AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary, Parallel, Continuous, Trigger Once / Multiple). | 59 | ST-FIX F51, spec table 5-77 |
+| SEQ-01 | The primary sequence is interrupted, SetSequence(secondary), a command with SequenceFlag SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted. | 20 | Siemens "SequenceFlag", spec 5.6.4.5 |
 | REP-01 | The same instance is executed 5 times in a row (new rising edge after Done) -> every execution sends one command and ends with Done. | 92 |  |
 | BUF-01 | More motion commands started in one cycle than the active command register has entries -> the commands that fit are buffered and executed, the others end with Error ERR_NO_FREE_ACR_ENTRY; no command stays Busy. | 17 | Siemens "1 CMD called 50 times in one cycle" |
 | BUF-02 | 16 instances started in the same cycle -> all commands are sent and every instance ends with Done or with the error of the RC (a limit of the RC is not a limit of the client). | 3 | Siemens "Call more than 15 CMDs in 1 Cycle" |
+| TMO-01 | The RC never answers the command -> Error ERR_TIMEOUT_CMD after the command timeout (5 s), Busy FALSE; before the fix the block stayed Busy forever. | 4 | ST-FIX F53 |
 
 ## Coverage of the Siemens test case templates
 
@@ -124,19 +125,20 @@ Methodology tests of all function blocks against the SDK
 |---|---|---:|---|
 | BUF-01 | More motion commands started in one cycle than the active command register has entries -> the commands that fit are buffered and executed, the others end with Error ERR_NO_FREE_ACR_ENTRY; no command stays Busy. | 17 | `test_buf01_more_commands_than_register_entries` |
 | BUF-02 | 16 instances started in the same cycle -> all commands are sent and every instance ends with Done or with the error of the RC (a limit of the RC is not a limit of the client). | 3 | `test_buf02_more_than_15_commands_in_one_cycle` |
-| ERR-01 | Undefined value of an enum parameter -> Error. | 300 | `test_err01_undefined_enum_value` |
-| ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 107 | `test_err02_error_of_the_rc` |
-| GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 107 | `test_gen04_not_executed` |
-| GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error. | 107 | `test_gen05_default_values` |
+| ERR-01 | Undefined value of an enum parameter -> Error. | 309 | `test_err01_undefined_enum_value` |
+| ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 109 | `test_err02_error_of_the_rc` |
+| GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 109 | `test_gen04_not_executed` |
+| GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command. | 109 | `test_gen05_default_values` |
 | GEN-06 | Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge. | 92 | `test_gen06_continuous_execute` |
-| GEN-07 | RobotTask not running -> Error. | 107 | `test_gen07_axes_group_not_initialized` |
+| GEN-07 | RobotTask not running -> Error (blocks of the start-up: after the command timeout). | 109 | `test_gen07_axes_group_not_initialized` |
 | GEN-08 | Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle. | 92 | `test_gen08_execute_for_one_cycle` |
-| GEN-09 | Undefined AbortingMode (18), or ExecMode for blocks without AbortingMode -> Error, nothing sent. | 107 | `test_gen09_undefined_exec_mode` |
+| GEN-09 | Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent. | 109 | `test_gen09_undefined_exec_mode` |
 | PM-01 | Two commands of the same kind -> the second one is buffered until the first one is done, both are Done in this order. | 20 | `test_pm01_buffered` |
 | PM-02 | A second command with AbortingMode ABORT aborts the active one -> first CommandAborted, second Done. | 20 | `test_pm02_aborting` |
-| PM-03 | A second command with ExecMode SEQUENCE_ABORT_OTHERS_PRIMARY aborts the active one -> first CommandAborted, second Done. | 20 | `test_pm03_abort_others` |
+| PM-03 | The ExecutionMode in the telegram follows the inputs AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary, Parallel, Continuous, Trigger Once / Multiple). | 59 | `test_pm03_execution_mode` |
 | REP-01 | The same instance is executed 5 times in a row (new rising edge after Done) -> every execution sends one command and ends with Done. | 92 | `test_rep01_repeated_execution` |
-| SEQ-01 | The primary sequence is interrupted, SetSequence(secondary), a command with ExecMode SEQUENCE_SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted. | 20 | `test_seq01_secondary_sequence` |
+| SEQ-01 | The primary sequence is interrupted, SetSequence(secondary), a command with SequenceFlag SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted. | 20 | `test_seq01_secondary_sequence` |
+| TMO-01 | The RC never answers the command -> Error ERR_TIMEOUT_CMD after the command timeout (5 s), Busy FALSE; before the fix the block stayed Busy forever. | 4 | `test_tmo01_no_response` |
 
 ## SDK-BIL
 
@@ -192,6 +194,7 @@ Core function blocks against the SDK
 | SDK-CORE-027 | WriteRobotSWLimits / ReadRobotSWLimits round trip | 1 | `test_write_and_read_sw_limits` |
 | SDK-CORE-028 | WriteRobotDefaultDynamics / ReadRobotDefaultDynamics round trip | 1 | `test_write_and_read_default_dynamics` |
 | SDK-CORE-029 | WriteRobotReferenceDynamics / ReadRobotReferenceDynamics round trip | 1 | `test_write_and_read_reference_dynamics` |
+| SDK-CORE-030 | ST-FIX F56: 600 commands one after the other (more than 255 telegram sequences): every command gets its response. | 1 | `test_sequence_number_overflow` |
 
 ## SDK-RT
 
@@ -211,6 +214,7 @@ RobotTask (communication, synchronization) against the SDK
 | SDK-RT-010 | 10000 cycles without error (long run) | 1 | `test_long_run_10000_cycles` |
 | SDK-RT-011 | PLC gateway (TCP server) in front of the SDK, real time with 10 ms cycles. | 1 | `test_synchronized_over_tcp` |
 | SDK-RT-012 | Log messages of the library arrive in Python logging and in the system log | 1 | `test_logging_to_python` |
+| SDK-RT-013 | F16: the internal start-up read must not overwrite the user data with the RC data. | 1 | `test_client_to_server_keeps_the_plc_data` |
 
 ## SDK-LOOP
 
@@ -324,6 +328,9 @@ Function blocks (unit tests without SDK)
 | UT-FB-040 | Fragment action and tracking status | 1 | `test_fragment_action_and_tracking_status` |
 | UT-FB-041 | Command data buffer | 1 | `test_command_data_buffer` |
 | UT-FB-042 | Response data buffer | 1 | `test_response_data_buffer` |
+| UT-FB-043 | Supported data set out of sync blocks synchronized | 1 | `test_supported_data_set_out_of_sync_blocks_synchronized` |
+| UT-FB-044 | F24 (spec 5.6.7.1): '… or not supported by the RC does not impact the RI state Synchronized'. | 1 | `test_unsupported_data_set_does_not_block_synchronized` |
+| UT-FB-045 | The RC functions are unknown before the initialisation. | 2 | `test_not_synchronized_before_initialized` |
 
 ## UT-FN
 
