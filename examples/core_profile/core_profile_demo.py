@@ -49,7 +49,6 @@ from srci.api import CommandError, SrciClient
 from srci.fb import (
     MC_ChangeSpeedOverrideFB,
     MC_EnableRobotFB,
-    MC_ExchangeConfigurationFB,
     MC_GroupContinueFB,
     MC_GroupInterruptFB,
     MC_GroupJogFB,
@@ -62,8 +61,6 @@ from srci.fb import (
     MC_ReadActualPositionFB,
     MC_ReadFrameDataFB,
     MC_ReadLoadDataFB,
-    MC_ReadMessagesFB,
-    MC_ReadRobotDataFB,
     MC_ReadRobotDefaultDynamicsFB,
     MC_ReadRobotReferenceDynamicsFB,
     MC_ReadRobotSWLimitsFB,
@@ -113,7 +110,7 @@ def create_client(transport: Transport, realtime: bool) -> SrciClient:
     # cyclic position data RC -> PLC for MC_ReadActualPositionCyclicFB (spec 5.6.3)
     cfg.Rob.OptionalCyclic.UseJointPosition = True
     cfg.Rob.OptionalCyclic.UseCartesianPosition = True
-    # messages of the robot controller from severity WARNING on (MC_ReadMessagesFB)
+    # messages of the robot controller from severity WARNING on (read by the RobotTask)
     cfg.Rob.Parameter.MessageLevel = MessageLevel.WARNING
     return client
 
@@ -132,46 +129,27 @@ def demo_robot_task(client: SrciClient) -> None:
     show("cycles until initialized", client.cycle)
 
 
-# ---------------------------------------------------------------------------- 2. robot data, configuration
+# ---------------------------------------------------------------------------- 2. robot data, configuration, messages
 
 
-def demo_read_robot_data(client: SrciClient) -> None:
-    section("ReadRobotData")
-    rd = client.execute(MC_ReadRobotDataFB())
-    out = rd.OutCmd
-    show("RCManufacturer", out.RCManufacturer)
-    show("RCSerialNumber", out.RCSerialNumber)
-    show("RCFirmwareVersion", out.RCFirmwareVersion)
-    show("RobotID", out.RobotID)
-    show("InterpreterCycleTime [ms]", out.InterpreterCycleTime)
-    show("J1..J6 used", all(getattr(out.AxisJointUsed, f"J{i}") for i in range(1, 7)))
-    show("supports MoveLinearAbsolute", out.RCSupportedFunctions.MoveLinearAbsolute)
-
-
-def demo_exchange_configuration(client: SrciClient) -> None:
-    section("ExchangeConfiguration")
-    # The RobotTask exchanges the configuration itself during the initialization; the block
-    # can be used to read the result (and to change parameters while the robot runs).
-    ex = MC_ExchangeConfigurationFB()
-    copy_into(ex.ParCmd, client.program.robot_task._exchangeConfiguration.ParCmd)  # keep the config
-    client.enable(ex)
-    client.run_until(lambda: ex.OutCmd.HighestToolIndex > 0 or ex.Error, 5.0, "configuration")
-    show("HighestToolIndex", ex.OutCmd.HighestToolIndex)
-    show("HighestFrameIndex", ex.OutCmd.HighestFrameIndex)
-    show("HighestLoadIndex", ex.OutCmd.HighestLoadIndex)
-    show("NumberOfServerLogs", ex.OutCmd.NumberOfServerLogs)
-    client.disable(ex)
-
-
-def demo_read_messages(client: SrciClient) -> MC_ReadMessagesFB:
-    section("ReadMessages")
-    rm = MC_ReadMessagesFB()
-    rm.ParCmd.MessageLevel = MessageLevel.INFO
-    client.enable(rm)
-    show("Valid", rm.Valid)
-    show("active errors / warnings", f"{rm.OutCmd.NumberOfActiveErrors} / {rm.OutCmd.NumberOfActiveWarnings}")
-    show("last message", rm.OutCmd.Text or "-")
-    return rm  # stays enabled: new messages appear in OutCmd
+def demo_robot_data_configuration_messages(client: SrciClient) -> None:
+    section("RobotTask - robot data, configuration, messages")
+    # ReadRobotData, ExchangeConfiguration and ReadMessages are executed by the RobotTask itself
+    # (during the initialization, ReadMessages permanently). Their results are available in the
+    # axes group and in the outputs of the RobotTask - the blocks are not called by the user.
+    ag = client.program.axes_group
+    robot = ag.State.RobotData  # ReadRobotData
+    show("RCManufacturer", robot.RCManufacturer)
+    show("RCSerialNumber", robot.RCSerialNumber)
+    show("RCFirmwareVersion", robot.RCFirmwareVersion)
+    show("InterpreterCycleTime [ms]", robot.InterpreterCycleTime)
+    show("supports MoveLinearAbsolute", robot.RCSupportedFunctions.MoveLinearAbsolute)
+    config = ag.State.ConfigurationData  # ExchangeConfiguration
+    show("HighestToolIndex", config.HighestToolIndex)
+    show("HighestFrameIndex", config.HighestFrameIndex)
+    show("HighestLoadIndex", config.HighestLoadIndex)
+    messages = [m for m in client.program.message_log if m.MessageCode]  # ReadMessages + client
+    show("messages in the buffer", len(messages))
 
 
 def demo_group_reset_and_enable(client: SrciClient) -> MC_EnableRobotFB:
@@ -388,7 +366,7 @@ def demo_set_sequence(client: SrciClient) -> None:
 # ---------------------------------------------------------------------------- 6. logs
 
 
-def demo_logs(client: SrciClient, messages: MC_ReadMessagesFB) -> None:
+def demo_logs(client: SrciClient) -> None:
     section("Client log / server log / messages")
     # Client log (CreateClientLog / ReadClientLog): every block writes into the system log of
     # the axes group - the RobotTask output SystemLog (ring buffer) and the ExternalLogger.
@@ -396,13 +374,10 @@ def demo_logs(client: SrciClient, messages: MC_ReadMessagesFB) -> None:
     show("system log entries", len(entries))
     for line in entries[:3]:  # newest first
         print("   ", line.rstrip())
-    # Server log (CreateServerLog / ReadServerLog): not implemented in the PLC library yet
-    # (MC_CreateServerLog_ToDo, MC_ReadServerLog are empty); the RC reports the number of
-    # its log entries in ExchangeConfiguration.OutCmd.NumberOfServerLogs.
-    show(
-        "messages of the RC",
-        f"{messages.OutCmd.NumberOfActiveErrors} errors, {messages.OutCmd.NumberOfActiveWarnings} warnings",
-    )
+    # Server log (CreateServerLog / ReadServerLog): not implemented in the PLC library yet.
+    # Messages of the RC (read by the RobotTask) and of the commands: RobotTask output MessageLog
+    for m in [m for m in client.program.message_log if m.MessageCode][:3]:
+        show(m.Severity.name, m.MessageText)
 
 
 # ---------------------------------------------------------------------------- main
@@ -470,9 +445,7 @@ def main(argv: list[str] | None = None) -> int:
             client.program.log_level = Severity.DEBUG
         try:
             demo_robot_task(client)
-            demo_read_robot_data(client)
-            demo_exchange_configuration(client)
-            messages = demo_read_messages(client)
+            demo_robot_data_configuration_messages(client)
             enable = demo_group_reset_and_enable(client)
             demo_change_speed_override(client, 100.0)
             demo_read_actual_position(client)
@@ -483,7 +456,7 @@ def main(argv: list[str] | None = None) -> int:
             demo_interrupt_jog_return_continue(client)
             demo_group_stop(client)
             demo_set_sequence(client)
-            demo_logs(client, messages)
+            demo_logs(client)
             section("EnableRobot - disable")
             client.disable(enable)
             show("Enabled", enable.Enabled)

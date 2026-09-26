@@ -38,7 +38,7 @@ The package is a 1:1 port of the SRCI PLC library for Codesys/TwinCAT. Every fun
 | Kind | Start | Result | Examples |
 |---|---|---|---|
 | **Execute** blocks | rising edge of `Execute` | `Done` / `Error` + `ErrorID` / `CommandAborted`, values in `OutCmd` | `MC_GroupResetFB`, `MC_MoveAxesAbsoluteFB`, `MC_ReadToolDataFB` |
-| **Enable** blocks | `Enable = True` | `Enabled` (or `Valid`), runs until `Enable = False` | `MC_EnableRobotFB`, `MC_GroupJogFB`, `MC_ReadMessagesFB` |
+| **Enable** blocks | `Enable = True` | `Enabled` (or `Valid`), runs until `Enable = False` | `MC_EnableRobotFB`, `MC_GroupJogFB`, `MC_ReadActualPositionCyclicFB` |
 
 Command parameters are in `ParCmd`, results in `OutCmd` – exactly the structures of the PLC
 library and of the specification:
@@ -126,9 +126,10 @@ Output (shortened):
   Initialized                  True
   TelegramState                INITIALIZED
   SRCI version RC              1.5
-=== ReadRobotData =========================================================
+=== RobotTask - robot data, configuration, messages =======================
   RCManufacturer               SRCI_PY SimRobot
   InterpreterCycleTime [ms]    10
+  HighestToolIndex             19
 ...
 === GroupInterrupt, GroupJog, ReturnToPrimary, GroupContinue ==============
   interrupted                  primary sequence paused
@@ -146,15 +147,15 @@ The 33 functions of table 5-2 and where the demo uses them:
 | # | Function | Block | Demo function |
 |---:|---|---|---|
 | 1 | RobotTask | `MC_RobotTaskFB` (in `RobotProgram`) | `create_client`, `demo_robot_task` |
-| 2 | ReadRobotData | `MC_ReadRobotDataFB` | `demo_read_robot_data` |
+| 2 | ReadRobotData | inside the RobotTask (`AxesGroup.State.RobotData`) | `demo_robot_data_configuration_messages` |
 | 3 | EnableRobot | `MC_EnableRobotFB` | `demo_group_reset_and_enable` |
 | 4 | GroupReset | `MC_GroupResetFB` | `demo_group_reset_and_enable` |
 | 5 | ReadActualPosition | `MC_ReadActualPositionFB` | `demo_read_actual_position` |
 | 6 | ReadActualPositionCyclic | `MC_ReadActualPositionCyclicFB` | `demo_read_actual_position_cyclic` |
-| 7 | ExchangeConfiguration | `MC_ExchangeConfigurationFB` | `demo_exchange_configuration` |
+| 7 | ExchangeConfiguration | inside the RobotTask (`AxesGroup.State.ConfigurationData`) | `demo_robot_data_configuration_messages` |
 | 8 | SetSequence | `MC_SetSequenceFB` | `demo_set_sequence` |
 | 9 | ChangeSpeedOverride | `MC_ChangeSpeedOverrideFB` | `demo_change_speed_override` |
-| 10 | ReadMessages | `MC_ReadMessagesFB` | `demo_read_messages` |
+| 10 | ReadMessages | inside the RobotTask (output `MessageLog`) | `demo_robot_data_configuration_messages` |
 | 11–12 | CreateServerLog, ReadServerLog | – (not in the PLC library yet) | `demo_logs` |
 | 13–14 | CreateClientLog, ReadClientLog | system log of the library | `demo_logs` |
 | 15–16 | Read/WriteRobotReferenceDynamics | `MC_Read…`/`MC_WriteRobotReferenceDynamicsFB` | `demo_limits_and_dynamics` |
@@ -198,46 +199,31 @@ Optional: synchronisation of tools, frames, loads … between PLC and RC
 (`cfg.Plc.Parameter.SynchronizationModes`) – then the user data arrays of the program
 (`client.program.tools`, `.frames`, …) are kept equal to the RC and `rt.Synchronized` becomes TRUE.
 
-### 4.2 ReadRobotData
+### 4.2 Robot data, configuration and messages – inside the RobotTask
 
-Execute block without parameters; `OutCmd` contains the identification of the RC and the list
-of functions it supports:
-
-```python
-rd = client.execute(MC_ReadRobotDataFB())
-print(rd.OutCmd.RCManufacturer, rd.OutCmd.RCFirmwareVersion, rd.OutCmd.InterpreterCycleTime)
-if rd.OutCmd.RCSupportedFunctions.MoveLinearAbsolute: ...
-```
-
-### 4.3 ExchangeConfiguration
-
-The RobotTask already exchanges the configuration during the initialization. The block is used to
-read the result (highest tool/frame/load index of the RC, number of server logs) or to change
-parameters later. To keep the configuration, the demo starts from the parameters the RobotTask
-used:
+`ReadRobotData`, `ExchangeConfiguration` and `ReadMessages` are executed by the RobotTask itself:
+the first two during the initialization, `ReadMessages` permanently. They are **not** called by
+the user program; their results are available in the axes group and in the outputs of the
+RobotTask:
 
 ```python
-ex = MC_ExchangeConfigurationFB()
-copy_into(ex.ParCmd, client.program.robot_task._exchangeConfiguration.ParCmd)
-client.enable(ex)
-client.run_until(lambda: ex.OutCmd.HighestToolIndex > 0 or ex.Error)
-print(ex.OutCmd.HighestToolIndex, ex.OutCmd.NumberOfServerLogs)
-client.disable(ex)
+ag = client.program.axes_group
+robot = ag.State.RobotData  # ReadRobotData
+print(robot.RCManufacturer, robot.RCFirmwareVersion, robot.InterpreterCycleTime)
+if robot.RCSupportedFunctions.MoveLinearAbsolute: ...
+
+config = ag.State.ConfigurationData  # ExchangeConfiguration
+print(config.HighestToolIndex, config.HighestFrameIndex, config.HighestLoadIndex)
+
+for m in client.program.message_log:  # RobotTask output MessageLog (RC + command messages)
+    if m.MessageCode:
+        print(m.Severity.name, m.MessageText)
 ```
 
-### 4.4 ReadMessages
+What the RobotTask sends is configured before the first cycle, e.g. the message level of the RC
+messages: `cfg.Rob.Parameter.MessageLevel = MessageLevel.WARNING`.
 
-Enable block: while enabled, `OutCmd` shows the messages of the RC (errors, warnings, info – from
-`ParCmd.MessageLevel` on). The demo keeps it enabled for the whole run:
-
-```python
-rm = MC_ReadMessagesFB()
-rm.ParCmd.MessageLevel = MessageLevel.INFO
-client.enable(rm)
-print(rm.OutCmd.NumberOfActiveErrors, rm.OutCmd.Text)
-```
-
-### 4.5 GroupReset and EnableRobot
+### 4.3 GroupReset and EnableRobot
 
 `GroupReset` acknowledges errors of the axes group; `EnableRobot` switches the drives on and keeps
 them on while `Enable` is TRUE:
@@ -249,7 +235,7 @@ enable = client.enable(MC_EnableRobotFB())  # enable.Enabled == True: robot has 
 client.disable(enable)  # at the end: drives off
 ```
 
-### 4.6 ChangeSpeedOverride
+### 4.4 ChangeSpeedOverride
 
 ```python
 ov = MC_ChangeSpeedOverrideFB()
@@ -257,7 +243,7 @@ ov.ParCmd.Override = 50.0  # % of the programmed velocity, applies to all motion
 client.execute(ov)
 ```
 
-### 4.7 ReadActualPosition and ReadActualPositionCyclic
+### 4.5 ReadActualPosition and ReadActualPositionCyclic
 
 `ReadActualPosition` is a command (one answer per `Execute`); `ReadActualPositionCyclic` reads
 the positions the RC sends in **every** telegram (configured in 4.1) – no command, no delay:
@@ -277,7 +263,7 @@ client.enable(cyc)
 `OutCmd.CurrentCoordinateSystem` the tool/frame the robot currently uses (finding F59: the PLC
 library mixed them up – fixed in Python).
 
-### 4.8 Tool, frame and load data
+### 4.6 Tool, frame and load data
 
 Tool, frame and load 0 are fixed on the RC (flange, world, no load); the user data start at
 index 1. A tool refers to its load (`LoadNo` ≥ 1):
@@ -299,7 +285,7 @@ Frames (`MC_WriteFrameDataFB`/`MC_ReadFrameDataFB`, `FrameNo`, `FrameData.X…Rz
 (`MC_WriteLoadDataFB`/`MC_ReadLoadDataFB`, `LoadNo`, `LoadData.Mass`, center of mass `X…Z`,
 inertia `Ix…Iz`) work the same way.
 
-### 4.9 SW limits and dynamics
+### 4.7 SW limits and dynamics
 
 ```python
 sw = client.execute(MC_ReadRobotSWLimitsFB())
@@ -316,7 +302,7 @@ The *default dynamics* are used by every motion whose rates are −1.0 (the defa
 `VelocityRate`, `AccelerationRate`, `DecelerationRate`, `JerkRate` inputs); the *reference
 dynamics* (`MC_Read/WriteRobotReferenceDynamicsFB`) are the 100 % values the rates refer to.
 
-### 4.10 Motions
+### 4.8 Motions
 
 All motions are Execute blocks. By default (`AbortingMode = BUFFER`) a new motion waits for the
 running one; `ABORT` replaces it.
@@ -339,7 +325,7 @@ client.wait_done(first)
 client.wait_done(second)
 ```
 
-### 4.11 Interrupt, jog, return, continue
+### 4.9 Interrupt, jog, return, continue
 
 `GroupInterrupt` pauses the *primary sequence* (the programmed motions). While it is paused the
 *secondary sequence* may move the robot, e.g. jogging. `ReturnToPrimary` moves back to the
@@ -369,7 +355,7 @@ client.execute(MC_GroupContinueFB())
 client.wait_done(mv)  # the interrupted motion finishes
 ```
 
-### 4.12 GroupStop
+### 4.10 GroupStop
 
 Stops the robot and aborts all motions (`CommandAborted` of the running and the buffered blocks):
 
@@ -380,7 +366,7 @@ client.execute(MC_GroupStopFB())
 client.run_until(lambda: mv.CommandAborted)
 ```
 
-### 4.13 SetSequence
+### 4.11 SetSequence
 
 Switches the active sequence (primary / secondary) explicitly:
 
@@ -394,7 +380,7 @@ client.execute(seq)
 
 Motions are assigned to a sequence with their input `SequenceFlag`.
 
-### 4.14 Logs
+### 4.12 Logs
 
 - **Client log** (CreateClientLog/ReadClientLog): every block writes its log entries into the
   system log of the axes group – `client.program.system_log` (ring buffer, newest first) and,
@@ -407,8 +393,9 @@ Motions are assigned to a sequence with their input `SequenceFlag`.
   ```
 
 - **Server log** (CreateServerLog/ReadServerLog): not implemented in the PLC library yet
-  (`MC_CreateServerLog_ToDo`, `MC_ReadServerLog` are empty); the number of log entries of the RC
-  is reported by ExchangeConfiguration (`OutCmd.NumberOfServerLogs`).
+  (`MC_CreateServerLog_ToDo`, `MC_ReadServerLog` are empty).
+- **Messages** of the RC and of the commands: RobotTask output `MessageLog`
+  (`client.program.message_log`).
 
 ## 5. Patterns for your own program
 
@@ -460,4 +447,4 @@ first block is created: `srci.configure(TOOL_MAX=20, FRAME_MAX=20, LOAD_MAX=20)`
 | motion does not start | robot not enabled, primary sequence interrupted (→ `GroupContinue`), override 0 |
 | `ReturnToPrimary` fails with `16#8C22…8C27` | tool/frame/load differ from the interrupted motion – use the same `ToolNo`/`FrameNo` |
 
-The RC messages (`MC_ReadMessagesFB`) and the system log (`--debug`) usually tell the reason.
+The messages in the RobotTask output `MessageLog` and the system log (`--debug`) usually tell the reason.

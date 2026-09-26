@@ -54,7 +54,7 @@ def test_core_profile_demo(demo: ModuleType, target: str, capsys: pytest.Capture
     assert demo.main([target, "--fast"]) == 0
     out = capsys.readouterr().out
     assert "all Core functions executed" in out
-    for title in ("ReadRobotData", "ExchangeConfiguration", "ReadMessages", "GroupReset, EnableRobot",
+    for title in ("RobotTask - robot data, configuration, messages", "GroupReset, EnableRobot",
                   "ChangeSpeedOverride", "ReadActualPositionCyclic", "WriteToolData", "WriteFrameData",
                   "WriteLoadData", "ReadRobotSWLimits", "Read/WriteRobotDefaultDynamics",
                   "Read/WriteRobotReferenceDynamics", "MoveAxesAbsolute", "MoveDirectAbsolute",
