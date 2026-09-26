@@ -80,6 +80,7 @@ def parse_table(lines: list[str]) -> list[Entry]:
     entries: list[Entry] = []
     start: int | None = None  # first byte number since the last entry
     pending_names: list[str] = []  # bit names above a BYTE row
+    bit_row = False  # the last entry is a BYTE with bit names printed above and below its row
     for line in lines:
         if _NOISE.search(line) or not line.strip() or "ByteNo" in line:
             continue
@@ -94,6 +95,7 @@ def parse_table(lines: list[str]) -> list[Entry]:
                 offset = int(no)
             else:
                 offset = expected
+            bit_row = typ == "BYTE" and bool(pending_names)
             entries.append(Entry(offset, typ, pending_names + _names(rest)))
             pending_names, start = [], None
             continue
@@ -105,8 +107,9 @@ def parse_table(lines: list[str]) -> list[Entry]:
             continue
         if m := _NAME_ONLY.match(line):
             names = _names(m.group(1))
-            # bit names below a BYTE row belong to it, above it to the next BYTE row
-            if entries and entries[-1].type == "BYTE" and start is None and len(entries[-1].names) < 8:
+            # bit names below a BYTE row belong to it when its first names were printed above it
+            # (centered bit layout); otherwise they are the names above the next BYTE row
+            if bit_row and start is None and len(entries[-1].names) < 8:
                 entries[-1].names.extend(names)
             else:
                 pending_names.extend(names)

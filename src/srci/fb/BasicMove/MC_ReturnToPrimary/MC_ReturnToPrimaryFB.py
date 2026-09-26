@@ -292,6 +292,7 @@ class MC_ReturnToPrimaryFB(RobotLibraryBaseFB):
         self._command.ReturnMode = self._parCmd.ReturnMode == ReturnMode.END_POSITION
         self._command.TrajectoryMode = self._parCmd.TrajectoryMode == TrajectoryMode.PTP_MOVEMENT
         self._command.MoveTime = TIME_TO_UINT(self._parCmd.MoveTime)
+        self._command.AllowDifferences = self._parCmd.AllowDifferences  # ST-FIX F38
         self._command.Enable = self.Enable
 
         # copy command data to header

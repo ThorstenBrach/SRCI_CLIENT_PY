@@ -38,9 +38,14 @@ Status "fixed in Python" means: still to be fixed in the PLC library.
 | F30 | `MC_ReadRobotDataFB.ParseResponsePayload` | `InterpreterCycleTime` read with `GetUsint` → 0 (SDK 10 ms) | table 6-18 / SDK: UINT | fixed (source patch) |
 | F31 | `MC_WriteRobotSWLimitsFB.CreateCommandPayload` | `ResetToFactoryDefaults` (byte 106) is never sent | table 6-209 | fixed (source patch) |
 | F32 | responses of `GroupStop`, `ExchangeConfiguration`, `ReadRobotSWLimits`, `ReadMessages` | fields at the end are not read: `AbortedSequence`, `NumberOfServerLogs`, `DataChanged`; the message text has 150 characters, ST reads 255 (F22) | tables 6-290, 6-87, 6-203, 6-108 | as in ST (no outputs for the fields) |
-| F33 | payload of 23 extended/optional FBs | layout differs from the spec tables (shifted by missing/additional bytes, wrong data types, off-by-one loops). List with details: `KNOWN` in `tests/unit/fb/test_payload_spec.py` | chapter 6 payload tables | as in ST (not testable against the SDK) |
+| F33 | payload of 24 extended/optional FBs | layout differs from the spec tables (the bilateral test also found `MC_LoadMeasurementAutomaticFB`: Position_1 complete before Position_2) (shifted by missing/additional bytes, wrong data types, off-by-one loops). List with details: `KNOWN` in `tests/unit/fb/test_payload_spec.py` | chapter 6 payload tables | as in ST (not testable against the SDK) |
 | F34 | `MC_UserLoginFB`, `MC_SwitchLanguageFB` | `AddString` writes only the actual length; the spec has fixed fields (`Password`/`Username` 50, `LanguageCode` 2) → `Username` at the wrong offset | tables 6-69, 6-76 | as in ST |
 | F35 | `CmdType` enum, `MC_MoveLinearAbsoluteJFB`, `MC_SoftSwitchTcpFB` | wrong command types: MoveLinearAbsoluteJ is sent as **MoveLinearAbsolute (2103)** – the RC reads the joint target as Cartesian position; SoftSwitchTcp as ShiftPosition (7205); MoveCircularAbsolute 2109 / MoveCircularRelative 2106 | spec: MoveLinearAbsoluteJ 2109, SoftSwitchTcp 7300, MoveCircularAbsolute 2106, MoveCircularRelative 2107 | fixed (enum override in `tools/plcopen_gen/overrides.py`, source patches) |
+| F36 | `MC_SearchHardStopFB`, `MC_SearchHardStopJFB` `.CheckParameterValid` | `FOR _idx := 0 TO 6` over `DetectionVector[0..5]` – reads behind the array (Python: IndexError) | – | fixed (source patch) |
+| F37 | `MC_EnableRobotFB`, `MC_MoveCircularRelativeFB` `.CreateCommandPayload` | two BOOLs that are bit 0/1 of **one** byte are sent as two bytes (`HoldToRun`/`ManualStep`, `PathChoice`/`Manipulation`) → `ManualStep`/`Manipulation` land in a reserved byte (not visible in the layout check, sizes happen to fit) | tables 6-25, 6-357 | fixed (source patch) |
+| F38 | `MC_ReturnToPrimaryFB.CreateCommandPayload` | `AllowDifferences` is never copied into the command → always FALSE | table 6-332 | fixed (source patch) |
+| F39 | ParCmd/OutCmd of several FBs | parameters without a field in the telegram of the spec (e.g. `MovePickPlaceDirect.ReductionRate`, `MoveSuperImposed.*DiffRate`, `SetTriggerRegister.EvaluateStartCondition`, `StopSubprogram.SequenceFlag`, `OutCmd.FollowID`) – list `NOT_IN_TELEGRAM` in `tests/sdk/test_bilateral.py` | – | to be reviewed (older/newer draft or values of the PLC only) |
+| F40 | `MC_UnitMeasurementFB`, `MC_SyncToConveyorFB` `.OnApplyOutCmd` | `OutCmd` is only updated in state ACTIVE – the values of a response that is DONE at once are lost | – | as in ST |
 
 ## Notes on the SRCI SDK (simulation)
 
@@ -61,6 +66,13 @@ Changes inside the private SDK copy are marked `SRCI_PY CUSTOM BEGIN/END` and li
 - `RSP::ReadActualPosition` has 2 reserved bytes before the extended axes that are not in the
   spec (SDK comment: "not anymore in spec, but in Tia?") → E1..E6 of ReadActualPosition are
   shifted by 2 bytes against the spec and the PLC library.
+- **C-003** all commands of the spec: the SDK implements only the core commands. The harness
+  generates field tables for all 115 commands from the payload tables of the spec
+  (`srci_py_harness/gen_commands.py`) and answers the other commands generically
+  (`srci_py_commands.cpp`: motion through the planner of the SDK, others done at once, response
+  values set by the test). Every received command is decoded with these tables
+  (`SdkSimulator.last_command`) – the bilateral tests (`tests/sdk/test_bilateral.py`) compare
+  every ParCmd value with it and every response value with OutCmd.
 - `srci_sim_layout` (harness, not an SDK change) returns the layout of the SDK structures;
   `tests/sdk/test_payload_sdk.py` compares every payload with them.
 - The SDK checks the lifesign only for a *frozen* value (same lifesign for

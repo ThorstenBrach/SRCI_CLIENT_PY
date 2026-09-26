@@ -33,7 +33,7 @@ __all__ = [
     "sdk_transport",
 ]
 
-API_VERSION = 2  # 2: srci_sim_layout
+API_VERSION = 3  # 2: srci_sim_layout, 3: generated commands (C-003)
 MAX_TELEGRAM_SIZE = 512
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -141,6 +141,16 @@ def _load(path: Path) -> ctypes.CDLL:
     lib.srci_sim_reset.argtypes = [ctypes.c_void_p]
     lib.srci_sim_layout.argtypes = [ctypes.c_int, ctypes.c_uint16, ctypes.c_void_p, ctypes.c_size_t]
     lib.srci_sim_layout.restype = ctypes.c_int
+    lib.srci_sim_last_command.argtypes = [ctypes.c_void_p, ctypes.c_uint16, ctypes.c_char_p, ctypes.c_size_t]
+    lib.srci_sim_last_command.restype = ctypes.c_size_t
+    lib.srci_sim_set_response_value.argtypes = [
+        ctypes.c_void_p,
+        ctypes.c_uint16,
+        ctypes.c_char_p,
+        ctypes.c_char_p,
+    ]
+    lib.srci_sim_clear_response_values.argtypes = [ctypes.c_void_p]
+    lib.srci_sim_set_all_functions_supported.argtypes = [ctypes.c_void_p, ctypes.c_int]
     version = lib.srci_sim_api_version()
     if version != API_VERSION:
         raise SdkNotAvailableError(
@@ -270,6 +280,34 @@ class SdkSimulator:
 
     def set_fail_enable(self, fail: bool) -> None:
         self._lib.srci_sim_set_fail_enable(self._h(), int(fail))
+
+    # ------------------------------------------------------------------ bilateral tests
+
+    def last_command(self, cmd_type: int) -> dict[str, str] | None:
+        """Fields of the last command of ``cmd_type`` as the SDK decoded them (payload tables of
+        the specification, generated into the harness): ``{"ToolNo": "3", ...}``."""
+        size = self._lib.srci_sim_last_command(self._h(), cmd_type, None, 0)
+        if size == 0:
+            return None
+        buf = ctypes.create_string_buffer(size)
+        self._lib.srci_sim_last_command(self._h(), cmd_type, buf, size)
+        text = buf.value.decode("latin-1")
+        return dict(line.split("=", 1) for line in text.splitlines() if "=" in line)
+
+    def set_response(self, cmd_type: int, values: dict[str, object]) -> None:
+        """Values of response fields (names of the specification, e.g. ``"Values[0]"``,
+        ``"IntValue_1"``) for the commands the SDK does not implement itself; the other
+        fields of the response are 0."""
+        for name, value in values.items():
+            text = str(int(value)) if isinstance(value, bool) else str(value)
+            self._lib.srci_sim_set_response_value(self._h(), cmd_type, name.encode(), text.encode("latin-1"))
+
+    def clear_responses(self) -> None:
+        self._lib.srci_sim_clear_response_values(self._h())
+
+    def set_all_functions_supported(self, supported: bool) -> None:
+        """ReadRobotData: all functions (default) or only those of the original SDK."""
+        self._lib.srci_sim_set_all_functions_supported(self._h(), 1 if supported else 0)
 
     @property
     def states(self) -> SdkStates:

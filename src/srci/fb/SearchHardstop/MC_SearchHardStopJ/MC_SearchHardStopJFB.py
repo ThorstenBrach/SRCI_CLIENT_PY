@@ -322,7 +322,8 @@ class MC_SearchHardStopJFB(RobotLibraryBaseExecuteFB):
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.DetectionMode = {1}', Para1=DETECTION_MODE_TO_STRING(Value=self.ParCmd.DetectionMode))
             return CheckParameterValid
 
-        for _idx in range(0, 7):
+        # ST-FIX F36
+        for _idx in range(0, 6):
             # Check ParCmd.DetectionVector[x] valid ?
             if SysDepIsValidReal(Value=self.ParCmd.DetectionVector[_idx]) == False:
                 # Parameter not valid

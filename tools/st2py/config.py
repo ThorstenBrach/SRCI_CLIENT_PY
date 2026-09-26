@@ -113,6 +113,28 @@ F28_POUS = (
 )
 
 
+def _bits_in_one_byte(pou: str, bit0: str, bit1: str, table: str) -> tuple[SourcePatch, SourcePatch]:
+    """F37: two BOOLs that are bit 0 and 1 of one byte were sent as two bytes."""
+    reason = f"F37: {bit0}/{bit1} are bit 0/1 of one byte (spec table {table}), ST sent 2 bytes"
+    return (
+        SourcePatch(
+            pou,
+            "CreateCommandPayload",
+            f"CreateCommandPayload.AddBool(_command.{bit0});",
+            f"CreateCommandPayload.AddByte(BOOL_TO_BYTE(_command.{bit0}) OR SHL(BOOL_TO_BYTE(_command.{bit1}), 1));"
+            " // ST-FIX F37",
+            reason,
+        ),
+        SourcePatch(
+            pou,
+            "CreateCommandPayload",
+            f"CreateCommandPayload.AddBool(_command.{bit1});",
+            "CreateCommandPayload.AddByte(0); // ST-FIX F37: reserved byte, the value is bit 1 of the byte before",
+            reason,
+        ),
+    )
+
+
 CONFIG = Config(
     patches=[
         SourcePatch(
@@ -240,6 +262,30 @@ CONFIG = Config(
             "_command.CmdTyp                    :=  CmdType.ShiftPosition;",
             "_command.CmdTyp                    :=  CmdType.SoftSwitchTcp; // ST-FIX F35",
             "F35: SoftSwitchTcp was sent as ShiftPosition",
+        ),
+        SourcePatch(
+            "MC_SearchHardStopFB",
+            "CheckParameterValid",
+            "FOR _idx := 0 TO 6\nDO\n  // Check ParCmd.DetectionVector[x] valid ?",
+            "FOR _idx := 0 TO 5 // ST-FIX F36\nDO\n  // Check ParCmd.DetectionVector[x] valid ?",
+            "F36: loop 0..6 over DetectionVector[0..5] (reads behind the array)",
+        ),
+        SourcePatch(
+            "MC_SearchHardStopJFB",
+            "CheckParameterValid",
+            "FOR _idx := 0 TO 6\nDO\n  // Check ParCmd.DetectionVector[x] valid ?",
+            "FOR _idx := 0 TO 5 // ST-FIX F36\nDO\n  // Check ParCmd.DetectionVector[x] valid ?",
+            "F36: loop 0..6 over DetectionVector[0..5] (reads behind the array)",
+        ),
+        *_bits_in_one_byte("MC_EnableRobotFB", "HoldToRun", "ManualStep", "6-25"),
+        *_bits_in_one_byte("MC_MoveCircularRelativeFB", "PathChoice", "Manipulation", "6-357"),
+        SourcePatch(
+            "MC_ReturnToPrimaryFB",
+            "CreateCommandPayload",
+            "_command.MoveTime          :=  TIME_TO_UINT(_parCmd.MoveTime);",
+            "_command.MoveTime          :=  TIME_TO_UINT(_parCmd.MoveTime);\n"
+            "_command.AllowDifferences  :=  _parCmd.AllowDifferences; // ST-FIX F38",
+            "F38: AllowDifferences was never copied into the command -> always sent as FALSE",
         ),
         *_swap_no_and_data_changed("MC_ReadToolDataFB", "ToolData.ToolNoReturn", "ToolNoReturn", "6-190"),
         *_swap_no_and_data_changed("MC_ReadFrameDataFB", "FrameNoReturn", "FrameNoReturn", "6-184"),

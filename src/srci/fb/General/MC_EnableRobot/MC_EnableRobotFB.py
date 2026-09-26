@@ -18,7 +18,7 @@ from srci.fb._internal.Recv.RobotLibraryResponseDataFB import RobotLibraryRespon
 from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommandDataFB
 from srci.functions.Common import CheckTimeout, SetTimeout
 from srci.functions.Convert.TO_STRING.STEP_MODE_TO_STRING import STEP_MODE_TO_STRING
-from srci.iec.conv import BOOL_TO_STRING, DINT_TO_STRING, USINT_TO_STRING
+from srci.iec.conv import BOOL_TO_BYTE, BOOL_TO_STRING, DINT_TO_STRING, USINT_TO_STRING
 from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, trunc_str, wrap
 from srci.types import CmdMessageState, CmdType, EnableRobotOutCmd, EnableRobotParCmd, EnableRobotRecvData, EnableRobotSendData, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, StepMode, SyncMode, SyncTime, SystemTime
 
@@ -212,14 +212,14 @@ class MC_EnableRobotFB(RobotLibraryBaseEnableFB):
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.HoldToRun
-            CreateCommandPayload.AddBool(Value=self._command.HoldToRun)
+            CreateCommandPayload.AddByte(Value=BOOL_TO_BYTE(self._command.HoldToRun) | BOOL_TO_BYTE(self._command.ManualStep) << 1)  # ST-FIX F37
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.ManualStep
-            CreateCommandPayload.AddBool(Value=self._command.ManualStep)
+            CreateCommandPayload.AddByte(Value=0)  # ST-FIX F37: reserved byte, the value is bit 1 of the byte before
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 

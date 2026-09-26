@@ -1036,14 +1036,14 @@ class MC_MoveCircularRelativeFB(RobotLibraryBaseExecuteFB):
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.PathChoice
-            CreateCommandPayload.AddBool(Value=self._command.PathChoice)
+            CreateCommandPayload.AddByte(Value=BOOL_TO_BYTE(self._command.PathChoice) | BOOL_TO_BYTE(self._command.Manipulation) << 1)  # ST-FIX F37
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.Manipulation
-            CreateCommandPayload.AddBool(Value=self._command.Manipulation)
+            CreateCommandPayload.AddByte(Value=0)  # ST-FIX F37: reserved byte, the value is bit 1 of the byte before
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
