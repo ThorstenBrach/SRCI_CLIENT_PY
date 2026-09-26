@@ -49,6 +49,8 @@ class MC_GroupStopFB(RobotLibraryBaseExecuteFB):
         self._command: GroupStopSendData = GroupStopSendData()
         # response data received
         self._response: GroupStopRecvData = GroupStopRecvData()
+        # VAR_OUTPUT
+        self.Active: bool = False
 
     def __call__(self, *, ParCmd: GroupStopParCmd | None = None, Execute: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if ParCmd is not None:
@@ -263,6 +265,12 @@ class MC_GroupStopFB(RobotLibraryBaseExecuteFB):
                 self.Error = True
                 self.Busy = False
 
+        # ST-FIX F45: output Active
+        self.Active = State == CmdMessageState.ACTIVE
+
+        # ST-FIX F32: output AbortedSequence
+        self.AbortedSequence = SequenceFlag(self._response.AbortedSequence)
+
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:
             ResponseData = RobotLibraryResponseDataFB()
@@ -282,6 +290,11 @@ class MC_GroupStopFB(RobotLibraryBaseExecuteFB):
         self._response.State = self._rspHeader.State
         self._response.AlarmMessageSeverity = self._rspHeader.AlarmMessageSeverity
         self._response.AlarmMessageCode = self._rspHeader.AlarmMessageCode
+
+        # ST-FIX F32
+        if ResponseData.IsPayloadRemaining:
+            self._response.AbortedSequence = ResponseData.GetSint()
+            _parameterCnt = _parameterCnt + 1
 
         # Create logging
         self.ParseResponsePayloadLog(ResponseData=ResponseData, Timestamp=Timestamp, ParameterCnt=_parameterCnt)
@@ -311,4 +324,7 @@ class MC_GroupStopFB(RobotLibraryBaseExecuteFB):
         self.Done = False
         self.Busy = False
         self.CommandBuffered = False
+
+        # ST-FIX F45
+        self.Active = False
         return Reset

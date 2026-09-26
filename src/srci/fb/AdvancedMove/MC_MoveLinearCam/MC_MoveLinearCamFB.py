@@ -657,13 +657,7 @@ class MC_MoveLinearCamFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Manipulation
-            CreateCommandPayload.AddBool(Value=self._command.Manipulation)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
+        # ST-FIX F33: Manipulation removed
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.BlendingParameter[0]
@@ -720,6 +714,11 @@ class MC_MoveLinearCamFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
+        # ST-FIX F33
+        CreateCommandPayload.AddArmConfig(Value=self._command.Position.Config)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddTurnNumber(Value=self._command.Position.TurnNumber)
+        _parameterCnt = _parameterCnt + 1
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.Position.E1
@@ -727,12 +726,29 @@ class MC_MoveLinearCamFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.MoveTime
-            CreateCommandPayload.AddUint(Value=self._command.MoveTime)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
+        # ST-FIX F33
+        CreateCommandPayload.AddUint(Value=self._command.TriggerDelay)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddReal(Value=self._command.TriggerDistance)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddUsint(Value=self._command.Index)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddBool(Value=self._command.RelativePosition)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddByte(Value=self._command.OutputBitmask)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddByte(Value=self._command.Value)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddByte(Value=self._command.ConfigMode[0])
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddByte(Value=self._command.ConfigMode[1])
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddBool(Value=self._command.Manipulation)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddUsint(Value=self._command.TurnMode)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddUint(Value=self._command.MoveTime)
+        _parameterCnt = _parameterCnt + 1
 
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):

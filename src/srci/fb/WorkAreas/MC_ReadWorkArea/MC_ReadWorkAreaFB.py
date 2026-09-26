@@ -23,7 +23,7 @@ from srci.functions.Convert.TO_STRING.IEC_TIME_TO_STRING import IEC_TIME_TO_STRI
 from srci.functions.Convert.TO_STRING.WORK_AREA_REACTION_MODE_TO_STRING import WORK_AREA_REACTION_MODE_TO_STRING
 from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, REAL_TO_STRING, USINT_TO_STRING
 from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, trunc_str, wrap
-from srci.types import AreaType, CmdMessageState, CmdType, DefinitionMode, ExecutionMode, MessageType, PriorityLevel, ReadWorkAreaOutCmd, ReadWorkAreaParCmd, ReadWorkAreaRecvData, ReadWorkAreaSendData, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, SystemTime, WorkAreaReactionMode
+from srci.types import AreaType, CmdMessageState, CmdType, ExecutionMode, MessageType, PriorityLevel, ReadWorkAreaOutCmd, ReadWorkAreaParCmd, ReadWorkAreaRecvData, ReadWorkAreaSendData, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, SystemTime, WorkAreaReactionMode
 
 if TYPE_CHECKING:
     from srci.interfaces.IMessageLogger import IMessageLogger
@@ -390,13 +390,7 @@ class MC_ReadWorkAreaFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # Check payload remaining ?
-        if ResponseData.IsPayloadRemaining:
-            # Get Response.WorkAreaData.DefinitionMode
-            self._response.WorkAreaData.DefinitionMode = DefinitionMode(ResponseData.GetUsint())
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
+        # ST-FIX F33: WorkAreaData.DefinitionMode removed
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
             # Get Response.WorkAreaData.FrameNo

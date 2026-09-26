@@ -60,6 +60,8 @@ class MC_ReadRealsFB(RobotLibraryBaseExecuteFB):
         self._command: ReadRealsSendData = ReadRealsSendData()
         # response data received
         self._response: ReadRealsRecvData = ReadRealsRecvData()
+        # VAR_OUTPUT
+        self.ParameterAccepted: bool = False
 
     def __call__(self, *, ProcessingMode: ProcessingMode | None = None, SequenceFlag: SequenceFlag | None = None, ParCmd: ReadRealsParCmd | None = None, Execute: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if ProcessingMode is not None:
@@ -461,6 +463,9 @@ class MC_ReadRealsFB(RobotLibraryBaseExecuteFB):
                 self.Error = True
                 self.Busy = False
 
+        # ST-FIX F45: output ParameterAccepted
+        self.ParameterAccepted = ((self.ParameterAccepted or State == CmdMessageState.BUFFERED) or State == CmdMessageState.ACTIVE) or State == CmdMessageState.DONE
+
         # ST-FIX F25: output data are valid while the command is active (continuous) or done
         self.Valid = State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE
 
@@ -576,4 +581,7 @@ class MC_ReadRealsFB(RobotLibraryBaseExecuteFB):
         self.CommandBuffered = False
         self.CommandAborted = False
         self.CommandInterrupted = False
+
+        # ST-FIX F45
+        self.ParameterAccepted = False
         return Reset

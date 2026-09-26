@@ -170,7 +170,8 @@ class MC_SwitchLanguageFB(RobotLibraryBaseExecuteFB):
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.LanguageCode
-            CreateCommandPayload.AddString(Value=self._command.LanguageCode)
+            # ST-FIX F34: LanguageCode is a field of 2 characters (spec table 6-76), padded with 0
+            CreateCommandPayload.AddDataBlock(pValue=ADR(self._command, 'LanguageCode', _iec.StringType(2)), Size=2)
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 

@@ -417,7 +417,8 @@ class MC_SyncToConveyorFB(RobotLibraryBaseEnableFB):
             # Reset command outputs
             SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(SyncToConveyorOutCmd)), Value=0, DataLen=5)
 
-        if State == CmdMessageState.ACTIVE:
+        # ST-FIX F40
+        if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
             self.OutCmd.InvocationCounter = self._response.InvocationCounter
             self.OutCmd.OriginID = self._response.OriginID

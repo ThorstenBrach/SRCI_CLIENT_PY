@@ -17,42 +17,10 @@ from tools.spec_tables import Entry, PayloadTable, load_command_types
 NO_TABLE = "no payload table in the specification (cyclic data / not specified)"
 
 KNOWN: dict[str, str] = {
-    # core profile: fields at the end of the response are not read (no outputs for them)
-    "MC_GroupStopFB recv": "F32: AbortedSequence (byte 4) not read",
-    "MC_ExchangeConfigurationFB recv": "F32: NumberOfServerLogs (byte 28) not read",
-    "MC_ReadRobotSWLimitsFB recv": "F32: DataChanged (byte 106) not read",
-    "MC_ReadMessagesFB recv": "F32: message text has 150 characters (spec, SDK), ST reads 255 (see F22)",
-    # strings are sent with their actual length instead of the fixed field length
-    "MC_UserLoginFB send": "F34: Password/Username not padded to 50 characters -> Username at wrong offset",
-    "MC_SwitchLanguageFB send": "F34: LanguageCode not padded to 2 characters",
-    # extended / optional profile (not in the SDK): layout differs from the spec
-    "MC_MoveApproachDirectFB send": "F33: additional Reserve byte after AddArmConfig (2 bytes already)",
-    "MC_MoveCircularAbsoluteFB send": "F33: PathChoice/Manipulation as 2 bytes, ConfigMode/TurnMode/Time missing",
-    "MC_MoveCircularCamFB send": "F33: Time (MoveTime) missing",
-    "MC_MoveLinearCamFB send": "F33: additional BOOL before BlendingParameter",
-    "MC_MoveLinearRelativeFB send": "F33: Reserved byte before Time missing",
-    "MC_CalculateToolFB recv": "F33: ToolData parsed before TCPMaxError/TCPMeanError",
-    "MC_ForceControlFB send": "F33: ReferenceType sent as UINT (USINT)",
-    "MC_ForceLimitFB recv": "F33: additional byte before OriginID",
-    "MC_ReadDHParameterFB recv": "F33: PositiveJointDirection bits read as 7 bytes",
-    "MC_CreateSplineFB send": "F33: all spline points in one payload (> 255 bytes, ST writes past the buffer)",
-    "MC_DynamicSplineFB send": "F33: all spline points in one payload (> 255 bytes, ST writes past the buffer)",
-    "MC_SetTriggerLimitFB send": "F33: Reserved byte after ListenerID missing",
-    "MC_SetTriggerMotionFB send": "F33: Reserved byte after ListenerID missing",
-    "MC_WaitTimeFB send": "F33: 4 additional bytes after Time",
-    "MC_WaitTimeFB recv": "F33: 4 additional bytes read",
-    "MC_MonitorWorkAreaFB recv": "F33: 2 WORDs read, spec has 1",
-    "MC_ReadWorkAreaFB recv": "F33: additional byte before ZeroPointX (spec: REAL at odd offset 17 - check spec)",
-    "MC_WriteWorkAreaFB send": "F33: additional byte before ZeroPointX (spec: REAL at odd offset 17 - check spec)",
-    "MC_WriteDigitalOutputsFB send": "F33: Values sent as REAL, Reserved byte missing",
-    "MC_WriteIntegersFB send": "F33: FOR 1 TO 6 -> Values[1..6] / Index[1..6] instead of [0..6]",
-    "MC_WriteSystemVariableFB send": "F33: last Reserved byte missing",
-    "MC_CallSubprogramFB recv": "F33: ReturnData one byte short",
-    # minor: only the kind of value differs
-    "MC_WaitForTriggerFB send": "F33: ConditionalWait sent as BOOL byte (spec SINT) - same values",
+    # errors or inconsistencies in the specification (the library follows the other tables)
     "MC_SyncToConveyorFB send": "spec: EmitterID as USINT in table 6-474 (SINT in all other tables)",
-    # errors in the specification
     "MC_MoveSuperImposedDynamicFB send": "spec: table 6-492 lacks Offset.RZ (byte numbers inconsistent)",
+    "MC_WaitForTriggerFB send": "spec: ConditionalWait is BOOL in the interface, SINT in the table - same values",
     # no table
     "MC_ReadActualPositionCyclicFB send": NO_TABLE,
     "MC_ReadActualPositionCyclicFB recv": NO_TABLE,
@@ -62,7 +30,7 @@ KNOWN: dict[str, str] = {
     "MC_WriteCallSubprogramCyclicFB recv": NO_TABLE,
     "MC_SoftSwitchTcpFB send": NO_TABLE,
     "MC_SoftSwitchTcpFB recv": NO_TABLE,
-}
+}  # F32/F33/F34 fixed (ST-FIX in tools/st2py/config.py)
 
 CORE = (
     "MC_GroupResetFB",

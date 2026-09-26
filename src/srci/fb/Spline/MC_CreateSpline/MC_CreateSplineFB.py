@@ -25,8 +25,8 @@ from srci.functions.Convert.TO_STRING.ARM_CONFIG_WRIST_TO_STRING import ARM_CONF
 from srci.functions.Convert.TO_STRING.SPLINE_MODE_TO_STRING import SPLINE_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
 from srci.iec.conv import BYTE_TO_STRING, DINT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UINT_TO_STRING, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
-from srci.types import ArmConfigElbow, ArmConfigShoulder, ArmConfigWrist, CmdMessageState, CmdType, CreateSplineOutCmd, CreateSplineParCmd, CreateSplineRecvData, CreateSplineSendData, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryParameter, Severity, SplineMode, SystemTime
+from srci.iec.rt import ADR, ADR_ELEM, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
+from srci.types import ArmConfigElbow, ArmConfigShoulder, ArmConfigWrist, CmdMessageState, CmdType, CreateSplineOutCmd, CreateSplineParCmd, CreateSplineRecvData, CreateSplineSendData, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryParameter, Severity, SplineData, SplineMode, SystemTime
 
 if TYPE_CHECKING:
     from srci.interfaces.IMessageLogger import IMessageLogger
@@ -54,6 +54,9 @@ class MC_CreateSplineFB(RobotLibraryBaseExecuteFB):
         self._command: CreateSplineSendData = CreateSplineSendData()
         # response data received
         self._response: CreateSplineRecvData = CreateSplineRecvData()
+        self._pointIndex: int = 1
+        self._pointCount: int = 0
+        self._emptyPoint: SplineData = SplineData()
 
     def __call__(self, *, ParCmd: CreateSplineParCmd | None = None, Execute: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if ParCmd is not None:
@@ -154,7 +157,8 @@ class MC_CreateSplineFB(RobotLibraryBaseExecuteFB):
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.Mode = {1}', Para1=SPLINE_MODE_TO_STRING(Value=self.ParCmd.Mode))
             return CheckParameterValid
 
-        for _idx in range(0, RobotLibraryParameter.SPLINE_DATA_MAX + 1):
+        # ST-FIX F54
+        for _idx in range(1, RobotLibraryParameter.SPLINE_DATA_MAX + 1):
             # Check ParCmd.SplineData[x].Position.X valid ?
             if SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].Position.X) == False:
                 # Parameter not valid
@@ -408,6 +412,18 @@ class MC_CreateSplineFB(RobotLibraryBaseExecuteFB):
                 self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.SplineData[{2}].MoveTime = {1}', Para1=TIME_TO_STRING(self.ParCmd.SplineData[_idx].MoveTime), Para2=DINT_TO_STRING(_idx))
                 break
                 return CheckParameterValid
+        else:
+            _idx = st_for_end(1, RobotLibraryParameter.SPLINE_DATA_MAX)
+
+        # ST-FIX F33: number of spline points = highest index of a point that is not empty
+        self._pointCount = 0
+        for _idx in range(1, RobotLibraryParameter.SPLINE_DATA_MAX + 1):
+            if SysDepMemCmp(pData1=ADR_ELEM(self.ParCmd.SplineData, _idx, _iec.StructType(SplineData)), pData2=ADR(self, '_emptyPoint', _iec.StructType(SplineData)), DataLen=83) != RobotLibraryConstants.OK:
+                self._pointCount = _idx
+        if self._pointCount == 0:
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            return CheckParameterValid
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL
@@ -432,6 +448,7 @@ class MC_CreateSplineFB(RobotLibraryBaseExecuteFB):
             self._command.SplineData[_idx].JerkRate = REAL_TO_PERCENT_UINT(Value=self._parCmd.SplineData[_idx].JerkRate, IsOptional=True)
             self._command.SplineData[_idx].ToolNo = self._parCmd.SplineData[_idx].ToolNo
             self._command.SplineData[_idx].FrameNo = self._parCmd.SplineData[_idx].FrameNo
+            copy_into(self._command.SplineData[_idx].Position, self._parCmd.SplineData[_idx].Position)  # ST-FIX F55
             self._command.SplineData[_idx].MoveTime = TIME_TO_UINT(self._parCmd.SplineData[_idx].MoveTime)
         else:
             _idx = st_for_end(1, RobotLibraryParameter.SPLINE_DATA_MAX)
@@ -455,7 +472,8 @@ class MC_CreateSplineFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        for _idx in range(1, RobotLibraryParameter.SPLINE_DATA_MAX + 1):
+        # ST-FIX F33: one spline point per command
+        for _idx in range(self._pointIndex, self._pointIndex + 1):
             # Check parameter must be added ?
             if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
                 # add command.VelocityRate
@@ -853,6 +871,8 @@ class MC_CreateSplineFB(RobotLibraryBaseExecuteFB):
                         copy_into(self._parCmd, self.ParCmd)
                         # init parameter sequence
                         self._command.ParSeq = 1
+                        # ST-FIX F33: first spline point
+                        self._pointIndex = 1
                         # create command data
                         self.CommandData = self.CreateCommandPayload(AxesGroup=AxesGroup)
                         # Add command to active command register
@@ -866,6 +886,14 @@ class MC_CreateSplineFB(RobotLibraryBaseExecuteFB):
                 if self._responseReceived:
                     # reset response received flag
                     self._responseReceived = False
+                    # ST-FIX F33: the next spline point is sent when the last one is done
+                    if self._response.State == CmdMessageState.DONE and self._pointIndex < self._pointCount:
+                        self._pointIndex = self._pointIndex + 1
+                        self._rspHeader.State = CmdMessageState.EMPTY
+                        self.CommandData = self.CreateCommandPayload(AxesGroup=AxesGroup)
+                        self._uniqueID = AxesGroup.Acyclic.ActiveCommandRegister.AddCmd(pCommandFB=self)
+                        SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
+                        return OnExecRun
                     # update state flags
                     self.OnUpdateStateFlags(State=self._response.State)
                     # update state flags

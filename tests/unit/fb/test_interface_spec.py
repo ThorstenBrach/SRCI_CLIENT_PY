@@ -20,31 +20,58 @@ from tools.spec_tables import load_interfaces
 # names of the specification -> names of the PLC library
 ALIAS = {"AbortingMode": "ExecMode", "Time": "MoveTime"}
 
-# F45: parameters of the specification that the function block does not have
-KNOWN_MISSING: dict[str, str] = {
-    "MC_CallSubprogramFB": "output Progress",
-    "MC_MeasuringInputFB": "outputs CommandAborted, ToolNo_x/FrameNo_x/MeasuredJointPosition_x (OutCmd.Measurings)",
-    "MC_GroupStopFB": "output Active",
-    "MC_SetSequenceFB": "output Active",
-    "MC_ReturnToPrimaryFB": "input Limit (DistanceLimit)",
-    "MC_CalculateForwardKinematicFB": "outputs ToolNoReturn, FrameNoReturn (TargetToolNoReturn/...)",
-    "MC_CalculateFrameFB": "output FrameData (IEC_Date, ..., Position)",
-    "MC_ActivateConveyorTrackingFB": "output TrackingStatusByte (TrackingStatus bits)",
-    "MC_RedefineTrackingPosFB": "input StartIndexInit (StartIndexInitPosition)",
-    "MC_ForceLimitFB": "input Limit (ForceLimit)",
-    "MC_RobotTaskFB": "inputs SoftwareLimits (SWLimits), SystemLogRingBuffer",
-    "MC_ReadActualPositionFB": "inputs Enable, ReadCartesianPosition, ReadJointPosition, ReadExtJointPosition; output Position",
-    "MC_ReadActualPositionCyclicFB": "outputs ReadingExtJointPosition, ExtCartesianPosition, ExtJointPosition",
-    "MC_ReadDHParameterFB": "outputs DHParameterAlpha/A/D/Theta, PositiveJointDirection, JointZeroPosition (DHParameter)",
-    "MC_ReadRealsFB": "output ParameterAccepted",
-    "MC_DynamicSplineFB": "input Enable (the block has Execute), output RemainingSegment",
-    "MC_SetTriggerLimitFB": "output Data",
-    "MC_SetTriggerRegisterFB": "inputs IntValue_1/_2, RealValue_1/_2 (arrays IntValue/RealValue)",
-    "MC_WaitTimeFB": "input Time (WaitTime)",
-    "MC_ReadWorkAreaFB": "outputs WorkAreaNo, Data (WorkAreaNoReturn, WorkAreaData)",
-    "MC_WriteWorkAreaFB": "input Data (WorkAreaData)",
-    "MC_WriteRobotSWLimitsFB": "input ResetToFactory (ResetToFactoryDefaults)",
+# F45: names of the specification -> names of the PLC library (same value, other name or
+# structure; documented in docs/TestCases.md / ST_FINDINGS.md F45). The library keeps its names
+# (1:1 to the PLC library); values the library did not have were added (ST-FIX F45).
+SPEC_NAMES: dict[str, dict[str, str]] = {
+    "MC_ActivateConveyorTrackingFB": {"TrackingStatusByte": "TrackingStatus"},
+    "MC_CalculateForwardKinematicFB": {
+        "ToolNoReturn": "TargetToolNoReturn",
+        "FrameNoReturn": "TargetFrameNoReturn",
+    },
+    "MC_CalculateFrameFB": {"FrameData": "Position"},
+    "MC_DynamicSplineFB": {"RemainingSegment": "RemainingDistance"},
+    "MC_ForceLimitFB": {"Limit": "ForceLimit"},
+    "MC_MeasuringInputFB": {
+        f"{name}_{i}": "Measurings" for name in ("ToolNo", "FrameNo", "MeasuredJointPosition") for i in (1, 2)
+    },
+    "MC_ReadActualPositionCyclicFB": {
+        "ReadingExtJointPosition": "ReadingJointPositionExt",
+        "ExtCartesianPosition": "CartesianPositionExt",
+        "ExtJointPosition": "JointPositionExt",
+    },
+    # ReadActualPosition: Execute (+ ProcessingMode CONTINUOUS) instead of Enable; all positions
+    # are read (the Read* inputs only select outputs); Position = ActualCartesian/JointPosition
+    "MC_ReadActualPositionFB": {
+        "Enable": "Execute",
+        "ReadCartesianPosition": "Execute",
+        "ReadJointPosition": "Execute",
+        "ReadExtJointPosition": "Execute",
+        "Position": "ActualCartesianPosition",
+    },
+    "MC_ReadDHParameterFB": {
+        "DHParameterAlpha": "DHParameter",
+        "DHParameterA": "DHParameter",
+        "DHParameterD": "DHParameter",
+        "DHParameterTheta": "DHParameter",
+        "PositiveJointDirection": "DHParameter",
+        "JointZeroPosition": "DHParameter",
+    },
+    "MC_ReadWorkAreaFB": {"output:WorkAreaNo": "WorkAreaNoReturn", "Data": "WorkAreaData"},
+    "MC_RedefineTrackingPosFB": {"StartIndexInit": "StartIndexInitPosition"},
+    "MC_ReturnToPrimaryFB": {"Limit": "DistanceLimit"},
+    "MC_RobotTaskFB": {"SoftwareLimits": "SWLimits", "SystemLogRingBuffer": "SystemLog"},
+    "MC_SetTriggerRegisterFB": {
+        "IntValue_1": "IntValue",
+        "IntValue_2": "IntValue",
+        "RealValue_1": "RealValue",
+        "RealValue_2": "RealValue",
+    },
+    "MC_WaitTimeFB": {"Time": "WaitTime"},
+    "MC_WriteRobotSWLimitsFB": {"ResetToFactory": "ResetToFactoryDefaults"},
+    "MC_WriteWorkAreaFB": {"Data": "WorkAreaData"},
 }
+KNOWN_MISSING: dict[str, str] = {}  # F45 fixed: missing outputs added, names mapped (SPEC_NAMES)
 
 # function blocks without an interface table in the specification
 NO_TABLE = {
@@ -69,8 +96,17 @@ def _interface(cls: type) -> tuple[set[str], set[str], set[str]]:
 def missing(name: str, cls: type) -> list[str]:
     spec = load_interfaces()[function_name(name)]
     inputs, outputs, _ = _interface(cls)
-    miss = [f"input {r[0]}" for r in spec["inputs"] if ALIAS.get(r[0], r[0]) not in inputs]
-    miss += [f"output {r[0]}" for r in spec["outputs"] if r[0] not in outputs]
+    names = {**ALIAS, **SPEC_NAMES.get(name, {})}
+    miss = [
+        f"input {r[0]}"
+        for r in spec["inputs"]
+        if names.get(f"input:{r[0]}", names.get(r[0], r[0])) not in inputs
+    ]
+    miss += [
+        f"output {r[0]}"
+        for r in spec["outputs"]
+        if names.get(f"output:{r[0]}", names.get(r[0], r[0])) not in outputs
+    ]
     return miss
 
 

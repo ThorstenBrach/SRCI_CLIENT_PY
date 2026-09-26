@@ -322,7 +322,8 @@ class MC_UnitMeasurementFB(RobotLibraryBaseEnableFB):
             # Reset command outputs
             SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(UnitMeasurementOutCmd)), Value=0, DataLen=8)
 
-        if State == CmdMessageState.ACTIVE:
+        # ST-FIX F40
+        if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
             self.OutCmd.MeasurementActive = self._response.MeasurementActive
             self.OutCmd.Result = self._response.Result

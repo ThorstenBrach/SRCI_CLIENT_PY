@@ -168,11 +168,14 @@ class MC_ReadRobotSWLimitsFB(RobotLibraryBaseExecuteFB):
     def OnApplyOutCmd(self, *, State: CmdMessageState = CmdMessageState.EMPTY) -> None:  # PROTECTED
         if State == CmdMessageState.EMPTY:
             # Reset command outputs
-            SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(ReadRobotSWLimitsOutCmd)), Value=0, DataLen=102)
+            SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(ReadRobotSWLimitsOutCmd)), Value=0, DataLen=103)
 
         if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
             copy_into(self.OutCmd.LimitValues, self._response.LimitValues)
+
+        # ST-FIX F32
+        self.OutCmd.DataChanged = self._response.DataChanged
 
     def OnExecRun(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
         OnExecRun: int = 0
@@ -189,7 +192,7 @@ class MC_ReadRobotSWLimitsFB(RobotLibraryBaseExecuteFB):
                         # set busy flag
                         self.Busy = True
                         # Reset command outputs
-                        SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(ReadRobotSWLimitsOutCmd)), Value=0, DataLen=102)
+                        SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(ReadRobotSWLimitsOutCmd)), Value=0, DataLen=103)
                         # apply command parameter
                         copy_into(self._parCmd, self.ParCmd)
                         # init parameter sequence
@@ -472,6 +475,11 @@ class MC_ReadRobotSWLimitsFB(RobotLibraryBaseExecuteFB):
             # Get Response.LimitValues.E6UpperLimit
             self._response.LimitValues.E6UpperLimit = ResponseData.GetReal()
             # inc parameter counter
+            _parameterCnt = _parameterCnt + 1
+
+        # ST-FIX F32
+        if ResponseData.IsPayloadRemaining:
+            self._response.DataChanged = ResponseData.GetBool()
             _parameterCnt = _parameterCnt + 1
 
         # Create logging

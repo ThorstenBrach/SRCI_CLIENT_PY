@@ -83,6 +83,8 @@ def _payload_out_of_order(path: Path) -> bool:
         )
         highest = -1
         for _, p in adds:
+            if not p:
+                continue
             off = _offset(command, p)
             if off < highest and not str(p[-1]).startswith("Reserve"):
                 return True

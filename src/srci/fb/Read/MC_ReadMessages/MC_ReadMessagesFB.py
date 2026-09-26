@@ -570,7 +570,7 @@ class MC_ReadMessagesFB(RobotLibraryBaseEnableFB):
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
             # Get _response.RCManufacturer
-            ResponseData.GetDataBlock(pData=ADR(self._response, 'Text', _iec.StringType(255)), Size=256, IsString=True)
+            ResponseData.GetDataBlock(pData=ADR(self._response, 'Text', _iec.StringType(255)), Size=151, IsString=True)  # ST-FIX F32: 150 chars + terminator
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 

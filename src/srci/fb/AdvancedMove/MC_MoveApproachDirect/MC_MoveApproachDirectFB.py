@@ -807,13 +807,7 @@ class MC_MoveApproachDirectFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Reserve
-            CreateCommandPayload.AddByte(Value=self._command.Reserve)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
+        # ST-FIX F33: Reserve removed
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.TargetPosition.TurnNumber

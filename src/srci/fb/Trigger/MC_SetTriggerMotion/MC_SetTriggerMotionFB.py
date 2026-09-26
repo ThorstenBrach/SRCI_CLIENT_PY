@@ -296,6 +296,9 @@ class MC_SetTriggerMotionFB(RobotLibraryBaseExecuteFB):
             CreateCommandPayload.AddSint(Value=self._command.ListenerID)
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
+        # ST-FIX F33
+        CreateCommandPayload.AddByte(Value=0)
+        _parameterCnt = _parameterCnt + 1
 
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):

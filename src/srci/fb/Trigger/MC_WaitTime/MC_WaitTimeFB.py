@@ -223,34 +223,10 @@ class MC_WaitTimeFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Reserve1
-            CreateCommandPayload.AddByte(Value=self._command.Reserve1)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Reserve2
-            CreateCommandPayload.AddByte(Value=self._command.Reserve2)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Reserve3
-            CreateCommandPayload.AddByte(Value=self._command.Reserve3)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Reserve4
-            CreateCommandPayload.AddByte(Value=self._command.Reserve4)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
+        # ST-FIX F33: Reserve1 removed
+        # ST-FIX F33: Reserve2 removed
+        # ST-FIX F33: Reserve3 removed
+        # ST-FIX F33: Reserve4 removed
         # Create logging
         self.CreateCommandPayloadLog(AxesGroup=AxesGroup, ParameterCnt=_parameterCnt)
         return CreateCommandPayload
@@ -450,34 +426,10 @@ class MC_WaitTimeFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # Check payload remaining ?
-        if ResponseData.IsPayloadRemaining:
-            # Get Response.Reserve1
-            self._response.Reserve1 = ResponseData.GetByte()
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
-        # Check payload remaining ?
-        if ResponseData.IsPayloadRemaining:
-            # Get Response.Reserve2
-            self._response.Reserve2 = ResponseData.GetByte()
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
-        # Check payload remaining ?
-        if ResponseData.IsPayloadRemaining:
-            # Get Response.Reserve3
-            self._response.Reserve3 = ResponseData.GetByte()
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
-        # Check payload remaining ?
-        if ResponseData.IsPayloadRemaining:
-            # Get Response.Reserve4
-            self._response.Reserve4 = ResponseData.GetByte()
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
+        # ST-FIX F33: Reserve1 removed
+        # ST-FIX F33: Reserve2 removed
+        # ST-FIX F33: Reserve3 removed
+        # ST-FIX F33: Reserve4 removed
         # Create logging
         self.ParseResponsePayloadLog(ResponseData=ResponseData, Timestamp=Timestamp, ParameterCnt=_parameterCnt)
         return ParseResponsePayload

@@ -929,6 +929,8 @@ class CallSubprogramOutCmd:
     Acyclic output parameters of the subprogram Array length adjusts to transmitted data (max 190
     bytes)
     """
+    Progress: int = 0
+    """Progress of the subprogram [%] (spec output Progress) [Override: ST-FIX F45]"""
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -1180,6 +1182,8 @@ class ExchangeConfigurationOutCmd:
     Total system hours of an RA connected to the RC. Must not be modifiable by the user. • 0:
     Invalid • >1: Total system hours
     """
+    NumberOfServerLogs: int = 0
+    """Number of server log entries [Override: ST-FIX F32]"""
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -1278,6 +1282,8 @@ class ExchangeConfigurationRecvData(RspHeader):
     Total system hours of an RA connected to the RC. Must not be modifiable by the user. • 0:
     Invalid • >1: Total system hours
     """
+    NumberOfServerLogs: int = 0
+    """Number of server log entries [Override: ST-FIX F32: bytes 28..29 of the response]"""
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -5965,6 +5971,11 @@ class GroupStopRecvData(RspHeader):
     """GroupStopRecvData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    AbortedSequence: int = 0
+    """
+    Sequence whose commands were aborted [Override: ST-FIX F32: byte 4 of the response (spec
+    GroupStop)]
+    """
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -9533,6 +9544,11 @@ class ReadRobotSWLimitsOutCmd:
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
     LimitValues: SWLimits = _field(default_factory=lambda: SWLimits())
     """DLimits for joints and external axes according to Table 6-173."""
+    DataChanged: bool = False
+    """
+    The limits were changed on the RC since the last synchronization [Override: ST-FIX F32: byte 106
+    of the response]
+    """
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -10871,6 +10887,8 @@ class SetTriggerLimitOutCmd:
     Unique system-generated ID of the trigger function when the function is called by user. For more
     information see chapter 5.5.12.4.
     """
+    Data: list[float] = _field(default_factory=lambda: [0.0] * 12)
+    """Actual values of the monitored data (spec output Data) [Override: ST-FIX F45]"""
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -16159,6 +16177,7 @@ CallSubprogramOutCmd._IEC_FIELDS_ = (
     _iec.IecField('InvocationCounter', _iec.USINT),
     _iec.IecField('InProgress', _iec.BOOL),
     _iec.IecField('ReturnData', _iec.ArrayType(0, _iec.Param('SUB_PROGRAM_DATA_MAX'), _iec.BYTE)),
+    _iec.IecField('Progress', _iec.UINT),
 )
 CallSubprogramParCmd._IEC_FIELDS_ = (
     _iec.IecField('JobID', _iec.UINT),
@@ -16226,6 +16245,7 @@ ExchangeConfigurationOutCmd._IEC_FIELDS_ = (
     _iec.IecField('DecceleratingSupported', _iec.BOOL),
     _iec.IecField('ConstantVelocitySupported', _iec.BOOL),
     _iec.IecField('RCWorkingHours', _iec.UDINT),
+    _iec.IecField('NumberOfServerLogs', _iec.UINT),
 )
 ExchangeConfigurationParCmd._IEC_FIELDS_ = (
     _iec.IecField('LogLevel', _iec.EnumType(_e.Severity)),
@@ -16258,6 +16278,7 @@ ExchangeConfigurationRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
     _iec.IecField('StatusByte', _iec.BYTE),
     _iec.IecField('ConstantVelocitySupported', _iec.BOOL),
     _iec.IecField('RCWorkingHours', _iec.UDINT),
+    _iec.IecField('NumberOfServerLogs', _iec.UINT),
 )
 ExchangeConfigurationSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
     _iec.IecField('LogLevel', _iec.EnumType(_e.Severity)),
@@ -17372,6 +17393,7 @@ GroupStopOutCmd._IEC_FIELDS_ = (
 GroupStopParCmd._IEC_FIELDS_ = (
 )
 GroupStopRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
+    _iec.IecField('AbortedSequence', _iec.SINT),
 )
 GroupStopSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
 )
@@ -18372,6 +18394,7 @@ ReadRobotReferenceDynamicsSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
 )
 ReadRobotSWLimitsOutCmd._IEC_FIELDS_ = (
     _iec.IecField('LimitValues', _iec.StructType(SWLimits)),
+    _iec.IecField('DataChanged', _iec.BOOL),
 )
 ReadRobotSWLimitsParCmd._IEC_FIELDS_ = (
 )
@@ -18708,6 +18731,7 @@ SetTriggerLimitOutCmd._IEC_FIELDS_ = (
     _iec.IecField('OriginID', _iec.INT),
     _iec.IecField('InvocationCounter', _iec.USINT),
     _iec.IecField('FollowID', _iec.DINT),
+    _iec.IecField('Data', _iec.ArrayType(0, 11, _iec.REAL)),
 )
 SetTriggerLimitParCmd._IEC_FIELDS_ = (
     _iec.IecField('TriggerMode', _iec.EnumType(_e.TriggerModeLimit)),

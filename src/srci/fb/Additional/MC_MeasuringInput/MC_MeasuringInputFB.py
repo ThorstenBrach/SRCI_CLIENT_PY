@@ -49,6 +49,8 @@ class MC_MeasuringInputFB(RobotLibraryBaseExecuteFB):
         self._command: MeasuringInputSendData = MeasuringInputSendData()
         # response data received
         self._response: MeasuringInputRecvData = MeasuringInputRecvData()
+        # VAR_OUTPUT
+        self.CommandAborted: bool = False
 
     def __call__(self, *, ParCmd: MeasuringInputParCmd | None = None, Execute: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if ParCmd is not None:
@@ -355,6 +357,9 @@ class MC_MeasuringInputFB(RobotLibraryBaseExecuteFB):
             case CmdMessageState.ERROR:
                 self.Error = True
                 self.Busy = False
+
+        # ST-FIX F45: output CommandAborted
+        self.CommandAborted = State == CmdMessageState.ABORTED
 
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:
@@ -1096,4 +1101,7 @@ class MC_MeasuringInputFB(RobotLibraryBaseExecuteFB):
         self.Done = False
         self.Busy = False
         self.CommandBuffered = False
+
+        # ST-FIX F45
+        self.CommandAborted = False
         return Reset

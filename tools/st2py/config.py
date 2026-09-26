@@ -6,6 +6,7 @@ fail when the ST text no longer contains the old text, so obsolete patches get n
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 
@@ -51,6 +52,9 @@ class PouClone:
     replacements: tuple[tuple[str, str], ...]
     reason: str
     keep_methods: tuple[str, ...] = ()  # methods of the target that are kept
+    target_decl: tuple[tuple[str, str], ...] | None = (
+        None  # declaration of the target with these replacements
+    )
 
 
 @dataclass(frozen=True)
@@ -106,6 +110,7 @@ def _swap_no_and_data_changed(
 # the complete payload. tests/unit/tools/test_st2py_f28.py checks this list against the code.
 F28_POUS = (
     "MC_CalculateInverseKinematicFB",
+    "MC_LoadMeasurementAutomaticFB",  # after ST-FIX F33 (Position_1.E2..E6 moved)
     "MC_EnableRobotFB",
     "MC_MoveApproachDirectFB",
     "MC_MoveApproachLinearFB",
@@ -145,6 +150,7 @@ F28_POUS = (
 # ExecutionMode from them (spec table 5-77 "ProcessingModes - ExecutionModes mapping").
 F51_ABORTING_POUS = (
     "MC_BrakeTestFB",
+    "MC_DynamicSplineFB",  # spec table 5-77: AbortingMode/SequenceFlag (the library had CONTINUOUS)
     "MC_LoadMeasurementAutomaticFB",
     "MC_MoveApproachDirectFB",
     "MC_MoveApproachLinearFB",
@@ -341,6 +347,585 @@ def _valid(pou: str) -> BodyAppend:
     )
 
 
+def _bits_in_one_byte(pou: str, bit0: str, bit1: str, table: str) -> tuple[SourcePatch, SourcePatch]:
+    """F37: two BOOLs that are bit 0 and 1 of one byte were sent as two bytes."""
+    reason = f"F37: {bit0}/{bit1} are bit 0/1 of one byte (spec table {table}), ST sent 2 bytes"
+    return (
+        SourcePatch(
+            pou,
+            "CreateCommandPayload",
+            f"CreateCommandPayload.AddBool(_command.{bit0});",
+            f"CreateCommandPayload.AddByte(BOOL_TO_BYTE(_command.{bit0}) OR SHL(BOOL_TO_BYTE(_command.{bit1}), 1));"
+            " // ST-FIX F37",
+            reason,
+        ),
+        SourcePatch(
+            pou,
+            "CreateCommandPayload",
+            f"CreateCommandPayload.AddBool(_command.{bit1});",
+            "CreateCommandPayload.AddByte(0); // ST-FIX F37: reserved byte, the value is bit 1 of the byte before",
+            reason,
+        ),
+    )
+
+
+# ---------------------------------------------------------------- F33 payload layout helpers
+_ADD_BLOCK = (
+    r"//\s*Check parameter must be added \?[^\n]*\n\s*IF\s*\(\s*CheckAddParameter\(CreateCommandPayload\.PayloadPtr\)\s*\)"
+    r"[^\n]*\n\s*THEN[^\n]*\n\s*//\s*add command\.{field}[ \t]*\n(?:(?!END_IF)[\s\S])*?END_IF[^\n]*\n"
+)
+_GET_BLOCK = (
+    r"//\s*Check payload remaining \?[^\n]*\n\s*IF\s*\(\s*ResponseData\.IsPayloadRemaining\s*\)"
+    r"[^\n]*\n\s*THEN[^\n]*\n\s*//\s*Get Response\.{field}[ \t]*\n(?:(?!END_IF)[\s\S])*?END_IF[^\n]*\n"
+)
+
+
+def _block(method: str, field: str) -> str:
+    pattern = _ADD_BLOCK if method == "CreateCommandPayload" else _GET_BLOCK
+    return pattern.replace("{field}", re.escape(field))
+
+
+def _payload(
+    pou: str, method: str, field: str, action: str, st: str, reason: str, context: str | None = None
+) -> SourcePatch:
+    """Payload fix at the parameter block of ``field`` (comment ``// add command.<field>`` /
+    ``// Get Response.<field>``): action ``before``, ``after``, ``replace`` (``st`` replaces the
+    block, empty: removed)."""
+    text = (
+        f"// ST-FIX {reason.split(':')[0]}\n{st}\n"
+        if st
+        else f"// ST-FIX {reason.split(':')[0]}: {field} removed\n"
+    )
+    text = text.replace("\\", "\\\\")
+    pattern = f"(?P<block>{_block(method, field)})"
+    prefix = ""
+    if context is not None:  # the block directly after the block containing ``context``
+        pattern = r"(?P<ctx>" + context + r"(?:(?!END_IF)[\s\S])*?END_IF[^\n]*\n\s*)" + pattern
+        prefix = r"\g<ctx>"
+    if action == "before":
+        new = prefix + text + r"\g<block>"
+    elif action == "after":
+        new = prefix + r"\g<block>" + text
+    else:
+        new = prefix + text
+    return SourcePatch(pou, method, pattern, new, reason, regex=True, template=True)
+
+
+def _add(field_st: str, method: str = "AddByte") -> str:
+    return f"CreateCommandPayload.{method}({field_st});\n_parameterCnt := _parameterCnt + 1;"
+
+
+def _after_loop(pou: str, call: str, st: str, reason: str) -> SourcePatch:
+    """ST text inserted after the FOR loop that contains ``call``."""
+    return SourcePatch(
+        pou,
+        "CreateCommandPayload",
+        r"(" + re.escape(call) + r"[\s\S]*?END_FOR)",
+        r"\1\n// ST-FIX " + reason.split(":")[0] + "\n" + st,
+        reason,
+        regex=True,
+        template=True,
+    )
+
+
+_LOG = "// Create logging\nCreateCommandPayloadLog(AxesGroup := AxesGroup, ParameterCnt := _parameterCnt);"
+
+
+def _append_payload(pou: str, st: str, reason: str) -> SourcePatch:
+    """Parameters added at the end of the command payload."""
+    return SourcePatch(
+        pou, "CreateCommandPayload", _LOG, f"// ST-FIX {reason.split(':')[0]}\n{st}\n\n{_LOG}", reason
+    )
+
+
+F33_PATCHES = (
+    _payload(
+        "MC_MoveApproachDirectFB",
+        "CreateCommandPayload",
+        "Reserve",
+        "replace",
+        "",
+        "F33: AddArmConfig writes 2 bytes (config + reserved), the additional Reserve byte shifted E1..E6",
+        context=r"AddArmConfig\(",
+    ),
+    *(
+        _payload(
+            "MC_WaitTimeFB",
+            method,
+            f"Reserve{i}",
+            "replace",
+            "",
+            "F33: 4 bytes after Time are not in the spec",
+        )
+        for method in ("CreateCommandPayload", "ParseResponsePayload")
+        for i in range(1, 5)
+    ),
+    _payload(
+        "MC_MoveLinearRelativeFB",
+        "CreateCommandPayload",
+        "MoveTime",
+        "before",
+        _add("0"),
+        "F33: Reserved byte before Time (spec table 6-310) was missing",
+    ),
+    _payload(
+        "MC_SetTriggerLimitFB",
+        "CreateCommandPayload",
+        "ListenerID",
+        "after",
+        _add("0"),
+        "F33: Reserved byte after ListenerID (spec table 6-607) was missing",
+    ),
+    _payload(
+        "MC_SetTriggerMotionFB",
+        "CreateCommandPayload",
+        "ListenerID",
+        "after",
+        _add("0"),
+        "F33: Reserved byte after ListenerID (spec table 6-696) was missing",
+    ),
+    *_bits_in_one_byte("MC_MoveCircularAbsoluteFB", "PathChoice", "Manipulation", "6-348"),
+    _payload(
+        "MC_MoveCircularAbsoluteFB",
+        "CreateCommandPayload",
+        "Reserve2",
+        "replace",
+        _add("_command.ConfigMode[0]")
+        + "\n"
+        + _add("_command.ConfigMode[1]")
+        + "\n"
+        + _add("_command.TurnMode", "AddUsint")
+        + "\n"
+        + _add("0")
+        + "\n"
+        + _add("_command.MoveTime", "AddUint"),
+        "F33: ConfigMode, TurnMode, Reserved and Time (spec table 6-348) were missing",
+    ),
+    _payload(
+        "MC_MoveCircularCamFB",
+        "CreateCommandPayload",
+        "Reserve",
+        "after",
+        _add("_command.MoveTime", "AddUint"),
+        "F33: Time (spec table 6-563) was missing",
+    ),
+    _payload(
+        "MC_MoveLinearCamFB",
+        "CreateCommandPayload",
+        "Manipulation",
+        "replace",
+        "",
+        "F33: Manipulation was sent before BlendingParameter (spec table 6-545: byte 70)",
+    ),
+    _payload(
+        "MC_MoveLinearCamFB",
+        "CreateCommandPayload",
+        "MoveTime",
+        "replace",
+        "\n".join(
+            (
+                _add("_command.TriggerDelay", "AddUint"),
+                _add("_command.TriggerDistance", "AddReal"),
+                _add("_command.Index", "AddUsint"),
+                _add("_command.RelativePosition", "AddBool"),
+                _add("_command.OutputBitmask"),
+                _add("_command.Value"),
+                _add("_command.ConfigMode[0]"),
+                _add("_command.ConfigMode[1]"),
+                _add("_command.Manipulation", "AddBool"),
+                _add("_command.TurnMode", "AddUsint"),
+                _add("_command.MoveTime", "AddUint"),
+            )
+        ),
+        "F33: TriggerDelay .. TurnMode (spec table 6-545 bytes 58..71) were not sent",
+    ),
+    SourcePatch(
+        "MC_ForceControlFB",
+        "CreateCommandPayload",
+        "CreateCommandPayload.AddUInt(_command.ReferenceType);",
+        "CreateCommandPayload.AddUsint(_command.ReferenceType); // ST-FIX F33: USINT (spec table 6-741)",
+        "F33: ReferenceType was sent as UINT",
+    ),
+    _payload(
+        "MC_MoveLinearCamFB",
+        "CreateCommandPayload",
+        "Position.E1",
+        "before",
+        "CreateCommandPayload.AddArmConfig(_command.Position.Config);\n_parameterCnt := _parameterCnt + 1;\n"
+        "CreateCommandPayload.AddTurnNumber(_command.Position.TurnNumber);\n_parameterCnt := _parameterCnt + 1;",
+        "F33: Config and TurnNumber of Position (spec table 6-545 bytes 48..53) were not sent",
+    ),
+    _payload(
+        "MC_ForceControlFB",
+        "CreateCommandPayload",
+        "MaxVelocity",
+        "before",
+        _add("_parCmd.TargetWindow", "AddReal"),
+        "F33: TargetWindow (spec table 6-741 byte 82) was not sent",
+    ),
+    _after_loop(
+        "MC_WriteDigitalOutputsFB",
+        "AddUsint(_command.Index[_idx]);",
+        _add("0"),
+        "F33: Reserved byte 15 after Index (spec table 6-512) was missing",
+    ),
+    _after_loop(
+        "MC_WriteDigitalOutputsFB",
+        "AddByte(_command.OutputBitmask[_idx]);",
+        _add("0"),
+        "F33: Reserved byte 21 after OutputBitmask (spec table 6-512) was missing",
+    ),
+    SourcePatch(
+        "MC_WriteDigitalOutputsFB",
+        "CreateCommandPayload",
+        "CreateCommandPayload.AddReal(_command.Values[_idx]);",
+        "CreateCommandPayload.AddByte(_command.Values[_idx]); // ST-FIX F33: BYTE (spec table 6-512)",
+        "F33: Values were sent as REAL",
+    ),
+    SourcePatch(
+        "MC_WriteIntegersFB",
+        "CreateCommandPayload",
+        "FOR _idx := 1 TO 6",
+        "FOR _idx := 0 TO 6 // ST-FIX F33",
+        "F33: Values/Index are [0..6] (spec table 6-530), the loops ran from 1",
+    ),
+    _payload(
+        "MC_WriteWorkAreaFB",
+        "CreateCommandPayload",
+        "WorkAreaData.DefinitionMode",
+        "replace",
+        "",
+        "F33: DefinitionMode was removed from the work area data in the spec (change log, table 6-229)",
+    ),
+    _payload(
+        "MC_ReadWorkAreaFB",
+        "ParseResponsePayload",
+        "WorkAreaData.DefinitionMode",
+        "replace",
+        "",
+        "F33: DefinitionMode was removed from the work area data in the spec (change log)",
+    ),
+    _payload(
+        "MC_CalculateToolFB",
+        "ParseResponsePayload",
+        "IEC_Date",
+        "replace",
+        "",
+        "F33: ToolData.Date follows TCPMaxError/TCPMeanError (spec table 6-673)",
+    ),
+    _payload(
+        "MC_CalculateToolFB",
+        "ParseResponsePayload",
+        "TCPMeanError",
+        "after",
+        "_response.ToolData.Timestamp.IEC_Date := ResponseData.GetIecDate();\n_parameterCnt := _parameterCnt + 1;",
+        "F33: ToolData.Date follows TCPMaxError/TCPMeanError (spec table 6-673)",
+    ),
+    SourcePatch(
+        "MC_ForceLimitFB",
+        "ParseResponsePayload",
+        _block("ParseResponsePayload", "ForceStatus")
+        + r"(?=\s*//\s*Check payload remaining[^\n]*\n[^\n]*\n[^\n]*\n\s*//\s*Get Response\.InvocationCounter)",
+        "// ST-FIX F33: ForceStatus is the last value (byte 8, spec table 6-750), it was read twice\n",
+        "F33: ForceStatus was read before InvocationCounter as well",
+        regex=True,
+    ),
+    SourcePatch(
+        "MC_ReadDHParameterFB",
+        "ParseResponsePayload",
+        r"FOR _idx := 0 TO 6(?:(?!FOR _idx)[\s\S])*?PositiveJointDirection\[_idx\] := ResponseData\.GetBool\(\);[\s\S]*?END_FOR",
+        "// ST-FIX F33: PositiveJointDirection[0..6] are the bits 0..6 of one byte (spec table)\n"
+        "IF ( ResponseData.IsPayloadRemaining )\nTHEN\n"
+        "  _directionBits := ResponseData.GetByte();\n"
+        "  FOR _idx := 0 TO 6\n  DO\n"
+        "    _response.DHParameter.PositiveJointDirection[_idx] := ( ( SHR(_directionBits, _idx) AND 1 ) = 1 );\n"
+        "  END_FOR\n"
+        "  _parameterCnt := _parameterCnt + 1;\nEND_IF",
+        "F33: PositiveJointDirection was read as 7 bytes, the spec has 7 bits of one byte",
+        regex=True,
+    ),
+    _payload(
+        "MC_MonitorWorkAreaFB",
+        "ParseResponsePayload",
+        "MonitoringState",
+        "replace",
+        "",
+        "F33: ActivationState/MonitoringState are bit 0/1 of one WORD (spec table 6-242)",
+    ),
+    _payload(
+        "MC_MonitorWorkAreaFB",
+        "ParseResponsePayload",
+        "ActivationState",
+        "replace",
+        "IF ( ResponseData.IsPayloadRemaining )\nTHEN\n"
+        "  _response.ActivationState := ResponseData.GetWord();\n"
+        "  _response.MonitoringState := SHR(_response.ActivationState, 1) AND 1;\n"
+        "  _response.ActivationState := _response.ActivationState AND 1;\n"
+        "  _parameterCnt := _parameterCnt + 1;\nEND_IF",
+        "F33: ActivationState/MonitoringState are bit 0/1 of one WORD (spec table 6-242)",
+    ),
+    SourcePatch(
+        "MC_CallSubprogramFB",
+        "ParseResponsePayload",
+        _block("ParseResponsePayload", "InProgress") + r"(?=\s*FOR _idx)",
+        r"\g<0>// ST-FIX F33: Reserved byte 11 before ReturnData (spec table 6-710)\n"
+        "IF ( ResponseData.IsPayloadRemaining )\nTHEN\n  ResponseData.GetByte();\nEND_IF\n",
+        "F33: the Reserved byte before ReturnData was not skipped -> ReturnData shifted by one",
+        regex=True,
+        template=True,
+    ),
+    *(
+        _payload(
+            "MC_LoadMeasurementAutomaticFB",
+            "CreateCommandPayload",
+            f"Position_1.E{i}",
+            "replace",
+            "",
+            "F33: Position_1.E2..E6 follow Position_2.E1 (spec: J1..E1 of both positions, then E2..E6)",
+        )
+        for i in range(2, 7)
+    ),
+    _payload(
+        "MC_LoadMeasurementAutomaticFB",
+        "CreateCommandPayload",
+        "Position_2.E1",
+        "after",
+        "\n".join(_add(f"_command.Position_1.E{i}", "AddReal") for i in range(2, 7)),
+        "F33: Position_1.E2..E6 follow Position_2.E1 (spec: J1..E1 of both positions, then E2..E6)",
+    ),
+    _append_payload(
+        "MC_WriteSystemVariableFB",
+        "_command.RCParameter := _parCmd.RCParameter;\n" + _add("_command.RCParameter", "AddBool"),
+        "F33: RCParameter (last byte, spec table 6-648) was never sent",
+    ),
+)
+
+
+_RSP_LOG = (
+    "// Create logging\n"
+    "ParseResponsePayloadLog(ResponseData := ResponseData, Timestamp := Timestamp, ParameterCnt := _parameterCnt);"
+)
+
+
+def _append_response(pou: str, field_st: str, get: str, reason: str) -> SourcePatch:
+    """Value read at the end of the response payload."""
+    return SourcePatch(
+        pou,
+        "ParseResponsePayload",
+        _RSP_LOG,
+        f"// ST-FIX {reason.split(':')[0]}\nIF ( ResponseData.IsPayloadRemaining )\nTHEN\n"
+        f"  {field_st} := ResponseData.{get}();\n  _parameterCnt := _parameterCnt + 1;\nEND_IF\n\n{_RSP_LOG}",
+        reason,
+    )
+
+
+F32_PATCHES = (
+    _append_response(
+        "MC_GroupStopFB", "_response.AbortedSequence", "GetSint", "F32: AbortedSequence (byte 4) was not read"
+    ),
+    BodyAppend(
+        "MC_GroupStopFB",
+        "OnUpdateStateFlags",
+        "// ST-FIX F32: output AbortedSequence\nAbortedSequence := _response.AbortedSequence;\n",
+        "F32: AbortedSequence",
+    ),
+    _append_response(
+        "MC_ExchangeConfigurationFB",
+        "_response.NumberOfServerLogs",
+        "GetUint",
+        "F32: NumberOfServerLogs (bytes 28..29) was not read",
+    ),
+    BodyAppend(
+        "MC_ExchangeConfigurationFB",
+        "OnApplyOutCmd",
+        "// ST-FIX F32\nOutCmd.NumberOfServerLogs := _response.NumberOfServerLogs;\n",
+        "F32: NumberOfServerLogs",
+    ),
+    _append_response(
+        "MC_ReadRobotSWLimitsFB",
+        "_response.DataChanged",
+        "GetBool",
+        "F32: DataChanged (byte 106) was not read",
+    ),
+    BodyAppend(
+        "MC_ReadRobotSWLimitsFB",
+        "OnApplyOutCmd",
+        "// ST-FIX F32\nOutCmd.DataChanged := _response.DataChanged;\n",
+        "F32: DataChanged",
+    ),
+    SourcePatch(
+        "MC_ReadMessagesFB",
+        "ParseResponsePayload",
+        "ResponseData.GetDataBlock(pData := ADR(_response.Text) , SIZEOF(_response.Text) , IsString := TRUE );",
+        "ResponseData.GetDataBlock(pData := ADR(_response.Text) , 151 , IsString := TRUE ); // ST-FIX F32: 150 chars + terminator",
+        "F32: the message text has 150 characters (spec, SDK); 255 were read",
+    ),
+)
+
+
+def _pad_string(pou: str, field: str, length: int, table: str) -> SourcePatch:
+    """F34: fixed length string fields (padded with 0)."""
+    return SourcePatch(
+        pou,
+        "CreateCommandPayload",
+        f"CreateCommandPayload.AddString(_command.{field});",
+        f"// ST-FIX F34: {field} is a field of {length} characters (spec table {table}), padded with 0\n"
+        f"CreateCommandPayload.AddDataBlock(pValue := ADR(_command.{field}), Size := {length});",
+        f"F34: {field} was sent with its actual length instead of the field length {length}",
+    )
+
+
+F34_PATCHES = (
+    _pad_string("MC_UserLoginFB", "Password", 50, "6-69"),
+    _pad_string("MC_UserLoginFB", "Username", 50, "6-69"),
+    _pad_string("MC_SwitchLanguageFB", "LanguageCode", 2, "6-76"),
+)
+
+
+SPLINE_PATCHES: tuple[SourcePatch, ...] = (
+    SourcePatch(
+        "MC_CreateSplineFB",
+        "CreateCommandPayload",
+        r"(SUPER\^\.CreateCommandPayload[\s\S]*?)FOR _idx := 1 TO RobotLibraryParameter\.SPLINE_DATA_MAX",
+        r"\1FOR _idx := _pointIndex TO _pointIndex // ST-FIX F33: one spline point per command",
+        "F33: the payload of CreateSpline has one SplineData (spec table 6-776); all 64 points were "
+        "written into one payload (> 255 bytes, behind the buffer)",
+        regex=True,
+        template=True,
+    ),
+    SourcePatch(
+        "MC_CreateSplineFB",
+        "OnExecRun",
+        "_command.ParSeq := 1;",
+        "_command.ParSeq := 1;\n// ST-FIX F33: first spline point\n_pointIndex := 1;",
+        "F33: one command per spline point",
+    ),
+    SourcePatch(
+        "MC_CreateSplineFB",
+        "OnExecRun",
+        "_responseReceived := FALSE;",
+        "_responseReceived := FALSE;\n"
+        "// ST-FIX F33: the next spline point is sent when the last one is done\n"
+        "IF ( _response.State = CmdMessageState.DONE ) AND ( _pointIndex < _pointCount )\nTHEN\n"
+        "  _pointIndex := _pointIndex + 1;\n"
+        "  _rspHeader.State := CmdMessageState.EMPTY;\n"
+        "  CommandData := CreateCommandPayload(AxesGroup := AxesGroup);\n"
+        "  _uniqueID := AxesGroup.Acyclic.ActiveCommandRegister.AddCmd( pCommandFB := ADR(THIS^ ));\n"
+        "  SetTimeout(PT := _timeoutCmd, rTimer := _timerCmd);\n"
+        "  RETURN;\n"
+        "END_IF",
+        "F33: one command per spline point",
+    ),
+)
+SPLINE_PATCHES = (
+    *SPLINE_PATCHES,
+    SourcePatch(
+        "MC_DynamicSplineFB",
+        "CreateCommandPayload",
+        r"(SUPER\^\.CreateCommandPayload[\s\S]*?)FOR _idx := 1 TO RobotLibraryParameter\.SPLINE_DATA_MAX",
+        r"\1FOR _idx := _pointIndex TO _pointIndex // ST-FIX F33: one spline point per command",
+        "F33: the payload of DynamicSpline has one SplineData (spec); all 64 points were written",
+        regex=True,
+        template=True,
+    ),
+)
+SPLINE_PATCHES = (
+    *SPLINE_PATCHES,
+    *(
+        SourcePatch(
+            pou,
+            "CheckParameterValid",
+            "FOR _idx := 0 TO RobotLibraryParameter.SPLINE_DATA_MAX",
+            "FOR _idx := 1 TO RobotLibraryParameter.SPLINE_DATA_MAX // ST-FIX F54",
+            "F54: loop 0..SPLINE_DATA_MAX over SplineData[1..SPLINE_DATA_MAX] (reads before the array)",
+        )
+        for pou in ("MC_CreateSplineFB", "MC_DynamicSplineFB")
+    ),
+)
+SPLINE_PATCHES = (
+    *SPLINE_PATCHES,
+    *(
+        SourcePatch(
+            pou,
+            "CreateCommandPayload",
+            "_command.SplineData[_idx].FrameNo          :=              _parCmd.SplineData[_idx].FrameNo;",
+            "_command.SplineData[_idx].FrameNo          :=              _parCmd.SplineData[_idx].FrameNo;\n"
+            "  _command.SplineData[_idx].Position         :=              _parCmd.SplineData[_idx].Position; "
+            "// ST-FIX F55",
+            "F55: the positions of the spline points were never copied into the command (always 0 sent)",
+        )
+        for pou in ("MC_CreateSplineFB", "MC_DynamicSplineFB")
+    ),
+)
+SPLINE_APPENDS = (
+    BodyAppend(
+        "MC_CreateSplineFB",
+        "CheckParameterValid",
+        "// ST-FIX F33: number of spline points = highest index of a point that is not empty\n"
+        "_pointCount := 0;\n"
+        "FOR _idx := 1 TO RobotLibraryParameter.SPLINE_DATA_MAX\nDO\n"
+        "  IF ( SysDepMemCmp(pData1 := ADR(ParCmd.SplineData[_idx]), pData2 := ADR(_emptyPoint), "
+        "DataLen := SIZEOF(_emptyPoint)) <> RobotLibraryConstants.OK )\n"
+        "  THEN\n    _pointCount := _idx;\n  END_IF\nEND_FOR\n"
+        "IF ( _pointCount = 0 )\nTHEN\n"
+        "  CheckParameterValid := FALSE;\n"
+        "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );\n"
+        "  RETURN;\nEND_IF\n",
+        "F33: number of spline points (one command per point)",
+    ),
+    BodyAppend(
+        "MC_DynamicSplineFB",
+        "CheckParameterValid",
+        "// ST-FIX F33: number of spline points = highest index of a point that is not empty\n"
+        "_pointCount := 0;\n"
+        "FOR _idx := 1 TO RobotLibraryParameter.SPLINE_DATA_MAX\nDO\n"
+        "  IF ( SysDepMemCmp(pData1 := ADR(ParCmd.SplineData[_idx]), pData2 := ADR(_emptyPoint), "
+        "DataLen := SIZEOF(_emptyPoint)) <> RobotLibraryConstants.OK )\n"
+        "  THEN\n    _pointCount := _idx;\n  END_IF\nEND_FOR\n",
+        "F33: number of spline points (one parameter update per point)",
+    ),
+)
+
+
+def _state_output(pou: str, output: str, expr: str) -> tuple[VarAppend, BodyAppend, BodyAppend]:
+    """F45: output of the spec that the block did not have (set from the command state)."""
+    return (
+        VarAppend(pou, f"VAR_OUTPUT\n  {output} : BOOL;\nEND_VAR", f"F45: output {output} of the spec"),
+        BodyAppend(
+            pou,
+            "OnUpdateStateFlags",
+            f"// ST-FIX F45: output {output}\n{output} := {expr};\n",
+            f"F45: output {output} of the spec",
+        ),
+        BodyAppend(pou, "Reset", f"// ST-FIX F45\n{output} := FALSE;\n", f"F45: output {output} of the spec"),
+    )
+
+
+F45_OUTPUTS = (
+    *_state_output("MC_GroupStopFB", "Active", "( State = CmdMessageState.ACTIVE )"),
+    *_state_output("MC_SetSequenceFB", "Active", "( State = CmdMessageState.ACTIVE )"),
+    *_state_output("MC_MeasuringInputFB", "CommandAborted", "( State = CmdMessageState.ABORTED )"),
+    *_state_output(
+        "MC_ReadRealsFB",
+        "ParameterAccepted",
+        "ParameterAccepted OR ( State = CmdMessageState.BUFFERED ) OR ( State = CmdMessageState.ACTIVE ) OR "
+        "( State = CmdMessageState.DONE )",
+    ),
+    BodyAppend(
+        "MC_CallSubprogramFB",
+        "OnApplyOutCmd",
+        "// ST-FIX F45\nOutCmd.Progress := _response.Progress;\n",
+        "F45: output Progress",
+    ),
+    BodyAppend(
+        "MC_SetTriggerLimitFB",
+        "OnApplyOutCmd",
+        "// ST-FIX F45\nOutCmd.Data := _response.Data;\n",
+        "F45: output Data",
+    ),
+)
+
+
 def _enum_check(pou: str, expr: str, enum: str, values: tuple[str, ...], error: str) -> BodyAppend:
     """F49: an enum parameter was not checked -> undefined values were sent to the RC."""
     cond = " AND\n    ".join(f"( {expr} <> {enum}.{v} )" for v in values)
@@ -409,28 +994,6 @@ F49_CHECKS = (
         "MC_CollisionDetectionFB", "ParCmd.SequenceFlag", "SequenceFlag", _SEQUENCE, "ERR_SEQFLAG_NOT_ALLOWED"
     ),
 )
-
-
-def _bits_in_one_byte(pou: str, bit0: str, bit1: str, table: str) -> tuple[SourcePatch, SourcePatch]:
-    """F37: two BOOLs that are bit 0 and 1 of one byte were sent as two bytes."""
-    reason = f"F37: {bit0}/{bit1} are bit 0/1 of one byte (spec table {table}), ST sent 2 bytes"
-    return (
-        SourcePatch(
-            pou,
-            "CreateCommandPayload",
-            f"CreateCommandPayload.AddBool(_command.{bit0});",
-            f"CreateCommandPayload.AddByte(BOOL_TO_BYTE(_command.{bit0}) OR SHL(BOOL_TO_BYTE(_command.{bit1}), 1));"
-            " // ST-FIX F37",
-            reason,
-        ),
-        SourcePatch(
-            pou,
-            "CreateCommandPayload",
-            f"CreateCommandPayload.AddBool(_command.{bit1});",
-            "CreateCommandPayload.AddByte(0); // ST-FIX F37: reserved byte, the value is bit 1 of the byte before",
-            reason,
-        ),
-    )
 
 
 CONFIG = Config(
@@ -625,6 +1188,21 @@ CONFIG = Config(
             "F50: a falling edge of Execute before the end cancelled the command / hid Done",
         ),
         *(_range_or(pou) for pou in F26_POUS),
+        *F33_PATCHES,
+        *F34_PATCHES,
+        *SPLINE_PATCHES,
+        *(
+            SourcePatch(
+                pou,
+                "OnApplyOutCmd",
+                r"IF \( State = CmdMessageState\.ACTIVE \)[ \t]*\n",
+                "IF ( State = CmdMessageState.ACTIVE ) OR ( State = CmdMessageState.DONE ) // ST-FIX F40\n",
+                "F40: OutCmd was only updated in state ACTIVE - the values of a response that is DONE at once were lost",
+                regex=True,
+            )
+            for pou in ("MC_UnitMeasurementFB", "MC_SyncToConveyorFB")
+        ),
+        *(p for p in F32_PATCHES if isinstance(p, SourcePatch)),
         *(_exec_mode_from_aborting(pou) for pou in F51_ABORTING_POUS),
         *(_exec_mode_from_processing(pou, seq) for pou, seq in F51_PROCESSING_POUS),
         SourcePatch(
@@ -691,11 +1269,22 @@ CONFIG = Config(
             "// calculate the used length of the ACR \n",
             "F48: undefined ExecutionMode was sent to the RC",
         ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "HandleSeqAck",
+            "      AxesGroup.State.CurrentSEQ[_idx] := 0;",
+            "      AxesGroup.State.CurrentSEQ[_idx] := 1; // ST-FIX F56: 0 only on the first exchange (spec 5.6.5.3)",
+            "F56: the Seq number wrapped from 254 to 0; an Ack of 0 equals the Ack of the telegrams "
+            "without new data -> the response of that sequence was ignored (command lost)",
+        ),
         *_swap_no_and_data_changed("MC_ReadToolDataFB", "ToolData.ToolNoReturn", "ToolNoReturn", "6-190"),
         *_swap_no_and_data_changed("MC_ReadFrameDataFB", "FrameNoReturn", "FrameNoReturn", "6-184"),
     ],
     appends=[
         *F49_CHECKS,
+        *(p for p in F45_OUTPUTS if isinstance(p, BodyAppend)),
+        *SPLINE_APPENDS,
+        *(p for p in F32_PATCHES if isinstance(p, BodyAppend)),
         *(_valid(pou) for pou in F25_POUS),
         BodyAppend(
             "RobotLibraryBaseFB",
@@ -730,6 +1319,22 @@ CONFIG = Config(
         ),
     ],
     variables=[
+        *(p for p in F45_OUTPUTS if isinstance(p, VarAppend)),
+        VarAppend(
+            "MC_DynamicSplineFB",
+            "VAR\n  _pointIndex : DINT := 1;\n  _pointCount : DINT;\n  _emptyPoint : SplineData;\nEND_VAR",
+            "F33: one spline point per parameter update",
+        ),
+        VarAppend(
+            "MC_CreateSplineFB",
+            "VAR\n  _pointIndex : DINT := 1;\n  _pointCount : DINT;\n  _emptyPoint : SplineData;\nEND_VAR",
+            "F33: one command per spline point",
+        ),
+        VarAppend(
+            "MC_ReadDHParameterFB",
+            "VAR\n  _directionBits : BYTE;\nEND_VAR",
+            "F33: bits of PositiveJointDirection",
+        ),
         VarAppend(
             "RobotLibraryBaseExecuteFB",
             "VAR\n  _executeIn : BOOL;\n  _executeHold : BOOL;\nEND_VAR",
@@ -752,6 +1357,8 @@ CONFIG = Config(
             "F42: OpenBrake is an Enable block in the spec (brakes open while Enable), the ST block "
             "was an Execute block; state machine of MC_FreeDriveFB, payload of MC_OpenBrakeFB",
             keep_methods=(
+                "CheckFunctionSupported",
+                "FB_init",
                 "CheckParameterValid",
                 "CheckParameterChanged",
                 "CreateCommandPayload",
@@ -759,6 +1366,53 @@ CONFIG = Config(
                 "OnApplyOutCmd",
                 "ParseResponsePayload",
                 "ParseResponsePayloadLog",
+            ),
+        ),
+        PouClone(
+            "MC_DynamicSplineFB",
+            "MC_FreeDriveFB",
+            (
+                ("MC_FreeDriveFB", "MC_DynamicSplineFB"),
+                ("FreeDriveParCmd", "DynamicSplineParCmd"),
+                ("FreeDriveOutCmd", "DynamicSplineOutCmd"),
+                ("FreeDriveSendData", "DynamicSplineSendData"),
+                ("FreeDriveRecvData", "DynamicSplineRecvData"),
+                (
+                    "OutCmd.Enabled := _response.Enabled;",
+                    "// ST-FIX F33/F45: enable block, spline points are sent one by one\n"
+                    "Enabled := ( State = CmdMessageState.ACTIVE ) OR ( State = CmdMessageState.BUFFERED );\n"
+                    "Active  := ( State = CmdMessageState.ACTIVE );\n"
+                    "// next spline point (the point after the last one is empty: end of the trajectory)\n"
+                    "IF ( _response.ParSeq = _command.ParSeq ) AND ( _pointIndex <= _pointCount ) AND\n"
+                    "   ( _pointIndex < RobotLibraryParameter.SPLINE_DATA_MAX ) AND\n"
+                    "   (( State = CmdMessageState.ACTIVE ) OR ( State = CmdMessageState.BUFFERED ))\nTHEN\n"
+                    "  _pointIndex := _pointIndex + 1;\n"
+                    "  _parameterUpdateInternal := TRUE;\n"
+                    "END_IF",
+                ),
+                ("_command.ParSeq := 1;", "_command.ParSeq := 1;\n_pointIndex := 1;"),
+            ),
+            "F33/F45: DynamicSpline is an Enable block in the spec that transmits one spline point per "
+            "parameter update (ParSeq); the ST block sent all points in one payload (> 255 bytes) "
+            "with Execute; state machine of MC_FreeDriveFB, payload of MC_DynamicSplineFB",
+            keep_methods=(
+                "CheckFunctionSupported",
+                "FB_init",
+                "CheckParameterValid",
+                "CreateCommandPayload",
+                "CreateCommandPayloadLog",
+                "OnApplyOutCmd",
+                "ParseResponsePayload",
+                "ParseResponsePayloadLog",
+            ),
+            target_decl=(
+                ("EXTENDS RobotLibraryBaseFB", "EXTENDS RobotLibraryBaseEnableFB"),
+                ("  /// Start of the command at the rising edge\n  Execute            : BOOL;\n", ""),
+                ("  /// FB is being processed\n  Busy               : BOOL;\n", ""),
+                (
+                    "  /// Function is enabled and new input values will be transmitted.\n  Enabled            : BOOL;\n",
+                    "",
+                ),
             ),
         ),
     ],

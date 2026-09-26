@@ -283,7 +283,10 @@ def response_values(entries: list[Any]) -> dict[str, object]:
             base = e.names[0].split("[")[0]
             text[base] = text.get(base, 0) + 1
             continue
-        if e.type in ("BYTE", "BOOL") and len(e.names) > 1:
+        if e.type == "BOOL" and len(e.names) == 1:
+            values[names[0]] = 1  # BOOL byte: TRUE
+            continue
+        if e.type in ("BYTE", "BOOL", "WORD") and len(e.names) > 1:
             if {"Shoulder", "Elbow", "Wrist"} & set(e.names):
                 continue  # ArmConfig: bit names repeat for every position of a response
             for i, n in enumerate(e.names):

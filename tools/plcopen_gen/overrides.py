@@ -9,7 +9,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
-from .model import EnumValueDef, InitValue, Library, SimpleValue, StructValue
+from .model import (
+    ArrayRef,
+    ElemRef,
+    EnumValueDef,
+    FieldDef,
+    InitValue,
+    Library,
+    SimpleValue,
+    StructValue,
+    TypeRef,
+)
 
 
 class OverrideError(Exception):
@@ -84,6 +94,80 @@ FIELD_OVERRIDES: tuple[FieldOverride, ...] = (
         doc="Version of the server implementation in the format X.X.X (spec table 6-18)",
     ),
 )
+
+
+@dataclass(frozen=True)
+class FieldAdd:
+    """Field added to a structure (value of the specification the PLC library does not have)."""
+
+    struct: str
+    name: str
+    type: TypeRef
+    doc: str
+    reason: str
+    after: str | None = None  # None: at the end
+
+
+FIELD_ADDS: tuple[FieldAdd, ...] = (
+    FieldAdd(
+        "GroupStopRecvData",
+        "AbortedSequence",
+        ElemRef("SINT"),
+        "Sequence whose commands were aborted",
+        "ST-FIX F32: byte 4 of the response (spec GroupStop)",
+    ),
+    FieldAdd(
+        "CallSubprogramOutCmd",
+        "Progress",
+        ElemRef("UINT"),
+        "Progress of the subprogram [%] (spec output Progress)",
+        "ST-FIX F45",
+    ),
+    FieldAdd(
+        "SetTriggerLimitOutCmd",
+        "Data",
+        ArrayRef("0", "11", ElemRef("REAL")),
+        "Actual values of the monitored data (spec output Data)",
+        "ST-FIX F45",
+    ),
+    FieldAdd(
+        "ExchangeConfigurationRecvData",
+        "NumberOfServerLogs",
+        ElemRef("UINT"),
+        "Number of server log entries",
+        "ST-FIX F32: bytes 28..29 of the response",
+    ),
+    FieldAdd(
+        "ExchangeConfigurationOutCmd",
+        "NumberOfServerLogs",
+        ElemRef("UINT"),
+        "Number of server log entries",
+        "ST-FIX F32",
+    ),
+    FieldAdd(
+        "ReadRobotSWLimitsOutCmd",
+        "DataChanged",
+        ElemRef("BOOL"),
+        "The limits were changed on the RC since the last synchronization",
+        "ST-FIX F32: byte 106 of the response",
+    ),
+)
+
+
+def apply_field_adds(lib: Library, adds: tuple[FieldAdd, ...] = FIELD_ADDS) -> None:
+    for add in adds:
+        struct = lib.structs.get(add.struct)
+        if struct is None:
+            raise OverrideError(f"field add target {add.struct} not found")
+        if any(f.name == add.name for f in struct.fields):
+            raise OverrideError(
+                f"field add {add.struct}.{add.name} is obsolete (the field exists) - remove it"
+            )
+        fld = FieldDef(add.name, add.type, None, f"{add.doc} [Override: {add.reason}]")
+        index = len(struct.fields)
+        if add.after is not None:
+            index = next(i for i, f in enumerate(struct.fields) if f.name == add.after) + 1
+        struct.fields.insert(index, fld)
 
 
 def apply_field_overrides(lib: Library, overrides: tuple[FieldOverride, ...] = FIELD_OVERRIDES) -> None:
@@ -182,3 +266,4 @@ def apply_overrides(lib: Library, overrides: tuple[ConstOverride, ...] = OVERRID
     if overrides is OVERRIDES:
         apply_enum_overrides(lib)
         apply_field_overrides(lib)
+        apply_field_adds(lib)

@@ -22,6 +22,7 @@ Known deviations are ``xfail`` with the finding of docs/ST_FINDINGS.md.
 from __future__ import annotations
 
 import enum
+import re
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
@@ -41,8 +42,6 @@ SKIP = {
     "MC_ReadActualPositionCyclicFB": "cyclic data, no command",
     "MC_ReadCallSubprogramCyclicFB": "cyclic data, no command",
     "MC_WriteCallSubprogramCyclicFB": "cyclic data, no command",
-    "MC_CreateSplineFB": "F33: payload > 255 bytes",
-    "MC_DynamicSplineFB": "F33: payload > 255 bytes",
 }
 SDK_NATIVE = {
     1000,
@@ -199,6 +198,7 @@ GEN05_MANDATORY = {
     "MC_WriteFrameDataFB": "FrameNo (frame 0 = world cannot be written)",
     "MC_WriteToolDataFB": "ToolNo (tool 0 = flange cannot be written)",
     "MC_WriteRobotSWLimitsFB": "limits (0/0 for all axes)",
+    "MC_CreateSplineFB": "SplineData (at least one point)",
 }
 GEN05_KNOWN = {
     "MC_ActivateConveyorTrackingFB": "precondition: the RC reports ConveyorTrackingEnabled",
@@ -226,7 +226,8 @@ def test_gen05_default_values(name: str) -> None:
 
 # ------------------------------------------------------------------ GEN-06
 
-GEN06_REPEAT = {"MC_CalculateFrameFB", "MC_CalculateToolFB"}  # one command per position (DataIndex)
+# one command per position (DataIndex) / per spline point (ST-FIX F33)
+GEN06_REPEAT = {"MC_CalculateFrameFB", "MC_CalculateToolFB", "MC_CreateSplineFB"}
 GEN06_KNOWN = {
     "MC_MoveSuperImposedFB": "precondition: needs a motion to superimpose",
     "MC_MoveSplineFB": "precondition: needs a spline created with CreateSpline",
@@ -326,8 +327,8 @@ def _enum_parameters() -> list[tuple[str, str]]:
     cases = []
     for name in NAMES:
         for path, value, _, _ in leaves(CLASSES[name]().ParCmd):
-            if isinstance(value, enum.IntEnum):
-                cases.append((name, path))
+            if isinstance(value, enum.IntEnum) and not re.match(r"SplineData\[[1-9]", path):
+                cases.append((name, path))  # spline: the enums of the first point are enough
     return cases
 
 
@@ -561,7 +562,7 @@ def test_rep01_repeated_execution(name: str) -> None:
         start_log = len(sim.logs)
         for run in range(5):
             start(fb)
-            h.run(300, until=lambda: bool(fb.Done or fb.Error))
+            h.run(1000, until=lambda: bool(fb.Done or fb.Error))
             if fb.Error:
                 pytest.skip(f"command rejected by the RC ({fb.ErrorID:#x}), see test_bilateral")
             assert fb.Done, (run, outputs(fb))

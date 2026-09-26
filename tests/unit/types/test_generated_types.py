@@ -113,7 +113,11 @@ def test_struct_layout_matches_dataclass(cls: type) -> None:
     struct_el = dt.find(f"{NS}baseType/{NS}struct")
     assert struct_el is not None
     own = [v.get("name") for v in struct_el.findall(f"{NS}variable")]
-    assert [f.st_name for f in fields[len(fields) - len(own) :]] == own
+    from tools.plcopen_gen.overrides import FIELD_ADDS
+
+    added = {a.name for a in FIELD_ADDS if a.struct == cls.__name__}  # ST-FIX fields (overrides)
+    names = [f.st_name for f in fields if f.st_name not in added]
+    assert names[len(names) - len(own) :] == own
 
 
 def check_value(value: Any, t: iec.IecType, where: str) -> None:

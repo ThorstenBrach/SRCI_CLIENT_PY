@@ -380,6 +380,13 @@
   "status": "active"
  },
  {
+  "id": "SDK-CORE-030",
+  "test": "tests/sdk/test_core_fbs.py::test_sequence_number_overflow",
+  "title": "ST-FIX F56: 600 commands one after the other (more than 255 telegram sequences): every command gets its response.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-RT-001",
   "test": "tests/sdk/test_robot_task.py::test_initialized_without_synchronization",
   "title": "RobotTask reaches Initialized without data synchronization",

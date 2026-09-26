@@ -15,14 +15,12 @@ from srci.sim.sdk import SdkSimulator, layout_pattern, sdk_layout
 from tools.payload_check import compare_sdk, fb_classes, recv_calls, sdk_fields, send_calls
 
 # known differences (docs/ST_FINDINGS.md)
-KNOWN = {
-    "MC_GroupStopFB recv": "F32: AbortedSequence not read",
-    "MC_ReadMessagesFB recv": "F32: message text 150 characters, ST reads 255",
-    "MC_ReadRobotSWLimitsFB recv": "F32: DataChanged not read",
+KNOWN = {  # F32 fixed
+    "MC_ExchangeConfigurationFB recv": "SDK: NumberOfServerLogs (spec bytes 28..29) not in the SDK structure",
     "MC_ReadActualPositionFB recv": "SDK: 2 reserved bytes before the extended axes (not in the spec)",
 }
 
-SKIP = {"MC_CreateSplineFB", "MC_DynamicSplineFB"}  # F33: payload > 255 bytes
+SKIP: set[str] = set()  # F33 fixed: one spline point per command
 
 
 def _cases() -> list[tuple[str, type]]:

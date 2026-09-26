@@ -310,7 +310,8 @@ class MC_WriteIntegersFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        for _idx in range(1, 7):
+        # ST-FIX F33
+        for _idx in range(0, 7):
             # Check parameter must be added ?
             if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
                 # add command.Values[x]
@@ -318,9 +319,10 @@ class MC_WriteIntegersFB(RobotLibraryBaseExecuteFB):
                 # inc parameter counter
                 _parameterCnt = _parameterCnt + 1
         else:
-            _idx = st_for_end(1, 6)
+            _idx = st_for_end(0, 6)
 
-        for _idx in range(1, 7):
+        # ST-FIX F33
+        for _idx in range(0, 7):
             # Check parameter must be added ?
             if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
                 # add command.Index[0]

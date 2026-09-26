@@ -560,13 +560,7 @@ class MC_WriteWorkAreaFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.WorkAreaData.DefinitionMode
-            CreateCommandPayload.AddUsint(Value=self._command.WorkAreaData.DefinitionMode)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
+        # ST-FIX F33: WorkAreaData.DefinitionMode removed
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.WorkAreaData.FrameNo

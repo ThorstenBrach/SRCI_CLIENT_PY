@@ -109,6 +109,9 @@ class MC_LoadMeasurementAutomaticFB(RobotLibraryBaseExecuteFB):
         DataLen = LIMIT(1, 143 - PayloadPtr, 143)
         # Compare Payload-Array with Null-Byte-Array
         CheckAddParameter = SysDepMemCmp(pData1=ADR(Payload, None, _iec.ArrayType(1, 143, _iec.BYTE)) + PayloadPtr, pData2=ADR(Null, None, _iec.ArrayType(1, 143, _iec.BYTE)), DataLen=DataLen) != RobotLibraryConstants.OK
+
+        # ST-FIX F28: payload order differs from the structure layout -> always add the parameter
+        CheckAddParameter = True
         return CheckAddParameter
 
     def CheckFunctionSupported(self, *, AxesGroup: _T.AxesGroup) -> bool:  # PROTECTED
@@ -693,41 +696,11 @@ class MC_LoadMeasurementAutomaticFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Position_1.E2
-            CreateCommandPayload.AddReal(Value=self._command.Position_1.E2)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Position_1.E3
-            CreateCommandPayload.AddReal(Value=self._command.Position_1.E3)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Position_1.E4
-            CreateCommandPayload.AddReal(Value=self._command.Position_1.E4)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Position_1.E5
-            CreateCommandPayload.AddReal(Value=self._command.Position_1.E5)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Position_1.E6
-            CreateCommandPayload.AddReal(Value=self._command.Position_1.E6)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
+        # ST-FIX F33: Position_1.E2 removed
+        # ST-FIX F33: Position_1.E3 removed
+        # ST-FIX F33: Position_1.E4 removed
+        # ST-FIX F33: Position_1.E5 removed
+        # ST-FIX F33: Position_1.E6 removed
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.Position_2.J1
@@ -776,6 +749,17 @@ class MC_LoadMeasurementAutomaticFB(RobotLibraryBaseExecuteFB):
             CreateCommandPayload.AddReal(Value=self._command.Position_2.E1)
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
+        # ST-FIX F33
+        CreateCommandPayload.AddReal(Value=self._command.Position_1.E2)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddReal(Value=self._command.Position_1.E3)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddReal(Value=self._command.Position_1.E4)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddReal(Value=self._command.Position_1.E5)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddReal(Value=self._command.Position_1.E6)
+        _parameterCnt = _parameterCnt + 1
 
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):

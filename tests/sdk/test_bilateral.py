@@ -68,9 +68,9 @@ SKIP = {
     "MC_ReadActualPositionCyclicFB": "cyclic data, no command",
     "MC_ReadCallSubprogramCyclicFB": "cyclic data, no command",
     "MC_WriteCallSubprogramCyclicFB": "cyclic data, no command",
-    "MC_CreateSplineFB": "F33: payload > 255 bytes",
-    "MC_DynamicSplineFB": "F33: payload > 255 bytes",
 }
+
+ONE_POINT = {"MC_CreateSplineFB", "MC_DynamicSplineFB"}
 
 # inputs of the function block itself (not ParCmd) needed for a valid command
 FB_INPUTS: dict[str, dict[str, Any]] = {
@@ -113,14 +113,35 @@ def run(name: str) -> Result:
         fb = cls()
         for key, value in FB_INPUTS.get(name, {}).items():
             setattr(fb, key, value)
-        sent = distinct_values(fb.ParCmd) if hasattr(fb, "ParCmd") else {}
+        if name in ONE_POINT:  # one spline point: the points 2.. stay empty
+            points = fb.ParCmd.SplineData
+            sent = distinct_values(fb.ParCmd)
+            for i in range(points.lower + 1, points.upper + 1):
+                points[i] = type(points[i])()
+            sent = {
+                p: v
+                for p, v in sent.items()
+                if not p.startswith("SplineData[") or p.startswith("SplineData[0]")
+            }
+        else:
+            sent = distinct_values(fb.ParCmd) if hasattr(fb, "ParCmd") else {}
         h.add(fb)
         if hasattr(fb, "Execute"):
             fb.Execute = True
         else:
             fb.Enable = True
-        h.run(200, until=lambda: bool(getattr(fb, "Done", False) or getattr(fb, "Valid", False) or fb.Error))
-        received = sim.last_command(cmd_type)
+        captured: list[dict[str, str]] = []
+
+        def finished() -> bool:
+            last = sim.last_command(cmd_type)
+            if last is not None and (not captured or captured[-1] != last):
+                captured.append(last)
+            return bool(getattr(fb, "Done", False) or getattr(fb, "Valid", False) or fb.Error)
+
+        h.run(200, until=finished)
+        finished()
+        # spline: the first command has the first point (DynamicSpline sends the end marker next)
+        received = captured[0] if name in ONE_POINT and captured else sim.last_command(cmd_type)
         send = compare_fields(_rename(name, sent), received) if received is not None else None
         recv = None
         if rsp and hasattr(fb, "OutCmd"):
@@ -195,40 +216,23 @@ def test_recv(sdk_available: None, name: str) -> None:
 # see docs/ST_FINDINGS.md; an xfail entry fails (strict) when the deviation is fixed
 
 KNOWN_SEND: dict[str, str] = {
-    "MC_OpenBrakeFB": "F33: RobotAxes/ExternalAxesBrakeRelease not sent as in the spec",
-    "MC_MoveApproachDirectFB": "F33: additional Reserve byte after the ArmConfig -> E1..E6 shifted",
-    "MC_MoveCircularAbsoluteFB": "F33: PathChoice/Manipulation as 2 bytes, ConfigMode/TurnMode/Time missing",
-    "MC_MoveCircularCamFB": "F33: Time missing -> AuxPoint/EndPoint E2..E6 shifted",
-    "MC_MoveLinearCamFB": "F33: additional BOOL before BlendingParameter -> positions shifted",
-    "MC_MoveLinearRelativeFB": "F33: Reserved byte before Time missing -> Time, E2..E6 shifted",
-    "MC_LoadMeasurementAutomaticFB": "F33: Position_1 complete before Position_2 (spec: J1..E1 of both, then E2..E6)",
-    "MC_ForceControlFB": "F33: ReferenceType sent as UINT -> following values shifted",
-    "MC_UserLoginFB": "F34: Password/Username not padded to 50 characters",
-    "MC_SetTriggerLimitFB": "F33: Reserved byte after ListenerID missing -> all values shifted",
-    "MC_SetTriggerMotionFB": "F33: Reserved byte after ListenerID missing -> all values shifted",
-    "MC_WriteWorkAreaFB": "F33: additional byte before ZeroPointX, limits not as in the spec",
-    "MC_WriteDigitalOutputsFB": "F33: Index[5..6]/Reserved missing, Values as REAL",
-    "MC_WriteIntegersFB": "F33: FOR 1 TO 6 -> Values/Index shifted by one",
-    "MC_WriteSystemVariableFB": "F33: last byte (RCParameter) not sent",
     "MC_ReturnToPrimaryFB": "spec: TrajectoryMode is USINT 0/1/2 (6.3.11.3) but one bit in table 6-332",
     "MC_MoveSuperImposedDynamicFB": "spec: table 6-492 lacks Offset.RZ, byte numbers inconsistent",
-}
+}  # F33/F34 fixed
 
-KNOWN_RECV: dict[str, str] = {
-    "MC_CallSubprogramFB": "F33: ReturnData one byte short -> shifted; InstanceID not in the response",
-    "MC_OpenBrakeFB": "F33: ExternalAxesBrakeReleased not read, bytes shifted",
-    "MC_UnitMeasurementFB": "F40: OutCmd only updated in state ACTIVE - values of a DONE response are lost",
-    "MC_SyncToConveyorFB": "F40: OutCmd only updated in state ACTIVE - values of a DONE response are lost",
-    "MC_CalculateToolFB": "F33: ToolData parsed before TCPMaxError/TCPMeanError",
-    "MC_ForceLimitFB": "F33: additional byte before OriginID",
-    "MC_ReadDHParameterFB": "F33: PositiveJointDirection bits read as 7 bytes",
-    "MC_ReadWorkAreaFB": "F33: additional byte before ZeroPointX, limits not as in the spec",
-    "MC_MonitorWorkAreaFB": "F33: 2 WORDs read, spec has 1 (MonitoringState)",
-}
+KNOWN_RECV: dict[str, str] = {}  # F33/F40 fixed
 
 # leaves of ParCmd/OutCmd that have no field in the telegram of the specification (F39, to be
 # reviewed: parameters of an older/newer draft, values used only in the PLC, ...)
+_OTHER_POINTS = tuple(f"SplineData[{i}]" for i in range(1, 64))
 NOT_IN_TELEGRAM: dict[str, tuple[str, ...]] = {
+    "MC_CreateSplineFB": _OTHER_POINTS,
+    "MC_DynamicSplineFB": _OTHER_POINTS,
+    # DefinitionMode was removed from the work area data in the spec (ST-FIX F33)
+    "MC_WriteWorkAreaFB": ("DefinitionMode",),
+    "MC_ReadWorkAreaFB": ("DefinitionMode",),
+    "MC_CallSubprogramFB": ("InstanceID",),  # not in the response table 6-710
+    "MC_SyncToConveyorFB": ("Reserve",),  # reserved byte of the library structure
     "MC_CollisionDetectionFB": ("ProcessingMode", "SequenceFlag"),
     "MC_StopSubprogramFB": ("SequenceFlag",),
     "MC_UnitMeasurementFB": ("NewMeasurement",),
@@ -259,7 +263,27 @@ NOT_IN_TELEGRAM: dict[str, tuple[str, ...]] = {
 RECV_NOT_COMPARED: tuple[str, ...] = ("FollowID", "Config")
 
 # ParCmd/OutCmd names -> names of the specification
+# work area data: library X.LowerLimit / J1Limit.UpperLimit, spec Data.X1 / Data.JointUpperLimit.J1
+_WORK_AREA = (
+    *((f"WorkAreaData.{a}.LowerLimit", f"Data.{a}1") for a in "XYZ"),
+    *((f"WorkAreaData.{a}.UpperLimit", f"Data.{a}2") for a in "XYZ"),
+    *(
+        (f"WorkAreaData.{j}Limit.{side}Limit", f"Data.Joint{side}Limit.{j}")
+        for j in ("J1", "J2", "J3", "J4", "J5", "J6", "E1", "E2", "E3", "E4", "E5", "E6")
+        for side in ("Lower", "Upper")
+    ),
+    ("WorkAreaData", "Data"),
+)
 RENAME: dict[str, tuple[tuple[str, str], ...]] = {
+    # one spline point per command (ST-FIX F33), only the first point is filled (ONE_POINT)
+    "MC_CreateSplineFB": (("SplineData[0].Position", "SplineData"), ("SplineData[0]", "SplineData")),
+    "MC_DynamicSplineFB": (
+        ("SplineData[0].Position", "SplineData"),
+        ("SplineData[0]", "SplineData"),
+        ("RemainingDistance", "RemainingSegmentDistance"),
+    ),
+    "MC_ReadWorkAreaFB": (("WorkAreaNoReturn", "WorkAreaNo"), *_WORK_AREA),
+    "MC_WriteWorkAreaFB": _WORK_AREA,
     "MC_CalculateFrameFB": (
         ("IEC_Date", "FrameData.Date"),
         ("IEC_TIME", "FrameData.Time"),

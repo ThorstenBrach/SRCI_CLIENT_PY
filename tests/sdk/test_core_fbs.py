@@ -123,6 +123,19 @@ def test_enable_robot_fails(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
     assert not robot.rt.Initialized and not robot.ag.State.CMDsEnabled
 
 
+def test_sequence_number_overflow(robot: RobotTaskHarness) -> None:
+    """ST-FIX F56: 600 commands one after the other (more than 255 telegram sequences): every
+    command gets its response. Before the fix the Seq number wrapped from 254 to 0 and the
+    response of that sequence was ignored (the block hung)."""
+    block = fb(robot, "MC_ReadRobotDataFB")
+    for run in range(600):
+        block.Execute = True
+        robot.run(100, until=lambda: bool(block.Done or block.Error))
+        assert block.Done and not block.Error, (run, state(block), hex(block.ErrorID))
+        block.Execute = False
+        robot.run(1)
+
+
 def test_change_speed_override(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
     ov = fb(robot, "MC_ChangeSpeedOverrideFB")
     ov.ParCmd.Override = 50.0

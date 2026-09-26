@@ -472,7 +472,7 @@ class MC_ExchangeConfigurationFB(RobotLibraryBaseEnableFB):
     def OnApplyOutCmd(self, *, State: CmdMessageState = CmdMessageState.EMPTY) -> None:  # PROTECTED
         if State == CmdMessageState.EMPTY:
             # Reset command outputs
-            SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(ExchangeConfigurationOutCmd)), Value=0, DataLen=34)
+            SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(ExchangeConfigurationOutCmd)), Value=0, DataLen=36)
 
         if State == CmdMessageState.ACTIVE or True:
             # Update command outputs
@@ -497,6 +497,9 @@ class MC_ExchangeConfigurationFB(RobotLibraryBaseEnableFB):
             self.OutCmd.DecceleratingSupported = bit(self._response.StatusByte, 7)
             self.OutCmd.ConstantVelocitySupported = self._response.ConstantVelocitySupported
             self.OutCmd.RCWorkingHours = self._response.RCWorkingHours
+
+        # ST-FIX F32
+        self.OutCmd.NumberOfServerLogs = self._response.NumberOfServerLogs
 
     def OnExecCancel(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
         OnExecCancel: int = 0
@@ -618,7 +621,7 @@ class MC_ExchangeConfigurationFB(RobotLibraryBaseEnableFB):
                         # set busy flag
                         self.Busy = True
                         # Reset command outputs
-                        SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(ExchangeConfigurationOutCmd)), Value=0, DataLen=34)
+                        SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(ExchangeConfigurationOutCmd)), Value=0, DataLen=36)
                         # apply command parameter
                         copy_into(self._parCmd, self.ParCmd)
                         # init parameter sequence
@@ -847,6 +850,11 @@ class MC_ExchangeConfigurationFB(RobotLibraryBaseEnableFB):
             # Get Response.RCWorkingHours
             self._response.RCWorkingHours = ResponseData.GetUdint()
             # inc parameter counter
+            _parameterCnt = _parameterCnt + 1
+
+        # ST-FIX F32
+        if ResponseData.IsPayloadRemaining:
+            self._response.NumberOfServerLogs = ResponseData.GetUint()
             _parameterCnt = _parameterCnt + 1
 
         # Create logging

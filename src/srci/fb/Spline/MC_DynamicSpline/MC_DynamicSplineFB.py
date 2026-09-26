@@ -13,10 +13,10 @@ from typing import TYPE_CHECKING, Any
 
 from srci.types import iec as _iec
 import srci.types as _T
-from srci.fb._internal.BaseFBs.RobotLibraryBaseFB import RobotLibraryBaseFB
+from srci.fb._internal.BaseFBs.RobotLibraryBaseEnableFB import RobotLibraryBaseEnableFB
 from srci.fb._internal.Recv.RobotLibraryResponseDataFB import RobotLibraryResponseDataFB
 from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommandDataFB
-from srci.functions.Common import SetTimeout
+from srci.functions.Common import CheckTimeout, SetTimeout
 from srci.functions.Convert.Misc import CombineHalfSints, REAL_TO_PERCENT_UINT
 from srci.functions.Convert.TO_STRING.ABORTING_MODE_TO_STRING import ABORTING_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.ARM_CONFIG_ELBOW_TO_STRING import ARM_CONFIG_ELBOW_TO_STRING
@@ -28,8 +28,8 @@ from srci.functions.Convert.TO_STRING.SEQUENCE_FLAG_TO_STRING import SEQUENCE_FL
 from srci.functions.Convert.TO_STRING.SPLINE_MODE_TO_STRING import SPLINE_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
 from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UINT_TO_STRING, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
-from srci.types import AbortingMode, AbortingModeEnum, ArmConfigElbow, ArmConfigShoulder, ArmConfigWrist, BlendingMode, CmdMessageState, CmdType, DynamicSplineOutCmd, DynamicSplineParCmd, DynamicSplineRecvData, DynamicSplineSendData, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryParameter, SequenceFlag, SequenceFlagEnum, Severity, SplineMode, SystemTime
+from srci.iec.rt import ADR, ADR_ELEM, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
+from srci.types import AbortingMode, AbortingModeEnum, ArmConfigElbow, ArmConfigShoulder, ArmConfigWrist, BlendingMode, CmdMessageState, CmdType, DynamicSplineOutCmd, DynamicSplineParCmd, DynamicSplineRecvData, DynamicSplineSendData, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryParameter, SequenceFlag, SequenceFlagEnum, Severity, SplineData, SplineMode, SystemTime
 
 if TYPE_CHECKING:
     from srci.interfaces.IMessageLogger import IMessageLogger
@@ -38,13 +38,11 @@ if TYPE_CHECKING:
 __all__ = ['MC_DynamicSplineFB']
 
 
-class MC_DynamicSplineFB(RobotLibraryBaseFB):
+class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
     """Create and move spline on RC simultaneously"""
 
     def _init_vars_(self) -> None:
         # VAR_INPUT
-        # Start of the command at the rising edge
-        self.Execute: bool = False
         # Parameter which determines the behavior towards the previously sent and still active or buffered commands
         self.AbortingMode: AbortingMode = AbortingMode.BUFFER
         # Defines the target sequence in which the command will be executed
@@ -52,12 +50,8 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
         # command parameter
         self.ParCmd: DynamicSplineParCmd = DynamicSplineParCmd()
         # VAR_OUTPUT
-        # FB is being processed
-        self.Busy: bool = False
         # Command is transferred and confirmed by the RC
         self.CommandBuffered: bool = False
-        # Function is enabled and new input values will be transmitted.
-        self.Enabled: bool = False
         # The command takes control of the motion of the according axis group
         self.Active: bool = False
         # The command was aborted by another command.
@@ -75,16 +69,19 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
         self._command: DynamicSplineSendData = DynamicSplineSendData()
         # response data received
         self._response: DynamicSplineRecvData = DynamicSplineRecvData()
+        self._pointIndex: int = 1
+        self._pointCount: int = 0
+        self._emptyPoint: SplineData = SplineData()
 
-    def __call__(self, *, Execute: bool | None = None, AbortingMode: AbortingMode | None = None, SequenceFlag: SequenceFlag | None = None, ParCmd: DynamicSplineParCmd | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
-        if Execute is not None:
-            self.Execute = Execute
+    def __call__(self, *, AbortingMode: AbortingMode | None = None, SequenceFlag: SequenceFlag | None = None, ParCmd: DynamicSplineParCmd | None = None, Enable: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if AbortingMode is not None:
             self.AbortingMode = AbortingMode(AbortingMode)
         if SequenceFlag is not None:
             self.SequenceFlag = SequenceFlag(SequenceFlag)
         if ParCmd is not None:
             copy_into(self.ParCmd, ParCmd)
+        if Enable is not None:
+            self.Enable = Enable
         if Name is not None:
             self.Name = trunc_str(Name, 80)
         if ExecMode is not None:
@@ -225,7 +222,8 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.Mode = {1}', Para1=SPLINE_MODE_TO_STRING(Value=self.ParCmd.Mode))
             return CheckParameterValid
 
-        for _idx in range(0, RobotLibraryParameter.SPLINE_DATA_MAX + 1):
+        # ST-FIX F54
+        for _idx in range(1, RobotLibraryParameter.SPLINE_DATA_MAX + 1):
             # Check ParCmd.SplineData[x].Position.X valid ?
             if SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].Position.X) == False:
                 # Parameter not valid
@@ -479,6 +477,8 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
                 self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.SplineData[{2}].MoveTime = {1}', Para1=TIME_TO_STRING(self.ParCmd.SplineData[_idx].MoveTime), Para2=DINT_TO_STRING(_idx))
                 break
                 return CheckParameterValid
+        else:
+            _idx = st_for_end(1, RobotLibraryParameter.SPLINE_DATA_MAX)
 
         # Check ParCmd.StartPosition valid ?
         if self.ParCmd.StartPosition < 0 or self.ParCmd.StartPosition > RobotLibraryParameter.SPLINE_DATA_MAX:
@@ -489,6 +489,12 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.StartPosition = {1}', Para1=INT_TO_STRING(self.ParCmd.StartPosition))
             return CheckParameterValid
+
+        # ST-FIX F33: number of spline points = highest index of a point that is not empty
+        self._pointCount = 0
+        for _idx in range(1, RobotLibraryParameter.SPLINE_DATA_MAX + 1):
+            if SysDepMemCmp(pData1=ADR_ELEM(self.ParCmd.SplineData, _idx, _iec.StructType(SplineData)), pData2=ADR(self, '_emptyPoint', _iec.StructType(SplineData)), DataLen=83) != RobotLibraryConstants.OK:
+                self._pointCount = _idx
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL
@@ -500,7 +506,17 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
 
         # set command parameter
         self._command.CmdTyp = CmdType.DynamicSpline
-        self._command.ExecMode = self.ExecMode
+        # ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
+        if self.SequenceFlag == SequenceFlag.SECONDARY_SEQUENCE:
+            if self.AbortingMode == AbortingMode.ABORT:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY
+            else:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_SECONDARY
+        else:
+            if self.AbortingMode == AbortingMode.ABORT:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY
+            else:
+                self._command.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority
         self._command.Mode = self._parCmd.Mode
@@ -516,6 +532,7 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
             self._command.SplineData[_idx].JerkRate = REAL_TO_PERCENT_UINT(Value=self._parCmd.SplineData[_idx].JerkRate, IsOptional=True)
             self._command.SplineData[_idx].ToolNo = self._parCmd.SplineData[_idx].ToolNo
             self._command.SplineData[_idx].FrameNo = self._parCmd.SplineData[_idx].FrameNo
+            copy_into(self._command.SplineData[_idx].Position, self._parCmd.SplineData[_idx].Position)  # ST-FIX F55
             self._command.SplineData[_idx].MoveTime = TIME_TO_UINT(self._parCmd.SplineData[_idx].MoveTime)
         else:
             _idx = st_for_end(1, RobotLibraryParameter.SPLINE_DATA_MAX)
@@ -567,7 +584,8 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        for _idx in range(1, RobotLibraryParameter.SPLINE_DATA_MAX + 1):
+        # ST-FIX F33: one spline point per command
+        for _idx in range(self._pointIndex, self._pointIndex + 1):
             # Check parameter must be added ?
             if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
                 # add command.VelocityRate
@@ -993,6 +1011,106 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
             self.OutCmd.ActiveIndex = self._response.ActiveIndex
             self.OutCmd.TrajectoryCompleted = self._response.TrajectoryCompleted
 
+    def OnExecCancel(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
+        OnExecCancel: int = 0
+        # internal return value
+        _retVal: int = 0
+
+        OnExecCancel = RobotLibraryConstants.RUNNING
+
+        match self._stepCancel:
+
+            case 0:
+                self.Busy = True
+
+                # Create log entry
+                self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='Execution of {1} cancelled', Para1=self.MyType)
+
+                # try to remove cmd
+                _retVal = AxesGroup.Acyclic.ActiveCommandRegister.RemoveCmd(UniqueID=self._uniqueID)
+
+                # check result of removement
+                if _retVal == RobotLibraryConstants.OK:
+                    # Reset step counter
+                    self._stepCancel = 0
+                    # finished okay
+                    OnExecCancel = RobotLibraryConstants.OK
+
+                    # Create log entry
+                    self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='{1} successfully removed from ACR', Para1=self.MyType)
+                else:
+                    # set timeout
+                    SetTimeout(PT=self._timeoutCancel, rTimer=self._timerCancel)
+                    # inc step counter
+                    self._stepCancel = self._stepCancel + 1
+
+                    # Create log entry
+                    self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='{1} was not removed from ACR because execution was already in progress', Para1=self.MyType)
+
+            case 1:
+                OnExecCancel = self.OnExecErrorClear(AxesGroup=AxesGroup)
+
+                if OnExecCancel == RobotLibraryConstants.OK:
+                    # Reset busy flag
+                    self.Busy = False
+                    # Reset step counter
+                    self._stepCancel = 0
+                    # finished okay
+                    OnExecCancel = RobotLibraryConstants.OK
+            case _:
+                # invalid step
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_STEP, Overwrite=True)
+
+        # reset step counter
+        if OnExecCancel != RobotLibraryConstants.RUNNING:
+            # Reset FB variables
+            self.Reset()
+            # Reset step counter
+            self._stepCancel = 0
+        return OnExecCancel
+
+    def OnExecErrorClear(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
+        OnExecErrorClear: int = 0
+
+        OnExecErrorClear = RobotLibraryConstants.RUNNING
+
+        match self._stepClearError:
+
+            case 0:
+                self.Busy = True
+                # trigger parameter update to disable FB
+                self._parameterUpdateInternal = True
+                # call Check Parameter changed method to trigger the parameter update to disable the function
+                self.CheckParameterChanged(AxesGroup=AxesGroup)
+                # set timeout
+                SetTimeout(PT=self._timeoutClearError, rTimer=self._timerClearError)
+                # inc step counter
+                self._stepClearError = self._stepClearError + 1
+
+            case 1:
+                if self._responseReceived:
+                    # reset response received flag
+                    self._responseReceived = False
+                    # reset step counter
+                    self._stepClearError = 0
+                    # finished
+                    OnExecErrorClear = RobotLibraryConstants.OK
+                else:
+                    # timeout exceeded ?
+                    if CheckTimeout(rTimer=self._timerClearError) == RobotLibraryConstants.OK:
+                        OnExecErrorClear = RobotLibraryConstants.HAS_ERROR
+            case _:
+                # invalid step
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_STEP, Overwrite=True)
+
+        # reset step counter
+        if OnExecErrorClear != RobotLibraryConstants.RUNNING:
+            # Reset
+            self.Reset()
+            # reset step counter
+            self._stepClearError = 0
+        return OnExecErrorClear
+
     def OnExecRun(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
         OnExecRun: int = 0
 
@@ -1002,9 +1120,14 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
         match self._stepCmd:
 
             case 0:
-                if self.Execute and (not self.Error):
+                if self._enable_R.Q and (not self.Error):
+                    # reset the rising edge
+                    self._enable_R()
+
                     # Check function is supported and parameter are valid ?
                     if self.CheckFunctionSupported(AxesGroup=AxesGroup) & self.CheckParameterValid(AxesGroup=AxesGroup):
+                        # Reset all internal flags
+                        self.Reset()
                         # set busy flag
                         self.Busy = True
                         # Reset command outputs
@@ -1013,6 +1136,7 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
                         copy_into(self._parCmd, self.ParCmd)
                         # init parameter sequence
                         self._command.ParSeq = 1
+                        self._pointIndex = 1
                         # create command data
                         self.CommandData = self.CreateCommandPayload(AxesGroup=AxesGroup)
                         # Add command to active command register
@@ -1031,39 +1155,43 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
                     # update state flags
                     self.OnApplyOutCmd(State=self._response.State)
 
-                    # Done, Aborted or Error ?
-                    if self._response.State >= CmdMessageState.DONE:
-                        # set timeout
-                        SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
-                        # inc step counter
-                        self._stepCmd = self._stepCmd + 1
+                # do not abort directly, so that the ParSeq update can be send
+                if self._enable_F.Q:
+                    # Set Busy flag
+                    self.Busy = True
+                    # trigger parameter update to disable FB
+                    self._parameterUpdateInternal = True
+                    # reset the falling edge
+                    self._enable_F()
+                    # set timeout
+                    SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
+                    # inc step counter
+                    self._stepCmd = self._stepCmd + 1
 
+            # Wait for response received or timeout or not Initialized
             case 2:
-                if not self.Execute:
+                if self._responseReceived | (CheckTimeout(rTimer=self._timerCmd) == RobotLibraryConstants.OK) or (not AxesGroup.State.Initialized and (not AxesGroup.State.Synchronized)):
                     self.Reset()
             case _:
                 # invalid step
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_STEP, Overwrite=True)
 
         # Reset FB
-        if not self.Execute:
-            self._uniqueID = 0
-            self._stepCmd = 0
-            self.Busy = False
-            self.CommandBuffered = False
-            self.CommandAborted = False
-            self.CommandInterrupted = False
-            self.Error = False
-            self.ErrorID = 0
-            self.WarningID = 0
-            self.InfoID = 0
+        if self._enable_R.Q or self._enable_F.Q:
+            self.Reset()
         return OnExecRun
 
     def OnUpdateStateFlags(self, *, State: CmdMessageState = CmdMessageState.EMPTY) -> None:  # PROTECTED
         # Reset State flags
-        self.Active = False
-        self.CommandAborted = False
-        self.CommandInterrupted = False
+
+        # Update Enable flag
+        # ST-FIX F33/F45: enable block, spline points are sent one by one
+        self.Enabled = State == CmdMessageState.ACTIVE or State == CmdMessageState.BUFFERED
+        self.Active = State == CmdMessageState.ACTIVE
+        # next spline point (the point after the last one is empty: end of the trajectory)
+        if ((self._response.ParSeq == self._command.ParSeq and self._pointIndex <= self._pointCount) and self._pointIndex < RobotLibraryParameter.SPLINE_DATA_MAX) and (State == CmdMessageState.ACTIVE or State == CmdMessageState.BUFFERED):
+            self._pointIndex = self._pointIndex + 1
+            self._parameterUpdateInternal = True
 
         match State:
 
@@ -1083,11 +1211,10 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
                 self.ParameterAccepted = True
             # Currently active and in progress
             case CmdMessageState.ACTIVE:
-                self.Active = True
-                self.Enabled = True
+                pass
             # Interrupted and awaiting continuation
             case CmdMessageState.INTERRUPTED:
-                self.CommandInterrupted = True
+                pass
             # Requested for abort
             case CmdMessageState.ABORT_REQUEST:
                 pass
@@ -1096,7 +1223,6 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
                 self.Busy = False
             # Aborted before completion
             case CmdMessageState.ABORTED:
-                self.CommandAborted = True
                 self.Busy = False
             # Encountered an error during execution
             case CmdMessageState.ERROR:
@@ -1231,9 +1357,6 @@ class MC_DynamicSplineFB(RobotLibraryBaseFB):
         Reset = super().Reset()
 
         self.Busy = False
-        self.Active = False
-        self.Enabled = False
         self.CommandBuffered = False
-        self.CommandAborted = False
-        self.CommandInterrupted = False
+        self.ParameterAccepted = False
         return Reset

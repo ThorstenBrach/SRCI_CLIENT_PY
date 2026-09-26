@@ -473,7 +473,7 @@ class MC_ForceControlFB(RobotLibraryBaseEnableFB):
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.CalibrationData
-            CreateCommandPayload.AddUint(Value=self._command.ReferenceType)
+            CreateCommandPayload.AddUsint(Value=self._command.ReferenceType)  # ST-FIX F33: USINT (spec table 6-741)
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
@@ -561,6 +561,9 @@ class MC_ForceControlFB(RobotLibraryBaseEnableFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
+        # ST-FIX F33
+        CreateCommandPayload.AddReal(Value=self._parCmd.TargetWindow)
+        _parameterCnt = _parameterCnt + 1
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.MaxVelocity

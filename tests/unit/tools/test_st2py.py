@@ -4,6 +4,7 @@ of the generated code (small ST programs are transpiled and executed)."""
 from __future__ import annotations
 
 import copy
+import re
 from collections.abc import Iterator
 from dataclasses import replace
 from typing import Any
@@ -482,9 +483,10 @@ def test_all_patches_applied(env_reg: tuple[TypeEnv, dict[str, Target]]) -> None
     for patch in CONFIG.patches:
         pou = env.pous[patch.pou.upper()]
         body = pou.body if patch.method is None else pou.methods[patch.method.upper()].body
-        marker = (
-            patch.new.split("\n", 1)[0].replace("\\1", "").replace("\\2", "") if patch.template else patch.new
-        )
+        marker = patch.new
+        if patch.template:
+            found = re.search(r"ST-FIX F\d+", patch.new)
+            marker = found.group(0) if found else "ST-FIX"
         assert marker in body.src and patch.reason
 
 

@@ -48,6 +48,8 @@ class MC_SetSequenceFB(RobotLibraryBaseExecuteFB):
         self._command: SetSequenceSendData = SetSequenceSendData()
         # response data received
         self._response: SetSequenceRecvData = SetSequenceRecvData()
+        # VAR_OUTPUT
+        self.Active: bool = False
 
     def __call__(self, *, ParCmd: SetSequenceParCmd | None = None, Execute: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if ParCmd is not None:
@@ -294,6 +296,9 @@ class MC_SetSequenceFB(RobotLibraryBaseExecuteFB):
                 self.Error = True
                 self.Busy = False
 
+        # ST-FIX F45: output Active
+        self.Active = State == CmdMessageState.ACTIVE
+
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:
             ResponseData = RobotLibraryResponseDataFB()
@@ -342,4 +347,7 @@ class MC_SetSequenceFB(RobotLibraryBaseExecuteFB):
         self.Done = False
         self.Busy = False
         self.CommandBuffered = False
+
+        # ST-FIX F45
+        self.Active = False
         return Reset

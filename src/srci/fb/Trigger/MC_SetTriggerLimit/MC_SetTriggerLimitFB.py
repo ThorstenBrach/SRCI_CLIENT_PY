@@ -297,6 +297,9 @@ class MC_SetTriggerLimitFB(RobotLibraryBaseExecuteFB):
             CreateCommandPayload.AddSint(Value=self._command.ListenerID)
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
+        # ST-FIX F33
+        CreateCommandPayload.AddByte(Value=0)
+        _parameterCnt = _parameterCnt + 1
 
         for _idx in range(0, 12):
             # Check parameter must be added ?
@@ -396,13 +399,16 @@ class MC_SetTriggerLimitFB(RobotLibraryBaseExecuteFB):
     def OnApplyOutCmd(self, *, State: CmdMessageState = CmdMessageState.EMPTY) -> None:  # PROTECTED
         if State == CmdMessageState.EMPTY:
             # Reset command outputs
-            SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(SetTriggerLimitOutCmd)), Value=0, DataLen=7)
+            SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(SetTriggerLimitOutCmd)), Value=0, DataLen=55)
 
         if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
             self.OutCmd.FollowID = 0  # {warning 'ToDo'}
             self.OutCmd.InvocationCounter = self._response.InvocationCounter
             self.OutCmd.OriginID = self._response.OriginID
+
+        # ST-FIX F45
+        copy_into(self.OutCmd.Data, self._response.Data)
 
     def OnExecRun(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
         OnExecRun: int = 0
@@ -419,7 +425,7 @@ class MC_SetTriggerLimitFB(RobotLibraryBaseExecuteFB):
                         # set busy flag
                         self.Busy = True
                         # Reset command outputs
-                        SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(SetTriggerLimitOutCmd)), Value=0, DataLen=7)
+                        SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(SetTriggerLimitOutCmd)), Value=0, DataLen=55)
                         # apply command parameter
                         copy_into(self._parCmd, self.ParCmd)
                         # init parameter sequence

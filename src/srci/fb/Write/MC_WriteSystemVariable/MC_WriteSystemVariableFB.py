@@ -534,6 +534,11 @@ class MC_WriteSystemVariableFB(RobotLibraryBaseExecuteFB):
                 # inc parameter counter
                 _parameterCnt = _parameterCnt + 1
 
+        # ST-FIX F33
+        self._command.RCParameter = self._parCmd.RCParameter
+        CreateCommandPayload.AddBool(Value=self._command.RCParameter)
+        _parameterCnt = _parameterCnt + 1
+
         # Create logging
         self.CreateCommandPayloadLog(AxesGroup=AxesGroup, ParameterCnt=_parameterCnt)
         return CreateCommandPayload

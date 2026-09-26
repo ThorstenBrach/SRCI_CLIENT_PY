@@ -221,14 +221,16 @@ class MC_UserLoginFB(RobotLibraryBaseExecuteFB):
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.Password
-            CreateCommandPayload.AddString(Value=self._command.Password)
+            # ST-FIX F34: Password is a field of 50 characters (spec table 6-69), padded with 0
+            CreateCommandPayload.AddDataBlock(pValue=ADR(self._command, 'Password', _iec.StringType(50)), Size=50)
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.Username
-            CreateCommandPayload.AddString(Value=self._command.Username)
+            # ST-FIX F34: Username is a field of 50 characters (spec table 6-69), padded with 0
+            CreateCommandPayload.AddDataBlock(pValue=ADR(self._command, 'Username', _iec.StringType(50)), Size=50)
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 

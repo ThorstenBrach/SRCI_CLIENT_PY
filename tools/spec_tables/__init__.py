@@ -72,8 +72,11 @@ class PayloadTable:
     entries: list[Entry]
 
 
+NAME_FIXES = {"Username30[]": "Username[30]"}  # typo in table 6-69 (byte 86)
+
+
 def _names(text: str) -> list[str]:
-    return [n for n in re.split(r"\s{2,}", text.strip()) if n]
+    return [NAME_FIXES.get(n, n) for n in re.split(r"\s{2,}", text.strip()) if n]
 
 
 def parse_table(lines: list[str]) -> list[Entry]:

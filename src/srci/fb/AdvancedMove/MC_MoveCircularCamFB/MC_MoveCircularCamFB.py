@@ -1132,6 +1132,9 @@ class MC_MoveCircularCamFB(RobotLibraryBaseExecuteFB):
             CreateCommandPayload.AddByte(Value=self._command.Reserve)
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
+        # ST-FIX F33
+        CreateCommandPayload.AddUint(Value=self._command.MoveTime)
+        _parameterCnt = _parameterCnt + 1
 
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):

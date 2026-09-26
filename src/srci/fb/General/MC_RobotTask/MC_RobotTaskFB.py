@@ -1561,7 +1561,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
                 # {warning 'ToDo: Test for Yaskawa'}
                 if AxesGroup.State.CurrentSEQ[_idx] >= 255:
-                    AxesGroup.State.CurrentSEQ[_idx] = 0
+                    AxesGroup.State.CurrentSEQ[_idx] = 1  # ST-FIX F56: 0 only on the first exchange (spec 5.6.5.3)
 
                 AxesGroup.State.NewSEQ[_idx] = True
 

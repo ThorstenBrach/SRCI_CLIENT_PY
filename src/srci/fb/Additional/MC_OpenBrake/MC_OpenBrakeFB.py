@@ -97,7 +97,7 @@ class MC_OpenBrakeFB(RobotLibraryBaseEnableFB):
     def CheckFunctionSupported(self, *, AxesGroup: _T.AxesGroup) -> bool:  # PROTECTED
         CheckFunctionSupported: bool = False
 
-        CheckFunctionSupported = AxesGroup.State.RobotData.RCSupportedFunctions.FreeDrive
+        CheckFunctionSupported = AxesGroup.State.RobotData.RCSupportedFunctions.OpenBrake
 
         if not CheckFunctionSupported:
             # call base implementation for set error and create log entry
@@ -339,7 +339,7 @@ class MC_OpenBrakeFB(RobotLibraryBaseEnableFB):
 
         self.MyType = 'MC_OpenBrakeFB'
 
-        self.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY
+        self.ExecMode = ExecutionMode.PARALLEL
         self.Priority = PriorityLevel.NORMAL
         return FB_init
 

@@ -49,8 +49,15 @@ def clone_pou(pous: dict[str, Pou], clone: PouClone) -> None:
         texts = [source.decl, source.body.src] + [m.decl + m.body.src for m in source.methods.values()]
         if not any(old in t for t in texts):
             raise PatchError(f"clone {clone.target}: replacement {old!r} not found - remove it")
-    itf = parse_interface(fix(source.decl))
-    pou = Pou(itf.header, itf.vars, Body(fix(source.body.src)), target.folder, decl=fix(source.decl))
+    decl = fix(source.decl)
+    if clone.target_decl is not None:
+        decl = target.decl
+        for old, new in clone.target_decl:
+            if old not in decl:
+                raise PatchError(f"clone {clone.target}: declaration text {old!r} not found")
+            decl = decl.replace(old, new)
+    itf = parse_interface(decl)
+    pou = Pou(itf.header, itf.vars, Body(fix(source.body.src)), target.folder, decl=decl)
     keep = {m.upper() for m in clone.keep_methods}
     for name in keep:
         if name not in target.methods:

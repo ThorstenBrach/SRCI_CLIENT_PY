@@ -47,6 +47,7 @@ class MC_ReadDHParameterFB(RobotLibraryBaseExecuteFB):
         self._command: ReadDHParameterSendData = ReadDHParameterSendData()
         # response data received
         self._response: ReadDHParameterRecvData = ReadDHParameterRecvData()
+        self._directionBits: int = 0
 
     def __call__(self, *, ParCmd: ReadDHParameterParCmd | None = None, Execute: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if ParCmd is not None:
@@ -374,13 +375,12 @@ class MC_ReadDHParameterFB(RobotLibraryBaseExecuteFB):
         else:
             _idx = st_for_end(0, 6)
 
-        for _idx in range(0, 7):
-            # Check payload remaining ?
-            if ResponseData.IsPayloadRemaining:
-                # Get Response.DHParameter.PositiveJointDirection[_idx]
-                self._response.DHParameter.PositiveJointDirection[_idx] = ResponseData.GetBool()
-                # inc parameter counter
-                _parameterCnt = _parameterCnt + 1
+        # ST-FIX F33: PositiveJointDirection[0..6] are the bits 0..6 of one byte (spec table)
+        if ResponseData.IsPayloadRemaining:
+            self._directionBits = ResponseData.GetByte()
+            for _idx in range(0, 7):
+                self._response.DHParameter.PositiveJointDirection[_idx] = self._directionBits >> _idx & 1 == 1
+            _parameterCnt = _parameterCnt + 1
 
         # Create logging
         self.ParseResponsePayloadLog(ResponseData=ResponseData, Timestamp=Timestamp, ParameterCnt=_parameterCnt)

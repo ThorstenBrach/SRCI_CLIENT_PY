@@ -332,6 +332,9 @@ class MC_WriteDigitalOutputsFB(RobotLibraryBaseExecuteFB):
                 _parameterCnt = _parameterCnt + 1
         else:
             _idx = st_for_end(0, 4)
+        # ST-FIX F33
+        CreateCommandPayload.AddByte(Value=0)
+        _parameterCnt = _parameterCnt + 1
 
         for _idx in range(0, 5):
             # Check parameter must be added ?
@@ -342,12 +345,15 @@ class MC_WriteDigitalOutputsFB(RobotLibraryBaseExecuteFB):
                 _parameterCnt = _parameterCnt + 1
         else:
             _idx = st_for_end(0, 4)
+        # ST-FIX F33
+        CreateCommandPayload.AddByte(Value=0)
+        _parameterCnt = _parameterCnt + 1
 
         for _idx in range(0, 5):
             # Check parameter must be added ?
             if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
                 # add command.Values[x]
-                CreateCommandPayload.AddReal(Value=float(self._command.Values[_idx]))
+                CreateCommandPayload.AddByte(Value=self._command.Values[_idx])  # ST-FIX F33: BYTE (spec table 6-512)
                 # inc parameter counter
                 _parameterCnt = _parameterCnt + 1
 

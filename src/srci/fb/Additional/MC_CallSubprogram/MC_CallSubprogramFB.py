@@ -395,6 +395,9 @@ class MC_CallSubprogramFB(RobotLibraryBaseExecuteFB):
             self.OutCmd.InvocationCounter = self._response.InvocationCounter
             copy_into(self.OutCmd.ReturnData, self._response.ReturnData)
 
+        # ST-FIX F45
+        self.OutCmd.Progress = self._response.Progress
+
     def OnExecRun(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
         OnExecRun: int = 0
 
@@ -556,6 +559,9 @@ class MC_CallSubprogramFB(RobotLibraryBaseExecuteFB):
             self._response.InProgress = ResponseData.GetBool()
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
+        # ST-FIX F33: Reserved byte 11 before ReturnData (spec table 6-710)
+        if ResponseData.IsPayloadRemaining:
+            ResponseData.GetByte()
 
         for _idx in range(0, RobotLibraryParameter.SUB_PROGRAM_DATA_MAX + 1):
             # Check payload remaining ?

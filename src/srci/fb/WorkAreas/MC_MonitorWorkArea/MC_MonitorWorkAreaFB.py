@@ -372,20 +372,14 @@ class MC_MonitorWorkAreaFB(RobotLibraryBaseFB):
         self._response.AlarmMessageSeverity = self._rspHeader.AlarmMessageSeverity
         self._response.AlarmMessageCode = self._rspHeader.AlarmMessageCode
 
-        # Check payload remaining ?
+        # ST-FIX F33
         if ResponseData.IsPayloadRemaining:
-            # Get Response.ActivationState
             self._response.ActivationState = ResponseData.GetWord()
-            # inc parameter counter
+            self._response.MonitoringState = self._response.ActivationState >> 1 & 1
+            self._response.ActivationState = self._response.ActivationState & 1
             _parameterCnt = _parameterCnt + 1
 
-        # Check payload remaining ?
-        if ResponseData.IsPayloadRemaining:
-            # Get Response.MonitoringState
-            self._response.MonitoringState = ResponseData.GetWord()
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
+        # ST-FIX F33: MonitoringState removed
         # Create logging
         self.ParseResponsePayloadLog(ResponseData=ResponseData, Timestamp=Timestamp, ParameterCnt=_parameterCnt)
         return ParseResponsePayload

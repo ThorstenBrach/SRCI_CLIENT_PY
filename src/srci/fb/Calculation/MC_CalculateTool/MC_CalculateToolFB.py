@@ -909,13 +909,7 @@ class MC_CalculateToolFB(RobotLibraryBaseExecuteFB):
         self._response.AlarmMessageSeverity = self._rspHeader.AlarmMessageSeverity
         self._response.AlarmMessageCode = self._rspHeader.AlarmMessageCode
 
-        # Check payload remaining ?
-        if ResponseData.IsPayloadRemaining:
-            # Get Response.IEC_Date
-            self._response.ToolData.Timestamp.IEC_DATE = ResponseData.GetIecDate()
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
+        # ST-FIX F33: IEC_Date removed
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
             # Get Response.TCPMaxError
@@ -929,6 +923,9 @@ class MC_CalculateToolFB(RobotLibraryBaseExecuteFB):
             self._response.TCPMeanError = ResponseData.GetReal()
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
+        # ST-FIX F33
+        self._response.ToolData.Timestamp.IEC_DATE = ResponseData.GetIecDate()
+        _parameterCnt = _parameterCnt + 1
 
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:

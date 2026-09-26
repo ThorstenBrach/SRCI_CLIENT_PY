@@ -32,7 +32,7 @@ from srci.functions.Convert.TO_STRING.PATH_CHOICE_TO_STRING import PATH_CHOICE_T
 from srci.functions.Convert.TO_STRING.SEQUENCE_FLAG_TO_STRING import SEQUENCE_FLAG_TO_STRING
 from srci.functions.Convert.TO_STRING.TURN_MODE_TO_STRING import TURN_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
-from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UINT_TO_STRING, USINT_TO_STRING
+from srci.iec.conv import BOOL_TO_BYTE, BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UINT_TO_STRING, USINT_TO_STRING
 from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, st_for_end, trunc_str, wrap
 from srci.types import AbortingMode, AbortingModeEnum, ArmConfigElbow, ArmConfigShoulder, ArmConfigWrist, BlendingMode, CircMode, CircPlane, CmdMessageState, CmdType, ExecutionMode, MessageType, MoveCircularAbsoluteOutCmd, MoveCircularAbsoluteParCmd, MoveCircularAbsoluteRecvData, MoveCircularAbsoluteSendData, OriMode, PathChoice, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, SequenceFlag, SequenceFlagEnum, Severity, SystemTime, TurnMode
 
@@ -1038,23 +1038,28 @@ class MC_MoveCircularAbsoluteFB(RobotLibraryBaseExecuteFB):
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.PathChoice
-            CreateCommandPayload.AddBool(Value=self._command.PathChoice)
+            CreateCommandPayload.AddByte(Value=BOOL_TO_BYTE(self._command.PathChoice) | BOOL_TO_BYTE(self._command.Manipulation) << 1)  # ST-FIX F37
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.Manipulation
-            CreateCommandPayload.AddBool(Value=self._command.Manipulation)
+            CreateCommandPayload.AddByte(Value=0)  # ST-FIX F37: reserved byte, the value is bit 1 of the byte before
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # Check parameter must be added ?
-        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
-            # add command.Reserve2
-            CreateCommandPayload.AddByte(Value=self._command.Reserve2)
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
+        # ST-FIX F33
+        CreateCommandPayload.AddByte(Value=self._command.ConfigMode[0])
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddByte(Value=self._command.ConfigMode[1])
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddUsint(Value=self._command.TurnMode)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddByte(Value=0)
+        _parameterCnt = _parameterCnt + 1
+        CreateCommandPayload.AddUint(Value=self._command.MoveTime)
+        _parameterCnt = _parameterCnt + 1
 
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):

@@ -764,13 +764,7 @@ class MC_ForceLimitFB(RobotLibraryBaseEnableFB):
         self._response.AlarmMessageSeverity = self._rspHeader.AlarmMessageSeverity
         self._response.AlarmMessageCode = self._rspHeader.AlarmMessageCode
 
-        # Check payload remaining ?
-        if ResponseData.IsPayloadRemaining:
-            # Get Response.ForceStatus
-            self._response.ForceStatus = ResponseData.GetByte()
-            # inc parameter counter
-            _parameterCnt = _parameterCnt + 1
-
+        # ST-FIX F33: ForceStatus is the last value (byte 8, spec table 6-750), it was read twice
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
             # Get Response.InvocationCounter
