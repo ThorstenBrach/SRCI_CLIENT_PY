@@ -912,10 +912,10 @@ class RobotLibraryErrorIdEnum(_iec.IecIntEnum):
     """Server Optional parameter not supported - RotationAngle Command "ShiftPosition" """
     ERR_OPTIONAL_PARAM_VALUE_NOT_SUPPORTED = 36392
     """Server Optional parameter value not supported - Mode Commands: "CalculateTool", "CalculateFrame" """
-    ERR_OPTIONAL_PARAM_EXTERNAL_TCP_NOT_SUPPORTED = 36393
+    ERR_OPTIONAL_PARAM_EXTERNAL_TCP_NOT_SUPPORTED = 36386
     """
     Server Optional parameter not supported - ExternalTCP Commands: "CalculateTool",
-    "CalculateFrame"
+    "CalculateFrame" [Override: F75: table 7-1 (missing in the library)]
     """
     ERR_OPTIONAL_PARAM_RELATIVE_POS_NOT_SUPPORTED = 36400
     """
@@ -1098,6 +1098,48 @@ class RobotLibraryErrorIdEnum(_iec.IecIntEnum):
     """Server Error: Invalid Command payload pointer (e.g., Out of bounds)"""
     ERR_EXEC_MODE_CHANGE_ILLEGAL = 39444
     """Server Illegal Execution Mode change"""
+    ERR_INVALID_PARAM_EMITTERID_EQUALS_LISTENERID = 36178
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_EMITTERID_INCOMPATIBLE_ACTION = 36179
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_TRIGGER_MODE_UNKNOWN = 36180
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_BIT_INDEX_OUT_OF_RANGE = 36181
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_LISTENERID_INCOMPATIBLE_TRIGGER = 36182
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_TRIGGER_PARAMETER_OUT_OF_RANGE = 36183
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_TRIGGER_START_BEHIND_END = 36184
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_TRIGGER_ERROR_MODE_UNKNOWN = 36185
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_REACTION_MODE_UNKNOWN = 36192
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_LOAD_IX_OUT_OF_RANGE = 36233
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_LOAD_IY_OUT_OF_RANGE = 36240
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_LOAD_IZ_OUT_OF_RANGE = 36241
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_LOAD_RX_OUT_OF_RANGE = 36242
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_LOAD_RY_OUT_OF_RANGE = 36243
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_LOAD_RZ_OUT_OF_RANGE = 36244
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_SERVER_LOG_ID_UNKNOWN = 36245
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_SERVER_LOG_START_LINE_UNKNOWN = 36246
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_SERVER_LOG_CONTEXT_FILTER_UNKNOWN = 36247
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_INVALID_PARAM_CIRCMODE_UNKNOWN = 36248
+    """[Override: F75: table 7-1 (missing in the library)]"""
+    ERR_LIFESIGN_TIMEOUT_0x8004 = 32772
+    """[Override: F75: name with the correct value (alias)]"""
+    ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8 = 32936
+    """[Override: F75: name with the correct value (alias)]"""
 
 
 _iec.register_enum(RobotLibraryErrorIdEnum, _iec.WORD)
@@ -1285,6 +1327,10 @@ class RobotLibraryInfoIdEnum(_iec.IecIntEnum):
     Server An RC internal error occurred during execution of this command. Check the message log for
     additional information
     """
+    INFO_SERVER_LOG_OLDEST_OVERWRITTEN = 27760
+    """[Override: F75: table 7-4]"""
+    INFO_TRIGGER_PARAMETERS_NOT_USED = 27988
+    """[Override: F75: table 7-4]"""
 
 
 _iec.register_enum(RobotLibraryInfoIdEnum, _iec.WORD)

@@ -73,8 +73,12 @@ SDK_NATIVE = {
     9001,
     9002,
 }
-FB_INPUTS: dict[str, dict[str, Any]] = {
-    "MC_CollisionDetectionFB": {"SequenceFlag": SequenceFlag.PRIMARY_SEQUENCE}
+FB_INPUTS: dict[str, dict[str, Any]] = {}  # ST-FIX F69: the defaults are valid (e.g. CollisionDetection)
+# ParCmd values needed for a valid command: "Action" functions that can only be started by a
+# trigger (ListenerID 0 = invalid, spec tables 6-622/6-628, ST-FIX F69)
+PARCMD_INPUTS: dict[str, dict[str, Any]] = {
+    name: {"ListenerID": 1}
+    for name in ("MC_ReactAtTriggerFB", "MC_WaitForTriggerFB", "MC_RedefineTrackingPosFB")
 }
 CLASSES = {n: c for n, c in fb_classes() if hasattr(c, "CreateCommandPayload") and n not in SKIP}
 NAMES = sorted(CLASSES)
@@ -115,6 +119,8 @@ def block(name: str, h: RobotTaskHarness, values: bool = True) -> Any:
         setattr(fb, key, value)
     if values:
         distinct_values(fb.ParCmd)
+    for key, value in PARCMD_INPUTS.get(name, {}).items():
+        setattr(fb.ParCmd, key, value)
     h.add(fb)
     return fb
 

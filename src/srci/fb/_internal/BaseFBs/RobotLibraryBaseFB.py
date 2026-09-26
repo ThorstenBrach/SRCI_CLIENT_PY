@@ -18,9 +18,9 @@ from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommand
 from srci.functions.Common import CheckTimeout
 from srci.functions.Convert.TO_STRING.MESSAGE_CODE_TO_STRING import MESSAGE_CODE_TO_STRING
 from srci.functions.Convert.TO_STRING.WORD_TO_STRING_HEX import WORD_TO_STRING_HEX
-from srci.iec.rt import CONCAT, copy_into, copy_value, trunc_str
+from srci.iec.rt import CONCAT, copy_into, copy_value, trunc_str, wrap
 from srci.iec.standard import R_TRIG, TON
-from srci.types import AxesGroupAcyclicAcrEntryRspBuffer, CmdHeader, CmdMessageState, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryInfoIdEnum, RobotLibraryWarningIdEnum, RspHeader, Severity, SystemTime
+from srci.types import AlarmMessage, AxesGroupAcyclicAcrEntryRspBuffer, CmdHeader, CmdMessageState, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryInfoIdEnum, RobotLibraryWarningIdEnum, RspHeader, Severity, SystemTime
 
 if TYPE_CHECKING:
     from srci.interfaces.IMessageLogger import IMessageLogger
@@ -111,6 +111,8 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
         self._parameterChanged: bool = False
         # internal flag for parameter are valid
         self._parameterValid: bool = False
+        # ST-FIX F74: message of the command for the message buffer
+        self._alarmMessage: AlarmMessage = AlarmMessage()
 
     def __call__(self, *, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if Name is not None:
@@ -143,6 +145,11 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
 
         if self.AxesGroup.State.OnlineChange_R.Q:
             self.OnOnlineChange(AxesGroup=self.AxesGroup)
+        # ST-FIX F61: Error follows ErrorID in the same cycle, and with Error the other state outputs
+        # are reset (Busy/Active/Done/CommandAborted exclusive, spec table 5-45)
+        self.Error = self.ErrorID != RobotLibraryConstants.OK
+        if self.Error:
+            self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
 
     def CallBack(self, *, RspData: AxesGroupAcyclicAcrEntryRspBuffer | None = None, Timestamp: SystemTime | None = None) -> int:  # PUBLIC
         if RspData is None:
@@ -161,6 +168,11 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
 
         # set flag for response received
         self._responseReceived = True
+        # ST-FIX F61: Error follows ErrorID in the same cycle, and with Error the other state outputs
+        # are reset (Busy/Active/Done/CommandAborted exclusive, spec table 5-45)
+        self.Error = self.ErrorID != RobotLibraryConstants.OK
+        if self.Error:
+            self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         return CallBack
 
     def CheckFunctionSupported(self, *, AxesGroup: _T.AxesGroup) -> bool:  # PROTECTED
@@ -229,10 +241,42 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
         self._warning_R(CLK=self.WarningID != RobotLibraryConstants.OK)
         self._info_R(CLK=self.InfoID != RobotLibraryConstants.OK)
 
-        # Log Command events to message log
-        if self.LogLevel < self._rspHeader.AlarmMessageSeverity and ((self._error_R.Q or self._warning_R.Q) or self._info_R.Q):
-            # Add command message to message buffer
-            AxesGroup.MessageLog.AddMessageLogByParameter(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, MessageCode=self._rspHeader.AlarmMessageCode, MessageText=CONCAT(self.MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self._rspHeader.AlarmMessageCode))), Severity=self._rspHeader.AlarmMessageSeverity)
+        # ST-FIX F74: every message of the command - also the client-side ones (e.g. parameter errors,
+        # before: only with the severity of the last response of the RC) - goes into the message
+        # buffer, with ACR entry and command type
+        if self._error_R.Q and self.LogLevel < Severity.ERROR:
+            self._alarmMessage.Severity = Severity.ERROR
+            if self.ErrorID == self._rspHeader.AlarmMessageCode and self._rspHeader.AlarmMessageSeverity > Severity.ERROR:
+                self._alarmMessage.Severity = self._rspHeader.AlarmMessageSeverity  # e.g. fatal error of the RC
+            copy_into(self._alarmMessage.Timestamp, AxesGroup.State.SystemTime)
+            self._alarmMessage.MessageType = MessageType.CMD
+            self._alarmMessage.MessageCode = self.ErrorID
+            self._alarmMessage.AcrID = wrap(self._uniqueID, 'UINT')
+            self._alarmMessage.CmdType = self._cmdHeader.CmdTyp
+            self._alarmMessage.MessageText = CONCAT(self.MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.ErrorID)))
+            AxesGroup.MessageLog.AddMessageLog(MessageLog=self._alarmMessage)
+        if self._warning_R.Q and self.LogLevel < Severity.WARNING:
+            self._alarmMessage.Severity = Severity.WARNING
+            if self.WarningID == self._rspHeader.AlarmMessageCode and self._rspHeader.AlarmMessageSeverity > Severity.WARNING:
+                self._alarmMessage.Severity = self._rspHeader.AlarmMessageSeverity  # e.g. fatal error of the RC
+            copy_into(self._alarmMessage.Timestamp, AxesGroup.State.SystemTime)
+            self._alarmMessage.MessageType = MessageType.CMD
+            self._alarmMessage.MessageCode = self.WarningID
+            self._alarmMessage.AcrID = wrap(self._uniqueID, 'UINT')
+            self._alarmMessage.CmdType = self._cmdHeader.CmdTyp
+            self._alarmMessage.MessageText = CONCAT(self.MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.WarningID)))
+            AxesGroup.MessageLog.AddMessageLog(MessageLog=self._alarmMessage)
+        if self._info_R.Q and self.LogLevel < Severity.INFO:
+            self._alarmMessage.Severity = Severity.INFO
+            if self.InfoID == self._rspHeader.AlarmMessageCode and self._rspHeader.AlarmMessageSeverity > Severity.INFO:
+                self._alarmMessage.Severity = self._rspHeader.AlarmMessageSeverity  # e.g. fatal error of the RC
+            copy_into(self._alarmMessage.Timestamp, AxesGroup.State.SystemTime)
+            self._alarmMessage.MessageType = MessageType.CMD
+            self._alarmMessage.MessageCode = self.InfoID
+            self._alarmMessage.AcrID = wrap(self._uniqueID, 'UINT')
+            self._alarmMessage.CmdType = self._cmdHeader.CmdTyp
+            self._alarmMessage.MessageText = CONCAT(self.MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.InfoID)))
+            AxesGroup.MessageLog.AddMessageLog(MessageLog=self._alarmMessage)
 
         if self._error_R.Q:
             # Create log entry
@@ -271,10 +315,8 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
         ParseResponsePayload: int = 0
 
         # reset message IDs
-        self.InfoID = 0
-        self.WarningID = 0
-        self.ErrorID = 0
-
+        # ST-FIX F62: InfoID/WarningID/ErrorID are held until the falling edge of Execute/Enable
+        # (Reset), a response without message must not clear them (spec 5.5.10)
         # get State
         self._rspHeader.State = CmdMessageState(ResponseData.GetHalfeByte1(IncPayloadPtr=False))
         # get ParSeq
@@ -300,6 +342,9 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
             case Severity.FATAL_ERROR:
                 self.SetError(ErrorID=self._rspHeader.AlarmMessageCode, Overwrite=True)
 
+        # ST-FIX F61: state ERROR without error code (or with severity INFO/WARNING) -> 16#8613
+        if self._rspHeader.State == CmdMessageState.ERROR and self.ErrorID == RobotLibraryConstants.OK:
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_ROBOT_ERROR_NO_ID, Overwrite=True)
         ParseResponsePayload = ResponseData.PayloadPtr
         return ParseResponsePayload
 

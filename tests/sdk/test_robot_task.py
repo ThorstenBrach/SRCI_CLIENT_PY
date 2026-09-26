@@ -160,7 +160,8 @@ def test_lifesign_timeout_and_restart(sdk: SdkSimulator, clock: FakeClock) -> No
     freeze_lifesign(h, 0.3)  # LifeSignTimeOut default 50 ms
     assert any("Lifesign timeout" in log.text for log in sdk.logs)
     h.run(20)
-    assert h.rt.Error and h.rt.ErrorID == RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2
+    # ST-FIX F65: the RI error of the RC in the telegram state (16#A5 lifesign timeout), not 16#80A2
+    assert h.rt.Error and h.rt.ErrorID == TelegramState.ERROR_165_LIFESIGN_TIMEOUT
     assert not h.rt.Synchronized
     # the user acknowledges by disabling the RobotTask (a quick restart: test_quick_restart, F23)
     h.enable = False

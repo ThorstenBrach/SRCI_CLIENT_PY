@@ -25,7 +25,6 @@ import pytest
 import srci
 from srci.iec.clock import FakeClock, use_clock
 from srci.sim.sdk import SdkSimulator, find_sdk_library, sdk_transport
-from srci.types import SequenceFlag
 from tests.bilateral import Comparison, compare_fields, distinct_values, leaves, response_values
 from tests.robot_task_harness import SIZE, RobotTaskHarness
 from tools.payload_check import fb_classes, function_name, send_calls
@@ -73,9 +72,7 @@ SKIP = {
 ONE_POINT = {"MC_CreateSplineFB", "MC_DynamicSplineFB"}
 
 # inputs of the function block itself (not ParCmd) needed for a valid command
-FB_INPUTS: dict[str, dict[str, Any]] = {
-    "MC_CollisionDetectionFB": {"SequenceFlag": SequenceFlag.PRIMARY_SEQUENCE}
-}
+FB_INPUTS: dict[str, dict[str, Any]] = {}  # ST-FIX F69: the defaults are valid (e.g. CollisionDetection)
 
 
 @dataclass
@@ -125,6 +122,10 @@ def run(name: str) -> Result:
             }
         else:
             sent = distinct_values(fb.ParCmd) if hasattr(fb, "ParCmd") else {}
+        from tests.sdk.test_methodology import PARCMD_INPUTS
+
+        for key, value in PARCMD_INPUTS.get(name, {}).items():
+            setattr(fb.ParCmd, key, value)
         h.add(fb)
         if hasattr(fb, "Execute"):
             fb.Execute = True

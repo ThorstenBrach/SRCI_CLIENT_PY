@@ -158,7 +158,14 @@ class RobotLibraryBaseExecuteFB(RobotLibraryBaseFB):
 
     def OnExecStart(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
         OnExecStart: int = 0
-        pass
+
+        # ST-FIX F71: Priority (1 = very high ... 4 = low, table 7-1)
+        if self.Priority < PriorityLevel.VERY_HIGH:
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_HIGH, Overwrite=True)
+            self.Error = True
+        elif self.Priority > PriorityLevel.LOW:
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_LOW, Overwrite=True)
+            self.Error = True
         return OnExecStart
 
     def OnUpdateStateFlags(self, *, State: CmdMessageState = CmdMessageState.EMPTY) -> None:  # PROTECTED

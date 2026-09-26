@@ -152,7 +152,8 @@ class MC_GroupJogFB(RobotLibraryBaseEnableFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_VELOCITY_INVALID, Overwrite=True)
+            # ST-FIX F70
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_OVERRIDE_INVALID, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.Override = {1}', Para1=VALID_REAL_TO_STRING(Value=float(self.ParCmd.Override)))
             return CheckParameterValid

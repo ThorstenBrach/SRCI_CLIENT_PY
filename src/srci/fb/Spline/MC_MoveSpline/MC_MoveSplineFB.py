@@ -444,7 +444,7 @@ class MC_MoveSplineFB(RobotLibraryBaseExecuteFB):
                 pass
             # Successfully completed
             case CmdMessageState.DONE:
-                self.Done = False
+                self.Done = True  # ST-FIX F64
                 self.Busy = False
             # Aborted before completion
             case CmdMessageState.ABORTED:

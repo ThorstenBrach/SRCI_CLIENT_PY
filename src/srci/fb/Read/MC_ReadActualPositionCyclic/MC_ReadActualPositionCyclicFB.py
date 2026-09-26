@@ -266,7 +266,9 @@ class MC_ReadActualPositionCyclicFB(RobotLibraryBaseEnableFB):
                         self._stepCmd = self._stepCmd + 1
 
             case 1:
-                if AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo == self._parCmd.FrameNo and AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo == self._parCmd.ToolNo or self._parCmd.ReadCartesianPosition == False:
+                # ST-FIX F73
+                # ST-FIX F73
+                if (AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo == self._parCmd.FrameNo or self._parCmd.FrameNo == -1) and (AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo == self._parCmd.ToolNo or self._parCmd.ToolNo == -1) or self._parCmd.ReadCartesianPosition == False:
                     # busy
                     self.Busy = False
                     # reset busy flag

@@ -249,6 +249,132 @@ the message when the limit is still reached must be an error, because the respon
 +                                  Severity    := Severity.ERROR, // ST-FIX F52: responses are lost
 ```
 
+### F63
+
+Two telegram sequences, hand written telegram coding of `MC_RobotTaskFB` (the generated part –
+`HandleSeqAck`, `AxesGroupToTelegram`, `AxesGroupToTelegramSequence`, `CheckParameterValid` – is
+listed above). Reference: `MC_RobotTaskFB_Telegram.CreateSendPayload`,
+`.CreateSendPayloadSequence`, `.ParseRecvPayloadSequence`, `.CalculateSequencePayloadMax`,
+`.CalculateSequencePayloadStartAdr`. Layout like spec Fig. 5-205 and the SDK: acyclic area =
+telegram length − cyclic data − footer; 1st sequence = area / 2 behind the cyclic data,
+2nd sequence = rest behind the 1st one (each including its 4 byte sequence header).
+
+```diff
+ // CalculateSequencePayloadMax
+ _cyclicDataLength := CalculateCyclicDataLength(AxesGroup := AxesGroup, Direction := Direction);
+-CASE (Sequence)
+-OF
+-  SequenceFlag.PRIMARY_SEQUENCE   :
+-    ... CalculateSequencePayloadMax := ( _parCfg.Com.TelegramLength... - _cyclicDataLength );
+-  SequenceFlag.SECONDARY_SEQUENCE :
+-    ... CalculateSequencePayloadMax := (( _parCfg.Com.TelegramLength... - _cyclicDataLength ) / 2);
+-END_CASE
++// ST-FIX F63: acyclic area without the footer, halved for two sequences (Fig. 5-205)
++IF ( Direction = ComDirection.PLC_TO_ROB )
++THEN
++  _area := UINT_TO_DINT(_parCfg.Com.TelegramLengthPlcToRob) - _cyclicDataLength - FOOTER_SIZE;
++ELSE
++  _area := UINT_TO_DINT(_parCfg.Com.TelegramLengthRobToPlc) - _cyclicDataLength - FOOTER_SIZE;
++END_IF
++IF ( NOT _parCfg.Com.TwoSequences )
++THEN
++  IF ( Sequence = SequenceFlag.PRIMARY_SEQUENCE ) THEN CalculateSequencePayloadMax := _area;
++  ELSE CalculateSequencePayloadMax := 0; END_IF
++ELSIF ( Sequence = SequenceFlag.PRIMARY_SEQUENCE )
++THEN
++  CalculateSequencePayloadMax := _area / 2;
++ELSIF ( Sequence = SequenceFlag.SECONDARY_SEQUENCE )
++THEN
++  CalculateSequencePayloadMax := _area - _area / 2;
++END_IF
+```
+
+```diff
+ // CalculateSequencePayloadStartAdr, SECONDARY_SEQUENCE: behind the area of the 1st sequence
+    _sequencePayloadLength
+      := CalculateSequencePayloadMax( AxesGroup := AxesGroup,
+                                      Direction := Direction,
+-                                     Sequence  := Sequence );
++                                     Sequence  := SequenceFlag.PRIMARY_SEQUENCE ); // ST-FIX F63
+```
+
+```diff
+ // CreateSendPayload
+ AxesGroup.State.NewSEQ[0] := FALSE;
++AxesGroup.State.NewSEQ[1] := FALSE; // ST-FIX F63: 2nd sequence was rebuilt in every cycle
+```
+
+```diff
+ // CreateSendPayloadSequence: every sequence starts at its own address
+ FOR _seqIdx := 0 TO AxesGroup.State.SequenceCountSend
+ DO
+-  // Check 2nd sequence ? -> goto 2nd sequence payload address
+-  IF ( _seqIdx = SECONDARY_SEQUENCE )
+-  THEN
+-    SendData.PayloadPtr := CalculateSequencePayloadStartAdr(AxesGroup := AxesGroup,
+-                                                            Direction := ComDirection.PLC_TO_ROB,
+-                                                            Sequence  := SequenceFlag.SECONDARY_SEQUENCE);
+-  END_IF
++  // ST-FIX F63: SequenceCountSend is 1 in every cycle with two sequences (HandleSeqAck)
++  IF ( _seqIdx = PRIMARY_SEQUENCE )
++  THEN
++    SendData.PayloadPtr := CalculateSequencePayloadStartAdr(AxesGroup := AxesGroup,
++                                                            Direction := ComDirection.PLC_TO_ROB,
++                                                            Sequence  := SequenceFlag.PRIMARY_SEQUENCE);
++  ELSE
++    SendData.PayloadPtr := CalculateSequencePayloadStartAdr(AxesGroup := AxesGroup,
++                                                            Direction := ComDirection.PLC_TO_ROB,
++                                                            Sequence  := SequenceFlag.SECONDARY_SEQUENCE);
++  END_IF
+```
+
+`ParseRecvPayloadSequence`: first read the headers of all sequences (each from its start address),
+then process the payloads with the lower Ack first (Fig. 5-207/5-208) and only if the Ack is the Seq
+that was sent (the SDK sends Ack 0 in the sequence it does not process):
+
+```iecst
+// ST-FIX F63: read the sequence headers
+FOR _seqIdx := 0 TO _seqCount
+DO
+  IF ( _seqIdx = PRIMARY_SEQUENCE )
+  THEN
+    RecvData.PayloadPtr := CalculateSequencePayloadStartAdr(AxesGroup := AxesGroup, Direction := ComDirection.ROB_TO_PLC,
+                                                            Sequence  := SequenceFlag.PRIMARY_SEQUENCE);
+  ELSE
+    RecvData.PayloadPtr := CalculateSequencePayloadStartAdr(AxesGroup := AxesGroup, Direction := ComDirection.ROB_TO_PLC,
+                                                            Sequence  := SequenceFlag.SECONDARY_SEQUENCE);
+  END_IF
+  Telegram.RobToPlc.Sequence[_seqIdx].Header.SEQ_ACK       := RecvData.GetUint();
+  Telegram.RobToPlc.Sequence[_seqIdx].Header.PayloadLength := RecvData.GetUint();
+  _seqStart[_seqIdx] := RecvData.PayloadPtr;   // new VAR _seqStart : ARRAY[0..1] OF UDINT;
+END_FOR
+
+// ST-FIX F63: lower Ack first (numbers wrap 254 -> 1)
+_seqFirst := 0;
+IF ( _seqCount = 1 )
+THEN
+  _seqDiff := UINT_TO_DINT(Telegram.RobToPlc.Sequence[0].Header.SEQ_ACK)
+            - UINT_TO_DINT(Telegram.RobToPlc.Sequence[1].Header.SEQ_ACK);
+  IF ( _seqDiff < 0 ) THEN _seqDiff := _seqDiff + 254; END_IF
+  IF ( _seqDiff > 0 ) AND ( _seqDiff < 127 ) THEN _seqFirst := 1; END_IF
+END_IF
+
+FOR _seqOrderIdx := 0 TO _seqCount
+DO
+  IF ( _seqOrderIdx = 0 ) THEN _seqIdx := _seqFirst; ELSE _seqIdx := 1 - _seqFirst; END_IF
+  _fragIdx       := 0;   // F5
+  _seqPayloadPtr := 0;   // F5
+  RecvData.PayloadPtr := _seqStart[_seqIdx];
+
+  // check new data available ?  (ST-FIX F63: Ack must be the Seq that was sent)
+  IF ( Telegram.RobToPlc.Sequence[_seqIdx].Header.SEQ_ACK <> AxesGroup.State.LastACK[_seqIdx]    ) AND
+     ( Telegram.RobToPlc.Sequence[_seqIdx].Header.SEQ_ACK  = AxesGroup.State.CurrentSEQ[_seqIdx] )
+  THEN
+    // ... unchanged: payload length check, fragments, AddRsp ...
+  END_IF
+END_FOR
+```
+
 ### Not to fix
 
 - F4 (dead code), F7 (`GetDword` without byte swap is correct for the status word), F8 (footer

@@ -52,10 +52,10 @@ from srci.functions.Convert.TO_STRING.SYNC_TIME_TO_STRING import SYNC_TIME_TO_ST
 from srci.functions.Convert.TO_STRING.TELEGRAM_CONTROL_TO_STRING import TELEGRAM_CONTROL_TO_STRING
 from srci.functions.Convert.TO_STRING.TELEGRAM_STATE_TO_STRING import TELEGRAM_STATE_TO_STRING
 from srci.functions.Convert.TO_STRING.WORD_TO_STRING_BIN import WORD_TO_STRING_BIN
-from srci.iec.conv import BYTE_TO_SINT, DINT_TO_STRING, DINT_TO_UDINT, DINT_TO_USINT, INT_TO_BYTE, SINT_TO_BYTE, STRING_TO_USINT, TIME_TO_STRING, TIME_TO_UINT, UDINT_TO_STRING, UINT_TO_STRING
-from srci.iec.rt import ADR, CONCAT, LIMIT, LOWER_BOUND, MAX, MID, MIN, SysDepMemCmp, SysDepMemSet, UPPER_BOUND, array_type, bit, copy_into, set_bit, st_for_end, trunc_str, type_size, wrap
+from srci.iec.conv import BYTE_TO_SINT, DINT_TO_STRING, DINT_TO_UDINT, DINT_TO_UINT, DINT_TO_USINT, INT_TO_BYTE, SINT_TO_BYTE, STRING_TO_USINT, TIME_TO_STRING, TIME_TO_UINT, UDINT_TO_STRING, UINT_TO_DINT, UINT_TO_STRING
+from srci.iec.rt import ADR, CONCAT, LIMIT, LOWER_BOUND, MID, MIN, SysDepMemCmp, UPPER_BOUND, array_type, bit, copy_into, set_bit, st_for_end, trunc_str, wrap
 from srci.iec.standard import F_TRIG, R_TRIG, TON
-from srci.types import AxesGroupAcyclicAcrEntryCmdBuffer, AxesGroupStateDataChanged, BufferStateCmd, CmdType, ComDirection, ControlHalfByte, DefaultDynamics, ExecutionMode, FragmentAction, Frame, Load, MessageType, PriorityLevel, RaSequenceState, ReferenceDynamics, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryInfoIdEnum, RobotLibraryParameter, RobotLibraryWarningIdEnum, RobotTaskParCfg, RobotWorkArea, SWLimits, SequenceFlag, Severity, SyncMode, SyncTime, SystemTime, Telegram, TelegramPlcToRob, TelegramState, Tool
+from srci.types import AxesGroupAcyclicAcrEntryCmdBuffer, AxesGroupStateDataChanged, BufferStateCmd, CmdType, ComDirection, ControlHalfByte, DefaultDynamics, ExecutionMode, FragmentAction, Frame, Load, MessageType, PriorityLevel, RaSequenceState, ReferenceDynamics, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryInfoIdEnum, RobotLibraryParameter, RobotLibraryWarningIdEnum, RobotTaskParCfg, RobotWorkArea, SWLimits, SequenceFlag, Severity, SyncMode, SyncTime, SystemTime, Telegram, TelegramState, Tool
 
 if TYPE_CHECKING:
     from srci.interfaces.IMessageLogger import IMessageLogger
@@ -337,6 +337,18 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         # {attribute 'hide'}
         self.EMPTY_EOL_ENTRY: int = 0
         # VAR
+        # ST-FIX F63: telegram sequence that is handled/filled first (lower Seq/Ack number)
+        self._seqSendFirst: int = 0
+        # ST-FIX F63: loop counter over the telegram sequences in Seq order
+        self._seqOrderIdx: int = 0
+        # ST-FIX F63: distance of two Seq numbers
+        self._seqDiff: int = 0
+        # ST-FIX F63: next Seq number
+        self._seqNext: int = 0
+        # ST-FIX F65: telegram sequence timeout (4 x LifeSignTimeOut without new Seq number)
+        self._seqAckTimeout: TON = TON()
+        # ST-FIX F66: lifesign of header and footer differ -> frame is not processed
+        self._frameInvalid: bool = False
         self._turns: int = 0  #  ST-FIX F60: turn number nibble
         self._restartReset: bool = False  #  ST-FIX F23: interface reset on the RC requested by a restart
         # VAR_INST of HandleAliveBit
@@ -423,7 +435,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         self.AxesGroupToTelegram(AxesGroup=self.AxesGroup)
 
         self.CreateSendPayload(AxesGroup=self.AxesGroup, RobotOutData=self.RobotOutData)
-        self.ParseRecvPayload(AxesGroup=self.AxesGroup, RobotInData=self.RobotInData)
+        # ST-FIX F66
+        if not self._frameInvalid:
+            self.ParseRecvPayload(AxesGroup=self.AxesGroup, RobotInData=self.RobotInData)
 
         self.AxesGroupFromTelegram(AxesGroup=self.AxesGroup)
 
@@ -609,11 +623,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         # maximount amount of bytes per sequence
         SEQUENCE_MAX_PAYLOAD_SIZE: int = 0
 
-        # {warning 'Handle 2nd sequence'}
-        if AxesGroup.State.NewSEQ[0]:
-            # delete old telegram data
-            SysDepMemSet(pDest=ADR(self.Telegram, 'PlcToRob', _iec.StructType(TelegramPlcToRob)), Value=0, DataLen=type_size(_iec.StructType(TelegramPlcToRob)))
-
+        # ST-FIX F63: the data of a telegram sequence is cleared in AxesGroupToTelegramSequence only
+        # when it gets a new Seq number; a sequence that is not acknowledged yet is sent unchanged
         self.AxesGroupToTelegramHeader(AxesGroup=AxesGroup)
         self.AxesGroupToTelegramCyclic(AxesGroup=AxesGroup)
         self.AxesGroupToTelegramCyclicOptional(AxesGroup=AxesGroup)
@@ -782,29 +793,49 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         _telegramLengthCurrent: int = 0
 
         # Check 2nd sequence active ?
+        # ST-FIX F67: remaining space for acyclic data at least 1 byte behind the sequence header
+        if self.CalculateSequencePayloadMax(AxesGroup=AxesGroup, Direction=ComDirection.PLC_TO_ROB, Sequence=SequenceFlag.PRIMARY_SEQUENCE) < 4 + 1:
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_PLC_TO_ROB, Overwrite=False)
+            return AxesGroupToTelegramSequence
+        if self.CalculateSequencePayloadMax(AxesGroup=AxesGroup, Direction=ComDirection.ROB_TO_PLC, Sequence=SequenceFlag.PRIMARY_SEQUENCE) < 4 + 1:
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_ROB_TO_PLC, Overwrite=False)
+            return AxesGroupToTelegramSequence
+
+        # ST-FIX F63: SEQUENCE_MAX_PAYLOAD_SIZE per sequence, see below
         if self._parCfg.Com.TwoSequences:
             # inc sequence counter
             _seqCount = _seqCount + 1
 
-            SEQUENCE_MAX_PAYLOAD_SIZE = wrap(self.CalculateSequencePayloadMax(AxesGroup=AxesGroup, Direction=ComDirection.PLC_TO_ROB, Sequence=SequenceFlag.SECONDARY_SEQUENCE) - self.FOOTER_SIZE, 'UDINT')
-        else:
-            SEQUENCE_MAX_PAYLOAD_SIZE = wrap(self.CalculateSequencePayloadMax(AxesGroup=AxesGroup, Direction=ComDirection.PLC_TO_ROB, Sequence=SequenceFlag.PRIMARY_SEQUENCE) - self.FOOTER_SIZE, 'UDINT')
-
-        for _seqIdx in range(0, _seqCount + 1):
+        for self._seqOrderIdx in range(0, _seqCount + 1):
+            # ST-FIX F63: fill the sequence with the lower Seq number first (it is processed first)
+            if self._seqOrderIdx == 0:
+                _seqIdx = self._seqSendFirst
+            else:
+                _seqIdx = 1 - self._seqSendFirst
             # set current SEQ / ACk index
             self.Telegram.PlcToRob.Sequence[_seqIdx].Header.SEQ_ACK = AxesGroup.State.CurrentSEQ[_seqIdx]
 
             # only update telegram content if a new sequence SEQ is set
             if AxesGroup.State.NewSEQ[_seqIdx]:
                 # only reset counters in case of new telegram to send
-                AxesGroup.State.SequenceCountSend = 0
+                # ST-FIX F63: each telegram sequence has its own data area (Fig. 5-205) and starts empty
+                if _seqIdx == self.PRIMARY_SEQUENCE:
+                    SEQUENCE_MAX_PAYLOAD_SIZE = self.CalculateSequencePayloadMax(AxesGroup=AxesGroup, Direction=ComDirection.PLC_TO_ROB, Sequence=SequenceFlag.PRIMARY_SEQUENCE)
+                else:
+                    SEQUENCE_MAX_PAYLOAD_SIZE = self.CalculateSequencePayloadMax(AxesGroup=AxesGroup, Direction=ComDirection.PLC_TO_ROB, Sequence=SequenceFlag.SECONDARY_SEQUENCE)
+                self.Telegram.PlcToRob.Sequence[_seqIdx].Header.PayloadLength = 0
+                for _idx in range(0, RobotLibraryParameter.FRAGMENT_MAX + 1):
+                    self.Telegram.PlcToRob.Sequence[_seqIdx].Fragment[_idx].Header.PayloadLength = 0
+                _fragIdx = 0
+                _listIdx = 1
                 AxesGroup.State.FragmentCountSend[_seqIdx] = 0
 
                 # calc current telegram payload length
-                _telegramLengthCurrent = self.CalculateTelegramLengthPlcToRob(AxesGroup=AxesGroup)
+                _telegramLengthCurrent = wrap(4 + self.Telegram.PlcToRob.Sequence[_seqIdx].Header.PayloadLength, 'UINT')  # ST-FIX F63: sequence header + payload
 
                 # Bedingung anpassen und TWO_SEQUENCES berücksichtigen
-                while self._parCfg.Com.TelegramLengthPlcToRob - _telegramLengthCurrent >= self.FRAGMENT_HEADER_SIZE + self.MIN_PAYLOAD_SIZE:
+                # ST-FIX F63
+                while _telegramLengthCurrent + self.FRAGMENT_HEADER_SIZE + self.MIN_PAYLOAD_SIZE <= SEQUENCE_MAX_PAYLOAD_SIZE:
                     # Check command in Execution-Order-List available ?
                     if AxesGroup.Acyclic.ActiveCommandRegister.ExecutionOrderList[_listIdx] > self.EMPTY_EOL_ENTRY:
                         # set current SEQ / ACk index
@@ -865,10 +896,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                                     AxesGroup.Acyclic.ActiveCommandRegister.Register[_regIdx].Command[self.ACTIVE_CMD].State = BufferStateCmd.SENDING
 
                                 # calc current telegram payload length
-                                _telegramLengthCurrent = self.CalculateTelegramLengthPlcToRob(AxesGroup=AxesGroup)
+                                _telegramLengthCurrent = wrap(4 + self.Telegram.PlcToRob.Sequence[_seqIdx].Header.PayloadLength, 'UINT')  # ST-FIX F63: sequence header + payload
 
                                 # check limit reached ?
-                                if _telegramLengthCurrent >= self._parCfg.Com.TelegramLengthPlcToRob:
+                                # ST-FIX F63
+                                if _telegramLengthCurrent >= SEQUENCE_MAX_PAYLOAD_SIZE:
                                     break  # -> abort for loop
 
                             # check payload complete ?
@@ -887,13 +919,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     _fragIdx = _fragIdx + 1
 
                     # check abort conditions
+                    # ST-FIX F63
                     # Payload limit reached
                     # Max fragment limit reached
                     # No entry in ExecutionOrderList left
-                    if (_telegramLengthCurrent >= self._parCfg.Com.TelegramLengthPlcToRob or _fragIdx >= RobotLibraryParameter.FRAGMENT_MAX) or AxesGroup.Acyclic.ActiveCommandRegister.ExecutionOrderList[_listIdx] == self.EMPTY_EOL_ENTRY:
+                    if (_telegramLengthCurrent >= SEQUENCE_MAX_PAYLOAD_SIZE or _fragIdx >= RobotLibraryParameter.FRAGMENT_MAX) or AxesGroup.Acyclic.ActiveCommandRegister.ExecutionOrderList[_listIdx] == self.EMPTY_EOL_ENTRY:
                         break  # -> Abort while loop
 
-                AxesGroup.State.SequenceCountSend = _seqIdx
+                AxesGroup.State.SequenceCountSend = _seqCount  # ST-FIX F63
                 AxesGroup.State.FragmentCountSend[_seqIdx] = _fragIdx
         return AxesGroupToTelegramSequence
 
@@ -970,18 +1003,18 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         # Check Plc.OptionalCyclic changed ?
         if PlcOptionalCyclicToUint(OptionalCyclic=self._parCfg.Plc.OptionalCyclic) != PlcOptionalCyclicToUint(OptionalCyclic=self.ParCfg.Plc.OptionalCyclic):
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TELEGRAM_NUMBER_CHANGED_AFTER_INIT, Overwrite=True)
+            self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_TELEGRAM_NO_CHANGED_DURING_OPERATION, Overwrite=True)  # ST-FIX F68
 
             # Create log entry
-            self.CreateLogMessagePara2(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=0, MessageText='ParCfg.Plc.OptionalCyclic changed after initialization from {1} to {2} -> Reinitialize by disabling and enabling the RobotTask', Para1=WORD_TO_STRING_BIN(Value=PlcOptionalCyclicToUint(OptionalCyclic=self._parCfg.Plc.OptionalCyclic)), Para2=WORD_TO_STRING_BIN(Value=PlcOptionalCyclicToUint(OptionalCyclic=self.ParCfg.Plc.OptionalCyclic)))
+            self.CreateLogMessagePara2(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.WARNING, MessageCode=0, MessageText='ParCfg.Plc.OptionalCyclic changed after initialization from {1} to {2} -> Reinitialize by disabling and enabling the RobotTask', Para1=WORD_TO_STRING_BIN(Value=PlcOptionalCyclicToUint(OptionalCyclic=self._parCfg.Plc.OptionalCyclic)), Para2=WORD_TO_STRING_BIN(Value=PlcOptionalCyclicToUint(OptionalCyclic=self.ParCfg.Plc.OptionalCyclic)))
 
         # Check Rob.OptionalCyclic changed ?
         if RobOptionalCyclicToUint(OptionalCyclic=self._parCfg.Rob.OptionalCyclic) != RobOptionalCyclicToUint(OptionalCyclic=self.ParCfg.Rob.OptionalCyclic):
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TELEGRAM_NUMBER_CHANGED_AFTER_INIT, Overwrite=True)
+            self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_TELEGRAM_NO_CHANGED_DURING_OPERATION, Overwrite=True)  # ST-FIX F68
 
             # Create log entry
-            self.CreateLogMessagePara2(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=0, MessageText='ParCfg.Rob.OptionalCyclic changed after initialization from {1} to {2} -> Reinitialize by disabling and enabling the RobotTask', Para1=WORD_TO_STRING_BIN(Value=RobOptionalCyclicToUint(OptionalCyclic=self._parCfg.Rob.OptionalCyclic)), Para2=WORD_TO_STRING_BIN(Value=RobOptionalCyclicToUint(OptionalCyclic=self.ParCfg.Rob.OptionalCyclic)))
+            self.CreateLogMessagePara2(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.WARNING, MessageCode=0, MessageText='ParCfg.Rob.OptionalCyclic changed after initialization from {1} to {2} -> Reinitialize by disabling and enabling the RobotTask', Para1=WORD_TO_STRING_BIN(Value=RobOptionalCyclicToUint(OptionalCyclic=self._parCfg.Rob.OptionalCyclic)), Para2=WORD_TO_STRING_BIN(Value=RobOptionalCyclicToUint(OptionalCyclic=self.ParCfg.Rob.OptionalCyclic)))
         return CheckParameterChanged
 
     def CheckParameterValid(self, *, AxesGroup: _T.AxesGroup) -> bool:  # PROTECTED
@@ -1036,6 +1069,12 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Com.TelegramLengthRobToPlc {1} invalid', Para1=UINT_TO_STRING(self.ParCfg.Com.TelegramLengthRobToPlc))
             # no further validation
+            return CheckParameterValid
+        # ST-FIX F63: two telegram sequences must be activated in both directions and for the layout
+        if self.ParCfg.Plc.OptionalCyclic.UseTwoSequences != self.ParCfg.Rob.OptionalCyclic.UseTwoSequences or self.ParCfg.Plc.OptionalCyclic.UseTwoSequences != self.ParCfg.Com.TwoSequences:
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TELEGRAM_NUMBER_INVALID_0x80AB, Overwrite=True)
+            self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=0, MessageText='TwoSequences must be set in Com and in Plc/Rob.OptionalCyclic')
             return CheckParameterValid
 
         # EndRegion }}}
@@ -1502,14 +1541,16 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         if AxesGroup.Cyclic.RobToPlc.TelegramState == TelegramState.INITIALIZED:
             # Get lifesign values
             _lifeSignHeader = GetHalfeByteHi(Value=RobotInData[self.ROBOT_IN_DATA_MIN + 1])
-            _lifeSignFooter = GetHalfeByteHi(Value=RobotInData[self.ROBOT_IN_DATA_MAX + 0])
+            _lifeSignFooter = GetHalfeByteHi(Value=RobotInData[MIN(self.ROBOT_IN_DATA_MIN + self._parCfg.Com.TelegramLengthRobToPlc - 1, self.ROBOT_IN_DATA_MAX)])  # ST-FIX F66: last byte of the telegram
 
         # Timer for invalid frame(s) message
         self._HandleInvalidFrames__invalidFrameCounterCheck_D(IN=True, PT=RobotLibraryParameter.INVALID_FRAMES_CHECK_TIMEOUT)
 
         # Check Frame is valid :
         # ----------------------
-        if _lifeSignHeader != _lifeSignFooter:
+        # ST-FIX F66: an invalid frame is counted and not processed (spec 5.6.6.2)
+        self._frameInvalid = _lifeSignHeader != _lifeSignFooter
+        if self._frameInvalid:
             AxesGroup.State.InvalidFrames = wrap(AxesGroup.State.InvalidFrames + 1, 'UDINT')
 
         # Check timeout for invalid frame message
@@ -1553,12 +1594,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             self.Synchronized = False
 
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_CONNECTION_LOST, Overwrite=True)
+            # ST-FIX F65: lifesign timeout, table 7-2
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_LIFESIGN_TIMEOUT_0x80A5, Overwrite=True)
             # Create log entry
             self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.FATAL_ERROR, MessageCode=0, MessageText='LifeSign timeout -> Reinitialization required !')
 
         # Reset connection lost error
-        if (not self.Enable and self._aliveBit) and self.ErrorID == RobotLibraryErrorIdEnum.ERR_CONNECTION_LOST:
+        # ST-FIX F65: lifesign timeout, table 7-2
+        if (not self.Enable and self._aliveBit) and self.ErrorID == RobotLibraryErrorIdEnum.ERR_LIFESIGN_TIMEOUT_0x80A5:
             self.ErrorID = 0
 
     def HandleLogMessagesAck(self, *, AxesGroup: _T.AxesGroup) -> None:
@@ -1583,23 +1626,67 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         # internal index for loops
         _idx: int = 0
 
+        # ST-FIX F63: Seq/Ack of one or two telegram sequences (spec 5.6.5.3, Fig. 5-206 ... 5-208):
+        # - two sequences start with the Seq numbers 0 and 1
+        # - the sequence with the lower Ack is handled first; its next Seq number is the number of the
+        # other sequence + 1 (one common counter, the sequences alternate)
+        # - ST-FIX F56: 254 -> 1, 0 only on the first exchange
+        if self._parCfg.Com.TwoSequences:
+            AxesGroup.State.SequenceCountSend = 1
+        else:
+            AxesGroup.State.SequenceCountSend = 0
+
+        if not self.Enable:
+            AxesGroup.State.CurrentSEQ[0] = 0
+            AxesGroup.State.CurrentSEQ[1] = DINT_TO_UINT(AxesGroup.State.SequenceCountSend)
+
         for _idx in range(0, AxesGroup.State.SequenceCountSend + 1):
             AxesGroup.State.CurrentACK[_idx] = self.Telegram.RobToPlc.Sequence[_idx].Header.SEQ_ACK
+        else:
+            _idx = st_for_end(0, AxesGroup.State.SequenceCountSend)
 
-            if not self.Enable:
-                AxesGroup.State.CurrentSEQ[0] = 0
-                AxesGroup.State.CurrentSEQ[1] = 0
+        # ST-FIX F63: the sequence with the lower number first (Fig. 5-207/5-208), numbers wrap 254 -> 1
+        self._seqSendFirst = 0
+        if AxesGroup.State.SequenceCountSend == 1:
+            self._seqDiff = UINT_TO_DINT(AxesGroup.State.CurrentACK[0]) - UINT_TO_DINT(AxesGroup.State.CurrentACK[1])
+            if self._seqDiff < 0:
+                self._seqDiff = self._seqDiff + 254
+            if self._seqDiff > 0 and self._seqDiff < 127:
+                self._seqSendFirst = 1
+
+        for self._seqOrderIdx in range(0, AxesGroup.State.SequenceCountSend + 1):
+            if self._seqOrderIdx == 0:
+                _idx = self._seqSendFirst
+            else:
+                _idx = 1 - self._seqSendFirst
 
             # Check Seq/Ack :
             # ----------------------
             if AxesGroup.State.CurrentACK[_idx] == AxesGroup.State.CurrentSEQ[_idx]:
-                AxesGroup.State.CurrentSEQ[_idx] = wrap(MAX(AxesGroup.State.CurrentSEQ[0], AxesGroup.State.CurrentSEQ[1]) + 1, 'UINT')
-
-                # {warning 'ToDo: Test for Yaskawa'}
-                if AxesGroup.State.CurrentSEQ[_idx] >= 255:
-                    AxesGroup.State.CurrentSEQ[_idx] = 1  # ST-FIX F56: 0 only on the first exchange (spec 5.6.5.3)
-
+                self._seqNext = wrap(AxesGroup.State.CurrentSEQ[AxesGroup.State.SequenceCountSend - _idx] + 1, 'UINT')
+                if self._seqNext >= 255:
+                    self._seqNext = 1
+                AxesGroup.State.CurrentSEQ[_idx] = self._seqNext
                 AxesGroup.State.NewSEQ[_idx] = True
+
+        # order in which the sequences are filled: lower Seq number first
+        # ST-FIX F63: the sequence with the lower number first (Fig. 5-207/5-208), numbers wrap 254 -> 1
+        self._seqSendFirst = 0
+        if AxesGroup.State.SequenceCountSend == 1:
+            self._seqDiff = UINT_TO_DINT(AxesGroup.State.CurrentSEQ[0]) - UINT_TO_DINT(AxesGroup.State.CurrentSEQ[1])
+            if self._seqDiff < 0:
+                self._seqDiff = self._seqDiff + 254
+            if self._seqDiff > 0 and self._seqDiff < 127:
+                self._seqSendFirst = 1
+
+        # ST-FIX F65: telegram sequence timeout (spec 5.6.5.3/5.6.6.2: no new Seq number for
+        # 4 x LifeSignTimeOut while initialized) -> 16#80A8, reinitialization required
+        self._seqAckTimeout(IN=self.Initialized and (not (AxesGroup.State.NewSEQ[0] or AxesGroup.State.NewSEQ[1])), PT=4 * self.ParCfg.Com.LifeSignTimeOut + self.ParCfg.Plc.CycleTime)
+        if self._seqAckTimeout.Q:
+            self.Initialized = False
+            self.Synchronized = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8_0x80A8, Overwrite=True)
+            self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.FATAL_ERROR, MessageCode=0, MessageText='Telegram sequence timeout -> Reinitialization required !')
 
     def HandleSync(self, *, AxesGroup: _T.AxesGroup, ToolData: list[Tool], FrameData: list[Frame], LoadData: list[Load], WorkAreas: list[RobotWorkArea], SWLimits: _T.SWLimits, DefaultDynamics: _T.DefaultDynamics, ReferenceDynamics: _T.ReferenceDynamics) -> None:  # PRIVATE
         # flag that indicates at least any iten has enabled synchronisation
@@ -5414,7 +5501,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             # Reset Synchronized flag
             self.Synchronized = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite=True)
+            # ST-FIX F65: reason of the loss of the initialization (table 7-2): RI error of the RC in the
+            # telegram state (16#A1..16#AD), interface reset by the RC (16#80A7) or unknown (16#80A2)
+            if AxesGroup.Cyclic.RobToPlc.TelegramState >= TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE and AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_173_SERVER_CONNECTION_LOST:
+                self.SetError(ErrorID=AxesGroup.Cyclic.RobToPlc.TelegramState, Overwrite=True)
+            elif AxesGroup.Cyclic.RobToPlc.TelegramState == TelegramState.READY_FOR_INITIALIZATION or AxesGroup.Cyclic.RobToPlc.TelegramState == TelegramState.READY_TO_RESUME:
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INTERFACE_WAS_RESET_AFTER_INIT_0x80A7, Overwrite=True)
+            else:
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite=True)
 
         # Warning for ACR Registers running low
         if AxesGroup.Acyclic.ActiveCommandRegister.CurrentAcrUsagePercent > RobotLibraryParameter.ACR_USAGE_WARNING_LIMIT:
@@ -5520,7 +5614,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                                 self.ErrorAddTxt = trunc_str(CONCAT('_stepCmd = ', DINT_TO_STRING(self._stepCmd)), 40)
                         case _:
                             # TelegrammState in error
-                            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0xA2, Overwrite=True)
+                            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite=True)  # ST-FIX F65: unknown state (16#A2 is the RI error of the RC)
                             self.ErrorAddTxt = trunc_str(CONCAT('_stepCmd = ', DINT_TO_STRING(self._stepCmd)), 40)
 
                 # timeout exceeded ?

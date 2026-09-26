@@ -103,6 +103,8 @@ class AxesGroupMessageLogFB(FunctionBlock):
             self.Messages[0].Severity = MessageLog.Severity
             self.Messages[0].MessageText = MessageLog.MessageText
             self.Messages[0].MessageCode = MessageLog.MessageCode
+            self.Messages[0].AcrID = MessageLog.AcrID  # ST-FIX F74
+            self.Messages[0].CmdType = MessageLog.CmdType  # ST-FIX F74
 
             # inc message counter
             self.MessagesEntries = DINT_TO_UINT(LIMIT(0, self.MessagesEntries + 1, RobotLibraryParameter.MESSAGE_LOG_MAX))

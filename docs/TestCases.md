@@ -26,11 +26,11 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 31 | 31 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 10 | 12 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 29 | 50 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
-| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 45 | 131 |
+| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 54 | 140 |
 | [UT-FN](#ut-fn) | Functions of the library | 16 | 20 |
 | [UT-IEC](#ut-iec) | IEC 61131-3 runtime (data types, timers, conversions) | 42 | 96 |
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 53 | 197 |
 | [UT-PKG](#ut-pkg) | Package, logging | 10 | 10 |
-| | **Total** | **306** | **3481** |
+| | **Total** | **334** | **3528** |
 
 ## Test methodology
 
@@ -233,6 +233,25 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-008 | The lifesign is mirrored by the RC in every cycle | 1 | `test_lifesign_is_mirrored_every_cycle` |
 | SDK-LOOP-009 | SDK behind the PLC gateway simulator: identical results via TcpTransport. | 1 | `test_same_handshake_over_tcp` |
 | SDK-LOOP-010 | Every function of the profile "Core" (spec table 5-2) is executed without error. | 2 | `test_core_profile_demo` |
+| SDK-LOOP-011 | F61 (B-01/B-02): a parameter error sets ErrorID and Error in the same cycle. | 1 | `test_f61_parameter_error_sets_error_in_the_same_cycle` |
+| SDK-LOOP-012 | F61 (B-01): an error of the RC (16#8E03) -> Error with ErrorID, Busy FALSE, no cycle with ErrorID but without Error. | 1 | `test_f61_error_of_the_rc_resets_busy_at_once` |
+| SDK-LOOP-013 | F61 (B-03, BUF-01): commands that find no free ACR entry (16#8618) end with Error and without Busy; all outputs stay consistent. | 1 | `test_f61_register_full_does_not_leave_busy` |
+| SDK-LOOP-014 | F61 (B-04): GroupJog with an error of the RC (robot not enabled): Active is never TRUE together with Error, Error follows ErrorID. | 1 | `test_f61_group_jog_active_and_error_exclusive` |
+| SDK-LOOP-015 | F63 (A-01...A-06): with two telegram sequences the RobotTask initializes, and several commands at once are exchanged over both sequences in the order of the Seq numbers. | 1 | `test_f63_two_sequences_initialize_and_execute_commands` |
+| SDK-LOOP-016 | F63 (A-02/A-05): commands longer than one sequence area are fragmented; each sequence stays within its half of the acyclic area (the RC decodes every fragment). | 1 | `test_f63_two_sequences_long_commands_are_fragmented_over_both_sequences` |
+| SDK-LOOP-017 | F63 (A-08): TwoSequences set only in one direction -> 16#80AB, no initialization. | 1 | `test_f63_two_sequences_only_in_one_direction_is_an_error` |
+| SDK-LOOP-018 | F64: MC_MoveSuperImposedFB reset Done on state DONE -> Execute TRUE without any status. | 1 | `test_f64_move_superimposed_signals_done` |
+| SDK-LOOP-019 | F65 (C-02): the lifesign of the RC does not change -> 16#80A5 (table 7-2), not initialized. | 1 | `test_f65_lifesign_timeout_is_80a5` |
+| SDK-LOOP-020 | F65 (C-03): the RC keeps the lifesign alive but acknowledges no sequence for 4 x LifeSignTimeOut -> 16#80A8, not initialized. | 1 | `test_f65_sequence_timeout_is_80a8` |
+| SDK-LOOP-021 | F65 (C-01): the reason of the loss of the initialization is reported (table 7-2). | 4 | `test_f65_reason_of_the_loss_of_initialization` |
+| SDK-LOOP-022 | F66 (C-04): lifesign in header and footer differ -> frame counted and not processed. | 1 | `test_f66_invalid_frame_is_not_processed` |
+| SDK-LOOP-023 | F68 (C-06): optional cyclic data changed during operation -> warning 16#7003 (spec 6.1.1). | 1 | `test_f68_changed_telegram_number_is_a_warning` |
+| SDK-LOOP-024 | F69...F71: invalid parameters are rejected by the client with the ID of table 7-1. | 15 | `test_f69_f71_parameter_checks` |
+| SDK-LOOP-025 | F69: the default values of the function blocks pass the new checks. | 3 | `test_f69_defaults_are_valid` |
+| SDK-LOOP-026 | F73 (D-10): ToolNo/FrameNo -1 (currently used) -> the outputs are updated. | 1 | `test_f73_read_actual_position_cyclic_with_current_tool` |
+| SDK-LOOP-027 | F74 (E-01/E-03): a parameter error of the client and an error of the RC are written into the message buffer; messages of a sent command carry its ACR entry and command type. | 1 | `test_f74_client_error_is_in_the_message_buffer_with_acr_entry_and_type` |
+| SDK-LOOP-028 | E-02 (already fulfilled, no fix): GroupReset deletes the messages of the PLC buffer (5.5.11.5). | 1 | `test_e02_group_reset_clears_the_message_buffer` |
+| SDK-LOOP-029 | F75 (E-05/C-08): IDs of tables 7-1/7-4 and names with the correct value. | 1 | `test_f75_missing_ids_of_the_specification` |
 
 ## TCP
 
@@ -333,6 +352,15 @@ Function blocks (unit tests without SDK)
 | UT-FB-043 | Supported data set out of sync blocks synchronized | 1 | `test_supported_data_set_out_of_sync_blocks_synchronized` |
 | UT-FB-044 | F24 (spec 5.6.7.1): '… or not supported by the RC does not impact the RI state Synchronized'. | 1 | `test_unsupported_data_set_does_not_block_synchronized` |
 | UT-FB-045 | The RC functions are unknown before the initialisation. | 2 | `test_not_synchronized_before_initialized` |
+| UT-FB-046 | F61 (B-05): response state ERROR without error code -> 16#8613, Error TRUE. | 1 | `test_f61_state_error_without_code_is_8613` |
+| UT-FB-047 | F61 (B-05): state ERROR with severity WARNING -> warning kept and 16#8613. | 1 | `test_f61_state_error_with_warning_only_is_8613` |
+| UT-FB-048 | F61 (B-01): the response with an error sets Error together with ErrorID (not one cycle later) and resets Busy. | 1 | `test_f61_error_of_the_rc_sets_error_at_once` |
+| UT-FB-049 | F62 (B-06): a later response without message does not clear WarningID/InfoID. | 1 | `test_f62_warning_and_info_are_held_until_reset` |
+| UT-FB-050 | F63 (A-03): one sequence: area = telegram length - cyclic data - footer. | 1 | `test_f63_one_sequence_area_is_the_acyclic_area` |
+| UT-FB-051 | F63 (A-02/A-03): two sequences: the acyclic area is halved like in spec Fig. | 1 | `test_f63_two_sequences_halve_the_acyclic_area` |
+| UT-FB-052 | F63 (A-04): both sequence headers are written, the 2nd one at its own address, and both NewSEQ flags are reset after sending. | 1 | `test_f63_second_sequence_is_sent_at_its_address` |
+| UT-FB-053 | F63 (A-06): both sequences acknowledged in one telegram -> the one with the lower Ack first (spec Fig. | 1 | `test_f63_responses_are_processed_in_the_order_of_the_ack` |
+| UT-FB-054 | F63: a sequence whose Ack is not the Seq that was sent (the SDK sends Ack 0 in the sequence it does not process) carries no response. | 1 | `test_f63_ack_of_an_other_seq_is_ignored` |
 
 ## UT-FN
 

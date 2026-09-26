@@ -177,7 +177,8 @@ class MC_CollisionDetectionFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check SequenceFlag valid ?
-        if self.SequenceFlag != SequenceFlag.PRIMARY_SEQUENCE and self.SequenceFlag != SequenceFlag.SECONDARY_SEQUENCE:
+        # ST-FIX F69: default with Parallel
+        if (self.SequenceFlag != SequenceFlag.NO_SEQUENCE and self.SequenceFlag != SequenceFlag.PRIMARY_SEQUENCE) and self.SequenceFlag != SequenceFlag.SECONDARY_SEQUENCE:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -251,6 +252,12 @@ class MC_CollisionDetectionFB(RobotLibraryBaseExecuteFB):
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.UnitLimitAxis = {1}', Para1=THRESHOLD_MODE_TO_STRING(Value=ThresholdMode(self.ParCmd.UnitLimitAxis)))
+            return CheckParameterValid
+
+        # ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
+        if CheckParameterValid and (((self.ProcessingMode == ProcessingMode.BUFFERED or self.ProcessingMode == ProcessingMode.ABORTING) or self.ProcessingMode == ProcessingMode.TRIGGER_BUFFERED) or self.ProcessingMode == ProcessingMode.TRIGGER_ABORTING) == (self.SequenceFlag == SequenceFlag.NO_SEQUENCE):
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite=True)
             return CheckParameterValid
 
         # ST-FIX F49: ParCmd.ProcessingMode was not checked

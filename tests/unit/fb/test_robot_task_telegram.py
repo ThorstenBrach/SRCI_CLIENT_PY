@@ -141,7 +141,7 @@ def test_second_sequence_starts_at_calculated_address() -> None:
     start = host.CalculateSequencePayloadStartAdr(
         ag, ComDirection.PLC_TO_ROB, SequenceFlag.SECONDARY_SEQUENCE
     )
-    assert start == 18 + (64 - 18) // 2
+    assert start == 18 + (64 - 18 - 1) // 2  # ST-FIX F63: acyclic area without the footer, halved
     assert out[start : start + 2] == b"\xab\xcd"
 
 
@@ -196,6 +196,7 @@ def test_receive_header_and_footer() -> None:
 
 def test_receive_sequence_with_response() -> None:
     host, (ag, acr) = Host(), new_axes_group()
+    ag.State.CurrentSEQ[0] = 5  # ST-FIX F63: Ack = Seq that was sent
     rsp = bytes([0x21, 0xFE, 0x12, 0x34, 0xAA])  # State 1, ParSeq 2, severity -2, code 0x1234, data
     body = rc_header() + struct.pack(">HH", 5, 8 + len(rsp)) + fragment(0x0101, rsp)
     host.ParseRecvPayload(ag, rc_telegram(body))
@@ -210,6 +211,7 @@ def test_receive_sequence_with_response() -> None:
 
 def test_same_ack_is_not_processed_twice() -> None:
     host, (ag, acr) = Host(), new_axes_group()
+    ag.State.CurrentSEQ[0] = 5  # ST-FIX F63: Ack = Seq that was sent
     body = rc_header() + struct.pack(">HH", 5, 9) + fragment(0x0101, b"\x01")
     host.ParseRecvPayload(ag, rc_telegram(body))
     host.ParseRecvPayload(ag, rc_telegram(body))
@@ -218,6 +220,7 @@ def test_same_ack_is_not_processed_twice() -> None:
 
 def test_two_fragments_in_one_sequence() -> None:
     host, (ag, acr) = Host(), new_axes_group()
+    ag.State.CurrentSEQ[0] = 1  # ST-FIX F63: Ack = Seq that was sent
     payload = fragment(1, b"\x01\x02") + fragment(2, b"\x03", pointer=0)
     body = rc_header() + struct.pack(">HH", 1, len(payload)) + payload
     host.ParseRecvPayload(ag, rc_telegram(body))
@@ -231,7 +234,8 @@ def test_second_sequence_is_parsed_from_its_start_address() -> None:
     start = host.CalculateSequencePayloadStartAdr(
         ag, ComDirection.ROB_TO_PLC, SequenceFlag.SECONDARY_SEQUENCE
     )
-    assert start == 10 + (128 - 10) // 2
+    assert start == 10 + (128 - 10 - 1) // 2  # ST-FIX F63
+    ag.State.CurrentSEQ[0] = ag.State.CurrentSEQ[1] = 1
     first = rc_header() + struct.pack(">HH", 1, 9) + fragment(1, b"\x11")
     second = struct.pack(">HH", 1, 9) + fragment(2, b"\x22")
     data = bytearray(rc_telegram(first))
@@ -243,6 +247,7 @@ def test_second_sequence_is_parsed_from_its_start_address() -> None:
 
 def test_invalid_fragment_pointer_is_logged() -> None:
     host, (ag, acr) = Host(), new_axes_group()
+    ag.State.CurrentSEQ[0] = 1  # ST-FIX F63: Ack = Seq that was sent
     body = rc_header() + struct.pack(">HH", 1, 10) + fragment(1, b"\x01\x02", pointer=255)
     host.ParseRecvPayload(ag, rc_telegram(body))
     assert acr.responses == []
@@ -251,6 +256,7 @@ def test_invalid_fragment_pointer_is_logged() -> None:
 
 def test_invalid_sequence_length_is_logged() -> None:
     host, (ag, acr) = Host(), new_axes_group()
+    ag.State.CurrentSEQ[0] = 1  # ST-FIX F63: Ack = Seq that was sent
     body = rc_header() + struct.pack(">HH", 1, 500)
     host.ParseRecvPayload(ag, rc_telegram(body))
     assert acr.responses == []
@@ -293,11 +299,11 @@ def test_payload_max_and_telegram_length() -> None:
     host, (ag, _) = Host(), new_axes_group()
     assert (
         host.CalculateSequencePayloadMax(ag, ComDirection.PLC_TO_ROB, SequenceFlag.PRIMARY_SEQUENCE)
-        == 64 - 18
+        == 64 - 18 - 1  # ST-FIX F63: without the footer
     )
     assert (
-        host.CalculateSequencePayloadMax(ag, ComDirection.ROB_TO_PLC, SequenceFlag.SECONDARY_SEQUENCE) == 59
-    )
+        host.CalculateSequencePayloadMax(ag, ComDirection.ROB_TO_PLC, SequenceFlag.SECONDARY_SEQUENCE) == 0
+    )  # ST-FIX F63: no 2nd sequence configured
     assert host.CalculateSequencePayloadMax(ag, ComDirection.PLC_TO_ROB, SequenceFlag.NO_SEQUENCE) == 0
     host.Telegram.PlcToRob.Sequence[0].Header.PayloadLength = 10
     assert host.CalculateTelegramLengthPlcToRob(ag) == 18 + 4 + 10 + 2

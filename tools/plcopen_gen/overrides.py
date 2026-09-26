@@ -111,6 +111,22 @@ class FieldAdd:
 
 FIELD_ADDS: tuple[FieldAdd, ...] = (
     FieldAdd(
+        "AlarmMessage",
+        "AcrID",
+        ElemRef("UINT"),
+        "Entry in the ACR of the command from which the message originated (0: no command)",
+        "ST-FIX F74: spec 5.5.11 Fig. 5-137",
+        after="MessageCode",
+    ),
+    FieldAdd(
+        "AlarmMessage",
+        "CmdType",
+        ElemRef("UINT"),
+        "Type of the command from which the message originated (0: no command)",
+        "ST-FIX F74: spec 5.5.11 Fig. 5-137",
+        after="AcrID",
+    ),
+    FieldAdd(
         "GroupStopRecvData",
         "AbortedSequence",
         ElemRef("SINT"),
@@ -213,6 +229,140 @@ ENUM_OVERRIDES: tuple[EnumOverride, ...] = (
         "CmdType", "MoveLinearAbsoluteJ", 2109, "F35: spec 6.3.12 Type 2109 (missing in the library)"
     ),
     EnumOverride("CmdType", "SoftSwitchTcp", 7300, "F35: spec Type 7300 (missing in the library)"),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_EMITTERID_EQUALS_LISTENERID",
+        0x8D52,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_EMITTERID_INCOMPATIBLE_ACTION",
+        0x8D53,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_TRIGGER_MODE_UNKNOWN",
+        0x8D54,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_BIT_INDEX_OUT_OF_RANGE",
+        0x8D55,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_LISTENERID_INCOMPATIBLE_TRIGGER",
+        0x8D56,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_TRIGGER_PARAMETER_OUT_OF_RANGE",
+        0x8D57,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_TRIGGER_START_BEHIND_END",
+        0x8D58,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_TRIGGER_ERROR_MODE_UNKNOWN",
+        0x8D59,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_REACTION_MODE_UNKNOWN",
+        0x8D60,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_LOAD_IX_OUT_OF_RANGE",
+        0x8D89,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_LOAD_IY_OUT_OF_RANGE",
+        0x8D90,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_LOAD_IZ_OUT_OF_RANGE",
+        0x8D91,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_LOAD_RX_OUT_OF_RANGE",
+        0x8D92,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_LOAD_RY_OUT_OF_RANGE",
+        0x8D93,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_LOAD_RZ_OUT_OF_RANGE",
+        0x8D94,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_SERVER_LOG_ID_UNKNOWN",
+        0x8D95,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_SERVER_LOG_START_LINE_UNKNOWN",
+        0x8D96,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_SERVER_LOG_CONTEXT_FILTER_UNKNOWN",
+        0x8D97,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_INVALID_PARAM_CIRCMODE_UNKNOWN",
+        0x8D98,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_OPTIONAL_PARAM_EXTERNAL_TCP_NOT_SUPPORTED",
+        0x8E22,
+        "F75: table 7-1 (missing in the library)",
+    ),
+    EnumOverride("RobotLibraryInfoIdEnum", "INFO_SERVER_LOG_OLDEST_OVERWRITTEN", 0x6C70, "F75: table 7-4"),
+    EnumOverride("RobotLibraryInfoIdEnum", "INFO_TRIGGER_PARAMETERS_NOT_USED", 0x6D54, "F75: table 7-4"),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_LIFESIGN_TIMEOUT_0x8004",
+        0x8004,
+        "F75: name with the correct value (alias)",
+    ),
+    EnumOverride(
+        "RobotLibraryErrorIdEnum",
+        "ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8",
+        0x80A8,
+        "F75: name with the correct value (alias)",
+    ),
 )
 
 OVERRIDES: tuple[ConstOverride, ...] = (

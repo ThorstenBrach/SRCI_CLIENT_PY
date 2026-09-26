@@ -14404,6 +14404,16 @@ class AlarmMessage:
     """Severity of message according to Table 5-47: Debug, Info, Warning, Error, Fatal error"""
     MessageCode: int = 0
     """Code of messages"""
+    AcrID: int = 0
+    """
+    Entry in the ACR of the command from which the message originated (0: no command) [Override: ST-
+    FIX F74: spec 5.5.11 Fig. 5-137]
+    """
+    CmdType: int = 0
+    """
+    Type of the command from which the message originated (0: no command) [Override: ST-FIX F74:
+    spec 5.5.11 Fig. 5-137]
+    """
     MessageText: str = ''
     """Static text of message"""
 
@@ -19865,6 +19875,8 @@ AlarmMessage._IEC_FIELDS_ = (
     _iec.IecField('MessageType', _iec.EnumType(_e.MessageType)),
     _iec.IecField('Severity', _iec.EnumType(_e.Severity)),
     _iec.IecField('MessageCode', _iec.DWORD),
+    _iec.IecField('AcrID', _iec.UINT),
+    _iec.IecField('CmdType', _iec.UINT),
     _iec.IecField('MessageText', _iec.StringType(255)),
 )
 ArmConfigParameter._IEC_FIELDS_ = (

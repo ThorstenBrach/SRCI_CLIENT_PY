@@ -258,10 +258,12 @@ class MC_ForceLimitFB(RobotLibraryBaseEnableFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # ST-FIX F69
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.EmitterID = {1}', Para1=SINT_TO_STRING(self.ParCmd.EmitterID))
             return CheckParameterValid
+        # ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL

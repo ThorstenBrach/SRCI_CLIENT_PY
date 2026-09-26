@@ -99,11 +99,25 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | [F53](#f53) | 112 function blocks, `OnExecRun` - `SetTimeout(PT := _timeoutCmd, ...)` is called, but the timer is never evaluated while waiting for the response → no error when a response never arrives (see F52) | 2 | `RobotLibraryBaseFB` |
 | [F54](#f54) | `MC_CreateSplineFB`, `MC_DynamicSplineFB` - loops `FOR _idx := 0 TO SPLINE_DATA_MAX` over `SplineData[1..SPLINE_DATA_MAX]` → access before the array | 2 | `MC_CreateSplineFB`, `MC_DynamicSplineFB` |
 | [F55](#f55) | `MC_CreateSplineFB`, `MC_DynamicSplineFB` `.CreateCommandPayload` - the positions of the spline points are never copied into the command → always 0 sent | 2 | `MC_CreateSplineFB`, `MC_DynamicSplineFB` |
-| [F56](#f56) | `MC_RobotTaskFB.HandleSeqAck` - the Seq number wraps from 254 to **0**; an Ack of 0 equals the Ack of telegrams without new data → the response of that sequence is ignored, the block hangs (after 255 sequences) | 1 | `MC_RobotTaskFB` |
 | [F57](#f57) | `MC_RobotTaskFB.HandleSync*` step 10 - the local change detection compares with `IgnoreTimestamp := FALSE`, but the internal copy holds the timestamp of the RC from the start-up read → every data set counts as changed on the PLC; together with the RC "not in sync" → warning "both sides changed", no synchronisation | 7 | `MC_RobotTaskFB` |
 | [F58](#f58) | `MC_RobotTaskFB.HandleSync*` step 10 - data changed on both sides only sets the warning `WARN_*_SYNC_BOTH_SIDES_CHANGED`, also with a fixed direction (`CLIENT_TO_SERVER` / `SERVER_TO_CLIENT`) → synchronisation stops | 7 | `MC_RobotTaskFB` |
 | [F59](#f59) | `MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional`, `MC_ReadActualPositionCyclicFB.OnExecRun` - the RobotTask writes the **currently used** tool/frame (bytes 36..37 of table 5-89) into `CoordinateSystem`; `ReadActualPositionCyclic` compares it with the requested `ToolNo`/`FrameNo` → as soon as a motion uses another tool the outputs are never updated again (all zero), `Enabled` stays TRUE; the output `CoordinateSystem` is never set | 3 | `MC_ReadActualPositionCyclicFB`, `MC_RobotTaskFB`, data types |
 | [F60](#f60) | `MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - turn numbers of the optional cyclic Cartesian position are decoded/encoded as two's complement nibble (like F3) | 4 | `MC_RobotTaskFB`, hand written |
+| [F61](#f61) | `RobotLibraryBaseFB` (body, `CallBack`, `ParseResponsePayload`) - `Error := ErrorID <> 0` is computed in `OnCall` *before* the parameter check / response evaluation → one cycle `ErrorID ≠ 0` with `Error = FALSE`; with a parameter error `Execute` is TRUE without any of Busy/Done/Error; ACR full (16#8618) leaves `Busy` and `Error` TRUE; GroupJog `Active` and `Error` TRUE; response state ERROR without error code ends the FB without Done and without Error (spec audit B-01…B-05) | 3 | `RobotLibraryBaseFB` |
+| [F62](#f62) | `RobotLibraryBaseFB.ParseResponsePayload` - every response clears `InfoID`/`WarningID`/`ErrorID` (also warnings of the client, e.g. from the parameter check) (B-06) | 1 | `RobotLibraryBaseFB` |
+| [F63](#f63) | `MC_RobotTaskFB`: `HandleSeqAck`, `AxesGroupToTelegram(Sequence)`, `CheckParameterValid`, telegram coding (`CreateSendPayload(Sequence)`, `ParseRecvPayloadSequence`, `CalculateSequencePayloadMax/StartAdr`) - **two telegram sequences do not work**: the RobotTask never finishes the initialization (A-01); the 1st sequence fills the whole telegram (`SEQUENCE_MAX_PAYLOAD_SIZE` unused, A-02); `CalculateSequencePayloadMax(PRIMARY)` not halved, footer not subtracted (A-03); header/ACK of the 2nd sequence only sent/evaluated sometimes (`SequenceCountSend`, A-04); `_fragIdx` not reset per sequence (A-05); receive order not by Ack (A-06); start values (A-07); `NewSEQ[1]` never reset and the whole PLC→RC telegram cleared when sequence 1 gets a new Seq; no check `Com.TwoSequences` vs `UseTwoSequences` (A-08) | 11 | `MC_RobotTaskFB`, hand written |
+| [F64](#f64) | `MC_MoveSplineFB`, `MC_MoveSuperImposedFB`: `OnUpdateStateFlags` - state DONE sets `Done := FALSE` (copy error) → the FB never signals Done, `Execute` TRUE without any status | 2 | `MC_MoveSplineFB`, `MC_MoveSuperImposedFB` |
+| [F65](#f65) | `MC_RobotTaskFB`: `OnCall`, `OnExecRun` step 1, `HandleLifeSign`, `HandleSeqAck` - loss of the initialization always 16#80A2 even if the RC reports the reason in the telegram state (C-01); lifesign timeout of the RC reported as 16#8AAD "connection lost" (C-02); no telegram sequence timeout (C-03) | 5 | `MC_RobotTaskFB` |
+| [F66](#f66) | `MC_RobotTaskFB.HandleInvalidFrames`, body - frames with different lifesign in header and footer are counted but **processed**; the footer is read at the end of the *buffer* instead of the telegram (C-04) | 3 | `MC_RobotTaskFB` |
+| [F67](#f67) | `MC_RobotTaskFB.AxesGroupToTelegramSequence` - remaining space for acyclic data not checked (C-05) | 1 | `MC_RobotTaskFB` |
+| [F68](#f68) | `MC_RobotTaskFB.CheckParameterChanged` - changed optional cyclic configuration during operation → **error** 16#8013 (C-06) | 1 | `MC_RobotTaskFB` |
+| [F69](#f69) | `CheckParameterValid` of the FBs with EmitterID / ListenerID / SequenceFlag - EmitterID −128 / ListenerID < 0 reported as 16#0008; ListenerID not checked against the ProcessingMode (> 0 in trigger modes, 0 otherwise); SequenceFlag not checked against the ProcessingMode (D-01…D-03) | 97 | `MC_ActivateNextCommandFB`, `MC_CallSubprogramFB`, `MC_CollisionDetectionFB`, `MC_ForceLimitFB` (+47) |
+| [F70](#f70) | `CheckParameterValid` of 10 Read FBs, `MC_GroupJogFB` - ProcessingMode / SequenceFlag not allowed → 16#0008; GroupJog Override → 16#8401 (D-04…D-06) | 19 | `MC_GroupJogFB`, `MC_ReadActualForceFB`, `MC_ReadActualPositionFB`, `MC_ReadActualTCPVelocityFB` (+7) |
+| [F71](#f71) | `RobotLibraryBaseExecuteFB/EnableFB.OnExecStart` - input `Priority` never checked (D-08) | 2 | `RobotLibraryBaseEnableFB`, `RobotLibraryBaseExecuteFB` |
+| [F72](#f72) | `MC_CallSubprogramFB.CheckParameterValid` - acyclic data > 190 bytes not rejected (D-09) | 1 | `MC_CallSubprogramFB` |
+| [F73](#f73) | `MC_ReadActualPositionCyclicFB.OnExecRun` - ToolNo/FrameNo −1 ("currently used", 255 in the telegram) never equal to the returned coordinate system → `Enabled` never set, outputs never updated (D-10) | 1 | `MC_ReadActualPositionCyclicFB` |
+| [F74](#f74) | `RobotLibraryBaseFB.OnCall`, `AxesGroupMessageLogFB.AddMessageLog`, `AlarmMessage` - messages of the command only with the severity of the last RC response → client-side errors (parameter check) never in the message buffer; `AcrID`/`CmdType` missing (E-01, E-03) | 3 | `AxesGroupMessageLogFB`, `RobotLibraryBaseFB`, data types |
+| [F75](#f75) | enums `RobotLibraryErrorIdEnum`, `RobotLibraryInfoIdEnum` - IDs of the spec missing (16#8D52…8D60, 8D89…8D98, 8E22, 16#6C70, 6D54); names with a wrong value (`ERR_LIFESIGN_TIMEOUT_0x8005` = 16#8004, `ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8_0x80A8`) (E-05, C-08) | 0 | data types |
 
 ## Generated ST changes
 
@@ -1053,7 +1067,7 @@ _`RobotLibraryBaseEnableFB` / `MC_RobotTaskFB.Reset` - disabling the RobotTask s
           TelegramState.UNDEFINED : ;
           
 @@ -94,6 +98,7 @@
-          SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0xA2, Overwrite := TRUE );
+          SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite := TRUE ); // ST-FIX F65: unknown state (16#A2 is the RI error of the RC)
           ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));
         END_CASE
 +END_IF
@@ -4168,11 +4182,31 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_StopSubprogramFB.CheckParameterValid
 +++ b/MC_StopSubprogramFB.CheckParameterValid
-@@ -116,4 +116,13 @@
-                           Para1       := SINT_TO_STRING(ParCmd.ListenerID));                            
+@@ -142,3 +142,13 @@
+   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
    RETURN;
  END_IF
--                
++
++// ST-FIX F49: ParCmd.SequenceFlag was not checked
++IF ( ( ParCmd.SequenceFlag <> SequenceFlag.NO_SEQUENCE ) AND
++    ( ParCmd.SequenceFlag <> SequenceFlag.PRIMARY_SEQUENCE ) AND
++    ( ParCmd.SequenceFlag <> SequenceFlag.SECONDARY_SEQUENCE ) )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_CollisionDetectionFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_CollisionDetectionFB.CheckParameterValid
++++ b/MC_CollisionDetectionFB.CheckParameterValid
+@@ -209,3 +209,13 @@
+   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
+   RETURN;
+ END_IF
 +
 +// ST-FIX F49: ParCmd.SequenceFlag was not checked
 +IF ( ( ParCmd.SequenceFlag <> SequenceFlag.NO_SEQUENCE ) AND
@@ -4190,11 +4224,10 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_MoveLinearRelativeFB.CheckParameterValid
 +++ b/MC_MoveLinearRelativeFB.CheckParameterValid
-@@ -670,4 +670,12 @@
-     RETURN;
-   END_IF
+@@ -672,3 +672,12 @@
  END_FOR
--                
+ 
+ // ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
 +
 +// ST-FIX F49: ParCmd.ReferenceType was not checked
 +IF ( ( ParCmd.ReferenceType <> ReferenceType.TOOL ) AND
@@ -4211,11 +4244,10 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_MovePickPlaceDirectFB.CheckParameterValid
 +++ b/MC_MovePickPlaceDirectFB.CheckParameterValid
-@@ -942,4 +942,17 @@
-     RETURN;
-   END_IF
+@@ -944,3 +944,17 @@
  END_FOR
--                
+ 
+ // ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
 +
 +// ST-FIX F49: ParCmd.BlendingMode was not checked
 +IF ( ( ParCmd.BlendingMode <> BlendingMode.EXACT_STOP ) AND
@@ -4237,11 +4269,10 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_MovePickPlaceLinearFB.CheckParameterValid
 +++ b/MC_MovePickPlaceLinearFB.CheckParameterValid
-@@ -924,4 +924,17 @@
-     RETURN;
-   END_IF
+@@ -926,3 +926,17 @@
  END_FOR
--                
+ 
+ // ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
 +
 +// ST-FIX F49: ParCmd.BlendingMode was not checked
 +IF ( ( ParCmd.BlendingMode <> BlendingMode.EXACT_STOP ) AND
@@ -4263,11 +4294,10 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_WriteAnalogOutputFB.CheckParameterValid
 +++ b/MC_WriteAnalogOutputFB.CheckParameterValid
-@@ -137,4 +137,12 @@
-                           Para1       := SINT_TO_STRING(ParCmd.ListenerID));
+@@ -157,3 +157,12 @@
+   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
    RETURN;
  END_IF
--                
 +
 +// ST-FIX F49: ParCmd.Unit was not checked
 +IF ( ( ParCmd.Unit <> UnitType.VOLT ) AND
@@ -4284,11 +4314,10 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_CollisionDetectionFB.CheckParameterValid
 +++ b/MC_CollisionDetectionFB.CheckParameterValid
-@@ -183,4 +183,20 @@
-                           Para1       := THRESHOLD_MODE_TO_STRING(ParCmd.UnitLimitAxis));
-   RETURN;                          
+@@ -192,3 +192,20 @@
+   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
+   RETURN;
  END_IF
--                
 +
 +// ST-FIX F49: ParCmd.ProcessingMode was not checked
 +IF ( ( ParCmd.ProcessingMode <> ProcessingMode.BUFFERED ) AND
@@ -4304,27 +4333,6 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
-+  RETURN;
-+END_IF
-```
-
-**MC_CollisionDetectionFB** · `CheckParameterValid` · append
-
-```diff
---- a/MC_CollisionDetectionFB.CheckParameterValid
-+++ b/MC_CollisionDetectionFB.CheckParameterValid
-@@ -200,3 +200,13 @@
-   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
-   RETURN;
- END_IF
-+
-+// ST-FIX F49: ParCmd.SequenceFlag was not checked
-+IF ( ( ParCmd.SequenceFlag <> SequenceFlag.NO_SEQUENCE ) AND
-+    ( ParCmd.SequenceFlag <> SequenceFlag.PRIMARY_SEQUENCE ) AND
-+    ( ParCmd.SequenceFlag <> SequenceFlag.SECONDARY_SEQUENCE ) )
-+THEN
-+  CheckParameterValid := FALSE;
-+  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED, Overwrite := TRUE );
 +  RETURN;
 +END_IF
 ```
@@ -5788,28 +5796,6 @@ _`MC_CreateSplineFB`, `MC_DynamicSplineFB` `.CreateCommandPayload` - the positio
  
 ```
 
-### F56
-
-_`MC_RobotTaskFB.HandleSeqAck` - the Seq number wraps from 254 to **0**; an Ack of 0 equals the Ack of telegrams without new data → the response of that sequence is ignored, the block hangs (after 255 sequences)_
-
-- F56: the Seq number wrapped from 254 to 0; an Ack of 0 equals the Ack of the telegrams without new data -> the response of that sequence was ignored (command lost)
-
-**MC_RobotTaskFB** · `HandleSeqAck` · patch
-
-```diff
---- a/MC_RobotTaskFB.HandleSeqAck
-+++ b/MC_RobotTaskFB.HandleSeqAck
-@@ -16,7 +16,7 @@
- 
-     IF (AxesGroup.State.CurrentSEQ[_idx] >= 255) {warning 'ToDo: Test for Yaskawa'}
-     THEN
--      AxesGroup.State.CurrentSEQ[_idx] := 0;
-+      AxesGroup.State.CurrentSEQ[_idx] := 1; // ST-FIX F56: 0 only on the first exchange (spec 5.6.5.3)
- 		END_IF
-     
-     AxesGroup.State.NewSEQ[_idx] := TRUE;
-```
-
 ### F57
 
 _`MC_RobotTaskFB.HandleSync*` step 10 - the local change detection compares with `IgnoreTimestamp := FALSE`, but the internal copy holds the timestamp of the RC from the start-up read → every data set counts as changed on the PLC; together with the RC "not in sync" → warning "both sides changed", no synchronisation_
@@ -6236,6 +6222,1739 @@ _`MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - t
    
 ```
 
+### F61
+
+_`RobotLibraryBaseFB` (body, `CallBack`, `ParseResponsePayload`) - `Error := ErrorID <> 0` is computed in `OnCall` *before* the parameter check / response evaluation → one cycle `ErrorID ≠ 0` with `Error = FALSE`; with a parameter error `Execute` is TRUE without any of Busy/Done/Error; ACR full (16#8618) leaves `Busy` and `Error` TRUE; GroupJog `Active` and `Error` TRUE; response state ERROR without error code ends the FB without Done and without Error (spec audit B-01…B-05)_
+
+- F61: Error lagged one cycle behind ErrorID; Busy/Active stayed TRUE together with Error
+- F61: outputs changed by a response (ErrorID) must be consistent with Error/Busy at once
+- F61: response state ERROR without error code ended the FB without Done and without Error
+
+**RobotLibraryBaseFB** · `body` · patch
+
+```diff
+--- a/RobotLibraryBaseFB.body
++++ b/RobotLibraryBaseFB.body
+@@ -18,4 +18,11 @@
+ THEN
+   OnOnlineChange(AxesGroup := AxesGroup);
+ END_IF
++// ST-FIX F61: Error follows ErrorID in the same cycle, and with Error the other state outputs
++// are reset (Busy/Active/Done/CommandAborted exclusive, spec table 5-45)
++Error := ErrorID <> RobotLibraryConstants.OK;
++IF ( Error )
++THEN
++  OnUpdateStateFlags( State := CmdMessageState.ERROR );
++END_IF
+           
+```
+
+**RobotLibraryBaseFB** · `CallBack` · patch
+
+```diff
+--- a/RobotLibraryBaseFB.CallBack
++++ b/RobotLibraryBaseFB.CallBack
+@@ -16,4 +16,11 @@
+ 
+ // set flag for response received
+ _responseReceived := TRUE;
++// ST-FIX F61: Error follows ErrorID in the same cycle, and with Error the other state outputs
++// are reset (Busy/Active/Done/CommandAborted exclusive, spec table 5-45)
++Error := ErrorID <> RobotLibraryConstants.OK;
++IF ( Error )
++THEN
++  OnUpdateStateFlags( State := CmdMessageState.ERROR );
++END_IF
+                 
+```
+
+**RobotLibraryBaseFB** · `ParseResponsePayload` · patch
+
+```diff
+--- a/RobotLibraryBaseFB.ParseResponsePayload
++++ b/RobotLibraryBaseFB.ParseResponsePayload
+@@ -26,5 +26,10 @@
+ 
+ END_CASE
+ 
++// ST-FIX F61: state ERROR without error code (or with severity INFO/WARNING) -> 16#8613
++IF ( _rspHeader.State = CmdMessageState.ERROR ) AND ( ErrorID = RobotLibraryConstants.OK )
++THEN
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ROBOT_ERROR_NO_ID, Overwrite := TRUE );
++END_IF
+ ParseResponsePayload := ResponseData.PayloadPtr;
+                 
+```
+
+### F62
+
+_`RobotLibraryBaseFB.ParseResponsePayload` - every response clears `InfoID`/`WarningID`/`ErrorID` (also warnings of the client, e.g. from the parameter check) (B-06)_
+
+- F62: every response cleared InfoID/WarningID/ErrorID (also warnings of the client)
+
+**RobotLibraryBaseFB** · `ParseResponsePayload` · patch
+
+```diff
+--- a/RobotLibraryBaseFB.ParseResponsePayload
++++ b/RobotLibraryBaseFB.ParseResponsePayload
+@@ -1,7 +1,6 @@
+                   // reset message IDs 
+-InfoID    := 0;
+-WarningID := 0;
+-ErrorID   := 0;
++// ST-FIX F62: InfoID/WarningID/ErrorID are held until the falling edge of Execute/Enable
++// (Reset), a response without message must not clear them (spec 5.5.10)
+ 
+ // get State
+ _rspHeader.State                := ResponseData.GetHalfeByte1(IncPayloadPtr := FALSE);
+```
+
+### F63
+
+_`MC_RobotTaskFB`: `HandleSeqAck`, `AxesGroupToTelegram(Sequence)`, `CheckParameterValid`, telegram coding (`CreateSendPayload(Sequence)`, `ParseRecvPayloadSequence`, `CalculateSequencePayloadMax/StartAdr`) - **two telegram sequences do not work**: the RobotTask never finishes the initialization (A-01); the 1st sequence fills the whole telegram (`SEQUENCE_MAX_PAYLOAD_SIZE` unused, A-02); `CalculateSequencePayloadMax(PRIMARY)` not halved, footer not subtracted (A-03); header/ACK of the 2nd sequence only sent/evaluated sometimes (`SequenceCountSend`, A-04); `_fragIdx` not reset per sequence (A-05); receive order not by Ack (A-06); start values (A-07); `NewSEQ[1]` never reset and the whole PLC→RC telegram cleared when sequence 1 gets a new Seq; no check `Com.TwoSequences` vs `UseTwoSequences` (A-08)_
+
+- F63: two telegram sequences did not work (init hung; areas overlapped; 2nd header/ACK lost)
+
+**MC_RobotTaskFB** · `declaration` · variables
+
+```diff
++VAR
++  /// ST-FIX F63: telegram sequence that is handled/filled first (lower Seq/Ack number)
++  _seqSendFirst : DINT;
++  /// ST-FIX F63: loop counter over the telegram sequences in Seq order
++  _seqOrderIdx : DINT;
++  /// ST-FIX F63: distance of two Seq numbers
++  _seqDiff : DINT;
++  /// ST-FIX F63: next Seq number
++  _seqNext : UINT;
++END_VAR
+```
+
+**MC_RobotTaskFB** · `HandleSeqAck` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSeqAck
++++ b/MC_RobotTaskFB.HandleSeqAck
+@@ -1,25 +1,76 @@
+-                  FOR _idx := 0 TO  AxesGroup.State.SequenceCountSend 
++// ST-FIX F63: Seq/Ack of one or two telegram sequences (spec 5.6.5.3, Fig. 5-206 ... 5-208):
++//  - two sequences start with the Seq numbers 0 and 1
++//  - the sequence with the lower Ack is handled first; its next Seq number is the number of the
++//    other sequence + 1 (one common counter, the sequences alternate)
++//  - ST-FIX F56: 254 -> 1, 0 only on the first exchange
++IF ( _parCfg.Com.TwoSequences )
++THEN
++  AxesGroup.State.SequenceCountSend := 1;
++ELSE
++  AxesGroup.State.SequenceCountSend := 0;
++END_IF
++
++IF (NOT Enable)
++THEN
++  AxesGroup.State.CurrentSEQ[0] := 0;
++  AxesGroup.State.CurrentSEQ[1] := DINT_TO_UINT(AxesGroup.State.SequenceCountSend);
++END_IF
++
++FOR _idx := 0 TO AxesGroup.State.SequenceCountSend
+ DO
+   AxesGroup.State.CurrentAck[_idx] := Telegram.RobToPlc.Sequence[_idx].Header.SEQ_ACK;
+-  
+-  IF (NOT Enable)
++END_FOR
++
++  // ST-FIX F63: the sequence with the lower number first (Fig. 5-207/5-208), numbers wrap 254 -> 1
++  _seqSendFirst := 0;
++  IF ( AxesGroup.State.SequenceCountSend = 1 )
+   THEN
+-    AxesGroup.State.CurrentSEQ[0] := 0;
+-    AxesGroup.State.CurrentSEQ[1] := 0;
+-  END_IF  
+-  
+-  // Check Seq/Ack : 
++    _seqDiff := UINT_TO_DINT(AxesGroup.State.CurrentAck[0]) - UINT_TO_DINT(AxesGroup.State.CurrentAck[1]);
++    IF ( _seqDiff < 0 )
++    THEN
++      _seqDiff := _seqDiff + 254;
++    END_IF
++    IF ( _seqDiff > 0 ) AND ( _seqDiff < 127 )
++    THEN
++      _seqSendFirst := 1;
++    END_IF
++  END_IF
++
++FOR _seqOrderIdx := 0 TO AxesGroup.State.SequenceCountSend
++DO
++  IF ( _seqOrderIdx = 0 )
++  THEN
++    _idx := _seqSendFirst;
++  ELSE
++    _idx := 1 - _seqSendFirst;
++  END_IF
++
++  // Check Seq/Ack :
+   // ----------------------
+-  IF ( AxesGroup.State.CurrentAck[_idx] = AxesGroup.State.CurrentSEQ[_idx] ) 
++  IF ( AxesGroup.State.CurrentAck[_idx] = AxesGroup.State.CurrentSEQ[_idx] )
+   THEN
+-    AxesGroup.State.CurrentSEQ[_idx] := MAX(AxesGroup.State.CurrentSEQ[0],AxesGroup.State.CurrentSEQ[1]) +1;
++    _seqNext := AxesGroup.State.CurrentSEQ[AxesGroup.State.SequenceCountSend - _idx] + 1;
++    IF ( _seqNext >= 255 )
++    THEN
++      _seqNext := 1;
++    END_IF
++    AxesGroup.State.CurrentSEQ[_idx] := _seqNext;
++    AxesGroup.State.NewSEQ[_idx]     := TRUE;
++  END_IF
++END_FOR
+ 
+-    IF (AxesGroup.State.CurrentSEQ[_idx] >= 255) {warning 'ToDo: Test for Yaskawa'}
+-    THEN
+-      AxesGroup.State.CurrentSEQ[_idx] := 0;
+-		END_IF
+-    
+-    AxesGroup.State.NewSEQ[_idx] := TRUE;
+-  END_IF  
+-END_FOR
+-                
++// order in which the sequences are filled: lower Seq number first
++// ST-FIX F63: the sequence with the lower number first (Fig. 5-207/5-208), numbers wrap 254 -> 1
++_seqSendFirst := 0;
++IF ( AxesGroup.State.SequenceCountSend = 1 )
++THEN
++  _seqDiff := UINT_TO_DINT(AxesGroup.State.CurrentSEQ[0]) - UINT_TO_DINT(AxesGroup.State.CurrentSEQ[1]);
++  IF ( _seqDiff < 0 )
++  THEN
++    _seqDiff := _seqDiff + 254;
++  END_IF
++  IF ( _seqDiff > 0 ) AND ( _seqDiff < 127 )
++  THEN
++    _seqSendFirst := 1;
++  END_IF
++END_IF
+```
+
+**MC_RobotTaskFB** · `AxesGroupToTelegram` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupToTelegram
++++ b/MC_RobotTaskFB.AxesGroupToTelegram
+@@ -1,8 +1,5 @@
+-                  IF ( AxesGroup.State.NewSEQ[0]) {warning 'Handle 2nd sequence'}
+-THEN
+-  // delete old telegram data 
+-  SysDepMemSet(pDest := ADR(Telegram.PlcToRob), Value := 0 , DataLen := SIZEOF(Telegram.PlcToRob));
+-END_IF
++                  // ST-FIX F63: the data of a telegram sequence is cleared in AxesGroupToTelegramSequence only
++// when it gets a new Seq number; a sequence that is not acknowledged yet is sent unchanged
+   
+ AxesGroupToTelegramHeader        (AxesGroup := AxesGroup);
+ AxesGroupToTelegramCyclic        (AxesGroup := AxesGroup);
+```
+
+**MC_RobotTaskFB** · `AxesGroupToTelegramSequence` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupToTelegramSequence
++++ b/MC_RobotTaskFB.AxesGroupToTelegramSequence
+@@ -1,16 +1,8 @@
+                   // Check 2nd sequence active ? 
+-IF ( _parCfg.Com.TwoSequences )
++IF ( _parCfg.Com.TwoSequences ) // ST-FIX F63: SEQUENCE_MAX_PAYLOAD_SIZE per sequence, see below
+ THEN
+   // inc sequence counter
+  _seqCount := _seqCount + 1;
+-  
+-  SEQUENCE_MAX_PAYLOAD_SIZE := CalculateSequencePayloadMax(AxesGroup := AxesGroup, 
+-                                                           Direction := ComDirection.PLC_TO_ROB, 
+-                                                           Sequence  := SequenceFlag.SECONDARY_SEQUENCE ) - FOOTER_SIZE;
+-ELSE
+-  SEQUENCE_MAX_PAYLOAD_SIZE := CalculateSequencePayloadMax(AxesGroup := AxesGroup, 
+-                                                           Direction := ComDirection.PLC_TO_ROB, 
+-                                                           Sequence  := SequenceFlag.PRIMARY_SEQUENCE   ) - FOOTER_SIZE;
+ END_IF   
+ 
+ 
+```
+
+**MC_RobotTaskFB** · `AxesGroupToTelegramSequence` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupToTelegramSequence
++++ b/MC_RobotTaskFB.AxesGroupToTelegramSequence
+@@ -6,8 +6,15 @@
+ END_IF   
+ 
+ 
+-FOR _seqIdx := 0 TO _seqCount
++FOR _seqOrderIdx := 0 TO _seqCount
+ DO
++  // ST-FIX F63: fill the sequence with the lower Seq number first (it is processed first)
++  IF ( _seqOrderIdx = 0 )
++  THEN
++    _seqIdx := _seqSendFirst;
++  ELSE
++    _seqIdx := 1 - _seqSendFirst;
++  END_IF
+   // set current SEQ / ACk index
+   Telegram.PlcToRob.Sequence[_seqIdx].Header.SEQ_ACK := AxesGroup.State.CurrentSEQ[_seqIdx];
+ 
+```
+
+**MC_RobotTaskFB** · `AxesGroupToTelegramSequence` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupToTelegramSequence
++++ b/MC_RobotTaskFB.AxesGroupToTelegramSequence
+@@ -22,7 +22,24 @@
+   IF ( AxesGroup.State.NewSEQ[_seqIdx] ) 
+   THEN
+     // only reset counters in case of new telegram to send  
+-    AxesGroup.State.SequenceCountSend := 0;
++    // ST-FIX F63: each telegram sequence has its own data area (Fig. 5-205) and starts empty
++    IF ( _seqIdx = PRIMARY_SEQUENCE )
++    THEN
++      SEQUENCE_MAX_PAYLOAD_SIZE := CalculateSequencePayloadMax(AxesGroup := AxesGroup,
++                                                               Direction := ComDirection.PLC_TO_ROB,
++                                                               Sequence  := SequenceFlag.PRIMARY_SEQUENCE);
++    ELSE
++      SEQUENCE_MAX_PAYLOAD_SIZE := CalculateSequencePayloadMax(AxesGroup := AxesGroup,
++                                                               Direction := ComDirection.PLC_TO_ROB,
++                                                               Sequence  := SequenceFlag.SECONDARY_SEQUENCE);
++    END_IF
++    Telegram.PlcToRob.Sequence[_seqIdx].Header.PayloadLength := 0;
++    FOR _idx := 0 TO RobotLibraryParameter.FRAGMENT_MAX
++    DO
++      Telegram.PlcToRob.Sequence[_seqIdx].Fragment[_idx].Header.PayloadLength := 0;
++    END_FOR
++   _fragIdx := 0;
++   _listIdx := 1;
+     AxesGroup.State.FragmentCountSend[_seqIdx] := 0;
+     
+     // calc current telegram payload length
+```
+
+**MC_RobotTaskFB** · `AxesGroupToTelegramSequence` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupToTelegramSequence
++++ b/MC_RobotTaskFB.AxesGroupToTelegramSequence
+@@ -43,7 +43,7 @@
+     AxesGroup.State.FragmentCountSend[_seqIdx] := 0;
+     
+     // calc current telegram payload length
+-   _telegramLengthCurrent := CalculateTelegramLengthPlcToRob(AxesGroup := AxesGroup);
++   _telegramLengthCurrent := 4 + Telegram.PlcToRob.Sequence[_seqIdx].Header.PayloadLength; // ST-FIX F63: sequence header + payload
+     
+     // Bedingung anpassen und TWO_SEQUENCES berücksichtigen
+     WHILE (( _parCfg.Com.TelegramLengthPlcToRob - _telegramLengthCurrent ) >= FRAGMENT_HEADER_SIZE + MIN_PAYLOAD_SIZE ) 
+@@ -124,7 +124,7 @@
+             END_IF 
+     
+             // calc current telegram payload length
+-           _telegramLengthCurrent := CalculateTelegramLengthPlcToRob(AxesGroup := AxesGroup);
++           _telegramLengthCurrent := 4 + Telegram.PlcToRob.Sequence[_seqIdx].Header.PayloadLength; // ST-FIX F63: sequence header + payload
+       
+             // check limit reached ?
+             IF ( _telegramLengthCurrent >= _parCfg.Com.TelegramLengthPlcToRob) 
+```
+
+**MC_RobotTaskFB** · `AxesGroupToTelegramSequence` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupToTelegramSequence
++++ b/MC_RobotTaskFB.AxesGroupToTelegramSequence
+@@ -46,7 +46,7 @@
+    _telegramLengthCurrent := 4 + Telegram.PlcToRob.Sequence[_seqIdx].Header.PayloadLength; // ST-FIX F63: sequence header + payload
+     
+     // Bedingung anpassen und TWO_SEQUENCES berücksichtigen
+-    WHILE (( _parCfg.Com.TelegramLengthPlcToRob - _telegramLengthCurrent ) >= FRAGMENT_HEADER_SIZE + MIN_PAYLOAD_SIZE ) 
++    WHILE ( _telegramLengthCurrent + FRAGMENT_HEADER_SIZE + MIN_PAYLOAD_SIZE <= SEQUENCE_MAX_PAYLOAD_SIZE ) // ST-FIX F63 
+     DO
+       // Check command in Execution-Order-List available ?
+       IF ( AxesGroup.Acyclic.ActiveCommandRegister.ExecutionOrderList[_listIdx] > EMPTY_EOL_ENTRY)
+```
+
+**MC_RobotTaskFB** · `AxesGroupToTelegramSequence` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupToTelegramSequence
++++ b/MC_RobotTaskFB.AxesGroupToTelegramSequence
+@@ -127,7 +127,7 @@
+            _telegramLengthCurrent := 4 + Telegram.PlcToRob.Sequence[_seqIdx].Header.PayloadLength; // ST-FIX F63: sequence header + payload
+       
+             // check limit reached ?
+-            IF ( _telegramLengthCurrent >= _parCfg.Com.TelegramLengthPlcToRob) 
++            IF ( _telegramLengthCurrent >= SEQUENCE_MAX_PAYLOAD_SIZE (* ST-FIX F63 *)) 
+             THEN  
+               EXIT; // -> abort for loop 
+             END_IF  
+@@ -154,7 +154,7 @@
+      _fragIdx := _fragIdx + 1;
+   
+       // check abort conditions
+-      IF (( _telegramLengthCurrent                                                >= _parCfg.Com.TelegramLengthPlcToRob  ) OR  // Payload limit reached 
++      IF (( _telegramLengthCurrent                                                >= SEQUENCE_MAX_PAYLOAD_SIZE (* ST-FIX F63 *)  ) OR  // Payload limit reached 
+           ( _fragIdx                                                              >=  RobotLibraryParameter.FRAGMENT_MAX ) OR  // Max fragment limit reached
+           (  AxesGroup.Acyclic.ActiveCommandRegister.ExecutionOrderList[_listIdx]  =  EMPTY_EOL_ENTRY                    ))    // No entry in ExecutionOrderList left
+       THEN
+```
+
+**MC_RobotTaskFB** · `AxesGroupToTelegramSequence` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupToTelegramSequence
++++ b/MC_RobotTaskFB.AxesGroupToTelegramSequence
+@@ -162,7 +162,7 @@
+       END_IF         
+     END_WHILE  
+     
+-    AxesGroup.State.SequenceCountSend          := _seqIdx;
++    AxesGroup.State.SequenceCountSend          := _seqCount; // ST-FIX F63
+     AxesGroup.State.FragmentCountSend[_seqIdx] := _fragIdx;
+     
+   END_IF  
+```
+
+**MC_RobotTaskFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_RobotTaskFB.CheckParameterValid
++++ b/MC_RobotTaskFB.CheckParameterValid
+@@ -79,6 +79,19 @@
+                           Para1       := UINT_TO_STRING(ParCfg.Com.TelegramLengthRobToPlc));
+   // no further validation                          
+   RETURN;                          
++END_IF
++// ST-FIX F63: two telegram sequences must be activated in both directions and for the layout
++IF ( ParCfg.Plc.OptionalCyclic.UseTwoSequences <> ParCfg.Rob.OptionalCyclic.UseTwoSequences ) OR
++   ( ParCfg.Plc.OptionalCyclic.UseTwoSequences <> ParCfg.Com.TwoSequences                  )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TELEGRAM_NUMBER_INVALID_0x80AB, Overwrite := TRUE );
++  CreateLogMessage( Timestamp   := SystemTime,
++                    MessageType := MessageType.CMD,
++                    Severity    := Severity.ERROR,
++                    MessageCode := 0,
++                    MessageText := 'TwoSequences must be set in Com and in Plc/Rob.OptionalCyclic');
++  RETURN;
+ END_IF
+ // EndRegion }}}
+ 
+```
+
+### F64
+
+_`MC_MoveSplineFB`, `MC_MoveSuperImposedFB`: `OnUpdateStateFlags` - state DONE sets `Done := FALSE` (copy error) → the FB never signals Done, `Execute` TRUE without any status_
+
+- F64: state DONE reset Done instead of setting it -> the FB never signalled Done
+
+**MC_MoveSplineFB** · `OnUpdateStateFlags` · patch
+
+```diff
+--- a/MC_MoveSplineFB.OnUpdateStateFlags
++++ b/MC_MoveSplineFB.OnUpdateStateFlags
+@@ -21,7 +21,7 @@
+   // Requested for abort
+   CmdMessageState.ABORT_REQUEST       :;
+   // Successfully completed
+-  CmdMessageState.DONE                : Done               := FALSE;
++  CmdMessageState.DONE                : Done               := TRUE; // ST-FIX F64
+                                         Busy               := FALSE;
+   // Aborted before completion
+   CmdMessageState.ABORTED             : CommandAborted     := TRUE;
+```
+
+**MC_MoveSuperImposedFB** · `OnUpdateStateFlags` · patch
+
+```diff
+--- a/MC_MoveSuperImposedFB.OnUpdateStateFlags
++++ b/MC_MoveSuperImposedFB.OnUpdateStateFlags
+@@ -21,7 +21,7 @@
+   // Requested for abort
+   CmdMessageState.ABORT_REQUEST       :;
+   // Successfully completed
+-  CmdMessageState.DONE                : Done               := FALSE;
++  CmdMessageState.DONE                : Done               := TRUE; // ST-FIX F64
+                                         Busy               := FALSE;
+   // Aborted before completion
+   CmdMessageState.ABORTED             : Busy               := FALSE;
+```
+
+### F65
+
+_`MC_RobotTaskFB`: `OnCall`, `OnExecRun` step 1, `HandleLifeSign`, `HandleSeqAck` - loss of the initialization always 16#80A2 even if the RC reports the reason in the telegram state (C-01); lifesign timeout of the RC reported as 16#8AAD "connection lost" (C-02); no telegram sequence timeout (C-03)_
+
+- F65: loss of the initialization always 16#80A2, lifesign 16#8AAD, no sequence timeout
+
+**MC_RobotTaskFB** · `declaration` · variables
+
+```diff
++VAR
++  /// ST-FIX F65: telegram sequence timeout (4 x LifeSignTimeOut without new Seq number)
++  _seqAckTimeout : TON;
++  /// ST-FIX F66: lifesign of header and footer differ -> frame is not processed
++  _frameInvalid : BOOL;
++END_VAR
+```
+
+**MC_RobotTaskFB** · `OnCall` · patch
+
+```diff
+--- a/MC_RobotTaskFB.OnCall
++++ b/MC_RobotTaskFB.OnCall
+@@ -31,7 +31,19 @@
+   // Reset Synchronized flag
+   Synchronized := FALSE;
+   // Set error 
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite := TRUE );
++  // ST-FIX F65: reason of the loss of the initialization (table 7-2): RI error of the RC in the
++  // telegram state (16#A1..16#AD), interface reset by the RC (16#80A7) or unknown (16#80A2)
++  IF (( AxesGroup.Cyclic.RobToPlc.TelegramState >= TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE ) AND
++      ( AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_173_SERVER_CONNECTION_LOST                   ))
++  THEN
++    SetError( ErrorID := AxesGroup.Cyclic.RobToPlc.TelegramState, Overwrite := TRUE );
++  ELSIF (( AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.READY_FOR_INITIALIZATION ) OR
++         ( AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.READY_TO_RESUME          ))
++  THEN
++    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INTERFACE_WAS_RESET_AFTER_INIT_0x80A7, Overwrite := TRUE );
++  ELSE
++    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite := TRUE );
++  END_IF
+ END_IF
+ 
+ 
+```
+
+**MC_RobotTaskFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_RobotTaskFB.OnExecRun
++++ b/MC_RobotTaskFB.OnExecRun
+@@ -87,7 +87,7 @@
+ 
+        ELSE
+          // TelegrammState in error          
+-         SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0xA2, Overwrite := TRUE );
++         SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite := TRUE ); // ST-FIX F65: unknown state (16#A2 is the RI error of the RC)
+          ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));
+        END_CASE
+ 
+```
+
+**MC_RobotTaskFB** · `HandleLifeSign` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleLifeSign
++++ b/MC_RobotTaskFB.HandleLifeSign
+@@ -25,7 +25,7 @@
+   Synchronized := FALSE;
+   
+   // Set error 
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_CONNECTION_LOST, Overwrite := TRUE );  
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LIFESIGN_TIMEOUT_0x80A5 (* ST-FIX F65: lifesign timeout, table 7-2 *), Overwrite := TRUE );  
+   // Create log entry
+   CreateLogMessage ( Timestamp   := SystemTime,
+                      MessageType := MessageType.CMD,
+@@ -35,7 +35,7 @@
+ END_IF
+ 
+ // Reset connection lost error
+-IF ( NOT Enable ) AND ( _aliveBit ) AND ( ErrorID = RobotLibraryErrorIdEnum.ERR_CONNECTION_LOST )
++IF ( NOT Enable ) AND ( _aliveBit ) AND ( ErrorID = RobotLibraryErrorIdEnum.ERR_LIFESIGN_TIMEOUT_0x80A5 (* ST-FIX F65: lifesign timeout, table 7-2 *) )
+ THEN
+   ErrorID := 0;
+ END_IF
+```
+
+**MC_RobotTaskFB** · `HandleSeqAck` · append
+
+```diff
+--- a/MC_RobotTaskFB.HandleSeqAck
++++ b/MC_RobotTaskFB.HandleSeqAck
+@@ -74,3 +74,19 @@
+     _seqSendFirst := 1;
+   END_IF
+ END_IF
++
++// ST-FIX F65: telegram sequence timeout (spec 5.6.5.3/5.6.6.2: no new Seq number for
++// 4 x LifeSignTimeOut while initialized) -> 16#80A8, reinitialization required
++_seqAckTimeout( IN := Initialized AND NOT ( AxesGroup.State.NewSEQ[0] OR AxesGroup.State.NewSEQ[1] ),
++                PT := 4 * ParCfg.Com.LifeSignTimeOut + ParCfg.Plc.CycleTime );
++IF ( _seqAckTimeout.Q )
++THEN
++  Initialized  := FALSE;
++  Synchronized := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8_0x80A8, Overwrite := TRUE );
++  CreateLogMessage ( Timestamp   := SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.FATAL_ERROR,
++                     MessageCode := 0,
++                     MessageText := 'Telegram sequence timeout -> Reinitialization required !');
++END_IF
+```
+
+### F66
+
+_`MC_RobotTaskFB.HandleInvalidFrames`, body - frames with different lifesign in header and footer are counted but **processed**; the footer is read at the end of the *buffer* instead of the telegram (C-04)_
+
+- F66: frames with different lifesign in header and footer were processed; footer read at the end of the buffer
+
+**MC_RobotTaskFB** · `HandleInvalidFrames` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleInvalidFrames
++++ b/MC_RobotTaskFB.HandleInvalidFrames
+@@ -2,7 +2,8 @@
+ THEN
+   // Get lifesign values
+  _lifeSignHeader := GetHalfeByteHi( RobotInData[ROBOT_IN_DATA_MIN + 1]);
+- _lifeSignFooter := GetHalfeByteHi( RobotInData[ROBOT_IN_DATA_MAX + 0]);
++ _lifeSignFooter := GetHalfeByteHi( RobotInData[MIN(ROBOT_IN_DATA_MIN + _parCfg.Com.TelegramLengthRobToPlc - 1,
++                                                     ROBOT_IN_DATA_MAX)]); // ST-FIX F66: last byte of the telegram
+ END_IF
+ 
+ // Timer for invalid frame(s) message
+```
+
+**MC_RobotTaskFB** · `HandleInvalidFrames` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleInvalidFrames
++++ b/MC_RobotTaskFB.HandleInvalidFrames
+@@ -11,7 +11,9 @@
+ 
+ // Check Frame is valid : 
+ // ----------------------
+-IF ( _lifeSignHeader <> _lifeSignFooter )   
++// ST-FIX F66: an invalid frame is counted and not processed (spec 5.6.6.2)
++_frameInvalid := ( _lifeSignHeader <> _lifeSignFooter );
++IF ( _frameInvalid )
+ THEN
+   AxesGroup.State.InvalidFrames := AxesGroup.State.InvalidFrames + 1;
+ END_IF
+```
+
+**MC_RobotTaskFB** · `body` · patch
+
+```diff
+--- a/MC_RobotTaskFB.body
++++ b/MC_RobotTaskFB.body
+@@ -41,7 +41,10 @@
+ AxesGroupToTelegram          ( AxesGroup         := AxesGroup );
+ 
+ CreateSendPayload            ( AxesGroup         := AxesGroup, RobotOutData := RobotOutData );
+-ParseRecvPayload             ( AxesGroup         := AxesGroup, RobotInData  := RobotInData); 
++IF ( NOT _frameInvalid ) // ST-FIX F66
++THEN
++  ParseRecvPayload             ( AxesGroup         := AxesGroup, RobotInData  := RobotInData);
++END_IF 
+ 
+ AxesGroupFromTelegram        ( AxesGroup         := AxesGroup);
+ 
+```
+
+### F67
+
+_`MC_RobotTaskFB.AxesGroupToTelegramSequence` - remaining space for acyclic data not checked (C-05)_
+
+- F67: no check of the remaining space for acyclic data (spec 6.1.1)
+
+**MC_RobotTaskFB** · `AxesGroupToTelegramSequence` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupToTelegramSequence
++++ b/MC_RobotTaskFB.AxesGroupToTelegramSequence
+@@ -1,4 +1,18 @@
+                   // Check 2nd sequence active ? 
++// ST-FIX F67: remaining space for acyclic data at least 1 byte behind the sequence header
++IF ( CalculateSequencePayloadMax(AxesGroup := AxesGroup, Direction := ComDirection.PLC_TO_ROB,
++                                 Sequence  := SequenceFlag.PRIMARY_SEQUENCE) < 4 + 1 )
++THEN
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_PLC_TO_ROB, Overwrite := FALSE );
++  RETURN;
++END_IF
++IF ( CalculateSequencePayloadMax(AxesGroup := AxesGroup, Direction := ComDirection.ROB_TO_PLC,
++                                 Sequence  := SequenceFlag.PRIMARY_SEQUENCE) < 4 + 1 )
++THEN
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_ROB_TO_PLC, Overwrite := FALSE );
++  RETURN;
++END_IF
++
+ IF ( _parCfg.Com.TwoSequences ) // ST-FIX F63: SEQUENCE_MAX_PAYLOAD_SIZE per sequence, see below
+ THEN
+   // inc sequence counter
+```
+
+### F68
+
+_`MC_RobotTaskFB.CheckParameterChanged` - changed optional cyclic configuration during operation → **error** 16#8013 (C-06)_
+
+- F68: changed telegram number during operation is an error, spec 6.1.1: warning 16#7003
+
+**MC_RobotTaskFB** · `CheckParameterChanged` · patch
+
+```diff
+--- a/MC_RobotTaskFB.CheckParameterChanged
++++ b/MC_RobotTaskFB.CheckParameterChanged
+@@ -141,12 +141,12 @@
+ IF ( PlcOptionalCyclicToUint(_parCfg.Plc.OptionalCyclic) <> PlcOptionalCyclicToUint(ParCfg.Plc.OptionalCyclic ))
+ THEN
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TELEGRAM_NUMBER_CHANGED_AFTER_INIT, Overwrite := TRUE );
++  SetWarning( WarningID := RobotLibraryWarningIdEnum.WARN_TELEGRAM_NO_CHANGED_DURING_OPERATION, Overwrite := TRUE ); // ST-FIX F68
+    
+   // Create log entry
+   CreateLogMessagePara2( Timestamp   := SystemTime,
+                          MessageType := MessageType.CMD,
+-                         Severity    := Severity.ERROR,
++                         Severity    := Severity.WARNING,
+                          MessageCode := 0,
+                          MessageText := 'ParCfg.Plc.OptionalCyclic changed after initialization from {1} to {2} -> Reinitialize by disabling and enabling the RobotTask',
+                          Para1       := WORD_TO_STRING_BIN(PlcOptionalCyclicToUint(_parCfg.Plc.OptionalCyclic)),
+@@ -158,12 +158,12 @@
+ IF ( RobOptionalCyclicToUint(_parCfg.Rob.OptionalCyclic) <> RobOptionalCyclicToUint(ParCfg.Rob.OptionalCyclic ))
+ THEN
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TELEGRAM_NUMBER_CHANGED_AFTER_INIT, Overwrite := TRUE );
++  SetWarning( WarningID := RobotLibraryWarningIdEnum.WARN_TELEGRAM_NO_CHANGED_DURING_OPERATION, Overwrite := TRUE ); // ST-FIX F68
+    
+   // Create log entry
+   CreateLogMessagePara2( Timestamp   := SystemTime,
+                          MessageType := MessageType.CMD,
+-                         Severity    := Severity.ERROR,
++                         Severity    := Severity.WARNING,
+                          MessageCode := 0,
+                          MessageText := 'ParCfg.Rob.OptionalCyclic changed after initialization from {1} to {2} -> Reinitialize by disabling and enabling the RobotTask',
+                          Para1       := WORD_TO_STRING_BIN(RobOptionalCyclicToUint(_parCfg.Rob.OptionalCyclic)),
+```
+
+### F69
+
+_`CheckParameterValid` of the FBs with EmitterID / ListenerID / SequenceFlag - EmitterID −128 / ListenerID < 0 reported as 16#0008; ListenerID not checked against the ProcessingMode (> 0 in trigger modes, 0 otherwise); SequenceFlag not checked against the ProcessingMode (D-01…D-03)_
+
+- F69: EmitterID/ListenerID/SequenceFlag were not checked against range and ProcessingMode
+
+**MC_CollisionDetectionFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_CollisionDetectionFB.CheckParameterValid
++++ b/MC_CollisionDetectionFB.CheckParameterValid
+@@ -38,7 +38,8 @@
+ END_IF
+ 
+ // Check SequenceFlag valid ? 
+-IF (( SequenceFlag <> SequenceFlagEnum.PRIMARY_SEQUENCE   ) AND
++IF (( SequenceFlag <> SequenceFlagEnum.NO_SEQUENCE        ) AND // ST-FIX F69: default with Parallel
++    ( SequenceFlag <> SequenceFlagEnum.PRIMARY_SEQUENCE   ) AND
+     ( SequenceFlag <> SequenceFlagEnum.SECONDARY_SEQUENCE ))
+ THEN
+   // Parameter not valid
+```
+
+**MC_ForceLimitFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ForceLimitFB.CheckParameterValid
++++ b/MC_ForceLimitFB.CheckParameterValid
+@@ -196,7 +196,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED (* ST-FIX F69 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+**MC_SetTriggerRegisterFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_SetTriggerRegisterFB.CheckParameterValid
++++ b/MC_SetTriggerRegisterFB.CheckParameterValid
+@@ -167,7 +167,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED (* ST-FIX F69 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+**MC_SetTriggerErrorFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_SetTriggerErrorFB.CheckParameterValid
++++ b/MC_SetTriggerErrorFB.CheckParameterValid
+@@ -118,7 +118,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED (* ST-FIX F69 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+Same change (same `-`/`+` lines) in: `MC_SetTriggerLimitFB`, `MC_SetTriggerUserFB`
+
+**MC_MoveLinearAbsoluteFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveLinearAbsoluteFB.CheckParameterValid
++++ b/MC_MoveLinearAbsoluteFB.CheckParameterValid
+@@ -657,7 +657,7 @@
+     // Parameter not valid
+     CheckParameterValid := FALSE;
+     // Set error
+-    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED (* ST-FIX F69 *), Overwrite := TRUE );
+     // Create log entry
+     CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
+                             MessageType := MessageType.CMD,
+```
+
+**MC_MoveDirectAbsoluteFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveDirectAbsoluteFB.CheckParameterValid
++++ b/MC_MoveDirectAbsoluteFB.CheckParameterValid
+@@ -635,7 +635,7 @@
+     // Parameter not valid
+     CheckParameterValid := FALSE;
+     // Set error
+-    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED (* ST-FIX F69 *), Overwrite := TRUE );
+     // Create log entry
+     CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
+                             MessageType := MessageType.CMD,
+```
+
+**MC_MoveAxesAbsoluteFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveAxesAbsoluteFB.CheckParameterValid
++++ b/MC_MoveAxesAbsoluteFB.CheckParameterValid
+@@ -454,7 +454,7 @@
+     // Parameter not valid
+     CheckParameterValid := FALSE;
+     // Set error
+-    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED (* ST-FIX F69 *), Overwrite := TRUE );
+     // Create log entry
+     CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
+                             MessageType := MessageType.CMD,
+```
+
+Same change (same `-`/`+` lines) in: `MC_MoveDepartDirectFB`, `MC_MoveLinearRelativeFB`, `MC_MoveApproachLinearFB`, `MC_MoveApproachDirectFB`, `MC_MoveDirectRelativeFB`, `MC_MoveDepartLinearFB`, `MC_MoveCircularRelativeFB`, `MC_MoveCircularAbsoluteFB`, `MC_MoveAxesRelativeFB`, `MC_MoveLinearOffsetFB`, `MC_MoveDirectOffsetFB`, `MC_MoveLinearAbsoluteJFB`, `MC_MovePickPlaceDirectFB`, `MC_MovePickPlaceLinearFB`
+
+**MC_SyncToConveyorFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_SyncToConveyorFB.CheckParameterValid
++++ b/MC_SyncToConveyorFB.CheckParameterValid
+@@ -133,7 +133,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_POSITIVE (* ST-FIX F69 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+**MC_RedefineTrackingPosFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_RedefineTrackingPosFB.CheckParameterValid
++++ b/MC_RedefineTrackingPosFB.CheckParameterValid
+@@ -172,7 +172,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_POSITIVE (* ST-FIX F69 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+**MC_MoveSuperImposedFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveSuperImposedFB.CheckParameterValid
++++ b/MC_MoveSuperImposedFB.CheckParameterValid
+@@ -500,7 +500,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_POSITIVE (* ST-FIX F69 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutputFB`, `MC_WriteDigitalOutputsFB`, `MC_WriteIntegersFB`, `MC_WriteRealsFB`, `MC_WriteSystemVariableFB`, `MC_ReadActualTCPVelocityFB`, `MC_ReadSystemVariableFB`, `MC_ReadDigitalOutputsFB`, `MC_ReadAnalogInputFB`, `MC_ReadActualPositionFB`, `MC_ReadIntegersFB`, `MC_ReadDigitalInputsFB`, `MC_ReadRealsFB`, `MC_SetTriggerRegisterFB`, `MC_WaitForTriggerFB`, `MC_SetTriggerErrorFB`, `MC_ReactAtTriggerFB`, `MC_SetTriggerLimitFB`, `MC_SetTriggerMotionFB`
+
+**MC_ActivateNextCommandFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_ActivateNextCommandFB.CheckParameterValid
++++ b/MC_ActivateNextCommandFB.CheckParameterValid
+@@ -58,5 +58,16 @@
+   RETURN;
+ END_IF
+ 
+-
+-                
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_CallSubprogramFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_CallSubprogramFB.CheckParameterValid
++++ b/MC_CallSubprogramFB.CheckParameterValid
+@@ -124,4 +124,23 @@
+     RETURN;                          
+   END_IF
+ END_FOR
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_ReadActualPositionFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_ReadActualPositionFB.CheckParameterValid
++++ b/MC_ReadActualPositionFB.CheckParameterValid
+@@ -138,4 +138,23 @@
+                           Para1       :=  SINT_TO_STRING(ParCmd.ListenerID));
+   RETURN;                          
+ END_IF
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_ReadActualTCPVelocityFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_ReadActualTCPVelocityFB.CheckParameterValid
++++ b/MC_ReadActualTCPVelocityFB.CheckParameterValid
+@@ -137,4 +137,23 @@
+                           Para1       :=  SINT_TO_STRING(ParCmd.ListenerID));
+   RETURN;                          
+ END_IF
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInputsFB`, `MC_ReadDigitalOutputsFB`, `MC_ReadIntegersFB`, `MC_ReadRealsFB`, `MC_ReadSystemVariableFB`, `MC_WaitForTriggerFB`, `MC_WriteAnalogOutputFB`, `MC_WriteDigitalOutputsFB`, `MC_WriteIntegersFB`, `MC_WriteRealsFB`, `MC_WriteSystemVariableFB`
+
+**MC_CollisionDetectionFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_CollisionDetectionFB.CheckParameterValid
++++ b/MC_CollisionDetectionFB.CheckParameterValid
+@@ -184,4 +184,11 @@
+                           Para1       := THRESHOLD_MODE_TO_STRING(ParCmd.UnitLimitAxis));
+   RETURN;                          
+ END_IF
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_LoadMeasurementSequentialFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_LoadMeasurementSequentialFB.CheckParameterValid
++++ b/MC_LoadMeasurementSequentialFB.CheckParameterValid
+@@ -98,4 +98,11 @@
+                           Para1       := VALID_REAL_TO_STRING(ParCmd.Mass));
+   RETURN;                          
+ END_IF
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_WriteLoadDataFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_WriteLoadDataFB.CheckParameterValid
++++ b/MC_WriteLoadDataFB.CheckParameterValid
+@@ -274,4 +274,11 @@
+                           Para1       := VALID_REAL_TO_STRING(ParCmd.LoadData.IZ));
+   RETURN;                          
+ END_IF
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+Same change (same `-`/`+` lines) in: `MC_WriteToolDataFB`
+
+**MC_ForceLimitFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_ForceLimitFB.CheckParameterValid
++++ b/MC_ForceLimitFB.CheckParameterValid
+@@ -207,5 +207,4 @@
+   RETURN;                          
+ END_IF
+ 
+-
+-                
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
+```
+
+**MC_MoveApproachDirectFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_MoveApproachDirectFB.CheckParameterValid
++++ b/MC_MoveApproachDirectFB.CheckParameterValid
+@@ -839,4 +839,5 @@
+     RETURN;
+   END_IF
+ END_FOR
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
+```
+
+**MC_MoveApproachLinearFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_MoveApproachLinearFB.CheckParameterValid
++++ b/MC_MoveApproachLinearFB.CheckParameterValid
+@@ -839,4 +839,5 @@
+     RETURN;
+   END_IF
+ END_FOR
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
+```
+
+**MC_MoveAxesAbsoluteFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_MoveAxesAbsoluteFB.CheckParameterValid
++++ b/MC_MoveAxesAbsoluteFB.CheckParameterValid
+@@ -467,4 +467,5 @@
+     RETURN;
+   END_IF
+ END_FOR
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
+```
+
+Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAbsoluteFB`, `MC_MoveCircularRelativeFB`, `MC_MoveDepartDirectFB`, `MC_MoveDepartLinearFB`, `MC_MoveDirectAbsoluteFB`, `MC_MoveDirectOffsetFB`, `MC_MoveDirectRelativeFB`, `MC_MoveLinearAbsoluteFB`, `MC_MoveLinearAbsoluteJFB`, `MC_MoveLinearOffsetFB`, `MC_MoveLinearRelativeFB`, `MC_MovePickPlaceDirectFB`, `MC_MovePickPlaceLinearFB`, `MC_SyncToConveyorFB`, `MC_UnitMeasurementFB`
+
+**MC_MoveSuperImposedFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_MoveSuperImposedFB.CheckParameterValid
++++ b/MC_MoveSuperImposedFB.CheckParameterValid
+@@ -511,4 +511,22 @@
+   RETURN;
+ END_IF
+ 
+-                
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND (( ParCmd.EmitterID[0] < -127 ) OR ( ParCmd.EmitterID[1] < -127 ) OR ( ParCmd.EmitterID[2] < -127 ) OR ( ParCmd.EmitterID[3] < -127 ))
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_ReactAtTriggerFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_ReactAtTriggerFB.CheckParameterValid
++++ b/MC_ReactAtTriggerFB.CheckParameterValid
+@@ -78,4 +78,16 @@
+   RETURN;
+ END_IF
+ 
+-                
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_ReadActualForceFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_ReadActualForceFB.CheckParameterValid
++++ b/MC_ReadActualForceFB.CheckParameterValid
+@@ -154,4 +154,17 @@
+                           Para1       :=  SINT_TO_STRING(ParCmd.ListenerID));
+   RETURN;                          
+ END_IF
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_RedefineTrackingPosFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_RedefineTrackingPosFB.CheckParameterValid
++++ b/MC_RedefineTrackingPosFB.CheckParameterValid
+@@ -182,4 +182,17 @@
+                           Para1       :=  SINT_TO_STRING(ParCmd.ListenerID));
+   RETURN;                          
+ END_IF
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_SetTriggerErrorFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_SetTriggerErrorFB.CheckParameterValid
++++ b/MC_SetTriggerErrorFB.CheckParameterValid
+@@ -129,4 +129,10 @@
+   RETURN;
+ END_IF
+ 
+-                
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_SetTriggerRegisterFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_SetTriggerRegisterFB.CheckParameterValid
++++ b/MC_SetTriggerRegisterFB.CheckParameterValid
+@@ -178,4 +178,10 @@
+   RETURN;
+ END_IF
+ 
+-                
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_SetTriggerLimitFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_SetTriggerLimitFB.CheckParameterValid
++++ b/MC_SetTriggerLimitFB.CheckParameterValid
+@@ -142,4 +142,11 @@
+                           Para1       := SINT_TO_STRING(ParCmd.EmitterID));
+   RETURN;
+ END_IF
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_SetTriggerMotionFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_SetTriggerMotionFB.CheckParameterValid
++++ b/MC_SetTriggerMotionFB.CheckParameterValid
+@@ -169,5 +169,18 @@
+                             Para2       := DINT_TO_STRING(_idx));
+     RETURN;
+   END_IF
+-END_FOR  
+-                
++END_FOR
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND (( ParCmd.EmitterID[0] < -127 ) OR ( ParCmd.EmitterID[1] < -127 ) OR ( ParCmd.EmitterID[2] < -127 ) OR ( ParCmd.EmitterID[3] < -127 ))
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_SetTriggerUserFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_SetTriggerUserFB.CheckParameterValid
++++ b/MC_SetTriggerUserFB.CheckParameterValid
+@@ -76,4 +76,10 @@
+   RETURN;
+ END_IF
+ 
+-                
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_WriteFrameDataFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_WriteFrameDataFB.CheckParameterValid
++++ b/MC_WriteFrameDataFB.CheckParameterValid
+@@ -217,4 +217,10 @@
+   RETURN;                          
+ END_IF
+ 
+-                
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+**MC_StopSubprogramFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_StopSubprogramFB.CheckParameterValid
++++ b/MC_StopSubprogramFB.CheckParameterValid
+@@ -116,4 +116,29 @@
+                           Para1       := SINT_TO_STRING(ParCmd.ListenerID));                            
+   RETURN;
+ END_IF
+-                
++
++// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
++IF ( CheckParameterValid ) AND (( ParCmd.EmitterID[0] < -127 ) OR ( ParCmd.EmitterID[1] < -127 ) OR ( ParCmd.EmitterID[2] < -127 ) OR ( ParCmd.EmitterID[3] < -127 ))
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  RETURN;
++END_IF
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+### F70
+
+_`CheckParameterValid` of 10 Read FBs, `MC_GroupJogFB` - ProcessingMode / SequenceFlag not allowed → 16#0008; GroupJog Override → 16#8401 (D-04…D-06)_
+
+- F70: wrong error IDs for ProcessingMode/SequenceFlag not allowed (16#8603/8616) and GroupJog Override (16#8410)
+
+**MC_RedefineTrackingPosFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_RedefineTrackingPosFB.CheckParameterValid
++++ b/MC_RedefineTrackingPosFB.CheckParameterValid
+@@ -26,7 +26,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_ALLOWED (* ST-FIX F70 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+**MC_ReadActualForceFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ReadActualForceFB.CheckParameterValid
++++ b/MC_ReadActualForceFB.CheckParameterValid
+@@ -31,7 +31,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_ALLOWED (* ST-FIX F70 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+**MC_ReadActualTCPVelocityFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ReadActualTCPVelocityFB.CheckParameterValid
++++ b/MC_ReadActualTCPVelocityFB.CheckParameterValid
+@@ -31,7 +31,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_ALLOWED (* ST-FIX F70 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+Same change (same `-`/`+` lines) in: `MC_ReadSystemVariableFB`, `MC_ReadDigitalOutputsFB`, `MC_ReadAnalogInputFB`, `MC_ReadActualPositionFB`, `MC_ReadIntegersFB`, `MC_ReadDigitalInputsFB`, `MC_ReadRealsFB`
+
+**MC_ReadActualTCPVelocityFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ReadActualTCPVelocityFB.CheckParameterValid
++++ b/MC_ReadActualTCPVelocityFB.CheckParameterValid
+@@ -51,7 +51,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED (* ST-FIX F70 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+**MC_ReadSystemVariableFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ReadSystemVariableFB.CheckParameterValid
++++ b/MC_ReadSystemVariableFB.CheckParameterValid
+@@ -51,7 +51,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED (* ST-FIX F70 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+**MC_ReadDigitalOutputsFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ReadDigitalOutputsFB.CheckParameterValid
++++ b/MC_ReadDigitalOutputsFB.CheckParameterValid
+@@ -51,7 +51,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED (* ST-FIX F70 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadActualPositionFB`, `MC_ReadIntegersFB`, `MC_ReadDigitalInputsFB`
+
+**MC_ReadRealsFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ReadRealsFB.CheckParameterValid
++++ b/MC_ReadRealsFB.CheckParameterValid
+@@ -51,7 +51,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD;
++  ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED (* ST-FIX F70 *);
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+**MC_GroupJogFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_GroupJogFB.CheckParameterValid
++++ b/MC_GroupJogFB.CheckParameterValid
+@@ -8,7 +8,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_VELOCITY_INVALID, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_OVERRIDE_INVALID (* ST-FIX F70 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+### F71
+
+_`RobotLibraryBaseExecuteFB/EnableFB.OnExecStart` - input `Priority` never checked (D-08)_
+
+- F71: the input Priority was not checked (16#8610/8611)
+
+**RobotLibraryBaseExecuteFB** · `OnExecStart` · append
+
+```diff
+--- a/RobotLibraryBaseExecuteFB.OnExecStart
++++ b/RobotLibraryBaseExecuteFB.OnExecStart
+@@ -1,2 +1,10 @@
+-                  
+-                
++// ST-FIX F71: Priority (1 = very high ... 4 = low, table 7-1)
++IF ( Priority < PriorityLevel.VERY_HIGH )
++THEN
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_HIGH, Overwrite := TRUE );
++  Error := TRUE;
++ELSIF ( Priority > PriorityLevel.LOW )
++THEN
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_LOW, Overwrite := TRUE );
++  Error := TRUE;
++END_IF
+```
+
+**RobotLibraryBaseEnableFB** · `OnExecStart` · append
+
+```diff
+--- a/RobotLibraryBaseEnableFB.OnExecStart
++++ b/RobotLibraryBaseEnableFB.OnExecStart
+@@ -1,2 +1,10 @@
+-                  
+-                
++// ST-FIX F71: Priority (1 = very high ... 4 = low, table 7-1)
++IF ( Priority < PriorityLevel.VERY_HIGH )
++THEN
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_HIGH, Overwrite := TRUE );
++  Error := TRUE;
++ELSIF ( Priority > PriorityLevel.LOW )
++THEN
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_LOW, Overwrite := TRUE );
++  Error := TRUE;
++END_IF
+```
+
+### F72
+
+_`MC_CallSubprogramFB.CheckParameterValid` - acyclic data > 190 bytes not rejected (D-09)_
+
+- F72: CallSubprogram: AcyclicData longer than 190 bytes not rejected (16#8416)
+
+**MC_CallSubprogramFB** · `CheckParameterValid` · append
+
+```diff
+--- a/MC_CallSubprogramFB.CheckParameterValid
++++ b/MC_CallSubprogramFB.CheckParameterValid
+@@ -144,3 +144,11 @@
+   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
+   RETURN;
+ END_IF
++
++// ST-FIX F72: at most 190 bytes of acyclic data (table 7-1)
++IF ( CheckParameterValid ) AND ( UPPER_BOUND(ParCmd.Data, 1) - LOWER_BOUND(ParCmd.Data, 1) + 1 > 190 )
++THEN
++  CheckParameterValid := FALSE;
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLICDATA_TOO_LARGE, Overwrite := TRUE );
++  RETURN;
++END_IF
+```
+
+### F73
+
+_`MC_ReadActualPositionCyclicFB.OnExecRun` - ToolNo/FrameNo −1 ("currently used", 255 in the telegram) never equal to the returned coordinate system → `Enabled` never set, outputs never updated (D-10)_
+
+- F73: ToolNo/FrameNo -1 (currently used, 255 in the telegram) never matched the returned coordinate system -> outputs never updated
+
+**MC_ReadActualPositionCyclicFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_ReadActualPositionCyclicFB.OnExecRun
++++ b/MC_ReadActualPositionCyclicFB.OnExecRun
+@@ -33,8 +33,8 @@
+      
+ 
+   01:  // Wait for FrameNo and ToolNo set
+-       IF ((  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo = _parCmd.FrameNo )  AND
+-           (  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo  = _parCmd.ToolNo  )) OR
++       IF ((( AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo = _parCmd.FrameNo ) OR ( _parCmd.FrameNo = -1 )) (* ST-FIX F73 *)  AND
++           (( AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo = _parCmd.ToolNo ) OR ( _parCmd.ToolNo = -1 )) (* ST-FIX F73 *)) OR
+            ( _parCmd.ReadCartesianPosition                                                 = FALSE           ) 
+        THEN
+          // busy 
+```
+
+### F74
+
+_`RobotLibraryBaseFB.OnCall`, `AxesGroupMessageLogFB.AddMessageLog`, `AlarmMessage` - messages of the command only with the severity of the last RC response → client-side errors (parameter check) never in the message buffer; `AcrID`/`CmdType` missing (E-01, E-03)_
+
+- F74: client-side command messages were not written into the message buffer; no AcrID/CmdType
+
+**RobotLibraryBaseFB** · `declaration` · variables
+
+```diff
++VAR
++  /// ST-FIX F74: message of the command for the message buffer
++  _alarmMessage : AlarmMessage;
++END_VAR
+```
+
+**AxesGroupMessageLogFB** · `AddMessageLog` · patch
+
+```diff
+--- a/AxesGroupMessageLogFB.AddMessageLog
++++ b/AxesGroupMessageLogFB.AddMessageLog
+@@ -48,6 +48,8 @@
+   Messages[0].Severity    := MessageLog.Severity;
+   Messages[0].MessageText := MessageLog.MessageText;
+   Messages[0].MessageCode := MessageLog.MessageCode;
++  Messages[0].AcrID       := MessageLog.AcrID;   // ST-FIX F74
++  Messages[0].CmdType     := MessageLog.CmdType; // ST-FIX F74
+   
+   // inc message counter
+   MessagesEntries := DINT_TO_UINT(LIMIT(0, MessagesEntries + 1, RobotLibraryParameter.MESSAGE_LOG_MAX));
+```
+
+**RobotLibraryBaseFB** · `OnCall` · patch
+
+```diff
+--- a/RobotLibraryBaseFB.OnCall
++++ b/RobotLibraryBaseFB.OnCall
+@@ -15,20 +15,55 @@
+ _info_R   ( CLK := InfoID    <> RobotLibraryConstants.OK );
+ 
+ 
+-// Log Command events to message log 
+-IF  ( LogLevel < _rspHeader.AlarmMessageSeverity ) AND
+-   (( _error_R  .Q                               ) OR 
+-    ( _warning_R.Q                               ) OR 
+-    ( _info_R   .Q                               ))
++// ST-FIX F74: every message of the command - also the client-side ones (e.g. parameter errors,
++// before: only with the severity of the last response of the RC) - goes into the message
++// buffer, with ACR entry and command type
++IF ( _error_R.Q ) AND ( LogLevel < Severity.ERROR )
+ THEN
+-  // Add command message to message buffer       
+-  AxesGroup.MessageLog
+-    .AddMessageLogByParameter(  Timestamp   :=   AxesGroup.State.SystemTime,
+-                                MessageType :=   MessageType.CMD,
+-                                MessageCode :=  _rspHeader.AlarmMessageCode,
+-                                MessageText :=   CONCAT(MyType, CONCAT(' : ' , MESSAGE_CODE_TO_STRING(_rspHeader.AlarmMessageCode))),
+-                                Severity    :=  _rspHeader.AlarmMessageSeverity ); 
+-END_IF 
++  _alarmMessage.Severity    := Severity.ERROR;
++  IF ( ErrorID = _rspHeader.AlarmMessageCode ) AND ( _rspHeader.AlarmMessageSeverity > Severity.ERROR )
++  THEN
++    _alarmMessage.Severity  := _rspHeader.AlarmMessageSeverity; // e.g. fatal error of the RC
++  END_IF
++  _alarmMessage.Timestamp   := AxesGroup.State.SystemTime;
++  _alarmMessage.MessageType := MessageType.CMD;
++  _alarmMessage.MessageCode := ErrorID;
++  _alarmMessage.AcrID       := _uniqueID;
++  _alarmMessage.CmdType     := _cmdHeader.CmdTyp;
++  _alarmMessage.MessageText := CONCAT(MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(ErrorID)));
++  AxesGroup.MessageLog.AddMessageLog( MessageLog := _alarmMessage );
++END_IF
++IF ( _warning_R.Q ) AND ( LogLevel < Severity.WARNING )
++THEN
++  _alarmMessage.Severity    := Severity.WARNING;
++  IF ( WarningID = _rspHeader.AlarmMessageCode ) AND ( _rspHeader.AlarmMessageSeverity > Severity.WARNING )
++  THEN
++    _alarmMessage.Severity  := _rspHeader.AlarmMessageSeverity; // e.g. fatal error of the RC
++  END_IF
++  _alarmMessage.Timestamp   := AxesGroup.State.SystemTime;
++  _alarmMessage.MessageType := MessageType.CMD;
++  _alarmMessage.MessageCode := WarningID;
++  _alarmMessage.AcrID       := _uniqueID;
++  _alarmMessage.CmdType     := _cmdHeader.CmdTyp;
++  _alarmMessage.MessageText := CONCAT(MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(WarningID)));
++  AxesGroup.MessageLog.AddMessageLog( MessageLog := _alarmMessage );
++END_IF
++IF ( _info_R.Q ) AND ( LogLevel < Severity.INFO )
++THEN
++  _alarmMessage.Severity    := Severity.INFO;
++  IF ( InfoID = _rspHeader.AlarmMessageCode ) AND ( _rspHeader.AlarmMessageSeverity > Severity.INFO )
++  THEN
++    _alarmMessage.Severity  := _rspHeader.AlarmMessageSeverity; // e.g. fatal error of the RC
++  END_IF
++  _alarmMessage.Timestamp   := AxesGroup.State.SystemTime;
++  _alarmMessage.MessageType := MessageType.CMD;
++  _alarmMessage.MessageCode := InfoID;
++  _alarmMessage.AcrID       := _uniqueID;
++  _alarmMessage.CmdType     := _cmdHeader.CmdTyp;
++  _alarmMessage.MessageText := CONCAT(MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(InfoID)));
++  AxesGroup.MessageLog.AddMessageLog( MessageLog := _alarmMessage );
++END_IF
++ 
+ 
+ 
+ IF ( _error_R.Q)
+```
+
 ## Data types
 
 Change the DUTs / enums / constants of the library:
@@ -6260,6 +7979,32 @@ Change the DUTs / enums / constants of the library:
 - **F46** Field `RCInterpreterVersion` (comment `/// Version of the server implementation in the format X.X.X (spec table 6-18)`) in `ReadRobotDataOutCmd` - ST-FIX F46: comment missing
 - **F52** Constant `RobotLibraryParameter.FRAGMENT_MAX` := `31` - ST-FIX F52: 10 fragments (0..9) per telegram are too few - a 256 byte telegram holds up to 27 fragments (header 8 bytes + at least 1 byte payload); fragments behind the array were dropped although the telegram was acknowledged -> responses lost
 - **F59** New field in `AxesGroupCyclicOptionalDataCartesianPosition` (after `CoordinateSystem`): `CurrentCoordinateSystem : RobotCoordinateSystemParameters;  /// Tool and frame currently used by the RC (bytes 36..37 of the optional cyclic Cartesian position)` - ST-FIX F59: CoordinateSystem is the tool/frame of the returned position (bytes 34..35), the currently used tool/frame needs an own field (spec table 5-89, 6.1.6)
+- **F74** New field in `AlarmMessage` (after `MessageCode`): `AcrID : UINT;  /// Entry in the ACR of the command from which the message originated (0: no command)` - ST-FIX F74: spec 5.5.11 Fig. 5-137
+- **F74** New field in `AlarmMessage` (after `AcrID`): `CmdType : UINT;  /// Type of the command from which the message originated (0: no command)` - ST-FIX F74: spec 5.5.11 Fig. 5-137
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_EMITTERID_EQUALS_LISTENERID` := 36178 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_EMITTERID_INCOMPATIBLE_ACTION` := 36179 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_TRIGGER_MODE_UNKNOWN` := 36180 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_BIT_INDEX_OUT_OF_RANGE` := 36181 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_LISTENERID_INCOMPATIBLE_TRIGGER` := 36182 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_TRIGGER_PARAMETER_OUT_OF_RANGE` := 36183 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_TRIGGER_START_BEHIND_END` := 36184 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_TRIGGER_ERROR_MODE_UNKNOWN` := 36185 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_REACTION_MODE_UNKNOWN` := 36192 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_LOAD_IX_OUT_OF_RANGE` := 36233 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_LOAD_IY_OUT_OF_RANGE` := 36240 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_LOAD_IZ_OUT_OF_RANGE` := 36241 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_LOAD_RX_OUT_OF_RANGE` := 36242 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_LOAD_RY_OUT_OF_RANGE` := 36243 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_LOAD_RZ_OUT_OF_RANGE` := 36244 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_SERVER_LOG_ID_UNKNOWN` := 36245 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_SERVER_LOG_START_LINE_UNKNOWN` := 36246 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_SERVER_LOG_CONTEXT_FILTER_UNKNOWN` := 36247 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_CIRCMODE_UNKNOWN` := 36248 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_OPTIONAL_PARAM_EXTERNAL_TCP_NOT_SUPPORTED` := 36386 (add the element if missing) - F75: table 7-1 (missing in the library)
+- **F75** Enum `RobotLibraryInfoIdEnum.INFO_SERVER_LOG_OLDEST_OVERWRITTEN` := 27760 (add the element if missing) - F75: table 7-4
+- **F75** Enum `RobotLibraryInfoIdEnum.INFO_TRIGGER_PARAMETERS_NOT_USED` := 27988 (add the element if missing) - F75: table 7-4
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_LIFESIGN_TIMEOUT_0x8004` := 32772 (add the element if missing) - F75: name with the correct value (alias)
+- **F75** Enum `RobotLibraryErrorIdEnum.ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8` := 32936 (add the element if missing) - F75: name with the correct value (alias)
 
 ## Fixes without generated diff
 
@@ -6512,6 +8257,132 @@ the message when the limit is still reached must be an error, because the respon
                                    MessageType := MessageType.CMD,
 -                                  Severity    := Severity.DEBUG,
 +                                  Severity    := Severity.ERROR, // ST-FIX F52: responses are lost
+```
+
+### F63
+
+Two telegram sequences, hand written telegram coding of `MC_RobotTaskFB` (the generated part –
+`HandleSeqAck`, `AxesGroupToTelegram`, `AxesGroupToTelegramSequence`, `CheckParameterValid` – is
+listed above). Reference: `MC_RobotTaskFB_Telegram.CreateSendPayload`,
+`.CreateSendPayloadSequence`, `.ParseRecvPayloadSequence`, `.CalculateSequencePayloadMax`,
+`.CalculateSequencePayloadStartAdr`. Layout like spec Fig. 5-205 and the SDK: acyclic area =
+telegram length − cyclic data − footer; 1st sequence = area / 2 behind the cyclic data,
+2nd sequence = rest behind the 1st one (each including its 4 byte sequence header).
+
+```diff
+ // CalculateSequencePayloadMax
+ _cyclicDataLength := CalculateCyclicDataLength(AxesGroup := AxesGroup, Direction := Direction);
+-CASE (Sequence)
+-OF
+-  SequenceFlag.PRIMARY_SEQUENCE   :
+-    ... CalculateSequencePayloadMax := ( _parCfg.Com.TelegramLength... - _cyclicDataLength );
+-  SequenceFlag.SECONDARY_SEQUENCE :
+-    ... CalculateSequencePayloadMax := (( _parCfg.Com.TelegramLength... - _cyclicDataLength ) / 2);
+-END_CASE
++// ST-FIX F63: acyclic area without the footer, halved for two sequences (Fig. 5-205)
++IF ( Direction = ComDirection.PLC_TO_ROB )
++THEN
++  _area := UINT_TO_DINT(_parCfg.Com.TelegramLengthPlcToRob) - _cyclicDataLength - FOOTER_SIZE;
++ELSE
++  _area := UINT_TO_DINT(_parCfg.Com.TelegramLengthRobToPlc) - _cyclicDataLength - FOOTER_SIZE;
++END_IF
++IF ( NOT _parCfg.Com.TwoSequences )
++THEN
++  IF ( Sequence = SequenceFlag.PRIMARY_SEQUENCE ) THEN CalculateSequencePayloadMax := _area;
++  ELSE CalculateSequencePayloadMax := 0; END_IF
++ELSIF ( Sequence = SequenceFlag.PRIMARY_SEQUENCE )
++THEN
++  CalculateSequencePayloadMax := _area / 2;
++ELSIF ( Sequence = SequenceFlag.SECONDARY_SEQUENCE )
++THEN
++  CalculateSequencePayloadMax := _area - _area / 2;
++END_IF
+```
+
+```diff
+ // CalculateSequencePayloadStartAdr, SECONDARY_SEQUENCE: behind the area of the 1st sequence
+    _sequencePayloadLength
+      := CalculateSequencePayloadMax( AxesGroup := AxesGroup,
+                                      Direction := Direction,
+-                                     Sequence  := Sequence );
++                                     Sequence  := SequenceFlag.PRIMARY_SEQUENCE ); // ST-FIX F63
+```
+
+```diff
+ // CreateSendPayload
+ AxesGroup.State.NewSEQ[0] := FALSE;
++AxesGroup.State.NewSEQ[1] := FALSE; // ST-FIX F63: 2nd sequence was rebuilt in every cycle
+```
+
+```diff
+ // CreateSendPayloadSequence: every sequence starts at its own address
+ FOR _seqIdx := 0 TO AxesGroup.State.SequenceCountSend
+ DO
+-  // Check 2nd sequence ? -> goto 2nd sequence payload address
+-  IF ( _seqIdx = SECONDARY_SEQUENCE )
+-  THEN
+-    SendData.PayloadPtr := CalculateSequencePayloadStartAdr(AxesGroup := AxesGroup,
+-                                                            Direction := ComDirection.PLC_TO_ROB,
+-                                                            Sequence  := SequenceFlag.SECONDARY_SEQUENCE);
+-  END_IF
++  // ST-FIX F63: SequenceCountSend is 1 in every cycle with two sequences (HandleSeqAck)
++  IF ( _seqIdx = PRIMARY_SEQUENCE )
++  THEN
++    SendData.PayloadPtr := CalculateSequencePayloadStartAdr(AxesGroup := AxesGroup,
++                                                            Direction := ComDirection.PLC_TO_ROB,
++                                                            Sequence  := SequenceFlag.PRIMARY_SEQUENCE);
++  ELSE
++    SendData.PayloadPtr := CalculateSequencePayloadStartAdr(AxesGroup := AxesGroup,
++                                                            Direction := ComDirection.PLC_TO_ROB,
++                                                            Sequence  := SequenceFlag.SECONDARY_SEQUENCE);
++  END_IF
+```
+
+`ParseRecvPayloadSequence`: first read the headers of all sequences (each from its start address),
+then process the payloads with the lower Ack first (Fig. 5-207/5-208) and only if the Ack is the Seq
+that was sent (the SDK sends Ack 0 in the sequence it does not process):
+
+```iecst
+// ST-FIX F63: read the sequence headers
+FOR _seqIdx := 0 TO _seqCount
+DO
+  IF ( _seqIdx = PRIMARY_SEQUENCE )
+  THEN
+    RecvData.PayloadPtr := CalculateSequencePayloadStartAdr(AxesGroup := AxesGroup, Direction := ComDirection.ROB_TO_PLC,
+                                                            Sequence  := SequenceFlag.PRIMARY_SEQUENCE);
+  ELSE
+    RecvData.PayloadPtr := CalculateSequencePayloadStartAdr(AxesGroup := AxesGroup, Direction := ComDirection.ROB_TO_PLC,
+                                                            Sequence  := SequenceFlag.SECONDARY_SEQUENCE);
+  END_IF
+  Telegram.RobToPlc.Sequence[_seqIdx].Header.SEQ_ACK       := RecvData.GetUint();
+  Telegram.RobToPlc.Sequence[_seqIdx].Header.PayloadLength := RecvData.GetUint();
+  _seqStart[_seqIdx] := RecvData.PayloadPtr;   // new VAR _seqStart : ARRAY[0..1] OF UDINT;
+END_FOR
+
+// ST-FIX F63: lower Ack first (numbers wrap 254 -> 1)
+_seqFirst := 0;
+IF ( _seqCount = 1 )
+THEN
+  _seqDiff := UINT_TO_DINT(Telegram.RobToPlc.Sequence[0].Header.SEQ_ACK)
+            - UINT_TO_DINT(Telegram.RobToPlc.Sequence[1].Header.SEQ_ACK);
+  IF ( _seqDiff < 0 ) THEN _seqDiff := _seqDiff + 254; END_IF
+  IF ( _seqDiff > 0 ) AND ( _seqDiff < 127 ) THEN _seqFirst := 1; END_IF
+END_IF
+
+FOR _seqOrderIdx := 0 TO _seqCount
+DO
+  IF ( _seqOrderIdx = 0 ) THEN _seqIdx := _seqFirst; ELSE _seqIdx := 1 - _seqFirst; END_IF
+  _fragIdx       := 0;   // F5
+  _seqPayloadPtr := 0;   // F5
+  RecvData.PayloadPtr := _seqStart[_seqIdx];
+
+  // check new data available ?  (ST-FIX F63: Ack must be the Seq that was sent)
+  IF ( Telegram.RobToPlc.Sequence[_seqIdx].Header.SEQ_ACK <> AxesGroup.State.LastACK[_seqIdx]    ) AND
+     ( Telegram.RobToPlc.Sequence[_seqIdx].Header.SEQ_ACK  = AxesGroup.State.CurrentSEQ[_seqIdx] )
+  THEN
+    // ... unchanged: payload length check, fragments, AddRsp ...
+  END_IF
+END_FOR
 ```
 
 ### Not to fix

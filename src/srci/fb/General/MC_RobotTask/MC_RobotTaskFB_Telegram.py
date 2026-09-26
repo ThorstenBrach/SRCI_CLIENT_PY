@@ -75,6 +75,7 @@ class MC_RobotTaskFB_Telegram:
 
         # reset NewSEQ flag
         AxesGroup.State.NewSEQ[0] = False
+        AxesGroup.State.NewSEQ[1] = False  # ST-FIX F63: 2nd telegram sequence was rebuilt in every cycle
         return 0
 
     # ST-Source: POUs/General/MC_RobotTask/MC_RobotTaskFB.st#CreateSendPayloadCyclic  sha256: 538f589a3a4be0dc
@@ -182,13 +183,15 @@ class MC_RobotTaskFB_Telegram:
     def CreateSendPayloadSequence(self, AxesGroup: AxesGroup) -> int:
         send = self.SendData
         for _seqIdx in range(AxesGroup.State.SequenceCountSend + 1):
-            # Check 2nd sequence ? -> goto 2nd sequence payload address
-            if _seqIdx == self.SECONDARY_SEQUENCE:
-                send.PayloadPtr = self.CalculateSequencePayloadStartAdr(
-                    AxesGroup=AxesGroup,
-                    Direction=ComDirection.PLC_TO_ROB,
-                    Sequence=SequenceFlag.SECONDARY_SEQUENCE,
-                )
+            # ST-FIX F63: every telegram sequence starts at its own address (Fig. 5-205); before, the
+            # 1st sequence ran into the area of the 2nd one and the 2nd header was sent only sometimes
+            send.PayloadPtr = self.CalculateSequencePayloadStartAdr(
+                AxesGroup=AxesGroup,
+                Direction=ComDirection.PLC_TO_ROB,
+                Sequence=SequenceFlag.PRIMARY_SEQUENCE
+                if _seqIdx == self.PRIMARY_SEQUENCE
+                else SequenceFlag.SECONDARY_SEQUENCE,
+            )
             seq = self.Telegram.PlcToRob.Sequence[_seqIdx]
             send.AddUint(seq.Header.SEQ_ACK)
             send.AddUint(seq.Header.PayloadLength)
@@ -339,23 +342,46 @@ class MC_RobotTaskFB_Telegram:
         if self._parCfg.Com.TwoSequences:
             _seqCount += 1
 
+        # ST-FIX F63: read the headers of all sequences, then process the sequence with the lower Ack
+        # first (spec Fig. 5-207/5-208); every sequence starts at its own address (Fig. 5-205)
+        _seqStart = [0, 0]
         for _seqIdx in range(_seqCount + 1):
-            # ST-FIX F5: ST keeps _fragIdx / _seqPayloadPtr of the first sequence for the second one
-            _fragIdx = 0
-            _seqPayloadPtr = 0
-            # Check 2nd sequence ? -> goto 2nd sequence payload address
-            if _seqIdx == self.SECONDARY_SEQUENCE:
-                recv.PayloadPtr = self.CalculateSequencePayloadStartAdr(
-                    AxesGroup=AxesGroup,
-                    Direction=ComDirection.ROB_TO_PLC,
-                    Sequence=SequenceFlag.SECONDARY_SEQUENCE,
-                )
+            recv.PayloadPtr = self.CalculateSequencePayloadStartAdr(
+                AxesGroup=AxesGroup,
+                Direction=ComDirection.ROB_TO_PLC,
+                Sequence=SequenceFlag.PRIMARY_SEQUENCE
+                if _seqIdx == self.PRIMARY_SEQUENCE
+                else SequenceFlag.SECONDARY_SEQUENCE,
+            )
             seq = self.Telegram.RobToPlc.Sequence[_seqIdx]
             seq.Header.SEQ_ACK = recv.GetUint()
             seq.Header.PayloadLength = recv.GetUint()
+            _seqStart[_seqIdx] = recv.PayloadPtr
+        _seqFirst = 0
+        if _seqCount == 1:
+            acks = self.Telegram.RobToPlc.Sequence
+            _seqDiff = acks[0].Header.SEQ_ACK - acks[1].Header.SEQ_ACK
+            if _seqDiff < 0:
+                _seqDiff += 254
+            if 0 < _seqDiff < 127:
+                _seqFirst = 1
+
+        for _seqOrderIdx in range(_seqCount + 1):
+            _seqIdx = _seqFirst if _seqOrderIdx == 0 else 1 - _seqFirst
+            # ST-FIX F5: ST keeps _fragIdx / _seqPayloadPtr of the first sequence for the second one
+            _fragIdx = 0
+            _seqPayloadPtr = 0
+            recv.PayloadPtr = _seqStart[_seqIdx]
+            seq = self.Telegram.RobToPlc.Sequence[_seqIdx]
 
             # check new data available ?
-            if seq.Header.SEQ_ACK == AxesGroup.State.LastACK[_seqIdx] or seq.Header.PayloadLength == 0:
+            # ST-FIX F63: only the Ack of the Seq that was sent (Seq = Ack) carries the response of it;
+            # with two sequences the RC may send Ack 0 in the sequence it does not process
+            if (
+                seq.Header.SEQ_ACK == AxesGroup.State.LastACK[_seqIdx]
+                or seq.Header.SEQ_ACK != AxesGroup.State.CurrentSEQ[_seqIdx]
+                or seq.Header.PayloadLength == 0
+            ):
                 continue
 
             if seq.Header.PayloadLength > self._parCfg.Com.TelegramLengthRobToPlc:
@@ -519,16 +545,26 @@ class MC_RobotTaskFB_Telegram:
     def CalculateSequencePayloadMax(
         self, AxesGroup: AxesGroup, Direction: ComDirection, Sequence: SequenceFlag
     ) -> int:
+        """Size of the data area of a telegram sequence (sequence header + payload).
+
+        ST-FIX F63: the acyclic area (telegram length - cyclic data - footer) belongs to one sequence
+        or is halved for two sequences (spec Fig. 5-205, like the SDK: 1st = area / 2, 2nd = rest).
+        Before, the 1st sequence got the whole area also with two sequences and the footer was not
+        subtracted -> the areas overlapped and did not match the RC.
+        """
         _cyclicDataLength = self.CalculateCyclicDataLength(AxesGroup=AxesGroup, Direction=Direction)
         total = (
             self._parCfg.Com.TelegramLengthPlcToRob
             if Direction == ComDirection.PLC_TO_ROB
             else self._parCfg.Com.TelegramLengthRobToPlc
         )
+        _area = total - _cyclicDataLength - self.FOOTER_SIZE
+        if not self._parCfg.Com.TwoSequences:
+            return _area if Sequence == SequenceFlag.PRIMARY_SEQUENCE else 0
         if Sequence == SequenceFlag.PRIMARY_SEQUENCE:
-            return total - _cyclicDataLength
+            return _area // 2
         if Sequence == SequenceFlag.SECONDARY_SEQUENCE:
-            return (total - _cyclicDataLength) // 2
+            return _area - _area // 2
         return 0
 
     # ST-Source: POUs/General/MC_RobotTask/MC_RobotTaskFB.st#CalculateSequencePayloadStartAdr  sha256: c19d7e4cfb757b6b
@@ -539,8 +575,9 @@ class MC_RobotTaskFB_Telegram:
         if Sequence == SequenceFlag.PRIMARY_SEQUENCE:
             return _cyclicDataLength
         if Sequence == SequenceFlag.SECONDARY_SEQUENCE:
+            # ST-FIX F63: behind the area of the 1st sequence
             _sequencePayloadLength = self.CalculateSequencePayloadMax(
-                AxesGroup=AxesGroup, Direction=Direction, Sequence=Sequence
+                AxesGroup=AxesGroup, Direction=Direction, Sequence=SequenceFlag.PRIMARY_SEQUENCE
             )
             return _cyclicDataLength + _sequencePayloadLength
         return 0

@@ -21,7 +21,7 @@ from srci.functions.Convert.TO_STRING.PROCESSING_MODE_TO_STRING import PROCESSIN
 from srci.functions.Convert.TO_STRING.SEQUENCE_FLAG_TO_STRING import SEQUENCE_FLAG_TO_STRING
 from srci.functions.String.StrReplace import StrReplace
 from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, SINT_TO_STRING, UINT_TO_STRING, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
+from srci.iec.rt import ADR, LIMIT, LOWER_BOUND, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, UPPER_BOUND, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
 from srci.types import CallSubprogramOutCmd, CallSubprogramParCmd, CallSubprogramRecvData, CallSubprogramSendData, CmdMessageState, CmdType, ExecutionMode, MessageType, PriorityLevel, ProcessingMode, ProcessingModeEnum, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryParameter, SequenceFlag, SequenceFlagEnum, Severity, SystemTime
 
 if TYPE_CHECKING:
@@ -224,6 +224,26 @@ class MC_CallSubprogramFB(RobotLibraryBaseExecuteFB):
                 self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.Data[{2}] = {1}', Para1=BYTE_TO_STRING(self.ParCmd.Data[_idx]), Para2=DINT_TO_STRING(_idx))
                 break
                 return CheckParameterValid
+
+        # ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
+        if (CheckParameterValid and self.ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED) and self.ParCmd.ListenerID == 0:
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite=True)
+            return CheckParameterValid
+        if ((CheckParameterValid and self.ProcessingMode != ProcessingMode.DEACTIVATE) and (not self.ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED)) and self.ParCmd.ListenerID > 0:
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite=True)
+            return CheckParameterValid
+        if CheckParameterValid and (((self.ProcessingMode == ProcessingMode.BUFFERED or self.ProcessingMode == ProcessingMode.ABORTING) or self.ProcessingMode == ProcessingMode.TRIGGER_BUFFERED) or self.ProcessingMode == ProcessingMode.TRIGGER_ABORTING) == (self.SequenceFlag == SequenceFlag.NO_SEQUENCE):
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite=True)
+            return CheckParameterValid
+
+        # ST-FIX F72: at most 190 bytes of acyclic data (table 7-1)
+        if CheckParameterValid & (UPPER_BOUND(self.ParCmd.Data) - LOWER_BOUND(self.ParCmd.Data) + 1 > 190):
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_ACYCLICDATA_TOO_LARGE, Overwrite=True)
+            return CheckParameterValid
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL

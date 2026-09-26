@@ -118,7 +118,11 @@ def test_enable_robot_fails(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
     assert en.Error and not en.Enabled, state(en)
     # the SDK resets the RI state on the fatal error -> the RobotTask loses the initialization
     assert en.ErrorID == RobotLibraryErrorIdEnum.ERR_COMMANDS_NOT_ENABLED
-    assert robot.rt.Error and robot.rt.ErrorID == RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2
+    # ST-FIX F65: the RC is ready for initialization again -> "interface reset after init"
+    assert (
+        robot.rt.Error
+        and robot.rt.ErrorID == RobotLibraryErrorIdEnum.ERR_INTERFACE_WAS_RESET_AFTER_INIT_0x80A7
+    )
     # ST-FIX F29: Initialized / CMDsEnabled are reset with the error
     assert not robot.rt.Initialized and not robot.ag.State.CMDsEnabled
 
