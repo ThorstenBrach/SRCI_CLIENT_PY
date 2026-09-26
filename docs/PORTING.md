@@ -61,3 +61,12 @@ specification, marks the place with `ST-FIX <id>` and the finding is listed in
 `docs/ST_FINDINGS.md` so that it can be fixed in the PLC library as well. Findings that
 change behaviour but have no clear fix are *not* patched – the tests document them
 (`xfail` with the finding id).
+
+## Logging
+
+The generated code keeps every log call of the ST code (`CreateLogMessage*`, the
+telegram logs of `MC_RobotTaskFB`, ACR entries, …). As in the PLC the entries go into the
+ring buffer `AxesGroup.MessageLog.SystemLogs` (output `SystemLog` of the RobotTask) and,
+filtered by `LogLevel`, to an external logger. `srci.logging_bridge.PythonLogger` is an
+external logger for Python `logging` (loggers `srci.plc` and `srci.rc`); transport and
+runtime log to `srci.transport` / `srci.runtime`.

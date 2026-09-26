@@ -15,6 +15,7 @@ reconnects and starts with a clean byte stream.
 from __future__ import annotations
 
 import contextlib
+import logging
 import socket
 import time
 
@@ -31,6 +32,8 @@ from srci.transport.base import (
 )
 
 __all__ = ["TcpTransport"]
+
+log = logging.getLogger("srci.transport")
 
 
 class TcpTransport(Transport):
@@ -70,6 +73,7 @@ class TcpTransport(Transport):
         except OSError as exc:
             self.reconnect.failed(self.clock())
             self._state = TransportState.ERROR
+            log.warning("cannot connect to %s:%s: %s", self.host, self.port, exc)
             raise TransportConnectError(f"cannot connect to {self.host}:{self.port}: {exc}") from exc
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -77,6 +81,7 @@ class TcpTransport(Transport):
         self._state = TransportState.CONNECTED
         self.reconnect.succeeded()
         self.statistics.connects += 1
+        log.info("connected to %s:%s (connect #%d)", self.host, self.port, self.statistics.connects)
 
     def close(self) -> None:
         self._user_closed = True
@@ -133,16 +138,20 @@ class TcpTransport(Transport):
             if self.check_extra_bytes:
                 self._check_no_extra_bytes(sock)
             return bytes(self._buffer)
-        except TransportError:
+        except TransportError as exc:
             self._drop(TransportState.ERROR)
+            log.warning("connection dropped: %s", exc)
             raise
         except TimeoutError as exc:
             self._drop(TransportState.ERROR)
-            raise TransportTimeoutError(
+            error = TransportTimeoutError(
                 f"no complete answer within {self.response_timeout * 1000:.0f} ms ({got}/{self.recv_size} bytes)"
-            ) from exc
+            )
+            log.warning("connection dropped: %s", error)
+            raise error from exc
         except OSError as exc:
             self._drop(TransportState.ERROR)
+            log.warning("connection dropped: connection error: %s", exc)
             raise TransportClosedError(f"connection error: {exc}") from exc
 
     def _check_no_extra_bytes(self, sock: socket.socket) -> None:

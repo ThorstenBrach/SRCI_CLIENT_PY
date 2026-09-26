@@ -208,3 +208,18 @@ def test_synchronized_over_tcp(sdk: SdkSimulator) -> None:
                 time.sleep(max(0.0, 0.01 - (time.monotonic() - t0)))
             assert h.rt.Synchronized and not h.rt.Error, h.history
     assert gateway.errors == []
+
+
+def test_logging_to_python(sdk: SdkSimulator, clock: FakeClock, caplog: pytest.LogCaptureFixture) -> None:
+    import logging
+
+    from srci.logging_bridge import PythonLogger
+
+    h = harness(sdk, clock)
+    h.rt.ExternalLogger = PythonLogger()
+    with caplog.at_level(logging.INFO, logger="srci.plc"):
+        h.run(100, until=lambda: bool(h.rt.Initialized))
+    texts = [r.getMessage() for r in caplog.records]
+    assert any("to INITIALIZED (255)" in t for t in texts)
+    assert any("ACR-ID [1]: Added" in t for t in texts)
+    assert h.system_log[0]  # the ring buffer (output SystemLog) is filled as well

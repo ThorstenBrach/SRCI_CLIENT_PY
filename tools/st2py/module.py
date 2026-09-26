@@ -188,7 +188,8 @@ class ModuleEmitter(PouEmitter):
             params = self.signature(m.vars, m.owner or self.pou)
             ret = self._method_return(m)
             ann = self.ann(ret) if m.header.return_type else "None"
-            out.add(1, f"def {m.name}(self{params}) -> {ann}: ...")
+            star = ", *" if params else ""
+            out.add(1, f"def {m.name}(self{star}{params}) -> {ann}: ...")
         for p in self.pou.properties.values():
             out.add(1, f"{p.name}: {self.ann(self.type_of_prop(p))}")
         if not self.pou.methods and not self.pou.properties:

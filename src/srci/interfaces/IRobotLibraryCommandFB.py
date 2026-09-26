@@ -21,5 +21,5 @@ __all__ = ['IRobotLibraryCommandFB']
 
 
 class IRobotLibraryCommandFB(Protocol):
-    def CallBack(self, RspData: AxesGroupAcyclicAcrEntryRspBuffer | None = None) -> int: ...
+    def CallBack(self, *, RspData: AxesGroupAcyclicAcrEntryRspBuffer | None = None) -> int: ...
     CommandData: RobotLibrarySendDataFB

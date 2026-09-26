@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from srci.fb.General.MC_RobotTask.MC_RobotTaskFB import MC_RobotTaskFB
+from srci.runtime.systemtime import system_time_now
 from srci.transport import Transport
 from srci.types import (
     AlarmMessage,
@@ -18,7 +19,6 @@ from srci.types import (
     RobotWorkArea,
     SWLimits,
     SyncMode,
-    SystemTime,
     Tool,
     UserData,
 )
@@ -73,7 +73,7 @@ class RobotTaskHarness:
         self.rt(
             Enable=self.enable,
             RobotName="Robot1",
-            SystemTime=SystemTime(),
+            SystemTime=system_time_now(),
             AxesGroupID=0,
             ParCfg=self.cfg,
             RobotInData=self.rin,
