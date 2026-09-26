@@ -64,3 +64,67 @@ jobs:
         with:
           name: dist
           path: dist/
+
+  # SDK in the loop. The SRCI SDK is PRIVATE: it is checked out from a private repository with a
+  # read-only deploy key and built in the job; nothing of it is cached, uploaded or printed
+  # (compiler and pytest output go to files, the log shows only counts and failed test IDs).
+  # Setup: docs/CI_SDK.md. Without the secret SDK_DEPLOY_KEY the job only prints a notice.
+  sdk:
+    needs: lint
+    # never for pull requests from forks (they must not run with the deploy key)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      SRCI_SDK_DIR: ${{ github.workspace }}/_sdk
+      SRCI_REQUIRE_SDK: "1"
+    steps:
+      - name: Deploy key configured?
+        id: key
+        env:
+          KEY: ${{ secrets.SDK_DEPLOY_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"
+          else echo "::notice::SDK tests skipped: secret SDK_DEPLOY_KEY not set (docs/CI_SDK.md)"; fi
+      - uses: actions/checkout@v4
+        if: steps.key.outputs.ok == 'true'
+      - name: Check out the private SDK
+        if: steps.key.outputs.ok == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.SDK_REPOSITORY || format('{0}/srci-sdk-private', github.repository_owner) }}
+          ref: ${{ vars.SDK_REF || 'main' }}
+          ssh-key: ${{ secrets.SDK_DEPLOY_KEY }}
+          path: _sdk
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        if: steps.key.outputs.ok == 'true'
+        with:
+          python-version: "3.12"
+      - name: Build the SDK simulator (output not shown)
+        if: steps.key.outputs.ok == 'true'
+        working-directory: _sdk/srci_py_harness
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then GEN=(-A x64); else GEN=(-DCMAKE_BUILD_TYPE=Release); fi
+          if cmake -S . -B build "${GEN[@]}" -DSRCI_SIM_QUIET=ON > "$RUNNER_TEMP/sdk-build.log" 2>&1 \
+             && cmake --build build --config Release -j 4 >> "$RUNNER_TEMP/sdk-build.log" 2>&1; then
+            echo "SDK simulator built: $(ls bin)"
+          else
+            echo "::error::SDK build failed (log not shown - it may contain SDK sources; build locally)"; exit 1
+          fi
+      - run: pip install -e ".[dev]" > "$RUNNER_TEMP/pip.log" 2>&1
+        if: steps.key.outputs.ok == 'true'
+      - name: SDK tests (only counts and failed test IDs are shown)
+        if: steps.key.outputs.ok == 'true'
+        run: |
+          pytest -m sdk -q -p no:cacheprovider --junitxml="$RUNNER_TEMP/sdk-junit.xml" > "$RUNNER_TEMP/sdk-pytest.log" 2>&1 || true
+          python -m tools.ci_sdk_summary "$RUNNER_TEMP/sdk-junit.xml"
+      - name: Remove the SDK from the runner
+        if: always() && steps.key.outputs.ok == 'true'
+        run: rm -rf _sdk "$RUNNER_TEMP"/sdk-*.log "$RUNNER_TEMP/sdk-junit.xml"

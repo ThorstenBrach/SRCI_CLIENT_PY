@@ -2300,6 +2300,34 @@
   "status": "active"
  },
  {
+  "id": "UT-TOOL-054",
+  "test": "tests/unit/tools/test_ci_sdk_summary.py::test_summary_lists_failed_ids_without_messages",
+  "title": "Summary lists failed ids without messages",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-055",
+  "test": "tests/unit/tools/test_ci_sdk_summary.py::test_all_passed",
+  "title": "All passed",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-056",
+  "test": "tests/unit/tools/test_ci_sdk_summary.py::test_missing_file_fails",
+  "title": "Missing file fails",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-TOOL-057",
+  "test": "tests/unit/tools/test_ci_sdk_summary.py::test_require_sdk_fails_without_library",
+  "title": "SRCI_REQUIRE_SDK=1: a missing SDK library stops the session (no silent skip in CI).",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-PKG-001",
   "test": "tests/unit/test_logging_bridge.py::test_levels",
   "title": "Levels",

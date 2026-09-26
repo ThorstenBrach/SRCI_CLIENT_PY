@@ -107,6 +107,9 @@ pytest -m sdk      # SDK in the loop tests (skipped if the library is missing)
 pytest -m tcp      # tests with local TCP sockets
 ```
 
+In CI the job `sdk` checks the SDK out of a private repository, builds it and runs these tests
+without showing anything of the SDK in the logs – see [docs/CI_SDK.md](docs/CI_SDK.md).
+
 ### Test cases and test report
 
 Every test has a unique, stable ID (`tests/testcases.json`); all test cases are listed and

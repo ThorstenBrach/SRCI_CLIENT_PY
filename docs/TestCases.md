@@ -36,9 +36,9 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
-| [UT-TOOL](#ut-tool) | Code generators and tools | 53 | 197 |
+| [UT-TOOL](#ut-tool) | Code generators and tools | 57 | 201 |
 | [UT-PKG](#ut-pkg) | Package, logging | 10 | 10 |
-| | **Total** | **334** | **3528** |
+| | **Total** | **338** | **3532** |
 
 ## Test methodology
 
@@ -552,6 +552,10 @@ Code generators and tools
 | UT-TOOL-051 | Every ST-FIX of hand written Python has an ST description in fix_guide_manual.md. | 1 | `test_hand_written_fixes_are_described` |
 | UT-TOOL-052 | Every step changes the st text | 1 | `test_every_step_changes_the_st_text` |
 | UT-TOOL-053 | Wheel and sdist | 1 | `test_wheel_and_sdist` |
+| UT-TOOL-054 | Summary lists failed ids without messages | 1 | `test_summary_lists_failed_ids_without_messages` |
+| UT-TOOL-055 | All passed | 1 | `test_all_passed` |
+| UT-TOOL-056 | Missing file fails | 1 | `test_missing_file_fails` |
+| UT-TOOL-057 | SRCI_REQUIRE_SDK=1: a missing SDK library stops the session (no silent skip in CI). | 1 | `test_require_sdk_fails_without_library` |
 
 ## UT-PKG
 
