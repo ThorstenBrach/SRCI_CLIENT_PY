@@ -26,7 +26,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 31 | 31 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 29 | 50 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 29 | 51 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
@@ -37,8 +37,8 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 64 | 208 |
-| [UT-PKG](#ut-pkg) | Package, logging | 10 | 10 |
-| | **Total** | **345** | **3539** |
+| [UT-PKG](#ut-pkg) | Package, logging | 15 | 15 |
+| | **Total** | **350** | **3545** |
 
 ## Test methodology
 
@@ -232,7 +232,7 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-007 | Cartesian position of the RC arrives in the cyclic data of the client | 1 | `test_cartesian_position_rc_to_plc` |
 | SDK-LOOP-008 | The lifesign is mirrored by the RC in every cycle | 1 | `test_lifesign_is_mirrored_every_cycle` |
 | SDK-LOOP-009 | SDK behind the PLC gateway simulator: identical results via TcpTransport. | 1 | `test_same_handshake_over_tcp` |
-| SDK-LOOP-010 | Every function of the profile "Core" (spec table 5-2) is executed without error. | 2 | `test_core_profile_demo` |
+| SDK-LOOP-010 | Every function of the profile "Core" (spec table 5-2) is executed without error - with ``--fast`` synchronous without waiting, without it in real time with the cycle in the background thread of the client. | 3 | `test_core_profile_demo` |
 | SDK-LOOP-011 | F61 (B-01/B-02): a parameter error sets ErrorID and Error in the same cycle. | 1 | `test_f61_parameter_error_sets_error_in_the_same_cycle` |
 | SDK-LOOP-012 | F61 (B-01): an error of the RC (16#8E03) -> Error with ErrorID, Busy FALSE, no cycle with ErrorID but without Error. | 1 | `test_f61_error_of_the_rc_resets_busy_at_once` |
 | SDK-LOOP-013 | F61 (B-03, BUF-01): commands that find no free ACR entry (16#8618) end with Error and without Busy; all outputs stay consistent. | 1 | `test_f61_register_full_does_not_leave_busy` |
@@ -580,3 +580,8 @@ Package, logging
 | UT-PKG-008 | Program runs with the runner | 1 | `test_program_runs_with_the_runner` |
 | UT-PKG-009 | Client wait times out without robot | 1 | `test_client_wait_times_out_without_robot` |
 | UT-PKG-010 | Without an initialized RobotTask the block ends with ERR_COMMANDS_NOT_ENABLED. | 1 | `test_client_execute_reports_a_failed_command` |
+| UT-PKG-011 | Like a PLC task: the cycle keeps running while the script sleeps; it starts with the first helper call (after the configuration) and stops with close(). | 1 | `test_client_runs_the_cycle_in_a_background_thread` |
+| UT-PKG-012 | Execute() waits for the result of the cycle thread, resets Execute and removes the block; after a timeout Execute is reset as well and the message says the command may still run. | 1 | `test_client_background_execute_error_and_timeout` |
+| UT-PKG-013 | Client background set add enable disable | 1 | `test_client_background_set_add_enable_disable` |
+| UT-PKG-014 | Client background reports an exception of the cycle | 1 | `test_client_background_reports_an_exception_of_the_cycle` |
+| UT-PKG-015 | Background=False: cycles only while the script waits (deterministic, e.g. | 1 | `test_client_without_background_removes_finished_blocks` |

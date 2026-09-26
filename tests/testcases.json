@@ -550,7 +550,7 @@
  {
   "id": "SDK-LOOP-010",
   "test": "tests/sdk/test_example_core_profile.py::test_core_profile_demo",
-  "title": "Every function of the profile \"Core\" (spec table 5-2) is executed without error.",
+  "title": "Every function of the profile \"Core\" (spec table 5-2) is executed without error - with ``--fast`` synchronous without waiting, without it in real time with the cycle in the background thread of the client.",
   "refs": [],
   "status": "active"
  },
@@ -2443,6 +2443,41 @@
   "id": "UT-PKG-010",
   "test": "tests/unit/api/test_api.py::test_client_execute_reports_a_failed_command",
   "title": "Without an initialized RobotTask the block ends with ERR_COMMANDS_NOT_ENABLED.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-011",
+  "test": "tests/unit/api/test_api.py::test_client_runs_the_cycle_in_a_background_thread",
+  "title": "Like a PLC task: the cycle keeps running while the script sleeps; it starts with the first helper call (after the configuration) and stops with close().",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-012",
+  "test": "tests/unit/api/test_api.py::test_client_background_execute_error_and_timeout",
+  "title": "Execute() waits for the result of the cycle thread, resets Execute and removes the block; after a timeout Execute is reset as well and the message says the command may still run.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-013",
+  "test": "tests/unit/api/test_api.py::test_client_background_set_add_enable_disable",
+  "title": "Client background set add enable disable",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-014",
+  "test": "tests/unit/api/test_api.py::test_client_background_reports_an_exception_of_the_cycle",
+  "title": "Client background reports an exception of the cycle",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-015",
+  "test": "tests/unit/api/test_api.py::test_client_without_background_removes_finished_blocks",
+  "title": "Background=False: cycles only while the script waits (deterministic, e.g.",
   "refs": [],
   "status": "active"
  }

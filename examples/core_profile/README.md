@@ -86,19 +86,27 @@ gateway (here 256 bytes each).
 
 A robot program in Python is usually written sequentially ("reset, enable, move, wait"). But the
 RobotTask needs a cycle at least every *LifeSignTimeOut* (50 ms), also while the script waits.
-**`SrciClient`** runs the cycles whenever the script waits:
+**`SrciClient`** therefore runs the program like a PLC task: cyclically in a background thread
+(`srci-runner`), which starts with the first call of the script (after the configuration) and
+stops with `close()` / the end of the `with` block. The script only sets inputs and waits for
+outputs – a plain `time.sleep()` does not interrupt the communication:
 
 | Method | Does |
 |---|---|
-| `wait_initialized()` | cycles until the RobotTask is initialized (commands enabled) |
-| `execute(block)` | Execute block: rising edge, cycles until `Done`, resets `Execute`; raises `CommandError` on `Error`/abort |
+| `wait_initialized()` | waits until the RobotTask is initialized (commands enabled) |
+| `execute(block)` | Execute block: rising edge, waits for `Done`, resets `Execute` and removes the block; raises `CommandError` on `Error`/abort, `WaitTimeoutError` after the timeout (`Execute` is reset as well – the command may still run on the RC) |
 | `start(block)` / `wait_done(block)` | the same in two steps (e.g. to start several motions) |
-| `enable(block)` / `disable(block)` | Enable block: sets `Enable`, cycles until `Enabled`/`Valid` (or back) |
-| `run(n)`, `idle(seconds)`, `run_until(condition)` | keep the communication running |
+| `enable(block)` / `disable(block)` | Enable block: sets `Enable`, waits for `Enabled`/`Valid` (or back); `disable` removes the block |
+| `add(block, **inputs)`, `set(block, **inputs)`, `remove(block)` | add a block / set several inputs together / remove it |
+| `run(n)`, `idle(seconds)`, `run_until(condition)` | wait for n cycles / a time / a condition |
 
-A block given to `execute`/`enable` is added to the program and stays there (it is called in every
-cycle, like in a PLC). For a program that runs for a long time in the background use
-`srci.runtime.Runner` instead (see [section 5](#5-patterns-for-your-own-program)).
+The helpers change inputs between two cycles (in the cycle thread) and take the results from one
+cycle, so they are always consistent. Outputs can be read at any time, a single input of an
+active block (e.g. a jog key) may be set directly.
+
+`SrciClient(..., background=False)` (default with `realtime=False` or an own `clock`) runs the
+cycles in the calling thread and only while the script waits in a helper – deterministic for
+tests and simulations (`--fast`); there pauses must use `client.idle()`.
 
 ## 3. Running the demo
 
@@ -117,7 +125,8 @@ python core_profile_demo.py --sdk-tcp
 
 The SDK simulator is not part of the package (the SDK is licensed); it is used when it was built
 locally (`SRCI_SDK_SIM_LIB`). The demo is also a test: `tests/sdk/test_example_core_profile.py`
-runs it against the SDK simulator (in-process and over TCP).
+runs it against the SDK simulator (in-process and over TCP with `--fast`, and in-process in real
+time with the background cycle).
 
 Output (shortened):
 
@@ -364,6 +373,7 @@ mv = client.start(move_axes(-60.0))
 client.idle(0.3)
 client.execute(MC_GroupStopFB())
 client.run_until(lambda: mv.CommandAborted)
+client.wait_done(mv, check=False)  # resets Execute and removes the aborted block
 ```
 
 ### 4.11 SetSequence
@@ -417,8 +427,8 @@ with SrciClient(TcpTransport("192.168.0.10", 5000, 256, 256)) as client:
     client.disable(enable)
 ```
 
-**Cyclic program in a background thread** (like a PLC task; other threads interact through
-`runner.call`):
+**Own cycle loop** without `SrciClient` (e.g. a long running program with an own state
+machine; other threads interact through `runner.call`):
 
 ```python
 from srci.api import RobotProgram
@@ -442,7 +452,7 @@ first block is created: `srci.configure(TOOL_MAX=20, FRAME_MAX=20, LOAD_MAX=20)`
 | Symptom | Cause |
 |---|---|
 | `WaitTimeoutError` in `wait_initialized` | no answer of the RC: gateway address/port, telegram lengths of both sides, robot in the right mode |
-| `CommandError … ErrorID 16#80A2` (and `rt.Error`) | RobotTask lost the initialization (e.g. life sign timeout – the script did not run cycles for > 50 ms; use `client.idle()` instead of `time.sleep()`) |
+| `CommandError … ErrorID 16#80A2` (and `rt.Error`) | RobotTask lost the initialization (e.g. life sign timeout – no cycles for > 50 ms, e.g. `time.sleep()` with `background=False`, or an overloaded computer – see `client.runner.monitor`) |
 | `CommandError … ErrorID 16#8xxx` | error of the RC, see spec table 7-1 (e.g. `16#8D17` invalid load number, `16#8E03` invalid dynamics) |
 | motion does not start | robot not enabled, primary sequence interrupted (→ `GroupContinue`), override 0 |
 | `ReturnToPrimary` fails with `16#8C22…8C27` | tool/frame/load differ from the interrupted motion – use the same `ToolNo`/`FrameNo` |

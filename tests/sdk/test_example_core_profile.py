@@ -48,10 +48,16 @@ def demo(sdk_library: str) -> Iterator[ModuleType]:
     srci.configure(force=True, **{k: old[k] for k in ("TOOL_MAX", "FRAME_MAX", "LOAD_MAX")})
 
 
-@pytest.mark.parametrize("target", ["--sdk", "--sdk-tcp"])
-def test_core_profile_demo(demo: ModuleType, target: str, capsys: pytest.CaptureFixture[str]) -> None:
-    """Every function of the profile "Core" (spec table 5-2) is executed without error."""
-    assert demo.main([target, "--fast"]) == 0
+@pytest.mark.parametrize(
+    "args",
+    [["--sdk", "--fast"], ["--sdk-tcp", "--fast"], ["--sdk"]],
+    ids=["sdk", "sdk-tcp", "sdk-background"],
+)
+def test_core_profile_demo(demo: ModuleType, args: list[str], capsys: pytest.CaptureFixture[str]) -> None:
+    """Every function of the profile "Core" (spec table 5-2) is executed without error - with
+    ``--fast`` synchronous without waiting, without it in real time with the cycle in the
+    background thread of the client."""
+    assert demo.main(args) == 0
     out = capsys.readouterr().out
     assert "all Core functions executed" in out
     for title in ("RobotTask - robot data, configuration, messages", "GroupReset, EnableRobot",

@@ -42,6 +42,8 @@ pip install -e .
 # Quick start
 
 ```python
+import time
+
 from srci.api import SrciClient
 from srci.fb import MC_EnableRobotFB, MC_GroupResetFB, MC_MoveAxesAbsoluteFB
 from srci.transport import TcpTransport
@@ -53,13 +55,15 @@ with SrciClient(TcpTransport("192.168.0.10", 5000, 256, 256)) as client:
     move = MC_MoveAxesAbsoluteFB()
     move.ParCmd.JointPosition.J1 = 30.0
     client.execute(move)  # returns when the robot is there
+    time.sleep(1.0)  # the cycle keeps running in the background (like a PLC task)
     client.disable(enable)
 ```
 
 * `srci.fb` – all function blocks (`MC_…FB`, same inputs and outputs as in the PLC library)
 * `srci.types` – all data types and enums
 * `srci.api.RobotProgram` – RobotTask + user data + function blocks (one "PLC program"),
-  `srci.api.SrciClient` – runs it from a sequential script, `srci.runtime.Runner` – cyclic in a thread
+  `srci.api.SrciClient` – runs it cyclically in a background thread, the sequential script
+  only sets inputs and waits for results, `srci.runtime.Runner` – the cycle loop itself
 
 Library parameters (like the library parameters of a Codesys project) are set before the first
 function block is created:

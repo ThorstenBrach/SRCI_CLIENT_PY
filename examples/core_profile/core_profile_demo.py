@@ -348,8 +348,7 @@ def demo_group_stop(client: SrciClient) -> None:
     client.execute(MC_GroupStopFB())
     client.run_until(lambda: mv.CommandAborted or mv.Done or mv.Error, 10.0, "abort")
     show("move CommandAborted", mv.CommandAborted)
-    mv.Execute = False
-    client.run()
+    client.wait_done(mv, check=False)  # resets Execute and removes the aborted block
 
 
 def demo_set_sequence(client: SrciClient) -> None:
@@ -463,6 +462,8 @@ def main(argv: list[str] | None = None) -> int:
         except CommandError as exc:
             print(f"\nERROR: {exc}")
             return 1
+        finally:
+            client.close()  # stops the cycle thread
     print("\nall Core functions executed")
     return 0
 
