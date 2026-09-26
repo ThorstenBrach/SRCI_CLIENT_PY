@@ -207,6 +207,26 @@ CONFIG = Config(
             "       // Initialized := NOT Synchronized;\n",
             "F29: Initialized (and CMDsEnabled) became TRUE again after an error (init lost)",
         ),
+        SourcePatch(
+            "MC_ReadRobotDataFB",
+            "ParseResponsePayload",
+            "_response.InterpreterCycleTime := ResponseData.GetUsint();",
+            "_response.InterpreterCycleTime := ResponseData.GetUint(); // ST-FIX F30",
+            "F30: InterpreterCycleTime is UINT (spec table 6-18, SDK), read as USINT -> 0 / wrong value",
+        ),
+        SourcePatch(
+            "MC_WriteRobotSWLimitsFB",
+            "CreateCommandPayload",
+            "// Create logging\nCreateCommandPayloadLog(AxesGroup := AxesGroup, ParameterCnt := _parameterCnt);",
+            "// ST-FIX F31: ResetToFactoryDefaults (byte 106, spec table 6-209) was not sent\n"
+            "IF ( CheckAddParameter(CreateCommandPayload.PayloadPtr))\n"
+            "THEN\n"
+            "  CreateCommandPayload.AddBool(_command.ResetToFactoryDefaults);\n"
+            " _parameterCnt := _parameterCnt + 1;\n"
+            "END_IF\n\n"
+            "// Create logging\nCreateCommandPayloadLog(AxesGroup := AxesGroup, ParameterCnt := _parameterCnt);",
+            "F31: WriteRobotSWLimits never sent ResetToFactoryDefaults",
+        ),
         *_swap_no_and_data_changed("MC_ReadToolDataFB", "ToolData.ToolNoReturn", "ToolNoReturn", "6-190"),
         *_swap_no_and_data_changed("MC_ReadFrameDataFB", "FrameNoReturn", "FrameNoReturn", "6-184"),
     ],

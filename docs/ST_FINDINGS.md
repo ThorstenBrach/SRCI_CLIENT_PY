@@ -35,6 +35,11 @@ Status "fixed in Python" means: still to be fixed in the PLC library.
 | F27 | `MC_ReadToolDataFB`, `MC_ReadFrameDataFB` `.ParseResponsePayload` | `DataChanged` parsed before the index (ToDo "swapped compared to V1.3") → `ToolNoReturn`/`FrameNoReturn` = DataChanged; the sync updates the wrong tool/frame | tables 6-184/6-190 (and SDK): index, then DataChanged (as `MC_ReadLoadDataFB`) | fixed (source patch) |
 | F28 | `CheckAddParameter` of 32 FBs (list `F28_POUS` in `tools/st2py/config.py`) | a parameter is omitted when the bytes of `_command` **behind the payload position** are zero; this assumes payload order = structure layout. Where it differs non-zero parameters are dropped, e.g. `WriteToolData`: `ToolNo` (payload end, structure start) not sent → SDK 0x8D35; `WriteRobotSWLimits`: upper limits not sent (structure J1Lower, J1Upper, …; payload all lower, then all upper); `MC_EnableRobotFB.HoldToRun`; `E2..E6` of positions | – | fixed: `CheckAddParameter := TRUE` (complete payload); `tests/unit/tools/test_st2py_f28.py` recomputes the list |
 | F29 | `MC_RobotTaskFB.OnExecRun` step 8 | `Initialized := NOT ERROR AND NOT Synchronized; Initialized := NOT Synchronized;` – the 2nd line (ToDo) overwrites the first → after an error (e.g. init lost 0x80A2) `Initialized` and `CMDsEnabled` are TRUE again, FBs stay Busy forever | – | fixed (2nd line removed): FBs end with `ERR_COMMANDS_NOT_ENABLED` |
+| F30 | `MC_ReadRobotDataFB.ParseResponsePayload` | `InterpreterCycleTime` read with `GetUsint` → 0 (SDK 10 ms) | table 6-18 / SDK: UINT | fixed (source patch) |
+| F31 | `MC_WriteRobotSWLimitsFB.CreateCommandPayload` | `ResetToFactoryDefaults` (byte 106) is never sent | table 6-209 | fixed (source patch) |
+| F32 | responses of `GroupStop`, `ExchangeConfiguration`, `ReadRobotSWLimits`, `ReadMessages` | fields at the end are not read: `AbortedSequence`, `NumberOfServerLogs`, `DataChanged`; the message text has 150 characters, ST reads 255 (F22) | tables 6-290, 6-87, 6-203, 6-108 | as in ST (no outputs for the fields) |
+| F33 | payload of 23 extended/optional FBs | layout differs from the spec tables (shifted by missing/additional bytes, wrong data types, off-by-one loops). List with details: `KNOWN` in `tests/unit/fb/test_payload_spec.py` | chapter 6 payload tables | as in ST (not testable against the SDK) |
+| F34 | `MC_UserLoginFB`, `MC_SwitchLanguageFB` | `AddString` writes only the actual length; the spec has fixed fields (`Password`/`Username` 50, `LanguageCode` 2) → `Username` at the wrong offset | tables 6-69, 6-76 | as in ST |
 
 ## Notes on the SRCI SDK (simulation)
 
@@ -56,6 +61,17 @@ Changes inside the private SDK copy are marked `SRCI_PY CUSTOM BEGIN/END` and li
   `LifeSignTimeOut` ms real time), not for missing telegrams.
 
 ## Notes on the specification
+
+- The payload tables of chapter 6 are extracted with `python -m tools.spec_tables <spec.txt>`
+  (text export of the PDF, `pdftotext -layout`) into `tools/spec_tables/spec_payload_tables.json`
+  (offsets, data types, parameter names only). `python -m tools.payload_check` compares every
+  function block with them (test `tests/unit/fb/test_payload_spec.py`).
+- Table 6-203 is captioned "WriteRobotSWLimits" but is the response of ReadRobotSWLimits;
+  the response table of SetTriggerError (after 6-620) has no caption.
+- Table 6-492 (MoveSuperImposedDynamic) lacks `Offset.RZ`, the byte numbers are inconsistent.
+- Table 6-474 (SyncToConveyor) has `EmitterID` as USINT, all other tables SINT.
+- Tables 6-224/6-229 (Read/WriteWorkArea) place `ZeroPointX` (REAL) at the odd offset 17, the
+  PLC library inserts a byte before it – to be clarified.
 
 - 5.6.6.2 states "The actual SRCI version is V1.3" (also in draft 1.5.9) while the SDK uses 1.5.
   Only the major version is checked (SDK `04_Network.cpp`). Python uses 1.5.0 (generator override).

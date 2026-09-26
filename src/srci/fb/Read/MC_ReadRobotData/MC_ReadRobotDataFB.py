@@ -420,7 +420,7 @@ class MC_ReadRobotDataFB(RobotLibraryBaseExecuteFB):
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
             # Get _response.InterpreterCycleTime
-            self._response.InterpreterCycleTime = ResponseData.GetUsint()
+            self._response.InterpreterCycleTime = ResponseData.GetUint()  # ST-FIX F30
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 

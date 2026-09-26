@@ -645,6 +645,11 @@ class MC_WriteRobotSWLimitsFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
+        # ST-FIX F31: ResetToFactoryDefaults (byte 106, spec table 6-209) was not sent
+        if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
+            CreateCommandPayload.AddBool(Value=self._command.ResetToFactoryDefaults)
+            _parameterCnt = _parameterCnt + 1
+
         # Create logging
         self.CreateCommandPayloadLog(AxesGroup=AxesGroup, ParameterCnt=_parameterCnt)
         return CreateCommandPayload

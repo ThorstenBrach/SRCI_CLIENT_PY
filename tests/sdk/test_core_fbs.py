@@ -136,6 +136,7 @@ def test_read_robot_data(robot: RobotTaskHarness) -> None:
     assert rd.OutCmd.RCManufacturer == "SRCI_PY SimRobot"
     assert rd.OutCmd.RCSupportedFunctions.MoveAxesAbsolute
     assert rd.OutCmd.AxisJointUsed.J1 and rd.OutCmd.AxisJointUsed.J6
+    assert rd.OutCmd.InterpreterCycleTime == 10  # ST-FIX F30: UINT, the ST read a USINT (0)
 
 
 def test_exchange_configuration(robot: RobotTaskHarness) -> None:

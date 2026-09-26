@@ -64,6 +64,13 @@ specification, marks the place with `ST-FIX <id>` and the finding is listed in
 change behaviour but have no clear fix are *not* patched – the tests document them
 (`xfail` with the finding id).
 
+## Payload check against the specification
+
+`python -m tools.payload_check [FB ...]` records the `Add*`/`Get*` calls of every function block
+and compares them with the payload tables of the specification (offset, size, REAL/signed/
+unsigned, string field length, payload length). `tests/unit/fb/test_payload_spec.py` fails for
+new deviations and for fixed ones that are still listed as known.
+
 ## Logging
 
 The generated code keeps every log call of the ST code (`CreateLogMessage*`, the
