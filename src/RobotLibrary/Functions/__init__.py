@@ -1,0 +1,1 @@
+"""Functions module for robot library."""

@@ -1,0 +1,8 @@
+"""Flag enumerations module."""
+
+from .SequenceFlag import SequenceFlag, SequenceFlagEnum
+
+__all__ = [
+    "SequenceFlag", 
+    "SequenceFlagEnum"
+]

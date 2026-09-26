@@ -1,27 +1,55 @@
-# SRCI Python Library
-Python Library for the Standard Robot Command Interface
+# Robot Library Py
 
-This is an open source Python inplementation, based on the on SRCI specification V1.3 (March 2023).
+A Python implementation of the IEC 61131 Robot Library.
 
-More information about SRCI : https://www.profibus.com/technologies/robotics-srci
+## Overview
 
+This project converts the original IEC 61131 Structured Text robot library to Python, maintaining modularity and state-of-the-art practices.
 
-# Status
-The development is planned, but not yet started...
+## Installation
 
-# Software delivery:
-Not yet defined.
+### Using pip (from source)
+```bash
+pip install -e .
+```
 
-# License
-The library is licensed under the GPL-3.0 license.
+### Development Setup
+```bash
+pip install -e ".[dev]"
+```
 
-# Disclaimer and Delimitation
+## Project Structure
 
-The developed software is based on the SRCI technology of "PROFIBUS and PROFINET International" (PI), but it is not an official publication of PI. It is a private project that is created and maintained exclusively by me.
+- `src/robot_library_py/`: Main package
+  - `constants/`: Global constants
+  - `structures/`: Data structures
+  - `enumerations/`: Enums
+  - `functions/`: Utility functions
+  - `pous/`: Programmable Organization Units (Function Blocks)
+- `tests/`: Unit tests
+- `docs/`: Documentation
 
-The use of PI technology only serves to ensure the interoperability and functionality of the SRCI interface. There is no connection or partnership between this project and the PI organization.
+## Usage
 
-This project is provided without any guarantee and can be used for private and commercial purposes. Any use is at the user’s own risk and responsibility.
+```python
+from robot_library_py import ...
+```
 
+## Development
 
-[![Donate with PayPal](https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png)](https://www.paypal.com/donate/?hosted_button_id=ERN6VH9WA95J6)
+- Format code: `black src tests`
+- Lint: `flake8 src tests`
+- Type check: `mypy src`
+- Run tests: `pytest`
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Add tests
+4. Ensure all checks pass
+5. Submit a pull request
+
+## License
+
+LGPL-3.0
