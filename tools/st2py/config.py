@@ -996,6 +996,12 @@ F49_CHECKS = (
 )
 
 
+_F59 = (
+    "F59: the RobotTask put the *currently used* tool/frame into CoordinateSystem and "
+    "ReadActualPositionCyclic compared it with the requested ToolNo/FrameNo -> no position update "
+    "when a motion uses another tool (spec 6.1.6, table 5-89); output CoordinateSystem was never set"
+)
+
 # ---------------------------------------------------------------- synchronisation (F16, F20, F21)
 _SYNC_READS = (
     ("ToolData", "UpdateToolData"),
@@ -1534,6 +1540,73 @@ CONFIG = Config(
         *SYNC_PATCHES,
         SourcePatch(
             "MC_RobotTaskFB",
+            "AxesGroupFromTelegramCyclicOptional",
+            r"(AxesGroup\.CyclicOptional\.RobToPlc\.CartesianPosition\.)CoordinateSystem(\.(?:ToolNo|FrameNo)\s*:=\s*"
+            r"Telegram\.RobToPlc\.CyclicOptional\.CartesianPosition\.)CurrentlyUsed((?:Tool|Frame)No;)",
+            "\\1CoordinateSystem\\2\\3 // ST-FIX F59: tool/frame of the returned position\n"
+            "\\1CurrentCoordinateSystem\\2CurrentlyUsed\\3",
+            _F59,
+            regex=True,
+            template=True,
+        ),
+        SourcePatch(
+            "MC_ReadActualPositionCyclicFB",
+            "OnExecRun",
+            "OutCmd.CurrentCoordinateSystem.FrameNo := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo;",
+            "OutCmd.CurrentCoordinateSystem.FrameNo := "
+            "AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.FrameNo; // ST-FIX F59\n"
+            "         OutCmd.CoordinateSystem.FrameNo        := "
+            "AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo;",
+            _F59,
+        ),
+        SourcePatch(
+            "MC_ReadActualPositionCyclicFB",
+            "OnExecRun",
+            "OutCmd.CurrentCoordinateSystem.ToolNo  := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo;",
+            "OutCmd.CurrentCoordinateSystem.ToolNo  := "
+            "AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.ToolNo; // ST-FIX F59\n"
+            "         OutCmd.CoordinateSystem.ToolNo         := "
+            "AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo;",
+            _F59,
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "AxesGroupFromTelegramCyclicOptional",
+            r"(AxesGroup\.CyclicOptional\.RobToPlc\.CartesianPosition\.TurnNumber\.J\dTurns)\s*:=\s*"
+            r"BYTE_TO_SINT\(GetHalfeByte(Lo|Hi)\s*\((Telegram\.RobToPlc\.CyclicOptional\.CartesianPosition\.Turns_J\d_J\d)\)\);",
+            "_turns := GetHalfeByte\\2(\\3); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
+            "\\1 := BYTE_TO_SINT(_turns AND 16#07);\n"
+            "IF (_turns AND 16#08) <> 0 THEN \\1 := -\\1; END_IF",
+            "F60: cyclic turn numbers RC -> PLC decoded as two's complement nibble (like F3)",
+            regex=True,
+            template=True,
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "AxesGroupFromTelegramCyclicOptional",
+            r"(AxesGroup\.CyclicOptional\.RobToPlc\.CartesianPosition\.TurnNumber\.E1Turns)\s*:=\s*BYTE_TO_SINT\s*"
+            r"\((Telegram\.RobToPlc\.CyclicOptional\.CartesianPosition\.Turns_E1)\);",
+            "\\1 := BYTE_TO_SINT(\\2 AND 16#7F); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
+            "IF (\\2 AND 16#80) <> 0 THEN \\1 := -\\1; END_IF",
+            "F60: cyclic turn numbers RC -> PLC decoded as two's complement nibble (like F3)",
+            regex=True,
+            template=True,
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
+            "AxesGroupToTelegramCyclicOptional",
+            r"(Telegram\.PlcToRob\.CyclicOptional\.CartesianPosition\.Turns_E1)\s*:=\s*SINT_TO_BYTE\s*"
+            r"\((AxesGroup\.CyclicOptional\.PlcToRob\.CartesianPosition\.TurnNumber\.E1Turns)\);",
+            "// ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
+            "  IF \\2 < 0 THEN \\1 := (SINT_TO_BYTE(-\\2) AND 16#7F) OR 16#80;\n"
+            "  ELSE \\1 := SINT_TO_BYTE(\\2) AND 16#7F; END_IF",
+            "F60: cyclic turn numbers PLC -> RC encoded as two's complement nibble (like F3); "
+            "J1..J6 via CombineHalfSints (fixed there)",
+            regex=True,
+            template=True,
+        ),
+        SourcePatch(
+            "MC_RobotTaskFB",
             "OnExecRun",
             "         // Reset Active command register\n         AxesGroup.Acyclic.ActiveCommandRegister.Reset();\n",
             "         // Reset Active command register\n         AxesGroup.Acyclic.ActiveCommandRegister.Reset();\n"
@@ -1608,6 +1681,11 @@ CONFIG = Config(
     variables=[
         *(p for p in F45_OUTPUTS if isinstance(p, VarAppend)),
         *SYNC_VARS,
+        VarAppend(
+            "MC_RobotTaskFB",
+            "VAR\n  _turns : BYTE; // ST-FIX F60: turn number nibble\nEND_VAR",
+            "F60: cyclic turn numbers RC -> PLC decoded as two's complement nibble (like F3)",
+        ),
         VarAppend(
             "MC_RobotTaskFB",
             "VAR\n  _restartReset : BOOL; // ST-FIX F23: interface reset on the RC requested by a restart\nEND_VAR",

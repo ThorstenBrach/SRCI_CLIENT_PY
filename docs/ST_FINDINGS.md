@@ -65,6 +65,8 @@ How to fix them in ST (exact ST diffs, generated from the corrections): [ST_Find
 | F56 | `MC_RobotTaskFB.HandleSeqAck` | the Seq number wraps from 254 to **0**; an Ack of 0 equals the Ack of telegrams without new data → the response of that sequence is ignored, the block hangs (after 255 sequences) | 5.6.5.3: 0 only on the first exchange | fixed (source patch): wrap to 1 (`test_sequence_number_overflow`) |
 | F57 | `MC_RobotTaskFB.HandleSync*` step 10 | the local change detection compares with `IgnoreTimestamp := FALSE`, but the internal copy holds the timestamp of the RC from the start-up read → every data set counts as changed on the PLC; together with the RC "not in sync" → warning "both sides changed", no synchronisation | – | fixed (source patch): `IgnoreTimestamp := TRUE` |
 | F58 | `MC_RobotTaskFB.HandleSync*` step 10 | data changed on both sides only sets the warning `WARN_*_SYNC_BOTH_SIDES_CHANGED`, also with a fixed direction (`CLIENT_TO_SERVER` / `SERVER_TO_CLIENT`) → synchronisation stops | 5.6.7.4: the direction decides | fixed (source patch): step 11 / 12 for the fixed directions, warning only for `AUTOMATIC` |
+| F59 | `MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional`, `MC_ReadActualPositionCyclicFB.OnExecRun` | the RobotTask writes the **currently used** tool/frame (bytes 36..37 of table 5-89) into `CoordinateSystem`; `ReadActualPositionCyclic` compares it with the requested `ToolNo`/`FrameNo` → as soon as a motion uses another tool the outputs are never updated again (all zero), `Enabled` stays TRUE; the output `CoordinateSystem` is never set | 6.1.6: `CoordinateSystem` = tool/frame of the returned position, `CurrentCoordinateSystem` = currently used | fixed: new field `CurrentCoordinateSystem` in `AxesGroupCyclicOptionalDataCartesianPosition`, `CoordinateSystem` from bytes 34..35, both outputs set (found by the Core example) |
+| F60 | `MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` | turn numbers of the optional cyclic Cartesian position are decoded/encoded as two's complement nibble (like F3) | 5.5.4.4 sign + magnitude | fixed (source patches + `CombineHalfSints`) |
 
 ## Notes on the SRCI SDK (simulation)
 
@@ -85,6 +87,11 @@ Changes inside the private SDK copy are marked `SRCI_PY CUSTOM BEGIN/END` and li
 - `RSP::ReadActualPosition` has 2 reserved bytes before the extended axes that are not in the
   spec (SDK comment: "not anymore in spec, but in Tia?") → E1..E6 of ReadActualPosition are
   shifted by 2 bytes against the spec and the PLC library.
+- **C-004** sequence change to the secondary sequence: the frame, tool and load data of the
+  leaving position are read with the numbers of the *previous* interruption (they are set only
+  after the reads) → `ReturnToPrimary` fails with 16#8C22..8C27 when the interrupted motion uses
+  another tool. Fixed in the private copy (numbers taken before the reads), should be reported to
+  the SDK maintainers. Found by the Core example.
 - **C-003** all commands of the spec: the SDK implements only the core commands. The harness
   generates field tables for all 115 commands from the payload tables of the spec
   (`srci_py_harness/gen_commands.py`) and answers the other commands generically

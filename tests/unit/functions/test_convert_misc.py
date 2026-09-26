@@ -37,7 +37,9 @@ def test_version_encoding_table_5_86() -> None:
 def test_half_bytes_and_uint() -> None:
     assert M.CombineHalfBytes(0x0A, 0x05) == 0xA5
     assert M.CombineHalfBytes(0xFA, 0xF5) == 0xA5  # only the low nibbles count
-    assert M.CombineHalfSints(-1, 1) == 0xF1
+    # ST-FIX F60: turn numbers are sign + magnitude (spec 5.5.4.4): -1 = 2#1001
+    assert M.CombineHalfSints(-1, 1) == 0x91
+    assert M.CombineHalfSints(3, -7) == 0x3F
     assert (M.GetHalfeByteHi(0xA5), M.GetHalfeByteLo(0xA5)) == (0xA, 0x5)
     assert M.CombineBytesToUint(HiByte=0x12, LoByte=0x34) == 0x1234
     assert M.SwapWord(0x1234) == 0x3412

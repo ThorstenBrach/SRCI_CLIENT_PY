@@ -37,11 +37,14 @@ Source = "https://github.com/ThorstenBrach/SRCI_PY"
 [tool.hatch.build.targets.wheel]
 packages = ["src/srci"]
 
+[tool.hatch.build.targets.sdist]
+include = ["src/srci", "examples", "docs", "README.md", "LICENSE", "pyproject.toml"]
+
 # ---------------------------------------------------------------- ruff
 [tool.ruff]
 line-length = 110
 target-version = "py312"
-extend-exclude = ["src/srci/types/_generated"]
+extend-exclude = ["src/srci/types/_generated", "src/srci/fb/__init__.pyi"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "N"]

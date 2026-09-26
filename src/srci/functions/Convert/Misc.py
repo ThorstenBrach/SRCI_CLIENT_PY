@@ -109,8 +109,16 @@ def CombineHalfBytes(HalfByteHi: int, HalfByteLo: int) -> int:
 
 # ST-Source: Functions/Convert/Misc/CombineHalfSints.st  sha256: 6c96b6bd218f0b92
 def CombineHalfSints(HalfSintHi: int, HalfSintLo: int) -> int:
-    """Like :func:`CombineHalfBytes` for SINT values (two's complement nibbles)."""
-    return ((HalfSintHi & 0x0F) << 4) | (HalfSintLo & 0x0F)
+    """Two SINT values as sign + magnitude nibbles (turn numbers, spec 5.5.4.4): bits 0..2 value,
+    bit 3 sign, ``HalfSintHi`` in bits 4..7.
+
+    ST-FIX F60: the ST code combines the two's complement nibbles (-1 -> 2#1111 = -7 for the RC).
+    """
+
+    def nibble(value: int) -> int:
+        return (min(abs(value), 7)) | (0x08 if value < 0 else 0)
+
+    return (nibble(HalfSintHi) << 4) | nibble(HalfSintLo)
 
 
 # ST-Source: Functions/Convert/Misc/CombineBytesToUint.st  sha256: 3a15b45d66be6f3c

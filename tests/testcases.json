@@ -387,6 +387,13 @@
   "status": "active"
  },
  {
+  "id": "SDK-CORE-031",
+  "test": "tests/sdk/test_core_fbs.py::test_read_actual_position_cyclic_with_tool",
+  "title": "ST-FIX F59: the position is updated also when the motion uses another tool than the one of the requested coordinate system (the ST compared the *currently used* tool with the request).",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-RT-001",
   "test": "tests/sdk/test_robot_task.py::test_initialized_without_synchronization",
   "title": "RobotTask reaches Initialized without data synchronization",
@@ -537,6 +544,13 @@
   "id": "SDK-LOOP-009",
   "test": "tests/sdk/test_sdk_in_the_loop.py::test_same_handshake_over_tcp",
   "title": "SDK behind the PLC gateway simulator: identical results via TcpTransport.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-010",
+  "test": "tests/sdk/test_example_core_profile.py::test_core_profile_demo",
+  "title": "Every function of the profile \"Core\" (spec table 5-2) is executed without error.",
   "refs": [],
   "status": "active"
  },
@@ -2083,6 +2097,13 @@
   "status": "active"
  },
  {
+  "id": "UT-TOOL-053",
+  "test": "tests/unit/tools/test_build_dist.py::test_wheel_and_sdist",
+  "title": "Wheel and sdist",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-PKG-001",
   "test": "tests/unit/test_logging_bridge.py::test_levels",
   "title": "Levels",
@@ -2107,6 +2128,48 @@
   "id": "UT-PKG-004",
   "test": "tests/unit/test_package.py::test_version_and_profile",
   "title": "Version and profile",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-005",
+  "test": "tests/unit/api/test_api.py::test_fb_package_exports_all_function_blocks",
+  "title": "Fb package exports all function blocks",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-006",
+  "test": "tests/unit/api/test_api.py::test_program_builds_a_telegram_of_the_configured_length",
+  "title": "Program builds a telegram of the configured length",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-007",
+  "test": "tests/unit/api/test_api.py::test_program_add_calls_blocks_and_checks_inputs",
+  "title": "Program add calls blocks and checks inputs",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-008",
+  "test": "tests/unit/api/test_api.py::test_program_runs_with_the_runner",
+  "title": "Program runs with the runner",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-009",
+  "test": "tests/unit/api/test_api.py::test_client_wait_times_out_without_robot",
+  "title": "Client wait times out without robot",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-010",
+  "test": "tests/unit/api/test_api.py::test_client_execute_reports_a_failed_command",
+  "title": "Without an initialized RobotTask the block ends with ERR_COMMANDS_NOT_ENABLED.",
   "refs": [],
   "status": "active"
  }

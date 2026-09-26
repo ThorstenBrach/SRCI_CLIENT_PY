@@ -11,6 +11,7 @@ from dataclasses import dataclass, replace
 
 from .model import (
     ArrayRef,
+    DerivedRef,
     ElemRef,
     EnumValueDef,
     FieldDef,
@@ -143,6 +144,15 @@ FIELD_ADDS: tuple[FieldAdd, ...] = (
         ElemRef("UINT"),
         "Number of server log entries",
         "ST-FIX F32",
+    ),
+    FieldAdd(
+        "AxesGroupCyclicOptionalDataCartesianPosition",
+        "CurrentCoordinateSystem",
+        DerivedRef("RobotCoordinateSystemParameters"),
+        "Tool and frame currently used by the RC (bytes 36..37 of the optional cyclic Cartesian position)",
+        "ST-FIX F59: CoordinateSystem is the tool/frame of the returned position (bytes 34..35), "
+        "the currently used tool/frame needs an own field (spec table 5-89, 6.1.6)",
+        after="CoordinateSystem",
     ),
     FieldAdd(
         "ReadRobotSWLimitsOutCmd",

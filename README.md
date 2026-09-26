@@ -10,6 +10,41 @@ can be ported between both implementations (see [docs/PORTING.md](docs/PORTING.m
 > Status: rewrite in progress (branch `rewrite`). The previous experimental port
 > is preserved on branch `legacy` / tag `legacy-v0`.
 
+## Installation
+
+```bash
+pip install srci_client-<version>-py3-none-any.whl   # wheel built with "python -m build"
+pip install -e .                                     # or from a clone of the repository
+```
+
+The wheel can also be built without any build dependency: `python -m tools.build_dist`
+(writes `dist/`). Python ≥ 3.12, no runtime dependencies.
+
+## Quick start
+
+```python
+from srci.api import SrciClient
+from srci.fb import MC_EnableRobotFB, MC_GroupResetFB, MC_MoveAxesAbsoluteFB
+from srci.transport import TcpTransport
+
+with SrciClient(TcpTransport("192.168.0.10", 5000, 256, 256)) as client:
+    client.wait_initialized()                    # MC_RobotTaskFB: handshake with the RC
+    client.execute(MC_GroupResetFB())
+    enable = client.enable(MC_EnableRobotFB())
+    move = MC_MoveAxesAbsoluteFB()
+    move.ParCmd.JointPosition.J1 = 30.0
+    client.execute(move)                         # returns when the robot is there
+    client.disable(enable)
+```
+
+* `srci.fb` – all function blocks of the PLC library (`MC_…FB`, same inputs/outputs as in the PLC)
+* `srci.types` – all data types and enums
+* `srci.api.RobotProgram` – RobotTask + user data + command blocks (one "PLC program"),
+  `srci.api.SrciClient` – runs it from a sequential script, `srci.runtime.Runner` – cyclic in a thread
+
+**Example:** [examples/core_profile](examples/core_profile) executes every function of the profile
+"Core" and explains the library step by step ([README](examples/core_profile/README.md)).
+
 ## How the port is made
 
 The data types, function blocks and functions are **generated** from the PLCopen XML

@@ -111,6 +111,23 @@ END_FUNCTION
 Values out of range (|J| > 7, |E1| > 127) are rejected in Python (`ValueRangeError`); in ST check
 them in `CheckParameterValid` of the blocks with turn numbers or clamp them.
 
+### F60
+
+`CombineHalfSints` (used by `MC_RobotTaskFB.AxesGroupToTelegramCyclicOptional` for the cyclic turn
+numbers PLC→RC) – combines two's complement nibbles; the turn numbers are sign + magnitude (spec
+5.5.4.4, see F3). The RC→PLC direction and E1 are fixed by generated patches (section F60 above).
+Reference: `CombineHalfSints` in `src/srci/functions/Convert/Misc.py`.
+
+```diff
+-CombineHalfSints.0 := HalfSintLo.0;
+-// ... bit copies .1 .. .7
+-CombineHalfSints.7 := HalfSintHi.3;
++// ST-FIX F60: sign + magnitude nibbles (bits 0..2 value, bit 3 sign)
++CombineHalfSints := SHL(TURN_TO_SIGN_MAGNITUDE(HalfSintHi, 3), 4) OR TURN_TO_SIGN_MAGNITUDE(HalfSintLo, 3);
+```
+
+(`TURN_TO_SIGN_MAGNITUDE` see F3.)
+
 ### F5
 
 `MC_RobotTaskFB.ParseRecvPayloadSequence` – `_fragIdx` and `_seqPayloadPtr` are not reset for the

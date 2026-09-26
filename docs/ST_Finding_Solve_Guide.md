@@ -102,6 +102,8 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | [F56](#f56) | `MC_RobotTaskFB.HandleSeqAck` - the Seq number wraps from 254 to **0**; an Ack of 0 equals the Ack of telegrams without new data → the response of that sequence is ignored, the block hangs (after 255 sequences) | 1 | `MC_RobotTaskFB` |
 | [F57](#f57) | `MC_RobotTaskFB.HandleSync*` step 10 - the local change detection compares with `IgnoreTimestamp := FALSE`, but the internal copy holds the timestamp of the RC from the start-up read → every data set counts as changed on the PLC; together with the RC "not in sync" → warning "both sides changed", no synchronisation | 7 | `MC_RobotTaskFB` |
 | [F58](#f58) | `MC_RobotTaskFB.HandleSync*` step 10 - data changed on both sides only sets the warning `WARN_*_SYNC_BOTH_SIDES_CHANGED`, also with a fixed direction (`CLIENT_TO_SERVER` / `SERVER_TO_CLIENT`) → synchronisation stops | 7 | `MC_RobotTaskFB` |
+| [F59](#f59) | `MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional`, `MC_ReadActualPositionCyclicFB.OnExecRun` - the RobotTask writes the **currently used** tool/frame (bytes 36..37 of table 5-89) into `CoordinateSystem`; `ReadActualPositionCyclic` compares it with the requested `ToolNo`/`FrameNo` → as soon as a motion uses another tool the outputs are never updated again (all zero), `Enabled` stays TRUE; the output `CoordinateSystem` is never set | 3 | `MC_ReadActualPositionCyclicFB`, `MC_RobotTaskFB`, data types |
+| [F60](#f60) | `MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - turn numbers of the optional cyclic Cartesian position are decoded/encoded as two's complement nibble (like F3) | 4 | `MC_RobotTaskFB`, hand written |
 
 ## Generated ST changes
 
@@ -6086,6 +6088,154 @@ _`MC_RobotTaskFB.HandleSync*` step 10 - data changed on both sides only sets the
  
 ```
 
+### F59
+
+_`MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional`, `MC_ReadActualPositionCyclicFB.OnExecRun` - the RobotTask writes the **currently used** tool/frame (bytes 36..37 of table 5-89) into `CoordinateSystem`; `ReadActualPositionCyclic` compares it with the requested `ToolNo`/`FrameNo` → as soon as a motion uses another tool the outputs are never updated again (all zero), `Enabled` stays TRUE; the output `CoordinateSystem` is never set_
+
+- F59: the RobotTask put the *currently used* tool/frame into CoordinateSystem and ReadActualPositionCyclic compared it with the requested ToolNo/FrameNo -> no position update when a motion uses another tool (spec 6.1.6, table 5-89); output CoordinateSystem was never set
+
+**MC_RobotTaskFB** · `AxesGroupFromTelegramCyclicOptional` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
++++ b/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
+@@ -22,8 +22,10 @@
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns       := BYTE_TO_SINT(GetHalfeByteHi         (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5));
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns       := BYTE_TO_SINT                        (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1);
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.E1                       :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.E1;
+-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo  :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.CurrentlyUsedToolNo;
+-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.CurrentlyUsedFrameNo;
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo  :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.ToolNo; // ST-FIX F59: tool/frame of the returned position
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.ToolNo  :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.CurrentlyUsedToolNo;
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.FrameNo; // ST-FIX F59: tool/frame of the returned position
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.FrameNo :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.CurrentlyUsedFrameNo;
+ // }}}
+ 
+ 
+```
+
+**MC_ReadActualPositionCyclicFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_ReadActualPositionCyclicFB.OnExecRun
++++ b/MC_ReadActualPositionCyclicFB.OnExecRun
+@@ -44,7 +44,8 @@
+          // Reset command outputs
+          SysDepMemSet(pDest := ADR(OutCmd), Value := 0, DataLen := SIZEOF(OutCmd));         
+          // set ToolNo and FrameNo
+-         OutCmd.CurrentCoordinateSystem.FrameNo := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo;
++         OutCmd.CurrentCoordinateSystem.FrameNo := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.FrameNo; // ST-FIX F59
++         OutCmd.CoordinateSystem.FrameNo        := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo;
+          OutCmd.CurrentCoordinateSystem.ToolNo  := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo;
+          
+          // Set cartesian position
+```
+
+**MC_ReadActualPositionCyclicFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_ReadActualPositionCyclicFB.OnExecRun
++++ b/MC_ReadActualPositionCyclicFB.OnExecRun
+@@ -46,7 +46,8 @@
+          // set ToolNo and FrameNo
+          OutCmd.CurrentCoordinateSystem.FrameNo := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.FrameNo; // ST-FIX F59
+          OutCmd.CoordinateSystem.FrameNo        := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo;
+-         OutCmd.CurrentCoordinateSystem.ToolNo  := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo;
++         OutCmd.CurrentCoordinateSystem.ToolNo  := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.ToolNo; // ST-FIX F59
++         OutCmd.CoordinateSystem.ToolNo         := AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo;
+          
+          // Set cartesian position
+          IF ( _parCmd.ReadCartesianPosition )  
+```
+
+### F60
+
+_`MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - turn numbers of the optional cyclic Cartesian position are decoded/encoded as two's complement nibble (like F3)_
+
+- F60: cyclic turn numbers RC -> PLC decoded as two's complement nibble (like F3)
+- F60: cyclic turn numbers PLC -> RC encoded as two's complement nibble (like F3); J1..J6 via CombineHalfSints (fixed there)
+
+**MC_RobotTaskFB** · `declaration` · variables
+
+```diff
++VAR
++  _turns : BYTE; // ST-FIX F60: turn number nibble
++END_VAR
+```
+
+**MC_RobotTaskFB** · `AxesGroupFromTelegramCyclicOptional` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
++++ b/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
+@@ -14,12 +14,24 @@
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.Config.Shoulder          :=              WordToArmConfigShoulder(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Config);
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.Config.Elbow             :=              WordToArmConfigElbow   (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Config);
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.Config.Wrist             :=              WordToArmConfigWrist   (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Config);
+-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns       := BYTE_TO_SINT(GetHalfeByteLo         (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J2_J1));
+-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns       := BYTE_TO_SINT(GetHalfeByteHi         (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J2_J1));
+-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns       := BYTE_TO_SINT(GetHalfeByteLo         (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J4_J3));
+-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns       := BYTE_TO_SINT(GetHalfeByteHi         (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J4_J3));
+-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns       := BYTE_TO_SINT(GetHalfeByteLo         (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5));
+-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns       := BYTE_TO_SINT(GetHalfeByteHi         (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5));
++_turns := GetHalfeByteLo(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J2_J1); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns := BYTE_TO_SINT(_turns AND 16#07);
++IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns; END_IF
++_turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J2_J1); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns := BYTE_TO_SINT(_turns AND 16#07);
++IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns; END_IF
++_turns := GetHalfeByteLo(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J4_J3); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns := BYTE_TO_SINT(_turns AND 16#07);
++IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns; END_IF
++_turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J4_J3); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns := BYTE_TO_SINT(_turns AND 16#07);
++IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns; END_IF
++_turns := GetHalfeByteLo(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns := BYTE_TO_SINT(_turns AND 16#07);
++IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns; END_IF
++_turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := BYTE_TO_SINT(_turns AND 16#07);
++IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns; END_IF
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns       := BYTE_TO_SINT                        (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1);
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.E1                       :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.E1;
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo  :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.ToolNo; // ST-FIX F59: tool/frame of the returned position
+```
+
+**MC_RobotTaskFB** · `AxesGroupFromTelegramCyclicOptional` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
++++ b/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
+@@ -32,7 +32,8 @@
+ _turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := BYTE_TO_SINT(_turns AND 16#07);
+ IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns; END_IF
+-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns       := BYTE_TO_SINT                        (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1);
++AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns := BYTE_TO_SINT(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1 AND 16#7F); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
++IF (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1 AND 16#80) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns; END_IF
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.E1                       :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.E1;
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo  :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.ToolNo; // ST-FIX F59: tool/frame of the returned position
+ AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.ToolNo  :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.CurrentlyUsedToolNo;
+```
+
+**MC_RobotTaskFB** · `AxesGroupToTelegramCyclicOptional` · patch
+
+```diff
+--- a/MC_RobotTaskFB.AxesGroupToTelegramCyclicOptional
++++ b/MC_RobotTaskFB.AxesGroupToTelegramCyclicOptional
+@@ -20,7 +20,9 @@
+                                                                                      AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.J3Turns);
+   Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_J6_J5 := CombineHalfSints(AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.J6Turns, 
+                                                                                      AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.J5Turns);
+-  Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1    := SINT_TO_BYTE    (AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns);
++  // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
++  IF AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns < 0 THEN Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 := (SINT_TO_BYTE(-AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns) AND 16#7F) OR 16#80;
++  ELSE Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 := SINT_TO_BYTE(AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns) AND 16#7F; END_IF
+ END_IF  
+ // }}}
+   
+```
+
 ## Data types
 
 Change the DUTs / enums / constants of the library:
@@ -6109,6 +6259,7 @@ Change the DUTs / enums / constants of the library:
 - **F46** Field `OriginID` (comment `/// OriginID of the stopped subprogram (spec 5.5.12.4 EmitterID, ListenerID, FollowID and OriginID)`) in `StopSubprogramOutCmd` - ST-FIX F46: comment missing
 - **F46** Field `RCInterpreterVersion` (comment `/// Version of the server implementation in the format X.X.X (spec table 6-18)`) in `ReadRobotDataOutCmd` - ST-FIX F46: comment missing
 - **F52** Constant `RobotLibraryParameter.FRAGMENT_MAX` := `31` - ST-FIX F52: 10 fragments (0..9) per telegram are too few - a 256 byte telegram holds up to 27 fragments (header 8 bytes + at least 1 byte payload); fragments behind the array were dropped although the telegram was acknowledged -> responses lost
+- **F59** New field in `AxesGroupCyclicOptionalDataCartesianPosition` (after `CoordinateSystem`): `CurrentCoordinateSystem : RobotCoordinateSystemParameters;  /// Tool and frame currently used by the RC (bytes 36..37 of the optional cyclic Cartesian position)` - ST-FIX F59: CoordinateSystem is the tool/frame of the returned position (bytes 34..35), the currently used tool/frame needs an own field (spec table 5-89, 6.1.6)
 
 ## Fixes without generated diff
 
@@ -6224,6 +6375,23 @@ END_FUNCTION
 
 Values out of range (|J| > 7, |E1| > 127) are rejected in Python (`ValueRangeError`); in ST check
 them in `CheckParameterValid` of the blocks with turn numbers or clamp them.
+
+### F60
+
+`CombineHalfSints` (used by `MC_RobotTaskFB.AxesGroupToTelegramCyclicOptional` for the cyclic turn
+numbers PLC→RC) – combines two's complement nibbles; the turn numbers are sign + magnitude (spec
+5.5.4.4, see F3). The RC→PLC direction and E1 are fixed by generated patches (section F60 above).
+Reference: `CombineHalfSints` in `src/srci/functions/Convert/Misc.py`.
+
+```diff
+-CombineHalfSints.0 := HalfSintLo.0;
+-// ... bit copies .1 .. .7
+-CombineHalfSints.7 := HalfSintHi.3;
++// ST-FIX F60: sign + magnitude nibbles (bits 0..2 value, bit 3 sign)
++CombineHalfSints := SHL(TURN_TO_SIGN_MAGNITUDE(HalfSintHi, 3), 4) OR TURN_TO_SIGN_MAGNITUDE(HalfSintLo, 3);
+```
+
+(`TURN_TO_SIGN_MAGNITUDE` see F3.)
 
 ### F5
 

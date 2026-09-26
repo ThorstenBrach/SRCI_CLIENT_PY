@@ -24,9 +24,9 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [MET](#met) | Methodology tests of all function blocks against the SDK | 16 | 1273 |
 | [SDK-BIL](#sdk-bil) | Bilateral tests: client payload decoded by the SDK and back | 2 | 224 |
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
-| [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 30 | 30 |
+| [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 31 | 31 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 9 | 10 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 10 | 12 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
@@ -36,9 +36,9 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
-| [UT-TOOL](#ut-tool) | Code generators and tools | 52 | 196 |
-| [UT-PKG](#ut-pkg) | Package, logging | 4 | 4 |
-| | **Total** | **297** | **3471** |
+| [UT-TOOL](#ut-tool) | Code generators and tools | 53 | 197 |
+| [UT-PKG](#ut-pkg) | Package, logging | 10 | 10 |
+| | **Total** | **306** | **3481** |
 
 ## Test methodology
 
@@ -195,6 +195,7 @@ Core function blocks against the SDK
 | SDK-CORE-028 | WriteRobotDefaultDynamics / ReadRobotDefaultDynamics round trip | 1 | `test_write_and_read_default_dynamics` |
 | SDK-CORE-029 | WriteRobotReferenceDynamics / ReadRobotReferenceDynamics round trip | 1 | `test_write_and_read_reference_dynamics` |
 | SDK-CORE-030 | ST-FIX F56: 600 commands one after the other (more than 255 telegram sequences): every command gets its response. | 1 | `test_sequence_number_overflow` |
+| SDK-CORE-031 | ST-FIX F59: the position is updated also when the motion uses another tool than the one of the requested coordinate system (the ST compared the *currently used* tool with the request). | 1 | `test_read_actual_position_cyclic_with_tool` |
 
 ## SDK-RT
 
@@ -231,6 +232,7 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-007 | Cartesian position of the RC arrives in the cyclic data of the client | 1 | `test_cartesian_position_rc_to_plc` |
 | SDK-LOOP-008 | The lifesign is mirrored by the RC in every cycle | 1 | `test_lifesign_is_mirrored_every_cycle` |
 | SDK-LOOP-009 | SDK behind the PLC gateway simulator: identical results via TcpTransport. | 1 | `test_same_handshake_over_tcp` |
+| SDK-LOOP-010 | Every function of the profile "Core" (spec table 5-2) is executed without error. | 2 | `test_core_profile_demo` |
 
 ## TCP
 
@@ -521,6 +523,7 @@ Code generators and tools
 | UT-TOOL-050 | Regenerate with ``python -m tools.st2py.fix_guide``. | 1 | `test_guide_is_up_to_date` |
 | UT-TOOL-051 | Every ST-FIX of hand written Python has an ST description in fix_guide_manual.md. | 1 | `test_hand_written_fixes_are_described` |
 | UT-TOOL-052 | Every step changes the st text | 1 | `test_every_step_changes_the_st_text` |
+| UT-TOOL-053 | Wheel and sdist | 1 | `test_wheel_and_sdist` |
 
 ## UT-PKG
 
@@ -532,3 +535,9 @@ Package, logging
 | UT-PKG-002 | System log of a function block | 1 | `test_system_log_of_a_function_block` |
 | UT-PKG-003 | Rc messages are forwarded | 1 | `test_rc_messages_are_forwarded` |
 | UT-PKG-004 | Version and profile | 1 | `test_version_and_profile` |
+| UT-PKG-005 | Fb package exports all function blocks | 1 | `test_fb_package_exports_all_function_blocks` |
+| UT-PKG-006 | Program builds a telegram of the configured length | 1 | `test_program_builds_a_telegram_of_the_configured_length` |
+| UT-PKG-007 | Program add calls blocks and checks inputs | 1 | `test_program_add_calls_blocks_and_checks_inputs` |
+| UT-PKG-008 | Program runs with the runner | 1 | `test_program_runs_with_the_runner` |
+| UT-PKG-009 | Client wait times out without robot | 1 | `test_client_wait_times_out_without_robot` |
+| UT-PKG-010 | Without an initialized RobotTask the block ends with ERR_COMMANDS_NOT_ENABLED. | 1 | `test_client_execute_reports_a_failed_command` |

@@ -274,8 +274,10 @@ class MC_ReadActualPositionCyclicFB(RobotLibraryBaseEnableFB):
                     # Reset command outputs
                     SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(ReadActualPositionCyclicOutCmd)), Value=0, DataLen=226)
                     # set ToolNo and FrameNo
-                    self.OutCmd.CurrentCoordinateSystem.FrameNo = AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo
-                    self.OutCmd.CurrentCoordinateSystem.ToolNo = AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo
+                    self.OutCmd.CurrentCoordinateSystem.FrameNo = AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.FrameNo  # ST-FIX F59
+                    self.OutCmd.CoordinateSystem.FrameNo = AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.FrameNo
+                    self.OutCmd.CurrentCoordinateSystem.ToolNo = AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.ToolNo  # ST-FIX F59
+                    self.OutCmd.CoordinateSystem.ToolNo = AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo
 
                     # Set cartesian position
                     if self._parCmd.ReadCartesianPosition:

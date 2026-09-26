@@ -12707,6 +12707,12 @@ class AxesGroupCyclicOptionalDataCartesianPosition(RobotCartesianPositionShort):
     """indicates that this optional parameter will be used"""
     CoordinateSystem: RobotCoordinateSystemParameters = _field(default_factory=lambda: RobotCoordinateSystemParameters())
     """corresponding coordinate systems"""
+    CurrentCoordinateSystem: RobotCoordinateSystemParameters = _field(default_factory=lambda: RobotCoordinateSystemParameters())
+    """
+    Tool and frame currently used by the RC (bytes 36..37 of the optional cyclic Cartesian position)
+    [Override: ST-FIX F59: CoordinateSystem is the tool/frame of the returned position (bytes
+    34..35), the currently used tool/frame needs an own field (spec table 5-89, 6.1.6)]
+    """
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -19230,6 +19236,7 @@ RobotCartesianPositionShort._IEC_FIELDS_ = RobotCartesianPositionBase._IEC_FIELD
 AxesGroupCyclicOptionalDataCartesianPosition._IEC_FIELDS_ = RobotCartesianPositionShort._IEC_FIELDS_ + (
     _iec.IecField('Active', _iec.BOOL),
     _iec.IecField('CoordinateSystem', _iec.StructType(RobotCoordinateSystemParameters)),
+    _iec.IecField('CurrentCoordinateSystem', _iec.StructType(RobotCoordinateSystemParameters)),
 )
 RobotCartesianPositionExt._IEC_FIELDS_ = (
     _iec.IecField('E2', _iec.REAL),

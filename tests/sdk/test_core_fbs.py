@@ -425,3 +425,31 @@ def test_write_and_read_reference_dynamics(robot: RobotTaskHarness) -> None:
     wr = fb(robot, "MC_WriteRobotReferenceDynamicsFB")
     wr.ParCmd.DynamicValues = rd.OutCmd.DynamicValues
     execute(robot, wr)
+
+
+# ---------------------------------------------------------------- cyclic position
+
+
+def test_read_actual_position_cyclic_with_tool(sdk: SdkSimulator) -> None:
+    """ST-FIX F59: the position is updated also when the motion uses another tool than the one of
+    the requested coordinate system (the ST compared the *currently used* tool with the request)."""
+    sdk.set_move_cycles(MOVE_CYCLES)
+    clock = FakeClock()
+    with use_clock(clock):
+        h = RobotTaskHarness(sdk_transport(sdk, SIZE, SIZE), advance=clock.advance)
+        h.cfg.Rob.OptionalCyclic.UseJointPosition = True
+        h.cfg.Rob.OptionalCyclic.UseCartesianPosition = True
+        h.run(100, until=lambda: bool(h.ag.State.CMDsEnabled))
+        cyc = fb(h, "MC_ReadActualPositionCyclicFB", Enable=True)
+        cyc.ParCmd.ReadJointPosition = cyc.ParCmd.ReadCartesianPosition = True
+        h.run(20, until=lambda: bool(cyc.Enabled or cyc.Error))
+        assert cyc.Enabled and not cyc.Error, state(cyc)
+        enable(h, sdk)
+        mv = move_axes(h, 10.0, 20.0)
+        mv.ParCmd.ToolNo = 1
+        execute(h, mv)
+        h.run(3)
+        assert (cyc.OutCmd.JointPosition.J1, cyc.OutCmd.JointPosition.J2) == (10.0, 20.0)
+        assert cyc.OutCmd.CartesianPosition.X == 10.0  # identity kinematics, flange (tool 0)
+        assert cyc.OutCmd.CoordinateSystem.ToolNo == 0  # requested
+        assert cyc.OutCmd.CurrentCoordinateSystem.ToolNo == 1  # used by the motion
