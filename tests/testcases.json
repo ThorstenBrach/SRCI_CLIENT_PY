@@ -47,7 +47,7 @@
  {
   "id": "GEN-05",
   "test": "tests/sdk/test_methodology.py::test_gen05_default_values",
-  "title": "Valid command with the default values, positive edge -> Done / Enabled / Valid without error.",
+  "title": "Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command.",
   "refs": [
    "Siemens x-06"
   ],
@@ -65,7 +65,7 @@
  {
   "id": "GEN-07",
   "test": "tests/sdk/test_methodology.py::test_gen07_axes_group_not_initialized",
-  "title": "RobotTask not running -> Error.",
+  "title": "RobotTask not running -> Error (blocks of the start-up: after the command timeout).",
   "refs": [
    "Siemens x-08 \"Axes group is not defined\""
   ],
@@ -83,9 +83,9 @@
  {
   "id": "GEN-09",
   "test": "tests/sdk/test_methodology.py::test_gen09_undefined_exec_mode",
-  "title": "Undefined AbortingMode (18), or ExecMode for blocks without AbortingMode -> Error, nothing sent.",
+  "title": "Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent.",
   "refs": [
-   "Siemens x-09 \"AbortingMode is not defined\""
+   "Siemens x-09 \"AbortingMode is not defined\", ST-FIX F48"
   ],
   "status": "active"
  },

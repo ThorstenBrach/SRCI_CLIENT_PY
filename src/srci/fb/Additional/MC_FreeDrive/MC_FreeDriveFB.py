@@ -357,6 +357,7 @@ class MC_FreeDriveFB(RobotLibraryBaseEnableFB):
 
         # Update Enable flag
         self.OutCmd.Enabled = self._response.Enabled
+        self.Enabled = self._response.Enabled  # ST-FIX F43
 
         match State:
 

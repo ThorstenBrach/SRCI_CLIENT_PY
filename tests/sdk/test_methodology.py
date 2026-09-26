@@ -185,53 +185,49 @@ def test_gen04_not_executed(name: str) -> None:
 
 # ------------------------------------------------------------------ GEN-05
 
-# F41/F44: defaults that are not a valid command (spec: rates "<0 %: default", mandatory
-# parameters without default); index 0 is rejected by the RC; blocks that need a precondition
+# mandatory parameters without a valid default (spec: M, no default) -> the block or the RC
+# rejects the command with the default values; that is the correct reaction
+GEN05_MANDATORY = {
+    "MC_SetOperationModeFB": "OperationMode",
+    "MC_SetSequenceFB": "TargetSequence",
+    "MC_SwitchLanguageFB": "LanguageCode",
+    "MC_UserLoginFB": "Username/Password",
+    "MC_ReadAnalogInputFB": "Index",
+    "MC_SetTriggerRegisterFB": "TriggerMode",
+    "MC_ReadLoadDataFB": "LoadNo (load 0 cannot be read)",
+    "MC_WriteLoadDataFB": "LoadNo",
+    "MC_WriteFrameDataFB": "FrameNo (frame 0 = world cannot be written)",
+    "MC_WriteToolDataFB": "ToolNo (tool 0 = flange cannot be written)",
+    "MC_WriteRobotSWLimitsFB": "limits (0/0 for all axes)",
+}
 GEN05_KNOWN = {
-    "MC_MoveAxesAbsoluteFB": "F41: DecelerationRate default 0.0 (spec: <0 % = default) -> RC error",
-    "MC_MoveDirectAbsoluteFB": "F41: DecelerationRate default 0.0 (spec: <0 % = default) -> RC error",
-    "MC_MoveLinearAbsoluteFB": "F41: DecelerationRate default 0.0 (spec: <0 % = default) -> RC error",
-    "MC_ReturnToPrimaryFB": "F41: DecelerationRate default 0.0 (spec: <0 % = default) -> RC error",
-    "MC_CollisionDetectionFB": "F44: SequenceFlag default NO_SEQUENCE is invalid for this block",
-    "MC_ExchangeConfigurationFB": "F44: LifeSignTimeOut default 0 is invalid",
-    "MC_ForceControlFB": "F44: default parameters invalid",
-    "MC_SetOperationModeFB": "F44: OperationMode default is invalid",
-    "MC_SetSequenceFB": "F44: TargetSequence default NO_SEQUENCE is invalid",
-    "MC_SwitchLanguageFB": "F44: LanguageCode default empty",
-    "MC_UserLoginFB": "F44: Username/Password default empty",
-    "MC_ReadAnalogInputFB": "F44: default parameters invalid",
-    "MC_MoveSplineFB": "F44: default parameters invalid",
-    "MC_SetTriggerRegisterFB": "F44: default parameters invalid",
-    "MC_ReadLoadDataFB": "F44: LoadNo default 0 is invalid (load 0 cannot be read)",
-    "MC_WriteLoadDataFB": "F44: LoadNo default 0 is invalid",
-    "MC_WriteFrameDataFB": "RC: frame 0 (world) cannot be written",
-    "MC_WriteToolDataFB": "RC: tool 0 (flange) cannot be written",
-    "MC_WriteRobotSWLimitsFB": "RC: limits 0/0 for all axes are rejected",
-    "MC_FreeDriveFB": "F43: output Enabled is never set (only OutCmd.Enabled)",
-    "MC_OpenBrakeFB": "F42: Execute block, the spec defines OpenBrake with Enable",
     "MC_ActivateConveyorTrackingFB": "precondition: the RC reports ConveyorTrackingEnabled",
     "MC_MoveSuperImposedFB": "precondition: needs a motion to superimpose",
+    "MC_MoveSplineFB": "precondition: needs a spline created with CreateSpline",
 }
 
 
 @pytest.mark.parametrize("name", NAMES)
 def test_gen05_default_values(name: str) -> None:
     """GEN-05 (Siemens x-06): valid command with the default values, positive edge -> Done /
-    Enabled / Valid without error."""
+    Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters
+    without default reject the command."""
     if name in GEN05_KNOWN:
         pytest.xfail(GEN05_KNOWN[name])
     with robot() as (_, h):
         fb = block(name, h, values=False)
         start(fb)
         h.run(200, until=lambda: finished(fb))
-        assert finished(fb) and not fb.Error, outputs(fb)
+        if name in GEN05_MANDATORY:
+            assert fb.Error and fb.ErrorID, outputs(fb)
+        else:
+            assert finished(fb) and not fb.Error, outputs(fb)
 
 
 # ------------------------------------------------------------------ GEN-06
 
 GEN06_REPEAT = {"MC_CalculateFrameFB", "MC_CalculateToolFB"}  # one command per position (DataIndex)
 GEN06_KNOWN = {
-    "MC_OpenBrakeFB": "F42: Execute block, the spec defines OpenBrake with Enable",
     "MC_MoveSuperImposedFB": "precondition: needs a motion to superimpose",
     "MC_MoveSplineFB": "precondition: needs a spline created with CreateSpline",
 }
@@ -261,22 +257,19 @@ def test_gen06_continuous_execute(name: str) -> None:
 
 # ------------------------------------------------------------------ GEN-07
 
-GEN07_KNOWN = {
-    "MC_ExchangeConfigurationFB": "F47: blocks of the start-up wait for the RobotTask (Busy, no error)",
-    "MC_ReadMessagesFB": "F47: blocks of the start-up wait for the RobotTask (Busy, no error)",
-    "MC_ReadRobotDataFB": "F47: blocks of the start-up wait for the RobotTask (Busy, no error)",
-}
+# blocks of the start-up sequence may run before the commands are enabled; without RobotTask
+# they end with ERR_TIMEOUT_CMD after the command timeout (5 s, ST-FIX F47/F53)
+GEN07_STARTUP = {"MC_ExchangeConfigurationFB", "MC_ReadMessagesFB", "MC_ReadRobotDataFB"}
 
 
 @pytest.mark.parametrize("name", NAMES)
 def test_gen07_axes_group_not_initialized(name: str) -> None:
-    """GEN-07 (Siemens x-08 "Axes group is not defined"): RobotTask not running -> Error."""
-    if name in GEN07_KNOWN:
-        pytest.xfail(GEN07_KNOWN[name])
+    """GEN-07 (Siemens x-08 "Axes group is not defined"): RobotTask not running -> Error (blocks
+    of the start-up: after the command timeout)."""
     with robot(initialized=False) as (sim, h):
         fb = block(name, h)
         start(fb)
-        h.run(100, until=lambda: bool(fb.Error))
+        h.run(700 if name in GEN07_STARTUP else 100, until=lambda: bool(fb.Error))
         assert fb.Error and fb.ErrorID != 0, outputs(fb)
         assert commands(sim, cmd_type(name)) == 0
 
@@ -307,55 +300,23 @@ def test_gen08_execute_for_one_cycle(name: str) -> None:
 
 # ------------------------------------------------------------------ GEN-09
 
-GEN09_CHECKED = {  # blocks that reject an undefined AbortingMode / ExecMode
-    "MC_BrakeTestFB",
-    "MC_EnableRobotFB",
-    "MC_GroupJogFB",
-    "MC_LoadMeasurementAutomaticFB",
-    "MC_MoveApproachDirectFB",
-    "MC_MoveApproachLinearFB",
-    "MC_MoveAxesAbsoluteFB",
-    "MC_MoveAxesRelativeFB",
-    "MC_MoveCircularAbsoluteFB",
-    "MC_MoveCircularCamFB",
-    "MC_MoveCircularRelativeFB",
-    "MC_MoveDepartDirectFB",
-    "MC_MoveDepartLinearFB",
-    "MC_MoveDirectAbsoluteFB",
-    "MC_MoveDirectOffsetFB",
-    "MC_MoveDirectRelativeFB",
-    "MC_MoveLinearAbsoluteFB",
-    "MC_MoveLinearAbsoluteJFB",
-    "MC_MoveLinearCamFB",
-    "MC_MoveLinearOffsetFB",
-    "MC_MoveLinearRelativeFB",
-    "MC_MovePickPlaceDirectFB",
-    "MC_MovePickPlaceLinearFB",
-    "MC_MoveSplineFB",
-    "MC_ReturnToPrimaryFB",
-    "MC_SearchHardStopFB",
-    "MC_SearchHardStopJFB",
-    "MC_SoftSwitchTcpFB",
-    "MC_WaitTimeFB",
-    "MC_WriteRobotSWLimitsFB",
-}
-
 
 @pytest.mark.parametrize("name", NAMES)
 def test_gen09_undefined_exec_mode(name: str) -> None:
-    """GEN-09 (Siemens x-09 "AbortingMode is not defined"): undefined AbortingMode (18), or
-    ExecMode for blocks without AbortingMode -> Error, nothing sent."""
-    if name not in GEN09_CHECKED:
-        pytest.xfail("F48: ExecMode is not checked by the block and not rejected by the RC")
-    with robot() as (_, h):
+    """GEN-09 (Siemens x-09 "AbortingMode is not defined", ST-FIX F48): undefined AbortingMode
+    (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing
+    sent."""
+    with robot() as (sim, h):
+        start_log = len(sim.logs)
         fb = block(name, h)
-        if hasattr(fb, "AbortingMode"):
-            fb.AbortingMode = 18
-        else:
-            fb.ExecMode = 18
+        for key in ("AbortingMode", "ProcessingMode", "ExecMode"):
+            if hasattr(fb, key):
+                setattr(fb, key, 18)
+                break
         start(fb)
         h.run(100, until=lambda: finished(fb))
-        assert fb.Error, outputs(fb)
+        assert fb.Error and not fb.Busy, outputs(fb)
+        assert commands(sim, cmd_type(name), start_log) == 0
 
 
 # ------------------------------------------------------------------ ERR-01
@@ -370,15 +331,7 @@ def _enum_parameters() -> list[tuple[str, str]]:
     return cases
 
 
-ERR01_KNOWN = {
-    ("MC_StopSubprogramFB", "SequenceFlag"): "F49: value not checked",
-    ("MC_MoveLinearRelativeFB", "ReferenceType"): "F49: value not checked",
-    ("MC_MovePickPlaceDirectFB", "BlendingMode"): "F49: value not checked",
-    ("MC_MovePickPlaceLinearFB", "BlendingMode"): "F49: value not checked",
-    ("MC_WriteAnalogOutputFB", "Unit"): "F49: value not checked",
-    ("MC_CollisionDetectionFB", "ProcessingMode"): "F49/F39: ParCmd.ProcessingMode neither checked nor sent",
-    ("MC_CollisionDetectionFB", "SequenceFlag"): "F49/F39: ParCmd.SequenceFlag neither checked nor sent",
-}
+ERR01_KNOWN: dict[tuple[str, str], str] = {}  # F49 fixed
 
 
 @pytest.mark.parametrize(("name", "path"), _enum_parameters())

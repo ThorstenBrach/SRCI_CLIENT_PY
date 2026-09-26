@@ -34,6 +34,83 @@ class EnumOverride:
     reason: str
 
 
+@dataclass(frozen=True)
+class FieldOverride:
+    """Initial value of a structure field; ``struct`` ending with ``*`` is a prefix,
+    starting with ``*`` a suffix (e.g. ``"*ParCmd"``)."""
+
+    struct: str
+    field: str
+    init: InitValue | None  # None: keep the initial value
+    reason: str
+    doc: str = ""  # comment of the field (for fields without comment)
+
+
+def _matches(pattern: str, name: str) -> bool:
+    if pattern.startswith("*"):
+        return name.endswith(pattern[1:])
+    if pattern.endswith("*"):
+        return name.startswith(pattern[:-1])
+    return name == pattern
+
+
+_F41 = (
+    "ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the library "
+    "had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)"
+)
+FIELD_OVERRIDES: tuple[FieldOverride, ...] = (
+    *(
+        FieldOverride("*ParCmd", rate, SimpleValue("-1.0"), _F41)
+        for rate in ("VelocityRate", "AccelerationRate", "DecelerationRate", "JerkRate")
+    ),
+    FieldOverride(
+        "ExchangeConfigurationParCmd",
+        "LifeSignTimeOut",
+        SimpleValue("50"),
+        "ST-FIX F44: spec 5.6.6: LifeSignTimeOut default 50 ms (min 10 ms); the library had 0 (invalid)",
+    ),
+    FieldOverride(
+        "StopSubprogramOutCmd",
+        "OriginID",
+        None,
+        "ST-FIX F46: comment missing",
+        doc="OriginID of the stopped subprogram (spec 5.5.12.4 EmitterID, ListenerID, FollowID and OriginID)",
+    ),
+    FieldOverride(
+        "ReadRobotDataOutCmd",
+        "RCInterpreterVersion",
+        None,
+        "ST-FIX F46: comment missing",
+        doc="Version of the server implementation in the format X.X.X (spec table 6-18)",
+    ),
+)
+
+
+def apply_field_overrides(lib: Library, overrides: tuple[FieldOverride, ...] = FIELD_OVERRIDES) -> None:
+    for ov in overrides:
+        found = 0
+        for struct in lib.structs.values():
+            if not _matches(ov.struct, struct.name):
+                continue
+            for i, fld in enumerate(struct.fields):
+                if fld.name != ov.field:
+                    continue
+                found += 1
+                if ov.init is not None and fld.init == ov.init:
+                    raise OverrideError(
+                        f"field override {struct.name}.{ov.field} is obsolete (XML already has the value)"
+                    )
+                if ov.doc and fld.doc.strip():
+                    raise OverrideError(
+                        f"field override {struct.name}.{ov.field}: the field has a comment now"
+                    )
+                doc = f"{ov.doc or fld.doc} [Override: {ov.reason}]".strip()
+                init = fld.init if ov.init is None else ov.init
+                struct.fields[i] = replace(fld, init=init, doc=doc)
+        if not found:
+            raise OverrideError(f"field override target {ov.struct}.{ov.field} not found")
+
+
 # F35: command types of the PLC library that contradict the specification V1.5.9
 ENUM_OVERRIDES: tuple[EnumOverride, ...] = (
     EnumOverride("CmdType", "MoveCircularAbsolute", 2106, "F35: spec 6.3.13 Type 2106 (library 2109)"),
@@ -104,3 +181,4 @@ def apply_overrides(lib: Library, overrides: tuple[ConstOverride, ...] = OVERRID
             raise OverrideError(f"override target {ov.group}.{ov.name} not found")
     if overrides is OVERRIDES:
         apply_enum_overrides(lib)
+        apply_field_overrides(lib)

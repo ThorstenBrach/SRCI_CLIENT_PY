@@ -482,7 +482,10 @@ def test_all_patches_applied(env_reg: tuple[TypeEnv, dict[str, Target]]) -> None
     for patch in CONFIG.patches:
         pou = env.pous[patch.pou.upper()]
         body = pou.body if patch.method is None else pou.methods[patch.method.upper()].body
-        assert patch.new in body.src and patch.reason
+        marker = (
+            patch.new.split("\n", 1)[0].replace("\\1", "").replace("\\2", "") if patch.template else patch.new
+        )
+        assert marker in body.src and patch.reason
 
 
 def test_mixin_methods_exist() -> None:

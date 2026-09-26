@@ -134,7 +134,13 @@ def test_sync_modes() -> None:
 
 @pytest.mark.parametrize(
     ("value", "optional", "expected"),
-    [(50.0, False, 5000), (0.005, False, 1), (-0.005, False, -1), (-1.0, True, -1), (-1.0, False, -100)],
+    [
+        (50.0, False, 5000),
+        (0.005, False, 1),
+        (-0.005, False, -1),
+        (-1.0, True, -1),
+        (-1.0, False, -1),
+    ],  # ST-FIX F41: -1.0 = default also if not optional,
 )
 def test_real_to_percent_int(value: float, optional: bool, expected: int) -> None:
     assert M.REAL_TO_PERCENT_INT(value, optional) == expected

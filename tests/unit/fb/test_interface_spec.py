@@ -24,7 +24,6 @@ ALIAS = {"AbortingMode": "ExecMode", "Time": "MoveTime"}
 KNOWN_MISSING: dict[str, str] = {
     "MC_CallSubprogramFB": "output Progress",
     "MC_MeasuringInputFB": "outputs CommandAborted, ToolNo_x/FrameNo_x/MeasuredJointPosition_x (OutCmd.Measurings)",
-    "MC_OpenBrakeFB": "input Enable (the block has Execute, F42)",
     "MC_GroupStopFB": "output Active",
     "MC_SetSequenceFB": "output Active",
     "MC_ReturnToPrimaryFB": "input Limit (DistanceLimit)",
@@ -102,7 +101,7 @@ def test_all_function_blocks_have_a_table() -> None:
 
 
 # F46: fields of ParCmd/OutCmd without a comment in the PLC library
-UNDOCUMENTED = {("StopSubprogramOutCmd", "OriginID"), ("ReadRobotDataOutCmd", "RCInterpreterVersion")}
+UNDOCUMENTED: set[tuple[str, str]] = set()  # F46 fixed (comments added by override)
 
 
 def test_parameters_are_documented() -> None:

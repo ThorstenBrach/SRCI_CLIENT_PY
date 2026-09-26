@@ -664,6 +664,12 @@ class MC_MovePickPlaceLinearFB(RobotLibraryBaseExecuteFB):
                 self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.EmitterID[{2}] = {1}', Para1=SINT_TO_STRING(self.ParCmd.EmitterID[_idx]), Para2=DINT_TO_STRING(_idx))
                 break
                 return CheckParameterValid
+
+        # ST-FIX F49: ParCmd.BlendingMode was not checked
+        if (((((self.ParCmd.BlendingMode != BlendingMode.EXACT_STOP and self.ParCmd.BlendingMode != BlendingMode.DEFINED_VELOCITY) and self.ParCmd.BlendingMode != BlendingMode.CORNER_DISTANCE) and self.ParCmd.BlendingMode != BlendingMode.MAX_CORNER_DEVIATION) and self.ParCmd.BlendingMode != BlendingMode.CORNER_DISTANCE_2R) and self.ParCmd.BlendingMode != BlendingMode.RAMP_OVERLAP) and self.ParCmd.BlendingMode != BlendingMode.CORNER_DISTANCE_1R:
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            return CheckParameterValid
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL

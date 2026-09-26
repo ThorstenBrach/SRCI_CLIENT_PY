@@ -17,6 +17,7 @@ class SourcePatch:
     new: str
     reason: str
     regex: bool = False  # old is a regular expression (must match at least once)
+    template: bool = False  # regex: new is a replacement template (group references \\1)
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,20 @@ class VarAppend:
 
 
 @dataclass(frozen=True)
+class PouClone:
+    """Replace a POU by a copy of another POU with text replacements (declarations and code).
+
+    Used when the ST implementation of a block has the wrong base behavior (e.g. Execute
+    instead of Enable) and a similar block implements the right one."""
+
+    target: str
+    source: str
+    replacements: tuple[tuple[str, str], ...]
+    reason: str
+    keep_methods: tuple[str, ...] = ()  # methods of the target that are kept
+
+
+@dataclass(frozen=True)
 class Mixin:
     """Hand written methods of a POU (``ST-FIX`` or Python specific)."""
 
@@ -53,6 +68,7 @@ class Config:
     patches: list[SourcePatch] = field(default_factory=list)
     appends: list[BodyAppend] = field(default_factory=list)
     variables: list[VarAppend] = field(default_factory=list)
+    clones: list[PouClone] = field(default_factory=list)
     mixins: dict[str, Mixin] = field(default_factory=dict)  # POU name -> mixin
 
     @property
@@ -240,11 +256,159 @@ def _exec_mode_from_processing(pou: str, sequence_flag: bool) -> SourcePatch:
         "  ProcessingMode.DEACTIVATE:\n"
         "    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;\n"
         "ELSE\n"
+        "  // undefined ProcessingMode -> error, not sent (ST-FIX F49)\n"
         "  _command.ExecMode := ExecMode;\n"
+        "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );\n"
+        "  OnUpdateStateFlags( State := CmdMessageState.ERROR );\n"
         "END_CASE",
         "F51: ProcessingMode/SequenceFlag had no effect on the ExecutionMode of the telegram",
         regex=True,
     )
+
+
+F26_POUS = (
+    "MC_ActivateNextCommandFB",
+    "MC_CallSubprogramFB",
+    "MC_CollisionDetectionFB",
+    "MC_LoadMeasurementSequentialFB",
+    "MC_MoveSuperImposedFB",
+    "MC_ReactAtTriggerFB",
+    "MC_ReadActualForceFB",
+    "MC_ReadActualPositionFB",
+    "MC_ReadActualTCPVelocityFB",
+    "MC_ReadAnalogInputFB",
+    "MC_ReadDigitalInputsFB",
+    "MC_ReadDigitalOutputsFB",
+    "MC_ReadIntegersFB",
+    "MC_ReadRealsFB",
+    "MC_ReadSystemVariableFB",
+    "MC_RedefineTrackingPosFB",
+    "MC_SetTriggerErrorFB",
+    "MC_SetTriggerLimitFB",
+    "MC_SetTriggerMotionFB",
+    "MC_SetTriggerRegisterFB",
+    "MC_SetTriggerUserFB",
+    "MC_StopSubprogramFB",
+    "MC_WaitForTriggerFB",
+    "MC_WriteAnalogOutputFB",
+    "MC_WriteDigitalOutputsFB",
+    "MC_WriteFrameDataFB",
+    "MC_WriteIntegersFB",
+    "MC_WriteLoadDataFB",
+    "MC_WriteRealsFB",
+    "MC_WriteSystemVariableFB",
+    "MC_WriteToolDataFB",
+)
+
+
+def _range_or(pou: str) -> SourcePatch:
+    return SourcePatch(
+        pou,
+        "CheckParameterValid",
+        r"(\(\s*(?:ParCmd\.)?ProcessingMode\s*<\s*ProcessingModeEnum\.BUFFERED\s*\)\s*)AND"
+        r"(\s*\n\s*\(\s*(?:ParCmd\.)?ProcessingMode\s*>\s*ProcessingModeEnum\.TRIGGER_MULTIPLE\s*\))",
+        r"\1OR // ST-FIX F26\2",
+        "F26: range check with AND is never TRUE",
+        regex=True,
+        template=True,
+    )
+
+
+# F25: output Valid was never set to TRUE
+F25_POUS = (
+    "MC_ActivateConveyorTrackingFB",
+    "MC_CallSubprogramFB",
+    "MC_ReadActualForceFB",
+    "MC_ReadActualPositionFB",
+    "MC_ReadActualTCPVelocityFB",
+    "MC_ReadAnalogInputFB",
+    "MC_ReadDigitalInputsFB",
+    "MC_ReadDigitalOutputsFB",
+    "MC_ReadIntegersFB",
+    "MC_ReadRealsFB",
+    "MC_ReadSystemVariableFB",
+    "MC_SetTriggerLimitFB",
+)
+
+
+def _valid(pou: str) -> BodyAppend:
+    return BodyAppend(
+        pou,
+        "OnUpdateStateFlags",
+        "// ST-FIX F25: output data are valid while the command is active (continuous) or done\n"
+        "Valid := ( State = CmdMessageState.ACTIVE ) OR ( State = CmdMessageState.DONE );\n",
+        "F25: Valid was never set (spec 5.5.x: TRUE while the presented output data are valid)",
+    )
+
+
+def _enum_check(pou: str, expr: str, enum: str, values: tuple[str, ...], error: str) -> BodyAppend:
+    """F49: an enum parameter was not checked -> undefined values were sent to the RC."""
+    cond = " AND\n    ".join(f"( {expr} <> {enum}.{v} )" for v in values)
+    return BodyAppend(
+        pou,
+        "CheckParameterValid",
+        f"// ST-FIX F49: {expr} was not checked\n"
+        f"IF ( {cond} )\nTHEN\n"
+        "  CheckParameterValid := FALSE;\n"
+        f"  SetError( ErrorID := RobotLibraryErrorIdEnum.{error}, Overwrite := TRUE );\n"
+        "  RETURN;\nEND_IF\n",
+        f"F49: undefined values of {expr} were not rejected",
+    )
+
+
+_BLENDING = (
+    "EXACT_STOP",
+    "DEFINED_VELOCITY",
+    "CORNER_DISTANCE",
+    "MAX_CORNER_DEVIATION",
+    "CORNER_DISTANCE_2R",
+    "RAMP_OVERLAP",
+    "CORNER_DISTANCE_1R",
+)
+_PROCESSING = (
+    "BUFFERED",
+    "ABORTING",
+    "PARALLEL",
+    "CONTINUOUS",
+    "DEACTIVATE",
+    "TRIGGER_BUFFERED",
+    "TRIGGER_ABORTING",
+    "TRIGGER_ONCE",
+    "TRIGGER_CONTINUOUS",
+    "TRIGGER_MULTIPLE",
+)
+_SEQUENCE = ("NO_SEQUENCE", "PRIMARY_SEQUENCE", "SECONDARY_SEQUENCE")
+F49_CHECKS = (
+    _enum_check(
+        "MC_StopSubprogramFB", "ParCmd.SequenceFlag", "SequenceFlag", _SEQUENCE, "ERR_SEQFLAG_NOT_ALLOWED"
+    ),
+    _enum_check(
+        "MC_MoveLinearRelativeFB",
+        "ParCmd.ReferenceType",
+        "ReferenceType",
+        ("TOOL", "FRAME"),
+        "ERR_INVALID_PAR_CMD",
+    ),
+    _enum_check(
+        "MC_MovePickPlaceDirectFB", "ParCmd.BlendingMode", "BlendingMode", _BLENDING, "ERR_INVALID_PAR_CMD"
+    ),
+    _enum_check(
+        "MC_MovePickPlaceLinearFB", "ParCmd.BlendingMode", "BlendingMode", _BLENDING, "ERR_INVALID_PAR_CMD"
+    ),
+    _enum_check(
+        "MC_WriteAnalogOutputFB", "ParCmd.Unit", "UnitType", ("VOLT", "AMPERE"), "ERR_INVALID_PAR_CMD"
+    ),
+    _enum_check(
+        "MC_CollisionDetectionFB",
+        "ParCmd.ProcessingMode",
+        "ProcessingMode",
+        _PROCESSING,
+        "ERR_PROCESSINGMODE_NOT_DEFINED",
+    ),
+    _enum_check(
+        "MC_CollisionDetectionFB", "ParCmd.SequenceFlag", "SequenceFlag", _SEQUENCE, "ERR_SEQFLAG_NOT_ALLOWED"
+    ),
+)
 
 
 def _bits_in_one_byte(pou: str, bit0: str, bit1: str, table: str) -> tuple[SourcePatch, SourcePatch]:
@@ -460,26 +624,142 @@ CONFIG = Config(
             "Execute      := _executeIn;",
             "F50: a falling edge of Execute before the end cancelled the command / hid Done",
         ),
+        *(_range_or(pou) for pou in F26_POUS),
         *(_exec_mode_from_aborting(pou) for pou in F51_ABORTING_POUS),
         *(_exec_mode_from_processing(pou, seq) for pou, seq in F51_PROCESSING_POUS),
+        SourcePatch(
+            "MC_OpenBrakeFB",
+            "CreateCommandPayload",
+            "CreateCommandPayload := SUPER^.CreateCommandPayload(AxesGroup := AxesGroup);",
+            "CreateCommandPayload := SUPER^.CreateCommandPayload(AxesGroup := AxesGroup);\n"
+            "// ST-FIX F42: byte 4 Enable (spec table of OpenBrake)\n"
+            "CreateCommandPayload.AddBool(Enable);\n"
+            "_parameterCnt := _parameterCnt + 1;",
+            "F42: Enable byte of the OpenBrake command",
+        ),
+        SourcePatch(
+            "MC_OpenBrakeFB",
+            "ParseResponsePayload",
+            "// Check payload remaining ? \nIF ( ResponseData.IsPayloadRemaining)\nTHEN\n  // Get RobotAxesStatus",
+            "// ST-FIX F42: byte 4 Enabled\n"
+            "IF ( ResponseData.IsPayloadRemaining)\nTHEN\n"
+            " _response.Enabled := ResponseData.GetByte();\n"
+            " _parameterCnt := _parameterCnt + 1;\nEND_IF\n\n"
+            "// Check payload remaining ? \nIF ( ResponseData.IsPayloadRemaining)\nTHEN\n  // Get RobotAxesStatus",
+            "F42: Enabled byte of the OpenBrake response",
+        ),
+        SourcePatch(
+            "MC_OpenBrakeFB",
+            "OnApplyOutCmd",
+            "IF ( State = CmdMessageState.DONE ) ",
+            "IF ( State = CmdMessageState.ACTIVE ) OR ( State = CmdMessageState.DONE ) // ST-FIX F42",
+            "F42: the results of an enable block are updated while it is active",
+        ),
+        SourcePatch(
+            "MC_FreeDriveFB",
+            "OnUpdateStateFlags",
+            "OutCmd.Enabled := _response.Enabled;",
+            "OutCmd.Enabled := _response.Enabled;\nEnabled        := _response.Enabled; // ST-FIX F43",
+            "F43: the output Enabled was never set",
+        ),
+        SourcePatch(
+            "MC_ForceControlFB",
+            "CheckParameterValid",
+            "IF (( ParCmd.ErrorReaction <> ErrorReaction.ABORT       ) AND  \n"
+            "    ( ParCmd.ErrorReaction <> ErrorReaction.NO_REACTION ))",
+            "IF (( ParCmd.ErrorReaction <> ErrorReaction.ABORT_AND_MOVE ) AND // ST-FIX F44\n"
+            "    ( ParCmd.ErrorReaction <> ErrorReaction.ABORT       ) AND  \n"
+            "    ( ParCmd.ErrorReaction <> ErrorReaction.NO_REACTION ))",
+            "F44: ErrorReaction 0 'Abort and move' (spec table 6-736, default) was rejected",
+        ),
+        SourcePatch(
+            "MC_MoveSplineFB",
+            "CheckParameterValid",
+            "IF ( ParCmd.MoveTime <= T#0S ) ",
+            "IF ( ParCmd.MoveTime < T#0S ) // ST-FIX F44: 0 = not used (default)",
+            "F44: MoveTime 0 = 'not used' is the default (spec table 6-784), it was rejected",
+        ),
+        SourcePatch(
+            "ActiveCommandRegisterFB",
+            "AddCmd",
+            "// calculate the used length of the ACR \n",
+            "// ST-FIX F48: a command with a parameter error of the block is not added\n"
+            "IF ( pCommandFB <> 0 )\nTHEN\n"
+            "  IF (( pCommandFB^.ErrorID = RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_EXECUTION_MODE ) OR\n"
+            "      ( pCommandFB^.ErrorID = RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED   ))\n"
+            "  THEN\n    AddCmd := 0;\n    RETURN;\n  END_IF\nEND_IF\n\n"
+            "// calculate the used length of the ACR \n",
+            "F48: undefined ExecutionMode was sent to the RC",
+        ),
         *_swap_no_and_data_changed("MC_ReadToolDataFB", "ToolData.ToolNoReturn", "ToolNoReturn", "6-190"),
         *_swap_no_and_data_changed("MC_ReadFrameDataFB", "FrameNoReturn", "FrameNoReturn", "6-184"),
     ],
     appends=[
+        *F49_CHECKS,
+        *(_valid(pou) for pou in F25_POUS),
         BodyAppend(
-            pou,
-            "CheckAddParameter",
-            "// ST-FIX F28: payload order differs from the structure layout -> always add the parameter\n"
-            "CheckAddParameter := TRUE;\n",
-            "F28: CheckAddParameter omits non-zero parameters when the payload order differs from _command",
-        )
-        for pou in F28_POUS
+            "RobotLibraryBaseFB",
+            "CreateCommandPayload",
+            "// ST-FIX F48: undefined ExecutionMode (spec table 5-75) -> error, not sent\n"
+            "CASE _cmdHeader.ExecMode OF\n"
+            "  ExecutionMode.SEQUENCE_PRIMARY, ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY,\n"
+            "  ExecutionMode.PARALLEL, ExecutionMode.CONTINUOUS, ExecutionMode.TRIGGER_MULTIPLE,\n"
+            "  ExecutionMode.SEQUENCE_SECONDARY, ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY,\n"
+            "  ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER: ;\n"
+            "ELSE\n"
+            "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_EXECUTION_MODE, Overwrite := TRUE );\n"
+            "  OnUpdateStateFlags( State := CmdMessageState.ERROR );\n"
+            "END_CASE\n",
+            "F48: an undefined ExecMode was neither checked by the block nor rejected by the RC",
+        ),
+        BodyAppend(
+            "MC_OpenBrakeFB",
+            "OnApplyOutCmd",
+            "// ST-FIX F42: output Enabled of the enable block\nEnabled := OutCmd.Enabled;\n",
+            "F42: Enabled output of the enable block",
+        ),
+        *(
+            BodyAppend(
+                pou,
+                "CheckAddParameter",
+                "// ST-FIX F28: payload order differs from the structure layout -> always add the parameter\n"
+                "CheckAddParameter := TRUE;\n",
+                "F28: CheckAddParameter omits non-zero parameters when the payload order differs from _command",
+            )
+            for pou in F28_POUS
+        ),
     ],
     variables=[
         VarAppend(
             "RobotLibraryBaseExecuteFB",
             "VAR\n  _executeIn : BOOL;\n  _executeHold : BOOL;\nEND_VAR",
             "F50: Execute of the caller and internal hold of Execute while Busy",
+        ),
+    ],
+    clones=[
+        PouClone(
+            "MC_OpenBrakeFB",
+            "MC_FreeDriveFB",
+            (
+                ("MC_FreeDriveFB", "MC_OpenBrakeFB"),
+                ("Move the robot axes by hand", "Release robot arm's brakes (Enable block, ST-FIX F42)"),
+                ("FreeDriveParCmd", "OpenBrakeParCmd"),
+                ("FreeDriveOutCmd", "OpenBrakeOutCmd"),
+                ("FreeDriveSendData", "OpenBrakeSendData"),
+                ("FreeDriveRecvData", "OpenBrakeRecvData"),
+                ("OutCmd.Enabled := _response.Enabled;", "// Enabled: see OnApplyOutCmd (ST-FIX F42)"),
+            ),
+            "F42: OpenBrake is an Enable block in the spec (brakes open while Enable), the ST block "
+            "was an Execute block; state machine of MC_FreeDriveFB, payload of MC_OpenBrakeFB",
+            keep_methods=(
+                "CheckParameterValid",
+                "CheckParameterChanged",
+                "CreateCommandPayload",
+                "CreateCommandPayloadLog",
+                "OnApplyOutCmd",
+                "ParseResponsePayload",
+                "ParseResponsePayloadLog",
+            ),
         ),
     ],
     mixins={

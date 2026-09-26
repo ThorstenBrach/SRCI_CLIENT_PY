@@ -22,7 +22,7 @@ from srci.functions.Convert.TO_STRING.SEQUENCE_FLAG_TO_STRING import SEQUENCE_FL
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
 from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, USINT_TO_STRING
 from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, trunc_str, wrap
-from srci.types import CmdMessageState, CmdType, ExecutionMode, MessageType, PriorityLevel, ProcessingMode, ProcessingModeEnum, RobotLibraryConstants, RobotLibraryErrorIdEnum, SequenceFlag, SequenceFlagEnum, Severity, SystemTime, WriteAnalogOutputOutCmd, WriteAnalogOutputParCmd, WriteAnalogOutputRecvData, WriteAnalogOutputSendData
+from srci.types import CmdMessageState, CmdType, ExecutionMode, MessageType, PriorityLevel, ProcessingMode, ProcessingModeEnum, RobotLibraryConstants, RobotLibraryErrorIdEnum, SequenceFlag, SequenceFlagEnum, Severity, SystemTime, UnitType, WriteAnalogOutputOutCmd, WriteAnalogOutputParCmd, WriteAnalogOutputRecvData, WriteAnalogOutputSendData
 
 if TYPE_CHECKING:
     from srci.interfaces.IMessageLogger import IMessageLogger
@@ -157,7 +157,8 @@ class MC_WriteAnalogOutputFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
-        if self.ProcessingMode < ProcessingMode.BUFFERED and self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        # ST-FIX F26
+        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -226,6 +227,12 @@ class MC_WriteAnalogOutputFB(RobotLibraryBaseExecuteFB):
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ListenerID = {1}', Para1=SINT_TO_STRING(self.ParCmd.ListenerID))
             return CheckParameterValid
+
+        # ST-FIX F49: ParCmd.Unit was not checked
+        if self.ParCmd.Unit != UnitType.VOLT and self.ParCmd.Unit != UnitType.AMPERE:
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            return CheckParameterValid
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL
@@ -258,7 +265,10 @@ class MC_WriteAnalogOutputFB(RobotLibraryBaseExecuteFB):
             case ProcessingMode.DEACTIVATE:
                 self._command.ExecMode = ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER
             case _:
+                # undefined ProcessingMode -> error, not sent (ST-FIX F49)
                 self._command.ExecMode = self.ExecMode
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite=True)
+                self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority
         self._command.EmitterID[0] = 0

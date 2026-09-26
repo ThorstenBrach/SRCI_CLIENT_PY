@@ -151,7 +151,8 @@ class MC_StopSubprogramFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
-        if self.ProcessingMode < ProcessingMode.BUFFERED and self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        # ST-FIX F26
+        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -209,6 +210,12 @@ class MC_StopSubprogramFB(RobotLibraryBaseExecuteFB):
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ListenerID = {1}', Para1=SINT_TO_STRING(self.ParCmd.ListenerID))
             return CheckParameterValid
+
+        # ST-FIX F49: ParCmd.SequenceFlag was not checked
+        if (self.ParCmd.SequenceFlag != SequenceFlag.NO_SEQUENCE and self.ParCmd.SequenceFlag != SequenceFlag.PRIMARY_SEQUENCE) and self.ParCmd.SequenceFlag != SequenceFlag.SECONDARY_SEQUENCE:
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED, Overwrite=True)
+            return CheckParameterValid
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL
@@ -241,7 +248,10 @@ class MC_StopSubprogramFB(RobotLibraryBaseExecuteFB):
             case ProcessingMode.DEACTIVATE:
                 self._command.ExecMode = ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER
             case _:
+                # undefined ProcessingMode -> error, not sent (ST-FIX F49)
                 self._command.ExecMode = self.ExecMode
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite=True)
+                self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority
         copy_into(self._command.EmitterID, self._parCmd.EmitterID)

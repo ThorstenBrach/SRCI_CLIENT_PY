@@ -100,6 +100,12 @@ class ActiveCommandRegisterFB(RobotLibraryLogFB):
         # internal Acr error
         _errorAcrEntry: int = RobotLibraryErrorIdEnum.ERR_NO_FREE_ACR_ENTRY
 
+        # ST-FIX F48: a command with a parameter error of the block is not added
+        if pCommandFB is not None:
+            if pCommandFB.ErrorID == RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_EXECUTION_MODE or pCommandFB.ErrorID == RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED:
+                AddCmd = 0
+                return AddCmd
+
         # calculate the used length of the ACR
         for _regIdx in range(1, self.RegisterSize + 1):
             if self.Register[_regIdx].State == ActiveCommandRegisterState.IS_FREE:

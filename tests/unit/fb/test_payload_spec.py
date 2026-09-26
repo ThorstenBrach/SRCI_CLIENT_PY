@@ -47,8 +47,6 @@ KNOWN: dict[str, str] = {
     "MC_WriteDigitalOutputsFB send": "F33: Values sent as REAL, Reserved byte missing",
     "MC_WriteIntegersFB send": "F33: FOR 1 TO 6 -> Values[1..6] / Index[1..6] instead of [0..6]",
     "MC_WriteSystemVariableFB send": "F33: last Reserved byte missing",
-    "MC_OpenBrakeFB send": "F33: ExternalAxesBrakeRelease not sent",
-    "MC_OpenBrakeFB recv": "F33: ExternalAxesBrakeReleased not read",
     "MC_CallSubprogramFB recv": "F33: ReturnData one byte short",
     # minor: only the kind of value differs
     "MC_WaitForTriggerFB send": "F33: ConditionalWait sent as BOOL byte (spec SINT) - same values",

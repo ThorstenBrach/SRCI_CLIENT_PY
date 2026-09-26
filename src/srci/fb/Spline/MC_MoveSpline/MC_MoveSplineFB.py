@@ -209,7 +209,8 @@ class MC_MoveSplineFB(RobotLibraryBaseExecuteFB):
                 return CheckParameterValid
 
         # Check ParCmd.MoveTime valid ?
-        if self.ParCmd.MoveTime <= 0:
+        # ST-FIX F44: 0 = not used (default)
+        if self.ParCmd.MoveTime < 0:
             # Parameter not valid
             CheckParameterValid = False
             # Set error

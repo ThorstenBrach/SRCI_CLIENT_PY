@@ -1,4 +1,4 @@
-"""Release robot arm’s brakes.
+"""Release robot arm's brakes (Enable block, ST-FIX F42)
 
 ST-Source: POUs/Additional/MC_OpenBrake/MC_OpenBrakeFB.st
 Generated from the PLC library by ``python -m tools.st2py`` - DO NOT EDIT.
@@ -13,10 +13,10 @@ from typing import TYPE_CHECKING, Any
 
 from srci.types import iec as _iec
 import srci.types as _T
-from srci.fb._internal.BaseFBs.RobotLibraryBaseExecuteFB import RobotLibraryBaseExecuteFB
+from srci.fb._internal.BaseFBs.RobotLibraryBaseEnableFB import RobotLibraryBaseEnableFB
 from srci.fb._internal.Recv.RobotLibraryResponseDataFB import RobotLibraryResponseDataFB
 from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommandDataFB
-from srci.functions.Common import SetTimeout
+from srci.functions.Common import CheckTimeout, SetTimeout
 from srci.functions.Convert.TO_STRING.BYTE_TO_STRING_BIN import BYTE_TO_STRING_BIN
 from srci.iec.conv import BOOL_TO_STRING, DINT_TO_STRING
 from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, set_bit, trunc_str, wrap
@@ -29,8 +29,8 @@ if TYPE_CHECKING:
 __all__ = ['MC_OpenBrakeFB']
 
 
-class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
-    """Release robot arm’s brakes."""
+class MC_OpenBrakeFB(RobotLibraryBaseEnableFB):
+    """Release robot arm's brakes (Enable block, ST-FIX F42)"""
 
     def _init_vars_(self) -> None:
         # VAR_INPUT
@@ -41,7 +41,7 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
         self.CommandBuffered: bool = False
         # Receiving of input parameter values has been acknowledged by RC
         self.ParameterAccepted: bool = False
-        # Command output
+        # command results
         self.OutCmd: OpenBrakeOutCmd = OpenBrakeOutCmd()
         # VAR
         # internal copy of command parameter
@@ -51,11 +51,11 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
         # response data received
         self._response: OpenBrakeRecvData = OpenBrakeRecvData()
 
-    def __call__(self, *, ParCmd: OpenBrakeParCmd | None = None, Execute: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
+    def __call__(self, *, ParCmd: OpenBrakeParCmd | None = None, Enable: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if ParCmd is not None:
             copy_into(self.ParCmd, ParCmd)
-        if Execute is not None:
-            self.Execute = Execute
+        if Enable is not None:
+            self.Enable = Enable
         if Name is not None:
             self.Name = trunc_str(Name, 80)
         if ExecMode is not None:
@@ -97,7 +97,7 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
     def CheckFunctionSupported(self, *, AxesGroup: _T.AxesGroup) -> bool:  # PROTECTED
         CheckFunctionSupported: bool = False
 
-        CheckFunctionSupported = AxesGroup.State.RobotData.RCSupportedFunctions.OpenBrake
+        CheckFunctionSupported = AxesGroup.State.RobotData.RCSupportedFunctions.FreeDrive
 
         if not CheckFunctionSupported:
             # call base implementation for set error and create log entry
@@ -292,6 +292,9 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
         copy_into(self._cmdHeader, self._command)
         # call base implementation to copy header to payload buffer
         CreateCommandPayload = super().CreateCommandPayload(AxesGroup=AxesGroup)
+        # ST-FIX F42: byte 4 Enable (spec table of OpenBrake)
+        CreateCommandPayload.AddBool(Value=self.Enable)
+        _parameterCnt = _parameterCnt + 1
 
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
@@ -336,7 +339,7 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
 
         self.MyType = 'MC_OpenBrakeFB'
 
-        self.ExecMode = ExecutionMode.PARALLEL
+        self.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY
         self.Priority = PriorityLevel.NORMAL
         return FB_init
 
@@ -345,7 +348,8 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
             # Reset command outputs
             SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(OpenBrakeOutCmd)), Value=0, DataLen=17)
 
-        if State == CmdMessageState.DONE:
+        # ST-FIX F42
+        if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
             self.OutCmd.Enabled = bit(self._response.Enabled, 0)
             self.OutCmd.RobotAxesBrakeReleased.Bit00 = bit(self._response.RobotAxesBrakeReleased, 0)
@@ -365,6 +369,109 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
             self.OutCmd.ExternalAxesBrakeReleased.AxisE6 = bit(self._response.ExternalAxesBrakeReleased, 6)
             self.OutCmd.ExternalAxesBrakeReleased.Bit07 = bit(self._response.ExternalAxesBrakeReleased, 7)
 
+        # ST-FIX F42: output Enabled of the enable block
+        self.Enabled = self.OutCmd.Enabled
+
+    def OnExecCancel(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
+        OnExecCancel: int = 0
+        # internal return value
+        _retVal: int = 0
+
+        OnExecCancel = RobotLibraryConstants.RUNNING
+
+        match self._stepCancel:
+
+            case 0:
+                self.Busy = True
+
+                # Create log entry
+                self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='Execution of {1} cancelled', Para1=self.MyType)
+
+                # try to remove cmd
+                _retVal = AxesGroup.Acyclic.ActiveCommandRegister.RemoveCmd(UniqueID=self._uniqueID)
+
+                # check result of removement
+                if _retVal == RobotLibraryConstants.OK:
+                    # Reset step counter
+                    self._stepCancel = 0
+                    # finished okay
+                    OnExecCancel = RobotLibraryConstants.OK
+
+                    # Create log entry
+                    self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='{1} successfully removed from ACR', Para1=self.MyType)
+                else:
+                    # set timeout
+                    SetTimeout(PT=self._timeoutCancel, rTimer=self._timerCancel)
+                    # inc step counter
+                    self._stepCancel = self._stepCancel + 1
+
+                    # Create log entry
+                    self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='{1} was not removed from ACR because execution was already in progress', Para1=self.MyType)
+
+            case 1:
+                OnExecCancel = self.OnExecErrorClear(AxesGroup=AxesGroup)
+
+                if OnExecCancel == RobotLibraryConstants.OK:
+                    # Reset busy flag
+                    self.Busy = False
+                    # Reset step counter
+                    self._stepCancel = 0
+                    # finished okay
+                    OnExecCancel = RobotLibraryConstants.OK
+            case _:
+                # invalid step
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_STEP, Overwrite=True)
+
+        # reset step counter
+        if OnExecCancel != RobotLibraryConstants.RUNNING:
+            # Reset FB variables
+            self.Reset()
+            # Reset step counter
+            self._stepCancel = 0
+        return OnExecCancel
+
+    def OnExecErrorClear(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
+        OnExecErrorClear: int = 0
+
+        OnExecErrorClear = RobotLibraryConstants.RUNNING
+
+        match self._stepClearError:
+
+            case 0:
+                self.Busy = True
+                # trigger parameter update to disable FB
+                self._parameterUpdateInternal = True
+                # call Check Parameter changed method to trigger the parameter update to disable the function
+                self.CheckParameterChanged(AxesGroup=AxesGroup)
+                # set timeout
+                SetTimeout(PT=self._timeoutClearError, rTimer=self._timerClearError)
+                # inc step counter
+                self._stepClearError = self._stepClearError + 1
+
+            case 1:
+                if self._responseReceived:
+                    # reset response received flag
+                    self._responseReceived = False
+                    # reset step counter
+                    self._stepClearError = 0
+                    # finished
+                    OnExecErrorClear = RobotLibraryConstants.OK
+                else:
+                    # timeout exceeded ?
+                    if CheckTimeout(rTimer=self._timerClearError) == RobotLibraryConstants.OK:
+                        OnExecErrorClear = RobotLibraryConstants.HAS_ERROR
+            case _:
+                # invalid step
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_STEP, Overwrite=True)
+
+        # reset step counter
+        if OnExecErrorClear != RobotLibraryConstants.RUNNING:
+            # Reset
+            self.Reset()
+            # reset step counter
+            self._stepClearError = 0
+        return OnExecErrorClear
+
     def OnExecRun(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
         OnExecRun: int = 0
 
@@ -374,9 +481,14 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
         match self._stepCmd:
 
             case 0:
-                if self._execute_R.Q and (not self.Error):
+                if self._enable_R.Q and (not self.Error):
+                    # reset the rising edge
+                    self._enable_R()
+
                     # Check function is supported and parameter are valid ?
                     if self.CheckFunctionSupported(AxesGroup=AxesGroup) & self.CheckParameterValid(AxesGroup=AxesGroup):
+                        # Reset all internal flags
+                        self.Reset()
                         # set busy flag
                         self.Busy = True
                         # Reset command outputs
@@ -403,29 +515,37 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
                     # update state flags
                     self.OnApplyOutCmd(State=self._response.State)
 
-                    # Done, Aborted or Error ?
-                    if self._response.State >= CmdMessageState.DONE:
-                        # set timeout
-                        SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
-                        # inc step counter
-                        self._stepCmd = self._stepCmd + 1
+                # do not abort directly, so that the ParSeq update can be send
+                if self._enable_F.Q:
+                    # Set Busy flag
+                    self.Busy = True
+                    # trigger parameter update to disable FB
+                    self._parameterUpdateInternal = True
+                    # reset the falling edge
+                    self._enable_F()
+                    # set timeout
+                    SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
+                    # inc step counter
+                    self._stepCmd = self._stepCmd + 1
 
+            # Wait for response received or timeout or not Initialized
             case 2:
-                if not self.Execute:
+                if self._responseReceived | (CheckTimeout(rTimer=self._timerCmd) == RobotLibraryConstants.OK) or (not AxesGroup.State.Initialized and (not AxesGroup.State.Synchronized)):
                     self.Reset()
             case _:
                 # invalid step
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_STEP, Overwrite=True)
 
         # Reset FB
-        if not self.Execute:
+        if self._enable_R.Q or self._enable_F.Q:
             self.Reset()
         return OnExecRun
 
     def OnUpdateStateFlags(self, *, State: CmdMessageState = CmdMessageState.EMPTY) -> None:  # PROTECTED
         # Reset State flags
-        self.Done = False
 
+        # Update Enable flag
+        # Enabled: see OnApplyOutCmd (ST-FIX F42)
         match State:
 
             # No operation or process is active
@@ -453,7 +573,6 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
                 pass
             # Successfully completed
             case CmdMessageState.DONE:
-                self.Done = True
                 self.Busy = False
             # Aborted before completion
             case CmdMessageState.ABORTED:
@@ -482,6 +601,11 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
         self._response.State = self._rspHeader.State
         self._response.AlarmMessageSeverity = self._rspHeader.AlarmMessageSeverity
         self._response.AlarmMessageCode = self._rspHeader.AlarmMessageCode
+
+        # ST-FIX F42: byte 4 Enabled
+        if ResponseData.IsPayloadRemaining:
+            self._response.Enabled = ResponseData.GetByte()
+            _parameterCnt = _parameterCnt + 1
 
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
@@ -530,7 +654,6 @@ class MC_OpenBrakeFB(RobotLibraryBaseExecuteFB):
 
         Reset = super().Reset()
 
-        self.Done = False
         self.Busy = False
         self.CommandBuffered = False
         self.ParameterAccepted = False

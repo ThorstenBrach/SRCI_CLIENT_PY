@@ -1214,10 +1214,11 @@ class ExchangeConfigurationParCmd:
     """
     WaitForNrOfCmd: int = 0
     """Define number of points required to calculate the blending. See also chapter 5.6.8."""
-    LifeSignTimeOut: int = 0
+    LifeSignTimeOut: int = 50
     """
     Maximum allowed time between incrementation of LifeSign before communication error. • <10 ms:
-    Invalid • 50 ms: default See also chapter 5.6.6.2.
+    Invalid • 50 ms: default See also chapter 5.6.6.2. [Override: ST-FIX F44: spec 5.6.6:
+    LifeSignTimeOut default 50 ms (min 10 ms); the library had 0 (invalid)]
     """
     SyncDelay: int = 0
     """
@@ -1778,6 +1779,10 @@ class StopSubprogramOutCmd:
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
     OriginID: int = 0
+    """
+    OriginID of the stopped subprogram (spec 5.5.12.4 EmitterID, ListenerID, FollowID and OriginID)
+    [Override: ST-FIX F46: comment missing]
+    """
     InvocationCounter: int = 0
     """
     Relates to ListenerID >0 Number of successful trigger -based command invocations For more
@@ -2025,28 +2030,36 @@ class MoveApproachDirectParCmd:
     """Offset distance of auxiliary position from TargetPosition"""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -2264,28 +2277,36 @@ class MoveApproachLinearParCmd:
     """Offset distance of auxiliary position from TargetPosition"""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -2490,28 +2511,36 @@ class MoveAxesRelativeParCmd:
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
     JointDistance: RobotJointPosition = _field(default_factory=lambda: RobotJointPosition())
     """Relative joint distance from the current or last target position to the end joint position"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     Axes velocity in % of nominal velocity. • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -2694,28 +2723,36 @@ class MoveCircularAbsoluteParCmd:
     """
     PathChoice: _e.PathChoice = _e.PathChoice.CLOCKWISE
     """Choice of the path"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -2950,28 +2987,36 @@ class MoveCircularCamParCmd:
     """
     PathChoice: _e.PathChoice = _e.PathChoice.CLOCKWISE
     """Choice of the path"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -3211,28 +3256,36 @@ class MoveCircularRelativeParCmd:
     """Choice of the path"""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -3446,28 +3499,36 @@ class MoveDepartDirectParCmd:
     """Offset distance of auxiliary position from TargetPosition"""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -3681,28 +3742,36 @@ class MoveDepartLinearParCmd:
     """Offset distance of auxiliary position from TargetPosition"""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -3916,28 +3985,36 @@ class MoveDirectOffsetParCmd:
     """Relative distance and rotation from ReferencePosition."""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -4128,28 +4205,36 @@ class MoveDirectRelativeParCmd:
     """Relative distance and rotation from the current or last target position to the end point."""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -4325,28 +4410,36 @@ class MoveLinearAbsoluteJParCmd:
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
     JointPosition: RobotJointPosition = _field(default_factory=lambda: RobotJointPosition())
     """Absolute end position of the robot in Joint position."""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -4512,28 +4605,36 @@ class MoveLinearCamParCmd:
     Absolute target coordinates in the selected coordinate system (see input parameters ToolNo and
     FrameNo)
     """
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -4715,28 +4816,36 @@ class MoveLinearOffsetParCmd:
     """Relative distance and rotation from ReferencePosition."""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position."""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -4927,28 +5036,36 @@ class MoveLinearRelativeParCmd:
     """Relative distance and rotation from the current or last target position to the end point"""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position."""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -5139,28 +5256,36 @@ class MovePickPlaceDirectParCmd:
     """Offset distance of auxiliary position from actual Position"""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -5398,28 +5523,36 @@ class MovePickPlaceLinearParCmd:
     """Offset distance of auxiliary position from actual Position"""
     ReferenceType: _e.ReferenceType = _e.ReferenceType.TOOL
     """Defines type of reference coordinate system of the offset position"""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -5862,28 +5995,36 @@ class MoveAxesAbsoluteParCmd:
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
     JointPosition: RobotJointPosition = _field(default_factory=lambda: RobotJointPosition())
     """Absolute end position of the robot in Joint position."""
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     Axes velocity in % of nominal velocity. • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -6042,28 +6183,36 @@ class MoveDirectAbsoluteParCmd:
     Absolute target coordinates in the selected coordinate system (see input parameters ToolNo and
     FrameNo)
     """
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -6241,28 +6390,36 @@ class MoveLinearAbsoluteParCmd:
     Absolute target coordinates in the selected coordinate system (see input parameters ToolNo and
     FrameNo)
     """
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -6449,28 +6606,36 @@ class ReturnToPrimaryParCmd:
     to position active, when interrupt was executed • 1: End position - Returns to target position
     of interrupted segment
     """
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -9177,6 +9342,10 @@ class ReadRobotDataOutCmd:
     RCFirmwareVersion: str = ''
     """Robot firmware version in manufacturer -specific format"""
     RCInterpreterVersion: str = ''
+    """
+    Version of the server implementation in the format X.X.X (spec table 6-18) [Override: ST-FIX
+    F46: comment missing]
+    """
     AxisJointUsed: _s.AxisJointUsed = _field(default_factory=lambda: AxisJointUsed())
     """TRUE = Axis used in Robot FALSE = Axis NOT used. See Table 6-13 for bit assignment"""
     AxisExternalUsed: _s.AxisExternalUsed = _field(default_factory=lambda: AxisExternalUsed())
@@ -9627,28 +9796,36 @@ class SearchHardStopParCmd:
     Error [mm] - >0: Robot stops when the following error reached positive limit - <0: Robot stops
     when the following error reaches the negative limit
     """
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     ToolNo: int = 0
     """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
@@ -9788,28 +9965,36 @@ class SearchHardStopJParCmd:
     Error [mm] - >0: Robot stops when the following error reached positive limit - <0: Robot stops
     when the following error reaches the negative limit
     """
-    VelocityRate: float = 0.0
+    VelocityRate: float = -1.0
     """
     TCP velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use
     internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
-    dynamics
+    dynamics [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default'
+    (default); the library had 0.0 = internal minimal value (the RC rejects 0 for
+    DecelerationRate/JerkRate)]
     """
-    AccelerationRate: float = 0.0
+    AccelerationRate: float = -1.0
     """
     Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
     acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
-    acceleration See chapter 5.5.7 Robot dynamics
+    acceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    DecelerationRate: float = 0.0
+    DecelerationRate: float = -1.0
     """
     Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
     deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
-    deceleration See chapter 5.5.7 Robot dynamics
+    deceleration See chapter 5.5.7 Robot dynamics [Override: ST-FIX F41: spec 5.x robot dynamics
+    parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC
+    rejects 0 for DecelerationRate/JerkRate)]
     """
-    JerkRate: float = 0.0
+    JerkRate: float = -1.0
     """
     Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
     internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    [Override: ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the
+    library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)]
     """
     Manipulation: bool = False
     """

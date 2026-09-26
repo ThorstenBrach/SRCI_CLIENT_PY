@@ -16,10 +16,10 @@ from tools.plcopen_gen.emitter import Generator
 from tools.plcopen_gen.overrides import apply_overrides
 from tools.plcopen_gen.parser import parse_library
 
-from .config import CONFIG, Config
+from .config import CONFIG, Config, PouClone
 from .decl import parse_interface
 from .emit import EmitError
-from .library import Pou, load_pous
+from .library import Body, Method, Pou, load_pous
 from .module import ModuleEmitter
 from .registry import Target, build_registry, generated_packages
 from .sem import TypeEnv
@@ -34,7 +34,42 @@ class PatchError(Exception):
     pass
 
 
+def clone_pou(pous: dict[str, Pou], clone: PouClone) -> None:
+    source = pous.get(clone.source.upper())
+    target = pous.get(clone.target.upper())
+    if source is None or target is None:
+        raise PatchError(f"clone {clone.source} -> {clone.target}: POU not found")
+
+    def fix(text: str) -> str:
+        for old, new in clone.replacements:
+            text = text.replace(old, new)
+        return text
+
+    for old, _ in clone.replacements:
+        texts = [source.decl, source.body.src] + [m.decl + m.body.src for m in source.methods.values()]
+        if not any(old in t for t in texts):
+            raise PatchError(f"clone {clone.target}: replacement {old!r} not found - remove it")
+    itf = parse_interface(fix(source.decl))
+    pou = Pou(itf.header, itf.vars, Body(fix(source.body.src)), target.folder, decl=fix(source.decl))
+    keep = {m.upper() for m in clone.keep_methods}
+    for name in keep:
+        if name not in target.methods:
+            raise PatchError(f"clone {clone.target}: method {name} to keep not found")
+        pou.methods[name] = target.methods[name]
+        target.methods[name].owner = pou
+    for method in source.methods.values():
+        if method.name.upper() in keep:
+            continue
+        m_itf = parse_interface(fix(method.decl))
+        pou.methods[method.name.upper()] = Method(
+            m_itf.header, m_itf.vars, Body(fix(method.body.src)), pou, decl=fix(method.decl)
+        )
+    pous[clone.target.upper()] = pou
+
+
 def apply_patches(pous: dict[str, Pou], cfg: Config) -> None:
+    for clone in cfg.clones:
+        clone_pou(pous, clone)
     for var in cfg.variables:
         pou = pous.get(var.pou.upper())
         if pou is None:
@@ -51,7 +86,8 @@ def apply_patches(pous: dict[str, Pou], cfg: Config) -> None:
             raise PatchError(f"patch target {patch.pou} not found")
         body = pou.body if patch.method is None else pou.methods[patch.method.upper()].body
         if patch.regex:
-            body.src, count = re.subn(patch.old, patch.new.replace("\\", "\\\\"), body.src)
+            new = patch.new if patch.template else patch.new.replace("\\", "\\\\")
+            body.src, count = re.subn(patch.old, new, body.src)
             if count == 0:
                 raise PatchError(f"patch for {patch.pou}.{patch.method} is obsolete (no match) - remove it")
         elif patch.old not in body.src:

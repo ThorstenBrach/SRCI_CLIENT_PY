@@ -304,7 +304,8 @@ class MC_ForceControlFB(RobotLibraryBaseEnableFB):
             _idx = st_for_end(0, 5)
 
         # Check ParCmd.ErrorReaction valid ?
-        if self.ParCmd.ErrorReaction != ErrorReaction.ABORT and self.ParCmd.ErrorReaction != ErrorReaction.NO_REACTION:
+        # ST-FIX F44
+        if (self.ParCmd.ErrorReaction != ErrorReaction.ABORT_AND_MOVE and self.ParCmd.ErrorReaction != ErrorReaction.ABORT) and self.ParCmd.ErrorReaction != ErrorReaction.NO_REACTION:
             # Parameter not valid
             CheckParameterValid = False
             # Set error

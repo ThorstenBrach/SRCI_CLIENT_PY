@@ -45,6 +45,7 @@ class Method:
     vars: list[VarDecl]
     body: Body
     owner: Pou | None = None
+    decl: str = ""  # declaration text (InterfaceAsPlainText)
 
     @property
     def name(self) -> str:
@@ -81,6 +82,7 @@ class Pou:
     folder: list[str]
     methods: dict[str, Method] = field(default_factory=dict)  # key: upper case name
     properties: dict[str, Property] = field(default_factory=dict)
+    decl: str = ""  # declaration text (InterfaceAsPlainText)
 
     @property
     def name(self) -> str:
@@ -145,10 +147,13 @@ def load_pous(xml: Path) -> dict[str, Pou]:
         name = el.get("name", "")
         plain = _plain(el)
         itf = parse_interface(plain)
-        pou = Pou(itf.header, itf.vars, Body(_st_body(el.find(f"{NS}body"))), folders.get(name, []))
+        pou = Pou(
+            itf.header, itf.vars, Body(_st_body(el.find(f"{NS}body"))), folders.get(name, []), decl=plain
+        )
         for m_el in el.iter(f"{NS}Method"):
-            m_itf = parse_interface(_text(m_el.find(f"{NS}InterfaceAsPlainText")))
-            m = Method(m_itf.header, m_itf.vars, Body(_st_body(m_el.find(f"{NS}body"))), pou)
+            m_plain = _text(m_el.find(f"{NS}InterfaceAsPlainText"))
+            m_itf = parse_interface(m_plain)
+            m = Method(m_itf.header, m_itf.vars, Body(_st_body(m_el.find(f"{NS}body"))), pou, decl=m_plain)
             pou.methods[m.name.upper()] = m
         for p_el in el.iter(f"{NS}Property"):
             p_itf = parse_interface(_text(p_el.find(f"{NS}InterfaceAsPlainText")))

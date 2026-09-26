@@ -180,9 +180,6 @@ def test_read_actual_position(robot: RobotTaskHarness, sdk: SdkSimulator) -> Non
     assert rp.OutCmd.ActualCartesianPosition.X == 1.0  # identity kinematics
 
 
-@pytest.mark.xfail(
-    strict=True, reason="F25: MC_ReadActualPositionFB never sets Valid (spec 6.1.5: Valid = Done)"
-)
 def test_read_actual_position_valid(robot: RobotTaskHarness) -> None:
     rp = fb(robot, "MC_ReadActualPositionFB")
     execute(robot, rp, reset=False)

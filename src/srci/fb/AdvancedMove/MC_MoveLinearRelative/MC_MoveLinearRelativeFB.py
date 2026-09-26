@@ -516,6 +516,12 @@ class MC_MoveLinearRelativeFB(RobotLibraryBaseExecuteFB):
                 self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.EmitterID[{2}] = {1}', Para1=SINT_TO_STRING(self.ParCmd.EmitterID[_idx]), Para2=DINT_TO_STRING(_idx))
                 break
                 return CheckParameterValid
+
+        # ST-FIX F49: ParCmd.ReferenceType was not checked
+        if self.ParCmd.ReferenceType != ReferenceType.TOOL and self.ParCmd.ReferenceType != ReferenceType.FRAME:
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            return CheckParameterValid
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL

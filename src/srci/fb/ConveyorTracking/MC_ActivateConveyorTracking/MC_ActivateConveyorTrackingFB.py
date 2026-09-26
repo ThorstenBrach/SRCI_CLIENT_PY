@@ -464,6 +464,9 @@ class MC_ActivateConveyorTrackingFB(RobotLibraryBaseEnableFB):
                 self.Error = True
                 self.Busy = False
 
+        # ST-FIX F25: output data are valid while the command is active (continuous) or done
+        self.Valid = State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE
+
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:
             ResponseData = RobotLibraryResponseDataFB()

@@ -147,7 +147,8 @@ class MC_SetTriggerMotionFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
-        if self.ProcessingMode < ProcessingMode.BUFFERED and self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        # ST-FIX F26
+        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -260,7 +261,10 @@ class MC_SetTriggerMotionFB(RobotLibraryBaseExecuteFB):
             case ProcessingMode.DEACTIVATE:
                 self._command.ExecMode = ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER
             case _:
+                # undefined ProcessingMode -> error, not sent (ST-FIX F49)
                 self._command.ExecMode = self.ExecMode
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite=True)
+                self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority
         self._command.EmitterID[0] = self._parCmd.EmitterID[0]

@@ -156,7 +156,8 @@ class MC_CollisionDetectionFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
-        if self.ProcessingMode < ProcessingMode.BUFFERED and self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        # ST-FIX F26
+        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -251,6 +252,18 @@ class MC_CollisionDetectionFB(RobotLibraryBaseExecuteFB):
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.UnitLimitAxis = {1}', Para1=THRESHOLD_MODE_TO_STRING(Value=ThresholdMode(self.ParCmd.UnitLimitAxis)))
             return CheckParameterValid
+
+        # ST-FIX F49: ParCmd.ProcessingMode was not checked
+        if ((((((((self.ParCmd.ProcessingMode != ProcessingMode.BUFFERED and self.ParCmd.ProcessingMode != ProcessingMode.ABORTING) and self.ParCmd.ProcessingMode != ProcessingMode.PARALLEL) and self.ParCmd.ProcessingMode != ProcessingMode.CONTINUOUS) and self.ParCmd.ProcessingMode != ProcessingMode.DEACTIVATE) and self.ParCmd.ProcessingMode != ProcessingMode.TRIGGER_BUFFERED) and self.ParCmd.ProcessingMode != ProcessingMode.TRIGGER_ABORTING) and self.ParCmd.ProcessingMode != ProcessingMode.TRIGGER_ONCE) and self.ParCmd.ProcessingMode != ProcessingMode.TRIGGER_CONTINUOUS) and self.ParCmd.ProcessingMode != ProcessingMode.TRIGGER_MULTIPLE:
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite=True)
+            return CheckParameterValid
+
+        # ST-FIX F49: ParCmd.SequenceFlag was not checked
+        if (self.ParCmd.SequenceFlag != SequenceFlag.NO_SEQUENCE and self.ParCmd.SequenceFlag != SequenceFlag.PRIMARY_SEQUENCE) and self.ParCmd.SequenceFlag != SequenceFlag.SECONDARY_SEQUENCE:
+            CheckParameterValid = False
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED, Overwrite=True)
+            return CheckParameterValid
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL
@@ -283,7 +296,10 @@ class MC_CollisionDetectionFB(RobotLibraryBaseExecuteFB):
             case ProcessingMode.DEACTIVATE:
                 self._command.ExecMode = ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER
             case _:
+                # undefined ProcessingMode -> error, not sent (ST-FIX F49)
                 self._command.ExecMode = self.ExecMode
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite=True)
+                self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority
 

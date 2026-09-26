@@ -199,6 +199,14 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
         CreateCommandPayload.AddHalfBytes(HalfByteHi=0, HalfByteLo=self._cmdHeader.ExecMode)
         # Add ParSeq_Priority
         CreateCommandPayload.AddHalfBytes(HalfByteHi=self._cmdHeader.ParSeq, HalfByteLo=self._cmdHeader.Priority)
+
+        # ST-FIX F48: undefined ExecutionMode (spec table 5-75) -> error, not sent
+        match self._cmdHeader.ExecMode:
+            case ExecutionMode.SEQUENCE_PRIMARY | ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY | ExecutionMode.PARALLEL | ExecutionMode.CONTINUOUS | ExecutionMode.TRIGGER_MULTIPLE | ExecutionMode.SEQUENCE_SECONDARY | ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY | ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER:
+                pass
+            case _:
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_EXECUTION_MODE, Overwrite=True)
+                self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         return CreateCommandPayload
 
     def OnApplyOutCmd(self, *, State: CmdMessageState = CmdMessageState.EMPTY) -> None:  # PROTECTED
