@@ -95,7 +95,7 @@ def registry_module(env: TypeEnv, reg: dict[str, Target]) -> str:
     for key, t in sorted(reg.items()):
         pou = env.pous.get(key)
         if pou is not None and pou.kind == "FUNCTION_BLOCK":
-            lines.append(f"    {t.name!r}: {t.module!r},")
+            lines.append(f'    "{t.name}": "{t.module}",')
     lines.append("}")
     return "\n".join(lines) + "\n"
 

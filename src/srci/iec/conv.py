@@ -10,6 +10,7 @@ from __future__ import annotations
 import math
 import struct
 from collections.abc import Callable
+from decimal import Decimal
 from functools import cache
 from typing import Any
 
@@ -71,24 +72,25 @@ def real_to_string(value: float, single: bool = True) -> str:
         return "NaN"
     if math.isinf(value):
         return "INF" if value > 0 else "-INF"
+    text = repr(float(value))
     if single:
-        text = f"{_f32(value):.7g}"
         # shortest representation that survives the round trip as float32
         for digits in range(1, 10):
             candidate = f"{value:.{digits}g}"
             if _f32(float(candidate)) == _f32(value):
                 text = candidate
                 break
-    else:
-        text = repr(float(value))
-    if "e" in text or "E" in text:
-        mantissa, exp = text.lower().split("e")
-        if "." not in mantissa:
-            mantissa += ".0"
-        return f"{mantissa}e{int(exp):+03d}"
-    if "." not in text and "n" not in text:
-        text += ".0"
-    return text
+    magnitude = abs(float(text))
+    if magnitude == 0 or 1e-5 <= magnitude < 1e7:
+        text = format(Decimal(text), "f")
+        if "." not in text:
+            text += ".0"
+        return text
+    mantissa, exp = f"{float(text):e}".split("e")
+    mantissa = mantissa.rstrip("0")
+    if mantissa.endswith("."):
+        mantissa += "0"
+    return f"{mantissa}e{int(exp):+03d}"
 
 
 def time_to_string(ms: int) -> str:

@@ -14,7 +14,7 @@ class FunctionBlock:
     """
 
     def __init__(self) -> None:
-        from srci.parameters import _mark_instance_created
+        from srci.library_parameters import _mark_instance_created
 
         _mark_instance_created()
         mro = type(self).__mro__[::-1]

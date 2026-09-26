@@ -10,6 +10,24 @@ can be ported between both implementations (see [docs/PORTING.md](docs/PORTING.m
 > Status: rewrite in progress (branch `rewrite`). The previous experimental port
 > is preserved on branch `legacy` / tag `legacy-v0`.
 
+## How the port is made
+
+The data types, function blocks and functions are **generated** from the PLCopen XML
+export of the PLC library (`third_party/robotlibrary/RobotLibrary.xml`): a small
+ST → Python transpiler (`tools/st2py`) keeps names, step chains and comments of the
+ST code. Only the telegram coding and the send/receive buffers are hand written.
+Deviations (bug fixes) are documented in `tools/st2py/config.py` and
+[docs/ST_FINDINGS.md](docs/ST_FINDINGS.md).
+
+Library parameters (like the library parameters of a Codesys project) are set before
+the first function block is created:
+
+```python
+import srci
+
+srci.configure(TOOL_MAX=20, FRAME_MAX=20, LOAD_MAX=20)
+```
+
 ## How it talks to the robot
 
 SRCI is transported over PROFINET. A PLC acts as gateway: it exchanges the
@@ -38,6 +56,7 @@ pytest                        # tests
 ruff check . && ruff format --check .
 mypy
 python -m tools.plcopen_gen   # regenerate types from third_party/robotlibrary/RobotLibrary.xml
+python -m tools.st2py         # regenerate function blocks and functions
 ```
 
 ### SDK in the loop

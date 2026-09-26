@@ -7,7 +7,7 @@ Status "fixed in Python" means: still to be fixed in the PLC library.
 | ID | Where (ST) | Problem | Spec / SDK | Python |
 |---|---|---|---|---|
 | F1 | `MC_RobotTaskFB.CreateSendPayloadCyclicOptional` | Cartesian position PLC→RC: `Config` is sent as **1 byte**, but `SIZEOF(...CartesianPosition)` = 34 counts 2 bytes → all following bytes are shifted by one compared to the calculated layout | Table 5-97: Config = bytes 24–25 | fixed: 2 bytes (`config`, `0`) |
-| F2 | `MC_RobotTaskFB.CreateSendPayloadCyclic`, `CalculateCyclicDataLength` | `ToolNo`/`FrameNo` are **always** sent after the header | Table 5-88 bit 1 / 5-90 and SDK (`AutoTransmitCartesianPos`): only when "Cartesian Position" RC→PLC is configured; otherwise the RC expects the sequence at byte 18 | fixed: only with `RobToPlc.CartesianPosition.Active` (to be confirmed against the SDK in M5) |
+| F2 | `MC_RobotTaskFB.CreateSendPayloadCyclic`, `CalculateCyclicDataLength` | `ToolNo`/`FrameNo` are **always** sent after the header | Table 5-88 bit 1 / 5-90 and SDK (`AutoTransmitCartesianPos`): only when "Cartesian Position" RC→PLC is configured; otherwise the RC expects the sequence at byte 18 | fixed: only with `RobToPlc.CartesianPosition.Active` (confirmed with the SDK in M5) |
 | F3 | `RobotLibrarySendDataBaseFB.AddTurnNumber`, `RobotLibraryRecvDataBaseFB.GetTurnNumbers` | turn numbers encoded as two's complement nibble (`SINT_TO_BYTE`, -1 → `2#1111` = -7 for the RC); decoding ignores the sign bit (`-1` = `2#1001` → 9) | 5.5.4.4, tables 5-24…5-26: sign + magnitude, bits 0..2 value, bit 3 sign (E1: bits 0..6, bit 7) | fixed |
 | F4 | `MC_RobotTaskFB.ParseRecvPayload` | "delete old telegram data" compares the ACK of the *previous* telegram with `LastACK[0]` – both are always equal, the branch is dead code | – | kept as in ST (documented) |
 | F5 | `MC_RobotTaskFB.ParseRecvPayloadSequence` | `_fragIdx` and `_seqPayloadPtr` are not reset for the second sequence – with two sequences the second one is parsed with a wrong fragment index/length | – | fixed: reset per sequence |
@@ -17,6 +17,30 @@ Status "fixed in Python" means: still to be fixed in the PLC library.
 | F9 | `ByteToAxisJointUnit` | bit 1 and bit 2 both assigned to `J2`, `J1` never set | – | fixed: J1..J6 = bits 1..6 like `ByteToAxisJointUsed` |
 | F10 | `PERCENT_INT_TO_REAL` | compares an `INT` with `16#FFFF_FFFF`/`16#0000_FFFF`; depending on the implicit conversion `-1` (16#FFFF) is not recognised as "not supported" | 5.6.2 percentage encoding | intended meaning implemented: all 16 bits set → -1.0 |
 | F11 | `TurnNumber` (SINT per axis) | cannot represent "-0" | 5.5.4.4 uses -0 and +0 (e.g. table 5-26) | as in ST (known limitation); raw bytes are available in the telegram |
+| F12 | `MC_MeasuringInputFB.CheckParameterValid` | `SetError( ErrorID := ErrorID := ...)` – duplicated assignment in the argument list | – | source patch (single `ErrorID :=`) |
+| F13 | `MC_RobotTaskFB.HandleSync` | `HandleSyncToolData` is called twice per cycle (the tool step chain runs at double speed, e.g. `Execute` set and evaluated in the same cycle) | – | as in ST |
+| F14 | `MC_RobotTaskFB.HandleAxesGroupSystemData` | `FrameDataPtr`/`WorkAreasPtr` (and Min/Max) are set to **LoadData** (copy & paste) – frame and work area data are written into the load array | – | source patch (FrameData / WorkAreas) |
+| F15 | `MC_RobotTaskFB.OnExecRun` step 1 | timeout check `(State >= ERROR_161) OR (State <= ERROR_173)` is always TRUE → `ErrorID := TelegramState` also for non-error states | – | as in ST |
+| F16 | `MC_Read*FB` (tool/frame/load/SW limits/dynamics) during the synchronisation | the start-up read calls `AxesGroup.SystemData.Update*` and so **overwrites the user data with the RC data** before the comparison – with `CLIENT_TO_SERVER` the PLC data is lost and the comparison always finds equal data | 5.6.7.3: client data wins | as in ST (to be decided) |
+| F17 | `MC_RobotTaskFB.HandleAxesGroupState` | `Unified*Index := MIN(..., X_MAX, ...)` but the internal arrays are `[0..X_MAX-1]` → write/read behind `_toolData` etc. | – | source patch (`X_MAX - 1`) |
+| F18 | `MC_RobotTaskFB.HandleSync*Data` | copy loops run over the user array bounds (`ToolDataMin..ToolDataMax`) on the internal arrays `[0..TOOL_MAX-1]` → out of bounds if the user array is longer than `TOOL_MAX` (Python raises `IndexError`) | – | as in ST; user arrays must not be longer than `TOOL_MAX` etc. |
+| F19 | `ActiveCommandRegisterFB.AddRsp` | `FOR _idx := PayloadPointer TO PayloadLength - 1` – for fragments after the first one (`PayloadPointer > 0`) nothing is copied, long responses (e.g. `ReadRobotData`, 134 bytes) are truncated | 5.6.5 fragmentation | source patch (`PayloadPointer + PayloadLength - 1`) |
+| F20 | synchronisation `SERVER_TO_CLIENT` | after reading the RC data the client never writes it back, so `DataChanged` on the RC is not reset and the RC never reports `DataInSync` → RI state never "Synchronized" | 5.6.7.4.2: "RobotTask then executes internally WriteToolData to reset DataChanged"; SDK resets `DataChanged` only on write | as in ST (xfail test) |
+| F21 | synchronisation `CLIENT_TO_SERVER` | writes tool/frame/load **0** (flange, world, …); the RC rejects it (SDK `0x8D35` invalid tool number) → warning, sync fails | 5.5.4: index 0 is fixed (flange) | as in ST (xfail test) |
+| F22 | `MC_ReadMessagesFB.ParseResponsePayload` | reads the 255 byte message text at offset 20 of the 256 byte response buffer (`GetDataBlock` copies behind the buffer) | – | fixed in `GetDataBlock`: missing bytes are 0 |
+| F23 | `RobotLibraryBaseEnableFB` / `MC_RobotTaskFB.Reset` | disabling the RobotTask starts the cancel of the enable FBs (`_cancel`, 5 s timeout); a new enable within this time lets the pending cancel reset `MC_ReadMessagesFB` after its first response → start-up hangs in step 3 | – | as in ST (xfail test); restart after > 5 s works |
+| F24 | `MC_RobotTaskFB.HandleSync` | a data set enabled for synchronisation whose functions the RC does not support (e.g. work areas in the SDK) keeps `Synchronized` FALSE forever | 5.6.7.1: "…or not supported by the RC does not impact the RI state Synchronized" | as in ST |
+
+## Notes on the SRCI SDK (simulation)
+
+Changes inside the private SDK copy are marked `SRCI_PY CUSTOM BEGIN/END` and listed in
+`srci_py_harness/CUSTOM_CHANGES.md` of the SDK folder:
+
+- **C-001** `SRCI::readRobotData` left `rcSupportedFunctions` 0, so a client never uses
+  optional functions (e.g. the data synchronisation). The simulation reports the commands
+  the SDK implements.
+- The SDK checks the lifesign only for a *frozen* value (same lifesign for
+  `LifeSignTimeOut` ms real time), not for missing telegrams.
 
 ## Notes on the specification
 

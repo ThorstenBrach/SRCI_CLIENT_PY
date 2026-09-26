@@ -100,7 +100,14 @@ class RobotLibraryRecvDataBaseFB:
         """
         if IsString:
             Size -= 1
-        data = self._read(Size)
+        # ST-FIX F22: ST copies ``Size`` bytes even if the payload buffer ends earlier
+        # (MC_ReadMessagesFB reads the 255 byte text at offset 20 of a 256 byte buffer) and
+        # so reads the memory behind the buffer. Here the missing bytes are 0.
+        self.UpdatePointer()
+        buf = self._pPayload
+        available = 0 if buf is None else max(0, min(Size, self._payload_size(buf) - self.PayloadPtr))
+        data = self._peek(available) + bytes(Size - available)
+        self.PayloadPtr += Size
         if pData is not None and Size > 0:
             pData.write(data)
         return data

@@ -6,7 +6,7 @@ numbers, error ids) mirrors the PLC library 1:1 so that fixes can be ported
 between both implementations. See ``docs/PORTING.md``.
 """
 
-from srci.parameters import configure, parameters
+from srci.library_parameters import configure, parameters
 
 __version__ = "0.1.0.dev0"
 

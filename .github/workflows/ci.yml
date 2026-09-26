@@ -19,6 +19,7 @@ jobs:
       - name: Generated code is up to date
         run: |
           python -m tools.plcopen_gen --check
+          python -m tools.st2py --check
 
   test:
     needs: lint

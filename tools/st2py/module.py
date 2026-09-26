@@ -9,7 +9,7 @@ from tools.plcopen_gen.emitter import py_name
 
 from . import ast as A
 from .decl import ArrayInit, Init, StructInit, VarDecl
-from .emit import RT, At, C, Cl, EmitError, N, Out, PouEmitter, R, _comment_lines, _walk_stmts, src
+from .emit import At, C, Cl, EmitError, N, Out, PouEmitter, R, _walk_stmts, src
 from .library import Body, Method, Pou, Property
 from .scope import Scope, Var, hierarchy, inst_attr
 from .sem import (
@@ -204,7 +204,8 @@ class ModuleEmitter(PouEmitter):
         )
         params = self.signature(pou.vars, pou)
         ann = self.ann(ret_t) if ret_t is not None else "None"
-        out.add(0, f"def {pou.name}(*{params}) -> {ann}:")
+        star = f"*{params}" if params else ""
+        out.add(0, f"def {pou.name}({star}) -> {ann}:")
         self.doc(out, 1, pou.header.doc)
         self.function_body(out, 1, pou.vars, pou.body, ret_t, pou.name)
 
@@ -510,4 +511,4 @@ def _mutated_names(stmts: list[A.Stmt]) -> set[str]:
     return names
 
 
-__all__ = ["RT", "ModuleEmitter", "_comment_lines"]
+__all__ = ["ModuleEmitter"]

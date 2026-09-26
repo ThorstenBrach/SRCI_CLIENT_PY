@@ -13,8 +13,8 @@ from tools.plcopen_gen.emitter import py_name
 
 from . import ast as A
 from .config import Config
-from .decl import ArrayInit, Init, StructInit, VarDecl
-from .library import Body, Method, Pou, Property
+from .decl import VarDecl
+from .library import Method, Pou, Property
 from .registry import Target
 from .scope import (
     Scope,
@@ -28,7 +28,6 @@ from .scope import (
 )
 from .sem import (
     ANY,
-    BIT_TYPES,
     BOOL,
     DINT,
     INT_TYPES,
@@ -234,9 +233,9 @@ class PouEmitter:
             return t.name
         if isinstance(t, SArray):
             inner = self.ann(t.elem)
-            if t.lower == 0:
-                return f"list[{inner}]"
-            if t.lower is None:
+            if t.lower is None and isinstance(t.elem, SElem) and t.elem.name in ("BYTE", "USINT"):
+                return "list[int] | bytearray"  # ARRAY[*] OF BYTE: bytes buffers are fine
+            if t.lower == 0 or t.lower is None:
                 return f"list[{inner}]"
             self.use_iec()
             return f"_iec.IecArray[{inner}]"
@@ -1177,31 +1176,23 @@ class PouEmitter:
         """``SysDepMemCpy(ADR(localScalar), src, n)`` -> ``local = mem_read(src, T, n, local)``."""
         if not (isinstance(e.func, A.Name) and e.func.id.upper() in ("SYSDEPMEMCPY", "SYSDEPMEMSET")):
             return False
-        dest = e.args[0].value
+        names = ["PDEST", "PSRC" if e.func.id.upper() == "SYSDEPMEMCPY" else "VALUE", "DATALEN"]
+        args: dict[str, A.Expr] = {}
+        for i, a in enumerate(e.args):
+            args[a.name.upper() if a.name else names[i]] = a.value
+        dest = args.get("PDEST")
         if not (isinstance(dest, A.Call) and isinstance(dest.func, A.Name) and dest.func.id.upper() == "ADR"):
             return False
         d = self.adr(dest.args[0].value)
         if d.kind != "localptr":
             return False
+        if e.func.id.upper() == "SYSDEPMEMSET":
+            raise EmitError(f"line {e.line}: SysDepMemSet of a local scalar is not supported")
         local = d.extra
         assert isinstance(d.type, SPtr)
-        t = d.type.target
-        n = self.expr(e.args[2].value).node
-        if e.func.id.upper() == "SYSDEPMEMSET":
-            value = self.expr(e.args[1].value).node
-            srcp = Cl(
-                self.use_rt("ADR_VALUE"),
-                [
-                    Cl(
-                        N("bytes"),
-                        [py.BinOp(left=py.List(elts=[value], ctx=py.Load()), op=py.Mult(), right=n)],
-                    ),
-                    self.desc(SArray(0, 0, SElem("BYTE"))),
-                ],
-            )
-            raise EmitError("SysDepMemSet of a local scalar")
-        srcp = self.expr(e.args[1].value).node
-        call = Cl(self.use_rt("mem_read"), [srcp, self.desc(t), n, N(local)])
+        n = self.expr(args["DATALEN"]).node
+        srcp = self.expr(args["PSRC"]).node
+        call = Cl(self.use_rt("mem_read"), [srcp, self.desc(d.type.target), n, N(local)])
         out.add(indent, f"{local} = {src(call)}" + trailing)
         return True
 
@@ -1435,14 +1426,4 @@ def _walk_names(s: A.Stmt) -> Iterator[str]:
             yield x.var
 
 
-__all__ = [
-    "BIT_TYPES",
-    "ArrayInit",
-    "Body",
-    "EmitError",
-    "Init",
-    "PouEmitter",
-    "StructInit",
-    "field",
-    "has_call",
-]
+__all__ = ["EmitError", "PouEmitter"]

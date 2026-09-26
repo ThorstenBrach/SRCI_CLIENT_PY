@@ -86,9 +86,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         self.ParCfg: RobotTaskParCfg = RobotTaskParCfg()
         # VAR_IN_OUT
         # Inputs of PLC for communication from RC
-        self.RobotInData: list[int] = None
+        self.RobotInData: list[int] | bytearray = None
         # Outputs of PLC for communication to RC
-        self.RobotOutData: list[int] = None
+        self.RobotOutData: list[int] | bytearray = None
         # User data stored on the PLC according to Table 6-10
         self.UserData: UserData = None
         # ToolData stored on PLC. For more information refer to 5.5.6.3
@@ -344,7 +344,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         # VAR_INST of HandleLifeSign
         self._HandleLifeSign__first: bool = True
 
-    def __call__(self, *, Enable: bool | None = None, RobotName: str | None = None, SystemTime: SystemTime | None = None, OnlineChange: bool | None = None, AxesGroupID: int | None = None, ParCfg: RobotTaskParCfg | None = None, RobotInData: list[int] | None = None, RobotOutData: list[int] | None = None, UserData: UserData | None = None, ToolData: list[Tool] | None = None, FrameData: list[Frame] | None = None, LoadData: list[Load] | None = None, WorkAreas: list[RobotWorkArea] | None = None, SWLimits: SWLimits | None = None, DefaultDynamics: DefaultDynamics | None = None, ReferenceDynamics: ReferenceDynamics | None = None, SystemLog: list[str] | None = None, MessageLog: list[AlarmMessage] | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
+    def __call__(self, *, Enable: bool | None = None, RobotName: str | None = None, SystemTime: SystemTime | None = None, OnlineChange: bool | None = None, AxesGroupID: int | None = None, ParCfg: RobotTaskParCfg | None = None, RobotInData: list[int] | bytearray | None = None, RobotOutData: list[int] | bytearray | None = None, UserData: UserData | None = None, ToolData: list[Tool] | None = None, FrameData: list[Frame] | None = None, LoadData: list[Load] | None = None, WorkAreas: list[RobotWorkArea] | None = None, SWLimits: SWLimits | None = None, DefaultDynamics: DefaultDynamics | None = None, ReferenceDynamics: ReferenceDynamics | None = None, SystemLog: list[str] | None = None, MessageLog: list[AlarmMessage] | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if Enable is not None:
             self.Enable = Enable
         if RobotName is not None:
@@ -1457,7 +1457,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         # Update ReferenceDynamics
         AxesGroup.SystemData.ReferenceDynamics = ReferenceDynamics
 
-    def HandleInvalidFrames(self, *, AxesGroup: _T.AxesGroup, RobotInData: list[int]) -> None:  # PRIVATE
+    def HandleInvalidFrames(self, *, AxesGroup: _T.AxesGroup, RobotInData: list[int] | bytearray) -> None:  # PRIVATE
         # Value of lifesign in header
         _lifeSignHeader: int = 0
         # Value of lifesign in footer

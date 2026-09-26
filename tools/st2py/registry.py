@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import importlib
 import inspect
-import pkgutil
 from dataclasses import dataclass
 
 from .library import Pou
@@ -90,4 +89,4 @@ def generated_packages(reg: dict[str, Target]) -> set[str]:
     return pkgs
 
 
-__all__ = ["Target", "build_registry", "generated_packages", "module_for", "pkgutil"]
+__all__ = ["Target", "build_registry", "generated_packages", "module_for"]

@@ -57,6 +57,8 @@ def configure(*, force: bool = False, **values: object) -> None:
     if _instances_created and not force and any(values[n] != current[n] for n in values):
         raise RuntimeError("configure() must be called before the first function block is created")
     for name, value in values.items():
+        if isinstance(current[name], float):
+            value = float(value)  # type: ignore[arg-type]
         setattr(RobotLibraryParameter, name, value)
     _clear_caches()
 
