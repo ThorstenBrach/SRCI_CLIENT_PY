@@ -81,6 +81,7 @@ disallow_incomplete_defs = false
 # ---------------------------------------------------------------- pytest
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src", "."]  # tests also run without "pip install -e ."
 addopts = "-ra --strict-markers"
 markers = [
     "sdk: tests that need the compiled SRCI SDK simulator (skipped if not built)",
