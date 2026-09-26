@@ -1,55 +1,49 @@
-# Robot Library Py
+# SRCI for Python
 
-A Python implementation of the IEC 61131 Robot Library.
+Python client for the **Standard Robot Command Interface (SRCI)**, profile V1.5.9.
 
-## Overview
+This is a port of the open SRCI PLC library for Codesys/TwinCAT
+([ThorstenBrach/SRCI](https://github.com/ThorstenBrach/SRCI)). Function blocks,
+methods, step numbers and error ids mirror the PLC library 1:1, so that fixes
+can be ported between both implementations (see [docs/PORTING.md](docs/PORTING.md)).
 
-This project converts the original IEC 61131 Structured Text robot library to Python, maintaining modularity and state-of-the-art practices.
+> Status: rewrite in progress (branch `rewrite`). The previous experimental port
+> is preserved on branch `legacy` / tag `legacy-v0`.
 
-## Installation
+## How it talks to the robot
 
-### Using pip (from source)
-```bash
-pip install -e .
+SRCI is transported over PROFINET. A PLC acts as gateway: it exchanges the
+PROFINET process data with the robot controller and forwards the raw SRCI
+byte array to Python over TCP/IP.
+
+```
+Python (srci)  --TCP, raw telegram-->  PLC gateway  --PROFINET-->  Robot controller
+               <--one reply per request--
 ```
 
-### Development Setup
-```bash
-pip install -e ".[dev]"
-```
-
-## Project Structure
-
-- `src/robot_library_py/`: Main package
-  - `constants/`: Global constants
-  - `structures/`: Data structures
-  - `enumerations/`: Enums
-  - `functions/`: Utility functions
-  - `pous/`: Programmable Organization Units (Function Blocks)
-- `tests/`: Unit tests
-- `docs/`: Documentation
-
-## Usage
-
-```python
-from robot_library_py import ...
-```
+* Python is the cycle master: it sends one telegram per cycle, the PLC answers
+  each received telegram with exactly one telegram (lockstep).
+* No extra framing: telegram lengths are fixed by configuration on both sides.
+* The transport is exchangeable (`srci.transport.Transport`); the library core can
+  also be used without any transport (`cycle(in_bytes) -> out_bytes`).
 
 ## Development
 
-- Format code: `black src tests`
-- Lint: `flake8 src tests`
-- Type check: `mypy src`
-- Run tests: `pytest`
+```bash
+python -m venv .venv
+.venv/Scripts/activate        # Windows  (Linux: source .venv/bin/activate)
+pip install -e ".[dev]"
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests
-4. Ensure all checks pass
-5. Submit a pull request
+pytest                        # tests
+ruff check . && ruff format --check .
+mypy
+python -m tools.plcopen_gen   # regenerate types from third_party/robotlibrary/RobotLibrary.xml
+```
 
 ## License
 
-LGPL-3.0
+MIT – see [LICENSE](LICENSE).
+
+The developed software is based on the SRCI technology of "PROFIBUS and PROFINET
+International" (PI), but it is not an official publication of PI.
+This project is provided without any guarantee. Any use is at the user's own risk.

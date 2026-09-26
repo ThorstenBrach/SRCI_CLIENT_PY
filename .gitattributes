@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+# vendored files are stored byte-exact
+third_party/** -text
