@@ -72,6 +72,7 @@ warn_unreachable = true
 
 [[tool.mypy.overrides]]
 module = ["tests.*"]
+warn_unreachable = false  # attribute narrowing across calls of stateful FBs
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
 
