@@ -58,3 +58,25 @@ def test_sdk_server_serves_a_plc_and_resets_the_rc_per_connection(sdk_library: s
 def test_sdk_server_cli_reports_a_missing_sdk(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
     assert main(["--lib", str(tmp_path / "missing.so"), "--status", "0"]) == 2
     assert "SDK simulator not available" in capsys.readouterr().err
+
+
+def test_sdk_server_reports_gaps_in_the_plc_lifesign(sdk_library: str) -> None:
+    """Diagnosis for PLC tests: the Python client (one RobotTask cycle per telegram) sends the
+    LifeSign without gaps; a PLC that runs its RobotTask several cycles per telegram shows gaps."""
+    from srci.api import RobotProgram
+
+    with SdkServer(port=0, library=Path(sdk_library)) as server:
+        with _client(server) as client:
+            client.wait_initialized(timeout=10.0)
+            client.run(40)
+        assert server.number_gaps == 0 and server.number_repeats == 0
+        host, port = server.address
+        transport = TcpTransport(host, port, 256, 256, response_timeout=0.5)
+        program, out, inp = RobotProgram(256, 256), bytes(256), bytes(256)
+        for cycle in range(90):  # 3 RobotTask cycles per telegram
+            if cycle % 3 == 0:
+                inp = transport.exchange(out)
+            out = program.step(inp)
+        transport.close()
+        assert server.number_gaps > 0
+        assert "gaps" in server.status()

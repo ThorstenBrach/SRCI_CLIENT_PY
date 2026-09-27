@@ -702,6 +702,13 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-032",
+  "test": "tests/sdk/test_sdk_server.py::test_sdk_server_reports_gaps_in_the_plc_lifesign",
+  "title": "Diagnosis for PLC tests: the Python client (one RobotTask cycle per telegram) sends the LifeSign without gaps; a PLC that runs its RobotTask several cycles per telegram shows gaps.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",

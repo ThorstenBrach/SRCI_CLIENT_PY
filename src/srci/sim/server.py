@@ -78,6 +78,10 @@ class SdkServer:
         self.response_size = response_size
         self._connection = 0
         self._lock = threading.Lock()
+        # LifeSign PLC -> RC (header byte 1, low nibble) of the current connection
+        self.last_number: int | None = None
+        self.number_gaps = 0  # telegrams missing between two received ones
+        self.number_repeats = 0  # telegrams with the same number as the one before
         self.gateway = PlcGatewaySimulator(self._handle, request_size, response_size, host=host, port=port)
 
     def _new_simulator(self) -> SdkSimulator:
@@ -103,12 +107,32 @@ class SdkServer:
         with self._lock:
             if self.gateway.connections != self._connection:  # new PLC connection: restart the RC
                 self._connection = self.gateway.connections
+                self.last_number = None
+                self.number_gaps = self.number_repeats = 0
                 if self._connection > 1:
                     # a new simulator: SdkSimulator.reset() does not bring the RI back to the
                     # initial state, the next initialization of the RobotTask would time out
                     self.sim.close()
                     self.sim = self._new_simulator()
+            self._check_number(telegram)
             return self.sim.exchange(telegram, self.response_size)
+
+    def _check_number(self, telegram: bytes) -> None:
+        """Gaps and repeats of the LifeSign PLC -> RC (header byte 1, low nibble 1..15): the
+        PLC counts it once per RobotTask cycle, so every telegram must carry the next value."""
+        if len(telegram) < 2:
+            return
+        number = telegram[1] & 0x0F
+        if number == 0:  # not initialized yet
+            self.last_number = None
+            return
+        if self.last_number is not None:
+            diff = (number - self.last_number) % 15
+            if diff == 0:
+                self.number_repeats += 1
+            elif diff > 1:
+                self.number_gaps += diff - 1
+        self.last_number = number
 
     def start(self) -> Self:
         self.gateway.start()
@@ -131,7 +155,9 @@ class SdkServer:
         return (
             f"connections {self.connections}  telegrams {self.telegrams}  "
             f"enabled {self.sim.enabled!s:5}  override {self.sim.override:5.1f}  "
-            "J1..J3 " + " ".join(f"{j:7.2f}" for j in joints[:3])
+            "J1..J3 "
+            + " ".join(f"{j:7.2f}" for j in joints[:3])
+            + f"  PLC lifesign {self.last_number}  gaps {self.number_gaps}  repeats {self.number_repeats}"
         )
 
 
