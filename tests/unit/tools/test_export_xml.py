@@ -27,11 +27,13 @@ from __future__ import annotations
 
 import re
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
-from tools.st2py.export_xml import DEFAULT_XML, ExportResult, export, verify
+from tools.st2py.config import CONFIG, BodyAppend
+from tools.st2py.export_xml import DEFAULT_XML, ExportError, ExportResult, export, verify
 
 
 @pytest.fixture(scope="module")
@@ -79,3 +81,20 @@ def test_fixed_xml_declares_added_variables_twice(fixed: tuple[ExportResult, Pat
     itf = pou.group(0)[: pou.group(0).find("</interface>")]
     assert '<variable name="Active">' in itf
     assert re.search(r"VAR_OUTPUT\s+Active : BOOL;", pou.group(0))
+
+
+@pytest.mark.parametrize(
+    "st",
+    [
+        "IF ( ParCmd.Mode = 0 ) THEN\n  RETURN;\nEND_IF",
+        "IF ( ParCmd.Mode = 0 )\nTHEN RETURN;\nEND_IF",
+        "IF ( ParCmd.Mode = 0 )\nTHEN\n  RETURN;\nELSE RETURN;\nEND_IF",
+    ],
+)
+def test_export_refuses_then_on_the_if_line(st: str) -> None:
+    """ST coding rule 4: THEN on its own line below the IF, no statement behind THEN/ELSE."""
+    cfg = replace(
+        CONFIG, appends=[*CONFIG.appends, BodyAppend("MC_GroupResetFB", "CheckFunctionSupported", st, "test")]
+    )
+    with pytest.raises(ExportError, match="THEN must be on its own line"):
+        export(cfg=cfg)

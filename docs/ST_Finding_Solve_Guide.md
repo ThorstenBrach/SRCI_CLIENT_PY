@@ -684,13 +684,18 @@ _synchronisation `SERVER_TO_CLIENT` - after reading the RC data the client never
 ```diff
 --- a/MC_RobotTaskFB.HandleSyncToolData
 +++ b/MC_RobotTaskFB.HandleSyncToolData
-@@ -641,7 +641,8 @@
+@@ -641,7 +641,13 @@
           // set timeout
           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
           // inc step counter
 -        _rStep := 10; // -> jump to after startup           
 +        // ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
-+IF AxesGroup.State.RobotData.RCSupportedFunctions.WriteToolData THEN _rStep := 30; ELSE _rStep := 10; END_IF // -> jump to after startup           
++        IF ( AxesGroup.State.RobotData.RCSupportedFunctions.WriteToolData )
++        THEN
++          _rStep := 30;
++        ELSE
++          _rStep := 10;
++        END_IF // -> jump to after startup           
         ELSE
           // check error ? 
           IF (_readToolData.Error)
@@ -701,13 +706,18 @@ _synchronisation `SERVER_TO_CLIENT` - after reading the RC data the client never
 ```diff
 --- a/MC_RobotTaskFB.HandleSyncFrameData
 +++ b/MC_RobotTaskFB.HandleSyncFrameData
-@@ -641,7 +641,8 @@
+@@ -641,7 +641,13 @@
           // set timeout
           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
           // inc step counter
 -        _rStep := 10; // -> jump to after startup           
 +        // ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
-+IF AxesGroup.State.RobotData.RCSupportedFunctions.WriteFrameData THEN _rStep := 30; ELSE _rStep := 10; END_IF // -> jump to after startup           
++        IF ( AxesGroup.State.RobotData.RCSupportedFunctions.WriteFrameData )
++        THEN
++          _rStep := 30;
++        ELSE
++          _rStep := 10;
++        END_IF // -> jump to after startup           
         ELSE
           // check error ? 
           IF (_readFrameData.Error)
@@ -718,13 +728,18 @@ _synchronisation `SERVER_TO_CLIENT` - after reading the RC data the client never
 ```diff
 --- a/MC_RobotTaskFB.HandleSyncLoadData
 +++ b/MC_RobotTaskFB.HandleSyncLoadData
-@@ -658,7 +658,8 @@
+@@ -658,7 +658,13 @@
           // set timeout
           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
           // inc step counter
 -        _rStep := 10; // -> jump to after startup           
 +        // ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
-+IF AxesGroup.State.RobotData.RCSupportedFunctions.WriteLoadData THEN _rStep := 30; ELSE _rStep := 10; END_IF // -> jump to after startup           
++        IF ( AxesGroup.State.RobotData.RCSupportedFunctions.WriteLoadData )
++        THEN
++          _rStep := 30;
++        ELSE
++          _rStep := 10;
++        END_IF // -> jump to after startup           
         ELSE
           // check error ? 
           IF (_readLoadData.Error)
@@ -735,13 +750,18 @@ _synchronisation `SERVER_TO_CLIENT` - after reading the RC data the client never
 ```diff
 --- a/MC_RobotTaskFB.HandleSyncWorkArea
 +++ b/MC_RobotTaskFB.HandleSyncWorkArea
-@@ -641,7 +641,8 @@
+@@ -641,7 +641,13 @@
           // set timeout
           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
           // inc step counter
 -        _rStep := 10; // -> jump to after startup           
 +        // ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
-+IF AxesGroup.State.RobotData.RCSupportedFunctions.WriteWorkArea THEN _rStep := 30; ELSE _rStep := 10; END_IF // -> jump to after startup           
++        IF ( AxesGroup.State.RobotData.RCSupportedFunctions.WriteWorkArea )
++        THEN
++          _rStep := 30;
++        ELSE
++          _rStep := 10;
++        END_IF // -> jump to after startup           
         ELSE
           // check error ? 
           IF (_readWorkArea.Error)
@@ -752,13 +772,18 @@ _synchronisation `SERVER_TO_CLIENT` - after reading the RC data the client never
 ```diff
 --- a/MC_RobotTaskFB.HandleSyncRobotSWLimits
 +++ b/MC_RobotTaskFB.HandleSyncRobotSWLimits
-@@ -547,7 +547,8 @@
+@@ -547,7 +547,13 @@
           // set timeout
           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
           // inc step counter
 -        _rStep := 10; // -> jump to after startup           
 +        // ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
-+IF AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotSWLimits THEN _rStep := 30; ELSE _rStep := 10; END_IF // -> jump to after startup           
++        IF ( AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotSWLimits )
++        THEN
++          _rStep := 30;
++        ELSE
++          _rStep := 10;
++        END_IF // -> jump to after startup           
         ELSE
           // check error ? 
           IF (_readRobotSWLimits.Error)
@@ -769,13 +794,18 @@ _synchronisation `SERVER_TO_CLIENT` - after reading the RC data the client never
 ```diff
 --- a/MC_RobotTaskFB.HandleSyncRobotDefaultDynamics
 +++ b/MC_RobotTaskFB.HandleSyncRobotDefaultDynamics
-@@ -528,7 +528,8 @@
+@@ -528,7 +528,13 @@
           // set timeout
           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
           // inc step counter
 -        _rStep := 10; // -> jump to after startup           
 +        // ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
-+IF AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotDefaultDynamics THEN _rStep := 30; ELSE _rStep := 10; END_IF // -> jump to after startup           
++        IF ( AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotDefaultDynamics )
++        THEN
++          _rStep := 30;
++        ELSE
++          _rStep := 10;
++        END_IF // -> jump to after startup           
         ELSE
           // check error ? 
           IF (_readRobotDefaultDynamics.Error)
@@ -786,13 +816,18 @@ _synchronisation `SERVER_TO_CLIENT` - after reading the RC data the client never
 ```diff
 --- a/MC_RobotTaskFB.HandleSyncRobotReferenceDynamics
 +++ b/MC_RobotTaskFB.HandleSyncRobotReferenceDynamics
-@@ -528,7 +528,8 @@
+@@ -528,7 +528,13 @@
           // set timeout
           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
           // inc step counter
 -        _rStep := 10; // -> jump to after startup           
 +        // ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)
-+IF AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotReferenceDynamics THEN _rStep := 30; ELSE _rStep := 10; END_IF // -> jump to after startup           
++        IF ( AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotReferenceDynamics )
++        THEN
++          _rStep := 30;
++        ELSE
++          _rStep := 10;
++        END_IF // -> jump to after startup           
         ELSE
           // check error ? 
           IF (_readRobotReferenceDynamics.Error)
@@ -1035,14 +1070,17 @@ _`RobotLibraryBaseEnableFB` / `MC_RobotTaskFB.Reset` - disabling the RobotTask s
 ```diff
 --- a/MC_RobotTaskFB.OnExecRun
 +++ b/MC_RobotTaskFB.OnExecRun
-@@ -31,6 +31,10 @@
+@@ -31,6 +31,13 @@
           AxesGroup.Cyclic.PlcToRob.FastStop := 0;
           // Reset Active command register
           AxesGroup.Acyclic.ActiveCommandRegister.Reset();
 +         // ST-FIX F23: the RC is still initialized from the previous enable (ACR, SEQ/ACK)
 +         // -> reset the interface on the RC as well
 +         _restartReset := AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.INITIALIZED;
-+         IF _restartReset THEN AxesGroup.Cyclic.PlcToRob.Control := ControlHalfByte.RESET; END_IF
++         IF ( _restartReset )
++         THEN
++           AxesGroup.Cyclic.PlcToRob.Control := ControlHalfByte.RESET;
++         END_IF
         
           // check parameter valid
           IF ( CheckParameterValid(AxesGroup := AxesGroup) )
@@ -1053,20 +1091,24 @@ _`RobotLibraryBaseEnableFB` / `MC_RobotTaskFB.Reset` - disabling the RobotTask s
 ```diff
 --- a/MC_RobotTaskFB.OnExecRun
 +++ b/MC_RobotTaskFB.OnExecRun
-@@ -46,7 +46,11 @@
+@@ -49,7 +49,15 @@
           END_IF
         END_IF
       
 -  01:  CASE AxesGroup.Cyclic.RobToPlc.TelegramState  OF
 +  01:  // ST-FIX F23: wait until the RC left the state INITIALIZED of the previous enable
-+IF _restartReset THEN
-+  IF AxesGroup.Cyclic.RobToPlc.TelegramState <> TelegramState.INITIALIZED THEN _restartReset := FALSE; END_IF
++IF ( _restartReset )
++THEN
++  IF ( AxesGroup.Cyclic.RobToPlc.TelegramState <> TelegramState.INITIALIZED )
++  THEN
++    _restartReset := FALSE;
++  END_IF
 +ELSE
 +CASE AxesGroup.Cyclic.RobToPlc.TelegramState  OF
  
           TelegramState.UNDEFINED : ;
           
-@@ -94,6 +98,7 @@
+@@ -97,6 +105,7 @@
           SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite := TRUE ); // ST-FIX F65: unknown state (16#A2 is the RI error of the RC)
           ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));
         END_CASE
@@ -4383,19 +4425,22 @@ _motion blocks: inputs `AbortingMode`, `SequenceFlag` - checked but not used: th
 ```diff
 --- a/MC_BrakeTestFB.CreateCommandPayload
 +++ b/MC_BrakeTestFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp               :=  CmdType.BrakeTest;
 -_command.ExecMode             :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4411,19 +4456,22 @@ _motion blocks: inputs `AbortingMode`, `SequenceFlag` - checked but not used: th
 ```diff
 --- a/MC_MoveDepartDirectFB.CreateCommandPayload
 +++ b/MC_MoveDepartDirectFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp               :=  CmdType.MoveDepartDirect;
 -_command.ExecMode             :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4439,19 +4487,22 @@ _motion blocks: inputs `AbortingMode`, `SequenceFlag` - checked but not used: th
 ```diff
 --- a/MC_DynamicSplineFB.CreateCommandPayload
 +++ b/MC_DynamicSplineFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp            :=  CmdType.DynamicSpline;
 -_command.ExecMode          :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4467,19 +4518,22 @@ _motion blocks: inputs `AbortingMode`, `SequenceFlag` - checked but not used: th
 ```diff
 --- a/MC_MoveAxesAbsoluteFB.CreateCommandPayload
 +++ b/MC_MoveAxesAbsoluteFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp            :=  CmdType.MoveAxesAbsolute;
 -_command.ExecMode          :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4495,19 +4549,22 @@ _motion blocks: inputs `AbortingMode`, `SequenceFlag` - checked but not used: th
 ```diff
 --- a/MC_MoveCircularCamFB.CreateCommandPayload
 +++ b/MC_MoveCircularCamFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp            :=  CmdType.MoveCircularCam;
 -_command.ExecMode          :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4525,19 +4582,22 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularRelativeFB`, `MC_MoveDirect
 ```diff
 --- a/MC_LoadMeasurementAutomaticFB.CreateCommandPayload
 +++ b/MC_LoadMeasurementAutomaticFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp             :=  CmdType.LoadMeasurementAutomatic;
 -_command.ExecMode           :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4553,19 +4613,22 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularRelativeFB`, `MC_MoveDirect
 ```diff
 --- a/MC_MoveApproachDirectFB.CreateCommandPayload
 +++ b/MC_MoveApproachDirectFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.MoveApproachDirect;
 -_command.ExecMode                  :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4581,19 +4644,22 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularRelativeFB`, `MC_MoveDirect
 ```diff
 --- a/MC_MoveApproachLinearFB.CreateCommandPayload
 +++ b/MC_MoveApproachLinearFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.MoveApproachLinear;
 -_command.ExecMode                  :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4609,19 +4675,22 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularRelativeFB`, `MC_MoveDirect
 ```diff
 --- a/MC_MoveAxesRelativeFB.CreateCommandPayload
 +++ b/MC_MoveAxesRelativeFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.MoveAxesRelative;
 -_command.ExecMode                  :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4639,19 +4708,22 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_MoveDepartLinearFB.CreateCommandPayload
 +++ b/MC_MoveDepartLinearFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp              :=  CmdType.MoveDepartLinear;
 -_command.ExecMode            :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4667,19 +4739,22 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_MovePickPlaceDirectFB.CreateCommandPayload
 +++ b/MC_MovePickPlaceDirectFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp              :=  CmdType.MovePickPlaceDirect;
 -_command.ExecMode            :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4695,19 +4770,22 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_MovePickPlaceLinearFB.CreateCommandPayload
 +++ b/MC_MovePickPlaceLinearFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp              :=  CmdType.MovePickPlaceLinear;
 -_command.ExecMode            :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4723,19 +4801,22 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_SearchHardStopFB.CreateCommandPayload
 +++ b/MC_SearchHardStopFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp           :=  CmdType.SearchHardstop;
 -_command.ExecMode         :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4751,19 +4832,22 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_WaitTimeFB.CreateCommandPayload
 +++ b/MC_WaitTimeFB.CreateCommandPayload
-@@ -1,6 +1,19 @@
+@@ -1,6 +1,22 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.WaitTime;
 -_command.ExecMode :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT )
++  THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4813,7 +4897,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_CallSubprogramFB.CreateCommandPayload
 +++ b/MC_CallSubprogramFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.CallSubprogram;
 -_command.ExecMode     :=  ExecMode;
@@ -4821,13 +4905,17 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -4853,7 +4941,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_ReadActualPositionFB.CreateCommandPayload
 +++ b/MC_ReadActualPositionFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.ReadActualPosition;
 -_command.ExecMode     :=  ExecMode;
@@ -4861,13 +4949,17 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -4893,7 +4985,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_ReadAnalogInputFB.CreateCommandPayload
 +++ b/MC_ReadAnalogInputFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.ReadAnalogInput;
 -_command.ExecMode     :=  ExecMode;
@@ -4901,13 +4993,17 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -4935,7 +5031,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_CollisionDetectionFB.CreateCommandPayload
 +++ b/MC_CollisionDetectionFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp               :=  CmdType.CollisionDetection;
 -_command.ExecMode             :=  ExecMode;
@@ -4943,13 +5039,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -4975,7 +5075,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_LoadMeasurementSequentialFB.CreateCommandPayload
 +++ b/MC_LoadMeasurementSequentialFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.LoadMeasurementSequential;
 -_command.ExecMode :=  ExecMode;
@@ -4983,13 +5083,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -5015,7 +5119,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteLoadDataFB.CreateCommandPayload
 +++ b/MC_WriteLoadDataFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.WriteLoadData;
 -_command.ExecMode :=  ExecMode;
@@ -5023,13 +5127,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -5055,7 +5163,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteToolDataFB.CreateCommandPayload
 +++ b/MC_WriteToolDataFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.WriteToolData;
 -_command.ExecMode :=  ExecMode;
@@ -5063,13 +5171,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -5231,7 +5343,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadActualTCPVelocityFB.CreateCommandPayload
 +++ b/MC_ReadActualTCPVelocityFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.ReadActualTCPVelocity;
 -_command.ExecMode                  :=  ExecMode;
@@ -5239,13 +5351,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -5271,7 +5387,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadDigitalInputsFB.CreateCommandPayload
 +++ b/MC_ReadDigitalInputsFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.ReadDigitalInputs;
 -_command.ExecMode                  :=  ExecMode;
@@ -5279,13 +5395,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -5311,7 +5431,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadSystemVariableFB.CreateCommandPayload
 +++ b/MC_ReadSystemVariableFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp         :=  CmdType.ReadSystemVariable;
 -_command.ExecMode       :=  ExecMode;
@@ -5319,13 +5439,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -5351,7 +5475,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteSystemVariableFB.CreateCommandPayload
 +++ b/MC_WriteSystemVariableFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp         :=  CmdType.WriteSystemVariable;
 -_command.ExecMode       :=  ExecMode;
@@ -5359,13 +5483,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -5527,7 +5655,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_StopSubprogramFB.CreateCommandPayload
 +++ b/MC_StopSubprogramFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp     :=  CmdType.StopSubprogram;
 -_command.ExecMode   :=  ExecMode;
@@ -5535,13 +5663,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -5567,7 +5699,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WaitForTriggerFB.CreateCommandPayload
 +++ b/MC_WaitForTriggerFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp          :=  CmdType.WaitForTrigger;
 -_command.ExecMode        :=  ExecMode;
@@ -5575,13 +5707,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -5607,7 +5743,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteDigitalOutputsFB.CreateCommandPayload
 +++ b/MC_WriteDigitalOutputsFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp        :=  CmdType.WriteDigitalOutputs;
 -_command.ExecMode      :=  ExecMode;
@@ -5615,13 +5751,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -5647,7 +5787,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteFrameDataFB.CreateCommandPayload
 +++ b/MC_WriteFrameDataFB.CreateCommandPayload
-@@ -1,6 +1,31 @@
+@@ -1,6 +1,35 @@
                    // set command parameter 
  _command.CmdTyp    :=  CmdType.WriteFrameData;
 -_command.ExecMode  :=  ExecMode;
@@ -5655,13 +5795,17 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +CASE ProcessingMode OF
 +  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
 +    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
-+    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    THEN
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE
++      _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +    END_IF
 +  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
@@ -6194,7 +6338,7 @@ _`MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - t
 ```diff
 --- a/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
 +++ b/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
-@@ -14,12 +14,24 @@
+@@ -14,12 +14,42 @@
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.Config.Shoulder          :=              WordToArmConfigShoulder(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Config);
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.Config.Elbow             :=              WordToArmConfigElbow   (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Config);
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.Config.Wrist             :=              WordToArmConfigWrist   (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Config);
@@ -6206,22 +6350,40 @@ _`MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - t
 -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns       := BYTE_TO_SINT(GetHalfeByteHi         (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5));
 +_turns := GetHalfeByteLo(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J2_J1); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns := BYTE_TO_SINT(_turns AND 16#07);
-+IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns; END_IF
++IF ( ( _turns AND 16#08 ) <> 0 )
++THEN
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns;
++END_IF
 +_turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J2_J1); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns := BYTE_TO_SINT(_turns AND 16#07);
-+IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns; END_IF
++IF ( ( _turns AND 16#08 ) <> 0 )
++THEN
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns;
++END_IF
 +_turns := GetHalfeByteLo(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J4_J3); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns := BYTE_TO_SINT(_turns AND 16#07);
-+IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns; END_IF
++IF ( ( _turns AND 16#08 ) <> 0 )
++THEN
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns;
++END_IF
 +_turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J4_J3); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns := BYTE_TO_SINT(_turns AND 16#07);
-+IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns; END_IF
++IF ( ( _turns AND 16#08 ) <> 0 )
++THEN
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns;
++END_IF
 +_turns := GetHalfeByteLo(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns := BYTE_TO_SINT(_turns AND 16#07);
-+IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns; END_IF
++IF ( ( _turns AND 16#08 ) <> 0 )
++THEN
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns;
++END_IF
 +_turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := BYTE_TO_SINT(_turns AND 16#07);
-+IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns; END_IF
++IF ( ( _turns AND 16#08 ) <> 0 )
++THEN
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns;
++END_IF
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns       := BYTE_TO_SINT                        (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1);
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.E1                       :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.E1;
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo  :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.ToolNo; // ST-FIX F59: tool/frame of the returned position
@@ -6232,13 +6394,16 @@ _`MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - t
 ```diff
 --- a/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
 +++ b/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
-@@ -32,7 +32,8 @@
- _turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
- AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := BYTE_TO_SINT(_turns AND 16#07);
- IF (_turns AND 16#08) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns; END_IF
+@@ -50,7 +50,11 @@
+ THEN
+   AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns;
+ END_IF
 -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns       := BYTE_TO_SINT                        (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1);
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns := BYTE_TO_SINT(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1 AND 16#7F); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
-+IF (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1 AND 16#80) <> 0 THEN AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns; END_IF
++IF ( ( Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1 AND 16#80 ) <> 0 )
++THEN
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns;
++END_IF
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.E1                       :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.E1;
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo  :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.ToolNo; // ST-FIX F59: tool/frame of the returned position
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.ToolNo  :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.CurrentlyUsedToolNo;
@@ -6249,14 +6414,18 @@ _`MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - t
 ```diff
 --- a/MC_RobotTaskFB.AxesGroupToTelegramCyclicOptional
 +++ b/MC_RobotTaskFB.AxesGroupToTelegramCyclicOptional
-@@ -20,7 +20,9 @@
+@@ -20,7 +20,13 @@
                                                                                       AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.J3Turns);
    Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_J6_J5 := CombineHalfSints(AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.J6Turns, 
                                                                                       AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.J5Turns);
 -  Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1    := SINT_TO_BYTE    (AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns);
 +  // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
-+  IF AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns < 0 THEN Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 := (SINT_TO_BYTE(-AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns) AND 16#7F) OR 16#80;
-+  ELSE Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 := SINT_TO_BYTE(AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns) AND 16#7F; END_IF
++  IF ( AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns < 0 )
++  THEN
++    Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 := (SINT_TO_BYTE(-AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns) AND 16#7F) OR 16#80;
++  ELSE
++    Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 := SINT_TO_BYTE(AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns) AND 16#7F;
++  END_IF
  END_IF  
  // }}}
    

@@ -254,14 +254,17 @@ def _exec_mode_from_aborting(pou: str) -> SourcePatch:
         "CreateCommandPayload",
         _EXEC_MODE,
         "// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)\n"
-        "IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN\n"
-        "  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN\n"
+        "IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )\n"
+        "THEN\n"
+        "  IF ( AbortingMode = AbortingModeEnum.ABORT )\n"
+        "  THEN\n"
         "    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;\n"
         "  ELSE\n"
         "    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;\n"
         "  END_IF\n"
         "ELSE\n"
-        "  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN\n"
+        "  IF ( AbortingMode = AbortingModeEnum.ABORT )\n"
+        "  THEN\n"
         "    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;\n"
         "  ELSE\n"
         "    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;\n"
@@ -284,8 +287,10 @@ def _exec_mode_from_processing(pou: str, sequence_flag: bool) -> SourcePatch:
             return f"    _command.ExecMode := ExecutionMode.{primary};\n"
         return (
             "    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )\n"
-            f"    THEN _command.ExecMode := ExecutionMode.{secondary};\n"
-            f"    ELSE _command.ExecMode := ExecutionMode.{primary};\n"
+            "    THEN\n"
+            f"      _command.ExecMode := ExecutionMode.{secondary};\n"
+            "    ELSE\n"
+            f"      _command.ExecMode := ExecutionMode.{primary};\n"
             "    END_IF\n"
         )
 
@@ -1116,9 +1121,14 @@ SYNC_PATCHES = (
         SourcePatch(
             "MC_RobotTaskFB",
             method,
-            r"(?s)(\n  21 :.*?)_rStep := 10;",
-            "\\1// ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)\n"
-            f"IF AxesGroup.State.RobotData.RCSupportedFunctions.{write} THEN _rStep := 30; ELSE _rStep := 10; END_IF",
+            r"(?s)(\n  21 :.*?\n)([ \t]*)_rStep := 10;",
+            "\\1\\2// ST-FIX F20: write the RC data back to reset DataChanged on the RC (spec 5.6.7.4.2)\n"
+            f"\\2IF ( AxesGroup.State.RobotData.RCSupportedFunctions.{write} )\n"
+            "\\2THEN\n"
+            "\\2  _rStep := 30;\n"
+            "\\2ELSE\n"
+            "\\2  _rStep := 10;\n"
+            "\\2END_IF",
             "F20: SERVER_TO_CLIENT never reset DataChanged on the RC -> RC never in sync",
             regex=True,
             template=True,
@@ -2308,11 +2318,14 @@ CONFIG = Config(
         SourcePatch(
             "MC_RobotTaskFB",
             "AxesGroupFromTelegramCyclicOptional",
-            r"(AxesGroup\.CyclicOptional\.RobToPlc\.CartesianPosition\.TurnNumber\.J\dTurns)\s*:=\s*"
+            r"(?m)^([ \t]*)(AxesGroup\.CyclicOptional\.RobToPlc\.CartesianPosition\.TurnNumber\.J\dTurns)\s*:=\s*"
             r"BYTE_TO_SINT\(GetHalfeByte(Lo|Hi)\s*\((Telegram\.RobToPlc\.CyclicOptional\.CartesianPosition\.Turns_J\d_J\d)\)\);",
-            "_turns := GetHalfeByte\\2(\\3); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
-            "\\1 := BYTE_TO_SINT(_turns AND 16#07);\n"
-            "IF (_turns AND 16#08) <> 0 THEN \\1 := -\\1; END_IF",
+            "\\1_turns := GetHalfeByte\\3(\\4); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
+            "\\1\\2 := BYTE_TO_SINT(_turns AND 16#07);\n"
+            "\\1IF ( ( _turns AND 16#08 ) <> 0 )\n"
+            "\\1THEN\n"
+            "\\1  \\2 := -\\2;\n"
+            "\\1END_IF",
             "F60: cyclic turn numbers RC -> PLC decoded as two's complement nibble (like F3)",
             regex=True,
             template=True,
@@ -2320,10 +2333,13 @@ CONFIG = Config(
         SourcePatch(
             "MC_RobotTaskFB",
             "AxesGroupFromTelegramCyclicOptional",
-            r"(AxesGroup\.CyclicOptional\.RobToPlc\.CartesianPosition\.TurnNumber\.E1Turns)\s*:=\s*BYTE_TO_SINT\s*"
-            r"\((Telegram\.RobToPlc\.CyclicOptional\.CartesianPosition\.Turns_E1)\);",
-            "\\1 := BYTE_TO_SINT(\\2 AND 16#7F); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
-            "IF (\\2 AND 16#80) <> 0 THEN \\1 := -\\1; END_IF",
+            r"(?m)^([ \t]*)(AxesGroup\.CyclicOptional\.RobToPlc\.CartesianPosition\.TurnNumber\.E1Turns)\s*:=\s*"
+            r"BYTE_TO_SINT\s*\((Telegram\.RobToPlc\.CyclicOptional\.CartesianPosition\.Turns_E1)\);",
+            "\\1\\2 := BYTE_TO_SINT(\\3 AND 16#7F); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
+            "\\1IF ( ( \\3 AND 16#80 ) <> 0 )\n"
+            "\\1THEN\n"
+            "\\1  \\2 := -\\2;\n"
+            "\\1END_IF",
             "F60: cyclic turn numbers RC -> PLC decoded as two's complement nibble (like F3)",
             regex=True,
             template=True,
@@ -2331,11 +2347,15 @@ CONFIG = Config(
         SourcePatch(
             "MC_RobotTaskFB",
             "AxesGroupToTelegramCyclicOptional",
-            r"(Telegram\.PlcToRob\.CyclicOptional\.CartesianPosition\.Turns_E1)\s*:=\s*SINT_TO_BYTE\s*"
+            r"(?m)^([ \t]*)(Telegram\.PlcToRob\.CyclicOptional\.CartesianPosition\.Turns_E1)\s*:=\s*SINT_TO_BYTE\s*"
             r"\((AxesGroup\.CyclicOptional\.PlcToRob\.CartesianPosition\.TurnNumber\.E1Turns)\);",
-            "// ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
-            "  IF \\2 < 0 THEN \\1 := (SINT_TO_BYTE(-\\2) AND 16#7F) OR 16#80;\n"
-            "  ELSE \\1 := SINT_TO_BYTE(\\2) AND 16#7F; END_IF",
+            "\\1// ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
+            "\\1IF ( \\3 < 0 )\n"
+            "\\1THEN\n"
+            "\\1  \\2 := (SINT_TO_BYTE(-\\3) AND 16#7F) OR 16#80;\n"
+            "\\1ELSE\n"
+            "\\1  \\2 := SINT_TO_BYTE(\\3) AND 16#7F;\n"
+            "\\1END_IF",
             "F60: cyclic turn numbers PLC -> RC encoded as two's complement nibble (like F3); "
             "J1..J6 via CombineHalfSints (fixed there)",
             regex=True,
@@ -2349,7 +2369,10 @@ CONFIG = Config(
             "         // ST-FIX F23: the RC is still initialized from the previous enable (ACR, SEQ/ACK)\n"
             "         // -> reset the interface on the RC as well\n"
             "         _restartReset := AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.INITIALIZED;\n"
-            "         IF _restartReset THEN AxesGroup.Cyclic.PlcToRob.Control := ControlHalfByte.RESET; END_IF\n",
+            "         IF ( _restartReset )\n"
+            "         THEN\n"
+            "           AxesGroup.Cyclic.PlcToRob.Control := ControlHalfByte.RESET;\n"
+            "         END_IF\n",
             "F23: a restart while the RC was still initialized kept the old ACR and SEQ/ACK on the RC",
         ),
         SourcePatch(
@@ -2357,8 +2380,12 @@ CONFIG = Config(
             "OnExecRun",
             r"(?s)(  01:  )(CASE AxesGroup\.Cyclic\.RobToPlc\.TelegramState\s+OF.*?END_CASE)",
             "\\1// ST-FIX F23: wait until the RC left the state INITIALIZED of the previous enable\n"
-            "IF _restartReset THEN\n"
-            "  IF AxesGroup.Cyclic.RobToPlc.TelegramState <> TelegramState.INITIALIZED THEN _restartReset := FALSE; END_IF\n"
+            "IF ( _restartReset )\n"
+            "THEN\n"
+            "  IF ( AxesGroup.Cyclic.RobToPlc.TelegramState <> TelegramState.INITIALIZED )\n"
+            "  THEN\n"
+            "    _restartReset := FALSE;\n"
+            "  END_IF\n"
             "ELSE\n\\2\nEND_IF",
             "F23: a restart while the RC was still initialized kept the old ACR and SEQ/ACK on the RC",
             regex=True,

@@ -36,9 +36,9 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
-| [UT-TOOL](#ut-tool) | Code generators and tools | 67 | 211 |
+| [UT-TOOL](#ut-tool) | Code generators and tools | 68 | 214 |
 | [UT-PKG](#ut-pkg) | Package, logging | 15 | 15 |
-| | **Total** | **353** | **3548** |
+| | **Total** | **354** | **3551** |
 
 ## Test methodology
 
@@ -566,6 +566,7 @@ Code generators and tools
 | UT-TOOL-065 | Without any correction the generators produce from the fixed XML the same types and function blocks as from the original XML with all corrections. | 1 | `test_fixed_xml_contains_every_correction` |
 | UT-TOOL-066 | Fixed xml keeps format and object ids | 1 | `test_fixed_xml_keeps_format_and_object_ids` |
 | UT-TOOL-067 | Added variables are in the plain text and in the structured interface. | 1 | `test_fixed_xml_declares_added_variables_twice` |
+| UT-TOOL-068 | ST coding rule 4: THEN on its own line below the IF, no statement behind THEN/ELSE. | 3 | `test_export_refuses_then_on_the_if_line` |
 
 ## UT-PKG
 

@@ -51,6 +51,7 @@ import html
 import re
 import sys
 import uuid
+from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -772,6 +773,32 @@ def _check_enum_literals(text: str, pous: dict[str, Pou]) -> None:
         )
 
 
+_THEN_ON_LINE = re.compile(r"^\s*(?:(?:IF|ELSIF)\b.*\bTHEN\b|(?:THEN|ELSE)\s+(?!//)\S)")
+
+
+def _check_then_layout(orig: dict[str, Pou], final: dict[str, Pou]) -> None:
+    """New or changed ST lines keep ``THEN`` on its own line below the ``IF`` and put no
+    statement behind ``THEN`` / ``ELSE`` (ST coding rules 4). Lines of the library are not checked."""
+    problems = []
+    for key, pou in final.items():
+        before = orig.get(key)
+        parts = [("body", pou.body.src, before.body.src if before else "")]
+        for mkey, m in pou.methods.items():
+            old = before.methods.get(mkey) if before else None
+            parts.append((m.name, m.body.src, old.body.src if old else ""))
+        for part, src, old_src in parts:
+            known = Counter(line.strip() for line in old_src.splitlines())
+            for line in src.splitlines():
+                if not _THEN_ON_LINE.match(line.split("//")[0]):
+                    continue
+                if known[line.strip()] > 0:
+                    known[line.strip()] -= 1
+                    continue
+                problems.append(f"{pou.name}.{part}: {line.strip()}")
+    if problems:
+        raise ExportError("THEN must be on its own line below the IF: " + "; ".join(problems[:10]))
+
+
 def _well_formed(text: str) -> None:
     ET.fromstring(text)
 
@@ -785,6 +812,7 @@ def export(xml: Path = DEFAULT_XML, cfg: Config = CONFIG) -> ExportResult:
 
     apply_patches(final, cfg)
     _check_enum_literals(text, final)
+    _check_then_layout(orig, final)
     add_text, add_vars = _added_decls(cfg)
     result = ExportResult("")
     clones = {c.target.upper(): c for c in cfg.clones}
