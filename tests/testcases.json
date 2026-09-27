@@ -709,6 +709,20 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-033",
+  "test": "tests/sdk/test_sdk_server.py::test_sdk_server_dump_shows_the_initialization",
+  "title": "--dump diagnosis: the decoded headers show Control INITIALIZE and the TelegramState.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-034",
+  "test": "tests/sdk/test_sdk_server.py::test_decode_header_of_short_or_unknown_values",
+  "title": "--dump diagnosis: short telegrams and unknown Control/TelegramState values are shown.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",

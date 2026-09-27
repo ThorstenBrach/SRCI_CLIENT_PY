@@ -44,14 +44,44 @@ import sys
 import threading
 import time
 from collections.abc import Callable
+from enum import IntEnum
 from pathlib import Path
 from types import TracebackType
 from typing import Self
 
 from srci.sim.gateway import PlcGatewaySimulator
 from srci.sim.sdk import SdkLog, SdkNotAvailableError, SdkSimulator
+from srci.types import ControlHalfByte, TelegramState
 
-__all__ = ["SdkServer", "main"]
+__all__ = ["SdkServer", "decode_header", "main"]
+
+
+def _name(enum: type[IntEnum], value: int) -> str:
+    try:
+        return enum(value).name
+    except ValueError:
+        return "?"
+
+
+def decode_header(telegram: bytes, answer: bytes) -> str:
+    """Header of both telegrams in one line (diagnosis of PLC clients).
+
+    PLC -> RC: version, FastStop/LifeSign, telegram lengths, AxesGroupID/Control, telegram
+    numbers, client date/time; RC -> PLC: LifeSign and TelegramState.
+    """
+    t, a = telegram, answer
+    if len(t) < 18 or len(a) < 4:
+        return f"short telegram: {t[:18].hex(' ')} / {a[:4].hex(' ')}"
+    control = t[6] & 0x0F
+    state = a[3]
+    return (
+        f"PLC->RC ver 16#{t[0]:02X} lifesign {t[1] & 0x0F:2} faststop {t[1] >> 4} "
+        f"len {int.from_bytes(t[2:4], 'big')}/{int.from_bytes(t[4:6], 'big')} "
+        f"axesgroup {t[6] >> 4} control {control} {_name(ControlHalfByte, control):10} "
+        f"telno {int.from_bytes(t[8:10], 'big')}/{int.from_bytes(t[10:12], 'big')} "
+        f"date {int.from_bytes(t[12:14], 'big')} time {int.from_bytes(t[14:18], 'big')} ms | "
+        f"RC->PLC lifesign {a[1] >> 4:2} state {state} {_name(TelegramState, state)}  [{t[:18].hex(' ')}]"
+    )
 
 
 class SdkServer:
@@ -74,6 +104,8 @@ class SdkServer:
         self._move_cycles = move_cycles
         self._library = library
         self.on_log: Callable[[SdkLog], None] | None = None
+        # diagnosis: called with (telegram PLC -> RC, answer RC -> PLC) for every exchange
+        self.on_exchange: Callable[[bytes, bytes], None] | None = None
         self.sim = self._new_simulator()
         self.response_size = response_size
         self._connection = 0
@@ -115,7 +147,10 @@ class SdkServer:
                     self.sim.close()
                     self.sim = self._new_simulator()
             self._check_number(telegram)
-            return self.sim.exchange(telegram, self.response_size)
+            answer = self.sim.exchange(telegram, self.response_size)
+            if self.on_exchange is not None:
+                self.on_exchange(telegram, answer)
+            return answer
 
     def _check_number(self, telegram: bytes) -> None:
         """Gaps and repeats of the LifeSign PLC -> RC (header byte 1, low nibble 1..15): the
@@ -173,6 +208,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--lib", type=Path, help="SDK simulator library (default: SRCI_SDK_SIM_LIB / SRCI SDK)")
     ap.add_argument("--status", type=float, default=1.0, help="status line every n seconds (0: off)")
     ap.add_argument("--log", action="store_true", help="print the log messages of the SDK")
+    ap.add_argument(
+        "--dump",
+        type=int,
+        default=0,
+        metavar="N",
+        help="print the decoded headers of the first N telegrams of every connection and every "
+        "change of control/state afterwards",
+    )
     args = ap.parse_args(argv)
 
     try:
@@ -194,6 +237,20 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  SDK severity {entry.severity:2} code 16#{entry.error_code:04X}: {entry.text}")
 
         server.on_log = server.sim.on_log = show
+    if args.dump:
+        connection, count, last = -1, 0, b""
+
+        def dump(telegram: bytes, answer: bytes) -> None:
+            nonlocal connection, count, last
+            if connection != server.connections:
+                connection, count, last = server.connections, 0, b""
+            count += 1
+            key = telegram[6:7] + answer[3:4]  # AxesGroupID/Control and TelegramState
+            if count <= args.dump or key != last:
+                print(f"  #{count:<5} {decode_header(telegram, answer)}", flush=True)
+            last = key
+
+        server.on_exchange = dump
     with server:
         host, port = server.address
         print(f"SRCI SDK server (SDK {server.sim.sdk_version}) on {host}:{port}, telegrams "

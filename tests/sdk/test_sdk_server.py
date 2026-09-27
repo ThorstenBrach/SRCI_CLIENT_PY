@@ -30,7 +30,7 @@ import pytest
 
 from srci.api import SrciClient
 from srci.fb import MC_EnableRobotFB, MC_GroupResetFB
-from srci.sim.server import SdkServer, main
+from srci.sim.server import SdkServer, decode_header, main
 from srci.transport import TcpTransport
 
 
@@ -80,3 +80,27 @@ def test_sdk_server_reports_gaps_in_the_plc_lifesign(sdk_library: str) -> None:
         transport.close()
         assert server.number_gaps > 0
         assert "gaps" in server.status()
+
+
+def test_sdk_server_dump_shows_the_initialization(sdk_library: str) -> None:
+    """--dump diagnosis: the decoded headers show Control INITIALIZE and the TelegramState."""
+    lines: list[str] = []
+    with SdkServer(port=0, library=Path(sdk_library)) as server:
+        server.on_exchange = lambda telegram, answer: lines.append(decode_header(telegram, answer))
+        with _client(server) as client:
+            client.wait_initialized(timeout=10.0)
+    assert any("axesgroup 0 control 1 INITIALIZE" in line for line in lines), lines[:5]
+    assert any("READY_FOR_INITIALIZATION" in line for line in lines)
+    assert "state 255 INITIALIZED" in lines[-1]
+    assert "len 256/256" in lines[-1] and "ver 16#25" in lines[-1]
+
+
+def test_decode_header_of_short_or_unknown_values() -> None:
+    """--dump diagnosis: short telegrams and unknown Control/TelegramState values are shown."""
+    assert decode_header(b"\x25", b"").startswith("short telegram")
+    line = decode_header(bytes([0x25, 0x03, 1, 0, 1, 0, 0x1F] + [0] * 11), bytes([0x25, 0x30, 0, 99]))
+    assert (
+        "axesgroup 1 control 15 UNDEFINED_15" in line
+        and "state 99 UNDEFINED_99" in line
+        and "lifesign  3" in line
+    )

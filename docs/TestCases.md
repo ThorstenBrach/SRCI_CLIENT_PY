@@ -26,7 +26,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 31 | 31 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 32 | 54 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 34 | 56 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 70 | 216 |
 | [UT-PKG](#ut-pkg) | Package, logging | 15 | 15 |
-| | **Total** | **359** | **3556** |
+| | **Total** | **361** | **3558** |
 
 ## Test methodology
 
@@ -255,6 +255,8 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-030 | A client (here the Python library instead of the PLC) initializes, resets and enables the robot over TCP; a new connection finds a restarted RC and initializes again. | 1 | `test_sdk_server_serves_a_plc_and_resets_the_rc_per_connection` |
 | SDK-LOOP-031 | Sdk server cli reports a missing sdk | 1 | `test_sdk_server_cli_reports_a_missing_sdk` |
 | SDK-LOOP-032 | Diagnosis for PLC tests: the Python client (one RobotTask cycle per telegram) sends the LifeSign without gaps; a PLC that runs its RobotTask several cycles per telegram shows gaps. | 1 | `test_sdk_server_reports_gaps_in_the_plc_lifesign` |
+| SDK-LOOP-033 | --dump diagnosis: the decoded headers show Control INITIALIZE and the TelegramState. | 1 | `test_sdk_server_dump_shows_the_initialization` |
+| SDK-LOOP-034 | --dump diagnosis: short telegrams and unknown Control/TelegramState values are shown. | 1 | `test_decode_header_of_short_or_unknown_values` |
 
 ## TCP
 
