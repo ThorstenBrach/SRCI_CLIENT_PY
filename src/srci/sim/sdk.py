@@ -235,7 +235,7 @@ class SdkSimulator:
         return value.decode()
 
     def close(self) -> None:
-        if self._handle is not None:
+        if getattr(self, "_handle", None) is not None:  # also after a failed __init__
             self._lib.srci_sim_destroy(self._handle)
             self._handle = None
 

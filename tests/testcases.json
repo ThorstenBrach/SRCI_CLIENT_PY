@@ -688,6 +688,20 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-030",
+  "test": "tests/sdk/test_sdk_server.py::test_sdk_server_serves_a_plc_and_resets_the_rc_per_connection",
+  "title": "A client (here the Python library instead of the PLC) initializes, resets and enables the robot over TCP; a new connection finds a restarted RC and initializes again.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-031",
+  "test": "tests/sdk/test_sdk_server.py::test_sdk_server_cli_reports_a_missing_sdk",
+  "title": "Sdk server cli reports a missing sdk",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",

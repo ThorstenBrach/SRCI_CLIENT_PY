@@ -26,7 +26,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 31 | 31 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 29 | 51 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 31 | 53 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 70 | 216 |
 | [UT-PKG](#ut-pkg) | Package, logging | 15 | 15 |
-| | **Total** | **356** | **3553** |
+| | **Total** | **358** | **3555** |
 
 ## Test methodology
 
@@ -252,6 +252,8 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-027 | F74 (E-01/E-03): a parameter error of the client and an error of the RC are written into the message buffer; messages of a sent command carry its ACR entry and command type. | 1 | `test_f74_client_error_is_in_the_message_buffer_with_acr_entry_and_type` |
 | SDK-LOOP-028 | E-02 (already fulfilled, no fix): GroupReset deletes the messages of the PLC buffer (5.5.11.5). | 1 | `test_e02_group_reset_clears_the_message_buffer` |
 | SDK-LOOP-029 | F75 (E-05/C-08): IDs of tables 7-1/7-4 and names with the correct value. | 1 | `test_f75_missing_ids_of_the_specification` |
+| SDK-LOOP-030 | A client (here the Python library instead of the PLC) initializes, resets and enables the robot over TCP; a new connection finds a restarted RC and initializes again. | 1 | `test_sdk_server_serves_a_plc_and_resets_the_rc_per_connection` |
+| SDK-LOOP-031 | Sdk server cli reports a missing sdk | 1 | `test_sdk_server_cli_reports_a_missing_sdk` |
 
 ## TCP
 
