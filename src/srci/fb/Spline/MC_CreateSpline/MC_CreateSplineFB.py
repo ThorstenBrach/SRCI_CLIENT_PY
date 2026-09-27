@@ -445,6 +445,8 @@ class MC_CreateSplineFB(RobotLibraryBaseExecuteFB):
         if self._pointCount == 0:
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessage(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.SplineData: no spline point defined')
             return CheckParameterValid
         return CheckParameterValid
 

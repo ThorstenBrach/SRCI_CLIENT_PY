@@ -458,14 +458,20 @@ class MC_MoveSuperImposedFB(RobotLibraryBaseExecuteFB):
         if CheckParameterValid and (((self.ParCmd.EmitterID[0] < -127 or self.ParCmd.EmitterID[1] < -127) or self.ParCmd.EmitterID[2] < -127) or self.ParCmd.EmitterID[3] < -127):
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessage(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.EmitterID (< -127)')
             return CheckParameterValid
         if (CheckParameterValid and self.ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED) and self.ParCmd.ListenerID == 0:
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}', Para1=PROCESSING_MODE_TO_STRING(Value=self.ProcessingMode))
             return CheckParameterValid
         if ((CheckParameterValid and self.ProcessingMode != ProcessingMode.DEACTIVATE) and (not self.ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED)) and self.ParCmd.ListenerID > 0:
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}', Para1=PROCESSING_MODE_TO_STRING(Value=self.ProcessingMode))
             return CheckParameterValid
         return CheckParameterValid
 
@@ -496,6 +502,8 @@ class MC_MoveSuperImposedFB(RobotLibraryBaseExecuteFB):
                 # undefined ProcessingMode -> error, not sent (ST-FIX F49)
                 self._command.ExecMode = self.ExecMode
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite=True)
+                # Create log entry
+                self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ProcessingMode = {1}', Para1=PROCESSING_MODE_TO_STRING(Value=self.ProcessingMode))
                 self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority

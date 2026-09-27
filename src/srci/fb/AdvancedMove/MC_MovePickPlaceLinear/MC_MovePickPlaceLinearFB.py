@@ -693,6 +693,8 @@ class MC_MovePickPlaceLinearFB(RobotLibraryBaseExecuteFB):
         if (((((self.ParCmd.BlendingMode != BlendingMode.EXACT_STOP and self.ParCmd.BlendingMode != BlendingMode.DEFINED_VELOCITY) and self.ParCmd.BlendingMode != BlendingMode.CORNER_DISTANCE) and self.ParCmd.BlendingMode != BlendingMode.MAX_CORNER_DEVIATION) and self.ParCmd.BlendingMode != BlendingMode.CORNER_DISTANCE_2R) and self.ParCmd.BlendingMode != BlendingMode.RAMP_OVERLAP) and self.ParCmd.BlendingMode != BlendingMode.CORNER_DISTANCE_1R:
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.BlendingMode = {1}', Para1=BLENDING_MODE_TO_STRING(Value=self.ParCmd.BlendingMode))
             return CheckParameterValid
         return CheckParameterValid
 

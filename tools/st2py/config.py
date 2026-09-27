@@ -102,6 +102,35 @@ class Config:
         return {pou: {m.upper(): mix for m in mix.methods} for pou, mix in self.mixins.items()}
 
 
+_TS_CMD = "AxesGroup.State.SystemTime"  # time stamp of the log entries of the command blocks
+_TS_TASK = "SystemTime"  # MC_RobotTaskFB (input SystemTime)
+
+
+def _log(text: str, *paras: str, indent: str = "  ", ts: str = _TS_CMD, code: str = "ErrorID") -> str:
+    """Log entry behind a ``SetError`` like the library does it (``CreateLogMessage``/``ParaN``),
+    ``text`` with the placeholders ``{1}``, ``{2}`` ... for ``paras``."""
+    name = f"CreateLogMessagePara{len(paras)}" if paras else "CreateLogMessage"
+    pad = " " * (len(name) + 3)
+    args = [
+        f"Timestamp   := {ts}",
+        "MessageType := MessageType.CMD",
+        "Severity    := Severity.ERROR",
+        f"MessageCode := {code}",
+        f"MessageText := '{text}'",
+        *(f"Para{i}       := {para}" for i, para in enumerate(paras, 1)),
+    ]
+    body = (",\n" + indent + pad).join(args)
+    return f"{indent}// Create log entry\n{indent}{name} ( {body});\n"
+
+
+_ENUM_TO_STRING = {
+    "ProcessingModeEnum": "PROCESSING_MODE_TO_STRING",
+    "SequenceFlagEnum": "SEQUENCE_FLAG_TO_STRING",
+    "ReferenceType": "REFERENCE_TYPE_TO_STRING",
+    "BlendingMode": "BLENDING_MODE_TO_STRING",
+}
+
+
 def _swap_no_and_data_changed(
     pou: str, comment: str, var: str, table: str
 ) -> tuple[SourcePatch, SourcePatch]:
@@ -316,7 +345,8 @@ def _exec_mode_from_processing(pou: str, sequence_flag: bool) -> SourcePatch:
         "  // undefined ProcessingMode -> error, not sent (ST-FIX F49)\n"
         "  _command.ExecMode := ExecMode;\n"
         "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );\n"
-        "  OnUpdateStateFlags( State := CmdMessageState.ERROR );\n"
+        + _log("Invalid Parameter ProcessingMode = {1}", "PROCESSING_MODE_TO_STRING(ProcessingMode)")
+        + "  OnUpdateStateFlags( State := CmdMessageState.ERROR );\n"
         "END_CASE",
         "F51: ProcessingMode/SequenceFlag had no effect on the ExecutionMode of the telegram",
         regex=True,
@@ -921,7 +951,8 @@ SPLINE_APPENDS = (
         "IF ( _pointCount = 0 )\nTHEN\n"
         "  CheckParameterValid := FALSE;\n"
         "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );\n"
-        "  RETURN;\nEND_IF\n",
+        + _log("Invalid Parameter ParCmd.SplineData: no spline point defined")
+        + "  RETURN;\nEND_IF\n",
         "F33: number of spline points (one command per point)",
     ),
     BodyAppend(
@@ -995,7 +1026,12 @@ def _enum_check(pou: str, expr: str, enum: str, values: tuple[str, ...], error: 
         f"IF ( {cond} )\nTHEN\n"
         "  CheckParameterValid := FALSE;\n"
         f"  SetError( ErrorID := RobotLibraryErrorIdEnum.{error}, Overwrite := TRUE );\n"
-        "  RETURN;\nEND_IF\n",
+        + (
+            _log(f"Invalid Parameter {expr} = {{1}}", f"{_ENUM_TO_STRING[enum]}({expr})")
+            if enum in _ENUM_TO_STRING
+            else _log(f"Invalid Parameter {expr}")
+        )
+        + "  RETURN;\nEND_IF\n",
         f"F49: undefined values of {expr} were not rejected",
     )
 
@@ -1435,13 +1471,28 @@ _F65_STATE_ERROR = (
     "    ( AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_173_SERVER_CONNECTION_LOST                   ))\n"
     "THEN\n"
     "  SetError( ErrorID := AxesGroup.Cyclic.RobToPlc.TelegramState, Overwrite := TRUE );\n"
-    "ELSIF (( AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.READY_FOR_INITIALIZATION ) OR\n"
+    + _log(
+        "Initialization lost: RI error {1} of the RC",
+        "TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState)",
+        ts=_TS_TASK,
+    )
+    + "ELSIF (( AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.READY_FOR_INITIALIZATION ) OR\n"
     "       ( AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.READY_TO_RESUME          ))\n"
     "THEN\n"
     "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INTERFACE_WAS_RESET_AFTER_INIT_0x80A7, Overwrite := TRUE );\n"
-    "ELSE\n"
+    + _log(
+        "Initialization lost: interface was reset by the RC (state {1})",
+        "TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState)",
+        ts=_TS_TASK,
+    )
+    + "ELSE\n"
     "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite := TRUE );\n"
-    "END_IF"
+    + _log(
+        "Initialization lost: unknown reason (state {1})",
+        "TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState)",
+        ts=_TS_TASK,
+    )
+    + "END_IF"
 )
 _F66 = "F66: frames with different lifesign in header and footer were processed; footer read at the end of the buffer"
 _F67 = "F67: no check of the remaining space for acyclic data (spec 6.1.1)"
@@ -1473,7 +1524,13 @@ C_PATCHES = (
         "OnExecRun",
         "SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0xA2, Overwrite := TRUE );",
         "SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite := TRUE ); "
-        "// ST-FIX F65: unknown state (16#A2 is the RI error of the RC)",
+        "// ST-FIX F65: unknown state (16#A2 is the RI error of the RC)\n"
+        + _log(
+            "Initialization lost: unknown telegram state {1}",
+            "TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState)",
+            indent="           ",
+            ts=_TS_TASK,
+        ).rstrip("\n"),
         _F65,
     ),
     SourcePatch(
@@ -1524,13 +1581,15 @@ C_PATCHES = (
         "                                 Sequence  := SequenceFlagEnum.PRIMARY_SEQUENCE) < 4 + 1 )\n"
         "THEN\n"
         "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_PLC_TO_ROB, Overwrite := FALSE );\n"
-        "  RETURN;\n"
+        + _log("Telegram PLC -> RC: no space left for acyclic data", ts=_TS_TASK)
+        + "  RETURN;\n"
         "END_IF\n"
         "IF ( CalculateSequencePayloadMax(AxesGroup := AxesGroup, Direction := ComDirection.ROB_TO_PLC,\n"
         "                                 Sequence  := SequenceFlagEnum.PRIMARY_SEQUENCE) < 4 + 1 )\n"
         "THEN\n"
         "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_ROB_TO_PLC, Overwrite := FALSE );\n"
-        "  RETURN;\n"
+        + _log("Telegram RC -> PLC: no space left for acyclic data", ts=_TS_TASK)
+        + "  RETURN;\n"
         "END_IF\n"
         "\n"
         "IF ( _parCfg.Com.TwoSequences ) // ST-FIX F63",
@@ -1640,13 +1699,18 @@ _SEQUENCE_MODE = (
 )
 
 
-def _check(cond: str, error: str) -> str:
+def _check(cond: str, error: str, text: str, *paras: str) -> str:
     return (
         f"IF ( CheckParameterValid ) AND {cond}\nTHEN\n"
         "  CheckParameterValid := FALSE;\n"
         f"  SetError( ErrorID := RobotLibraryErrorIdEnum.{error}, Overwrite := TRUE );\n"
-        "  RETURN;\nEND_IF\n"
+        + _log(text, *paras)
+        + "  RETURN;\nEND_IF\n"
     )
+
+
+_PM_STR = "PROCESSING_MODE_TO_STRING(ProcessingMode)"
+_SF_STR = "SEQUENCE_FLAG_TO_STRING(SequenceFlag)"
 
 
 def _f69(pou: str) -> BodyAppend:
@@ -1654,20 +1718,32 @@ def _f69(pou: str) -> BodyAppend:
     if pou in _EMITTER_FBS and pou not in _EMITTER_CHECKED:
         n = _EMITTER_FBS[pou]
         ids = [f"ParCmd.EmitterID[{i}]" for i in range(n)] if n else ["ParCmd.EmitterID"]
-        text += _check("(" + " OR ".join(f"( {e} < -127 )" for e in ids) + ")", "ERR_EMITTERID_NOT_ALLOWED")
+        text += _check(
+            "(" + " OR ".join(f"( {e} < -127 )" for e in ids) + ")",
+            "ERR_EMITTERID_NOT_ALLOWED",
+            "Invalid Parameter ParCmd.EmitterID (< -127)",
+        )
     if pou in _LISTENER_FBS and pou in _PM_FBS:
         if pou not in _TRIGGER_FUNCTIONS:  # trigger function: ListenerID 0 = start immediately
             text += _check(
-                f"{_TRIGGER_MODE} AND ( ParCmd.ListenerID = 0 )", "ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO"
+                f"{_TRIGGER_MODE} AND ( ParCmd.ListenerID = 0 )",
+                "ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO",
+                "Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}",
+                _PM_STR,
             )
         text += _check(
             f"( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT {_TRIGGER_MODE} AND ( ParCmd.ListenerID > 0 )",
             "ERR_LISTENERID_NOT_ALLOWED",
+            "Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}",
+            _PM_STR,
         )
     if pou in _SF_FBS:
         text += _check(
             f"( ( {_SEQUENCE_MODE} ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )",
             "ERR_SEQFLAG_INVALID_IN_PROC_MODE",
+            "Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}",
+            _SF_STR,
+            _PM_STR,
         )
     return BodyAppend(pou, "CheckParameterValid", text, _F69)
 
@@ -1771,10 +1847,12 @@ D_APPENDS += tuple(
         "// ST-FIX F71: Priority (1 = very high ... 4 = low, table 7-1)\n"
         "IF ( Priority < PriorityLevel.VERY_HIGH )\nTHEN\n"
         "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_HIGH, Overwrite := TRUE );\n"
-        "  Error := TRUE;\n"
+        + _log("Invalid input Priority: higher than VERY_HIGH")
+        + "  Error := TRUE;\n"
         "ELSIF ( Priority > PriorityLevel.LOW )\nTHEN\n"
         "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_LOW, Overwrite := TRUE );\n"
-        "  Error := TRUE;\n"
+        + _log("Invalid input Priority: lower than LOW")
+        + "  Error := TRUE;\n"
         "END_IF",
         _F71,
     )
@@ -1790,6 +1868,7 @@ D_APPENDS += (
         + _check(
             "( UPPER_BOUND(ParCmd.Data, 1) - LOWER_BOUND(ParCmd.Data, 1) + 1 > 190 )",
             "ERR_ACYCLICDATA_TOO_LARGE",
+            "Invalid Parameter ParCmd.Data: more than 190 bytes",
         ),
         _F72,
     ),
@@ -2019,7 +2098,8 @@ CONFIG = Config(
             "  THEN\n"
             "    AxesGroup.Acyclic.ActiveCommandRegister.RemoveCmd( UniqueID := _uniqueID );\n"
             "    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD, Overwrite := TRUE );\n"
-            "    OnUpdateStateFlags( State := CmdMessageState.ERROR );\n"
+            + _log("No response of the RC within the command timeout", indent="    ")
+            + "    OnUpdateStateFlags( State := CmdMessageState.ERROR );\n"
             "  END_IF\n"
             "END_IF\n",
             "F53: the command timeout was set but never evaluated",
@@ -2054,7 +2134,8 @@ CONFIG = Config(
             "IF ( _rspHeader.State = CmdMessageState.ERROR ) AND ( ErrorID = RobotLibraryConstants.OK )\n"
             "THEN\n"
             "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ROBOT_ERROR_NO_ID, Overwrite := TRUE );\n"
-            "END_IF\n"
+            + _log("Response of the RC with state ERROR but without error code", ts="Timestamp")
+            + "END_IF\n"
             "ParseResponsePayload := ResponseData.PayloadPtr;",
             "F61: response state ERROR without error code ended the FB without Done and without Error",
         ),
@@ -2422,7 +2503,8 @@ CONFIG = Config(
             "  ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER: ;\n"
             "ELSE\n"
             "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_EXECUTION_MODE, Overwrite := TRUE );\n"
-            "  OnUpdateStateFlags( State := CmdMessageState.ERROR );\n"
+            + _log("Invalid ExecutionMode = {1}", "EXECUTION_MODE_TO_STRING(_cmdHeader.ExecMode)")
+            + "  OnUpdateStateFlags( State := CmdMessageState.ERROR );\n"
             "END_CASE\n",
             "F48: an undefined ExecMode was neither checked by the block nor rejected by the RC",
         ),

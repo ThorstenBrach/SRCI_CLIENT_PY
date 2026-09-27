@@ -280,18 +280,24 @@ class MC_CollisionDetectionFB(RobotLibraryBaseExecuteFB):
         if CheckParameterValid and (((self.ProcessingMode == ProcessingMode.BUFFERED or self.ProcessingMode == ProcessingMode.ABORTING) or self.ProcessingMode == ProcessingMode.TRIGGER_BUFFERED) or self.ProcessingMode == ProcessingMode.TRIGGER_ABORTING) == (self.SequenceFlag == SequenceFlag.NO_SEQUENCE):
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}', Para1=SEQUENCE_FLAG_TO_STRING(Value=self.SequenceFlag), Para2=PROCESSING_MODE_TO_STRING(Value=self.ProcessingMode))
             return CheckParameterValid
 
         # ST-FIX F49: ParCmd.ProcessingMode was not checked
         if ((((((((self.ParCmd.ProcessingMode != ProcessingMode.BUFFERED and self.ParCmd.ProcessingMode != ProcessingMode.ABORTING) and self.ParCmd.ProcessingMode != ProcessingMode.PARALLEL) and self.ParCmd.ProcessingMode != ProcessingMode.CONTINUOUS) and self.ParCmd.ProcessingMode != ProcessingMode.DEACTIVATE) and self.ParCmd.ProcessingMode != ProcessingMode.TRIGGER_BUFFERED) and self.ParCmd.ProcessingMode != ProcessingMode.TRIGGER_ABORTING) and self.ParCmd.ProcessingMode != ProcessingMode.TRIGGER_ONCE) and self.ParCmd.ProcessingMode != ProcessingMode.TRIGGER_CONTINUOUS) and self.ParCmd.ProcessingMode != ProcessingMode.TRIGGER_MULTIPLE:
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ProcessingMode = {1}', Para1=PROCESSING_MODE_TO_STRING(Value=self.ParCmd.ProcessingMode))
             return CheckParameterValid
 
         # ST-FIX F49: ParCmd.SequenceFlag was not checked
         if (self.ParCmd.SequenceFlag != SequenceFlag.NO_SEQUENCE and self.ParCmd.SequenceFlag != SequenceFlag.PRIMARY_SEQUENCE) and self.ParCmd.SequenceFlag != SequenceFlag.SECONDARY_SEQUENCE:
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.SequenceFlag = {1}', Para1=SEQUENCE_FLAG_TO_STRING(Value=self.ParCmd.SequenceFlag))
             return CheckParameterValid
         return CheckParameterValid
 
@@ -328,6 +334,8 @@ class MC_CollisionDetectionFB(RobotLibraryBaseExecuteFB):
                 # undefined ProcessingMode -> error, not sent (ST-FIX F49)
                 self._command.ExecMode = self.ExecMode
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite=True)
+                # Create log entry
+                self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ProcessingMode = {1}', Para1=PROCESSING_MODE_TO_STRING(Value=self.ProcessingMode))
                 self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority

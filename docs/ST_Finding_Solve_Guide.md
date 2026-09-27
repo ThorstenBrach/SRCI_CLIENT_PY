@@ -1108,8 +1108,8 @@ _`RobotLibraryBaseEnableFB` / `MC_RobotTaskFB.Reset` - disabling the RobotTask s
  
           TelegramState.UNDEFINED : ;
           
-@@ -97,6 +105,7 @@
-          SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite := TRUE ); // ST-FIX F65: unknown state (16#A2 is the RI error of the RC)
+@@ -104,6 +112,7 @@
+                                    Para1       := TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState));
           ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));
         END_CASE
 +END_IF
@@ -3116,7 +3116,7 @@ Same change (same `-`/`+` lines) in: `MC_WriteDigitalOutputsFB`, `MC_WriteDigita
 ```diff
 --- a/MC_CreateSplineFB.CheckParameterValid
 +++ b/MC_CreateSplineFB.CheckParameterValid
-@@ -501,4 +501,18 @@
+@@ -501,4 +501,24 @@
    END_IF  
  END_FOR
  
@@ -3134,6 +3134,12 @@ Same change (same `-`/`+` lines) in: `MC_WriteDigitalOutputsFB`, `MC_WriteDigita
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Invalid Parameter ParCmd.SplineData: no spline point defined');
 +  RETURN;
 +END_IF
 ```
@@ -4191,7 +4197,7 @@ _77 blocks - an undefined `ExecMode` (e.g. 18) is neither checked by the block n
 ```diff
 --- a/RobotLibraryBaseFB.CreateCommandPayload
 +++ b/RobotLibraryBaseFB.CreateCommandPayload
-@@ -6,4 +6,14 @@
+@@ -6,4 +6,21 @@
  CreateCommandPayload.AddHalfBytes(  0               , _cmdHeader.ExecMode);
  // Add ParSeq_Priority
  CreateCommandPayload.AddHalfBytes( _cmdHeader.ParSeq, _cmdHeader.Priority);
@@ -4205,6 +4211,13 @@ _77 blocks - an undefined `ExecMode` (e.g. 18) is neither checked by the block n
 +  ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER: ;
 +ELSE
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_EXECUTION_MODE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid ExecutionMode = {1}',
++                          Para1       := EXECUTION_MODE_TO_STRING(_cmdHeader.ExecMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
 ```
@@ -4224,8 +4237,8 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_StopSubprogramFB.CheckParameterValid
 +++ b/MC_StopSubprogramFB.CheckParameterValid
-@@ -142,3 +142,13 @@
-   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
+@@ -170,3 +170,20 @@
+                           Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
    RETURN;
  END_IF
 +
@@ -4236,6 +4249,13 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.SequenceFlag = {1}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(ParCmd.SequenceFlag));
 +  RETURN;
 +END_IF
 ```
@@ -4245,8 +4265,8 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_CollisionDetectionFB.CheckParameterValid
 +++ b/MC_CollisionDetectionFB.CheckParameterValid
-@@ -209,3 +209,13 @@
-   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
+@@ -224,3 +224,20 @@
+                           Para1       := PROCESSING_MODE_TO_STRING(ParCmd.ProcessingMode));
    RETURN;
  END_IF
 +
@@ -4257,6 +4277,13 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.SequenceFlag = {1}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(ParCmd.SequenceFlag));
 +  RETURN;
 +END_IF
 ```
@@ -4266,7 +4293,7 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_MoveLinearRelativeFB.CheckParameterValid
 +++ b/MC_MoveLinearRelativeFB.CheckParameterValid
-@@ -672,3 +672,12 @@
+@@ -672,3 +672,19 @@
  END_FOR
  
  // ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
@@ -4277,6 +4304,13 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ReferenceType = {1}',
++                          Para1       := REFERENCE_TYPE_TO_STRING(ParCmd.ReferenceType));
 +  RETURN;
 +END_IF
 ```
@@ -4286,7 +4320,7 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_MovePickPlaceDirectFB.CheckParameterValid
 +++ b/MC_MovePickPlaceDirectFB.CheckParameterValid
-@@ -944,3 +944,17 @@
+@@ -944,3 +944,24 @@
  END_FOR
  
  // ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
@@ -4302,6 +4336,13 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.BlendingMode = {1}',
++                          Para1       := BLENDING_MODE_TO_STRING(ParCmd.BlendingMode));
 +  RETURN;
 +END_IF
 ```
@@ -4311,7 +4352,7 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_MovePickPlaceLinearFB.CheckParameterValid
 +++ b/MC_MovePickPlaceLinearFB.CheckParameterValid
-@@ -926,3 +926,17 @@
+@@ -926,3 +926,24 @@
  END_FOR
  
  // ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
@@ -4327,6 +4368,13 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.BlendingMode = {1}',
++                          Para1       := BLENDING_MODE_TO_STRING(ParCmd.BlendingMode));
 +  RETURN;
 +END_IF
 ```
@@ -4336,8 +4384,8 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_WriteAnalogOutputFB.CheckParameterValid
 +++ b/MC_WriteAnalogOutputFB.CheckParameterValid
-@@ -157,3 +157,12 @@
-   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
+@@ -179,3 +179,18 @@
+                           Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
    RETURN;
  END_IF
 +
@@ -4347,6 +4395,12 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Invalid Parameter ParCmd.Unit');
 +  RETURN;
 +END_IF
 ```
@@ -4356,8 +4410,8 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_CollisionDetectionFB.CheckParameterValid
 +++ b/MC_CollisionDetectionFB.CheckParameterValid
-@@ -192,3 +192,20 @@
-   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
+@@ -200,3 +200,27 @@
+                           Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
    RETURN;
  END_IF
 +
@@ -4375,6 +4429,13 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ParCmd.ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -4863,7 +4924,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_ActivateNextCommandFB.CreateCommandPayload
 +++ b/MC_ActivateNextCommandFB.CreateCommandPayload
-@@ -1,6 +1,25 @@
+@@ -1,6 +1,32 @@
                    // set command parameter 
  _command.CmdTyp     :=  CmdType.ActivateNextCommand;
 -_command.ExecMode   :=  ExecMode;
@@ -4885,6 +4946,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq     := _command.ParSeq;
@@ -4897,7 +4965,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_CallSubprogramFB.CreateCommandPayload
 +++ b/MC_CallSubprogramFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.CallSubprogram;
 -_command.ExecMode     :=  ExecMode;
@@ -4929,6 +4997,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq       := _command.ParSeq;
@@ -4941,7 +5016,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_ReadActualPositionFB.CreateCommandPayload
 +++ b/MC_ReadActualPositionFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.ReadActualPosition;
 -_command.ExecMode     :=  ExecMode;
@@ -4973,6 +5048,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq       := _command.ParSeq;
@@ -4985,7 +5067,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_ReadAnalogInputFB.CreateCommandPayload
 +++ b/MC_ReadAnalogInputFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.ReadAnalogInput;
 -_command.ExecMode     :=  ExecMode;
@@ -5017,6 +5099,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq       := _command.ParSeq;
@@ -5031,7 +5120,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_CollisionDetectionFB.CreateCommandPayload
 +++ b/MC_CollisionDetectionFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp               :=  CmdType.CollisionDetection;
 -_command.ExecMode             :=  ExecMode;
@@ -5063,6 +5152,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq               := _command.ParSeq;
@@ -5075,7 +5171,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_LoadMeasurementSequentialFB.CreateCommandPayload
 +++ b/MC_LoadMeasurementSequentialFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.LoadMeasurementSequential;
 -_command.ExecMode :=  ExecMode;
@@ -5107,6 +5203,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq   := _command.ParSeq;
@@ -5119,7 +5222,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteLoadDataFB.CreateCommandPayload
 +++ b/MC_WriteLoadDataFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.WriteLoadData;
 -_command.ExecMode :=  ExecMode;
@@ -5151,6 +5254,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq   := _command.ParSeq;
@@ -5163,7 +5273,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteToolDataFB.CreateCommandPayload
 +++ b/MC_WriteToolDataFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.WriteToolData;
 -_command.ExecMode :=  ExecMode;
@@ -5195,6 +5305,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq   := _command.ParSeq;
@@ -5207,7 +5324,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_MoveSuperImposedFB.CreateCommandPayload
 +++ b/MC_MoveSuperImposedFB.CreateCommandPayload
-@@ -1,6 +1,25 @@
+@@ -1,6 +1,32 @@
                    // set command parameter 
  _command.CmdTyp               :=  CmdType.MoveSuperImposed;
 -_command.ExecMode             :=  ExecMode;
@@ -5229,6 +5346,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq               := _command.ParSeq;
@@ -5241,7 +5365,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReactAtTriggerFB.CreateCommandPayload
 +++ b/MC_ReactAtTriggerFB.CreateCommandPayload
-@@ -1,6 +1,25 @@
+@@ -1,6 +1,32 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.ReactAtTrigger;
 -_command.ExecMode     :=  ExecMode;
@@ -5263,6 +5387,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq       := _command.ParSeq;
@@ -5275,7 +5406,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_SetTriggerRegisterFB.CreateCommandPayload
 +++ b/MC_SetTriggerRegisterFB.CreateCommandPayload
-@@ -1,6 +1,25 @@
+@@ -1,6 +1,32 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.SetTriggerRegister;
 -_command.ExecMode     :=  ExecMode;
@@ -5297,6 +5428,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq       := _command.ParSeq;
@@ -5309,7 +5447,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadActualForceFB.CreateCommandPayload
 +++ b/MC_ReadActualForceFB.CreateCommandPayload
-@@ -1,6 +1,25 @@
+@@ -1,6 +1,32 @@
                    // set command parameter 
  _command.CmdTyp          :=  CmdType.ReadActualForce;
 -_command.ExecMode        :=  ExecMode;
@@ -5331,6 +5469,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq          := _command.ParSeq;
@@ -5343,7 +5488,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadActualTCPVelocityFB.CreateCommandPayload
 +++ b/MC_ReadActualTCPVelocityFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.ReadActualTCPVelocity;
 -_command.ExecMode                  :=  ExecMode;
@@ -5375,6 +5520,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq                    := _command.ParSeq;
@@ -5387,7 +5539,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadDigitalInputsFB.CreateCommandPayload
 +++ b/MC_ReadDigitalInputsFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.ReadDigitalInputs;
 -_command.ExecMode                  :=  ExecMode;
@@ -5419,6 +5571,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq                    := _command.ParSeq;
@@ -5431,7 +5590,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadSystemVariableFB.CreateCommandPayload
 +++ b/MC_ReadSystemVariableFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp         :=  CmdType.ReadSystemVariable;
 -_command.ExecMode       :=  ExecMode;
@@ -5463,6 +5622,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq         := _command.ParSeq;
@@ -5475,7 +5641,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteSystemVariableFB.CreateCommandPayload
 +++ b/MC_WriteSystemVariableFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp         :=  CmdType.WriteSystemVariable;
 -_command.ExecMode       :=  ExecMode;
@@ -5507,6 +5673,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq         := _command.ParSeq;
@@ -5519,7 +5692,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_RedefineTrackingPosFB.CreateCommandPayload
 +++ b/MC_RedefineTrackingPosFB.CreateCommandPayload
-@@ -1,6 +1,25 @@
+@@ -1,6 +1,32 @@
                    // set command parameter 
  _command.CmdTyp                 :=  CmdType.RedefineTrackingPos;
 -_command.ExecMode               :=  ExecMode;
@@ -5541,6 +5714,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq                 := _command.ParSeq;
@@ -5553,7 +5733,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_SetTriggerLimitFB.CreateCommandPayload
 +++ b/MC_SetTriggerLimitFB.CreateCommandPayload
-@@ -1,6 +1,25 @@
+@@ -1,6 +1,32 @@
                    // set command parameter 
  _command.CmdTyp                 :=  CmdType.SetTriggerLimit;
 -_command.ExecMode               :=  ExecMode;
@@ -5575,6 +5755,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq                 := _command.ParSeq;
@@ -5587,7 +5774,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_SetTriggerErrorFB.CreateCommandPayload
 +++ b/MC_SetTriggerErrorFB.CreateCommandPayload
-@@ -1,6 +1,25 @@
+@@ -1,6 +1,32 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.SetTriggerError;
 -_command.ExecMode                  :=  ExecMode;
@@ -5609,6 +5796,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq                    := _command.ParSeq;
@@ -5621,7 +5815,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_SetTriggerMotionFB.CreateCommandPayload
 +++ b/MC_SetTriggerMotionFB.CreateCommandPayload
-@@ -1,6 +1,25 @@
+@@ -1,6 +1,32 @@
                    // set command parameter 
  _command.CmdTyp             :=  CmdType.SetTriggerMotion;
 -_command.ExecMode           :=  ExecMode;
@@ -5643,6 +5837,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq             := _command.ParSeq;
@@ -5655,7 +5856,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_StopSubprogramFB.CreateCommandPayload
 +++ b/MC_StopSubprogramFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp     :=  CmdType.StopSubprogram;
 -_command.ExecMode   :=  ExecMode;
@@ -5687,6 +5888,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq     := _command.ParSeq;
@@ -5699,7 +5907,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WaitForTriggerFB.CreateCommandPayload
 +++ b/MC_WaitForTriggerFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp          :=  CmdType.WaitForTrigger;
 -_command.ExecMode        :=  ExecMode;
@@ -5731,6 +5939,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq          := _command.ParSeq;
@@ -5743,7 +5958,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteDigitalOutputsFB.CreateCommandPayload
 +++ b/MC_WriteDigitalOutputsFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp        :=  CmdType.WriteDigitalOutputs;
 -_command.ExecMode      :=  ExecMode;
@@ -5775,6 +5990,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq        := _command.ParSeq;
@@ -5787,7 +6009,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteFrameDataFB.CreateCommandPayload
 +++ b/MC_WriteFrameDataFB.CreateCommandPayload
-@@ -1,6 +1,35 @@
+@@ -1,6 +1,42 @@
                    // set command parameter 
  _command.CmdTyp    :=  CmdType.WriteFrameData;
 -_command.ExecMode  :=  ExecMode;
@@ -5819,6 +6041,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq    := _command.ParSeq;
@@ -5831,7 +6060,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteWorkAreaFB.CreateCommandPayload
 +++ b/MC_WriteWorkAreaFB.CreateCommandPayload
-@@ -1,6 +1,25 @@
+@@ -1,6 +1,32 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.WriteWorkArea;
 -_command.ExecMode :=  ExecMode;
@@ -5853,6 +6082,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
 +  _command.ExecMode := ExecMode;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +END_CASE
  _command.ParSeq   := _command.ParSeq;
@@ -5872,7 +6108,7 @@ _112 function blocks, `OnExecRun` - `SetTimeout(PT := _timeoutCmd, ...)` is call
 ```diff
 --- a/RobotLibraryBaseFB.body
 +++ b/RobotLibraryBaseFB.body
-@@ -1,5 +1,16 @@
+@@ -1,5 +1,22 @@
              OnCall               (AxesGroup := AxesGroup);
  OnExecRun            (AxesGroup := AxesGroup);
 +// ST-FIX F53: no response of the RC within _timeoutCmd after the command was added
@@ -5883,6 +6119,12 @@ _112 function blocks, `OnExecRun` - `SetTimeout(PT := _timeoutCmd, ...)` is call
 +  THEN
 +    AxesGroup.Acyclic.ActiveCommandRegister.RemoveCmd( UniqueID := _uniqueID );
 +    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD, Overwrite := TRUE );
++    // Create log entry
++    CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                       MessageType := MessageType.CMD,
++                       Severity    := Severity.ERROR,
++                       MessageCode := ErrorID,
++                       MessageText := 'No response of the RC within the command timeout');
 +    OnUpdateStateFlags( State := CmdMessageState.ERROR );
 +  END_IF
 +END_IF
@@ -6444,7 +6686,7 @@ _`RobotLibraryBaseFB` (body, `CallBack`, `ParseResponsePayload`) - `Error := Err
 ```diff
 --- a/RobotLibraryBaseFB.body
 +++ b/RobotLibraryBaseFB.body
-@@ -18,4 +18,11 @@
+@@ -24,4 +24,11 @@
  THEN
    OnOnlineChange(AxesGroup := AxesGroup);
  END_IF
@@ -6482,7 +6724,7 @@ _`RobotLibraryBaseFB` (body, `CallBack`, `ParseResponsePayload`) - `Error := Err
 ```diff
 --- a/RobotLibraryBaseFB.ParseResponsePayload
 +++ b/RobotLibraryBaseFB.ParseResponsePayload
-@@ -26,5 +26,10 @@
+@@ -26,5 +26,16 @@
  
  END_CASE
  
@@ -6490,6 +6732,12 @@ _`RobotLibraryBaseFB` (body, `CallBack`, `ParseResponsePayload`) - `Error := Err
 +IF ( _rspHeader.State = CmdMessageState.ERROR ) AND ( ErrorID = RobotLibraryConstants.OK )
 +THEN
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ROBOT_ERROR_NO_ID, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := Timestamp,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Response of the RC with state ERROR but without error code');
 +END_IF
  ParseResponsePayload := ResponseData.PayloadPtr;
                  
@@ -6911,7 +7159,7 @@ _`MC_RobotTaskFB`: `OnCall`, `OnExecRun` step 1, `HandleLifeSign`, `HandleSeqAck
 ```diff
 --- a/MC_RobotTaskFB.OnCall
 +++ b/MC_RobotTaskFB.OnCall
-@@ -31,7 +31,19 @@
+@@ -31,7 +31,40 @@
    // Reset Synchronized flag
    Synchronized := FALSE;
    // Set error 
@@ -6922,12 +7170,33 @@ _`MC_RobotTaskFB`: `OnCall`, `OnExecRun` step 1, `HandleLifeSign`, `HandleSeqAck
 +      ( AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_173_SERVER_CONNECTION_LOST                   ))
 +  THEN
 +    SetError( ErrorID := AxesGroup.Cyclic.RobToPlc.TelegramState, Overwrite := TRUE );
++    // Create log entry
++    CreateLogMessagePara1 ( Timestamp   := SystemTime,
++                            MessageType := MessageType.CMD,
++                            Severity    := Severity.ERROR,
++                            MessageCode := ErrorID,
++                            MessageText := 'Initialization lost: RI error {1} of the RC',
++                            Para1       := TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState));
 +  ELSIF (( AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.READY_FOR_INITIALIZATION ) OR
 +         ( AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.READY_TO_RESUME          ))
 +  THEN
 +    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INTERFACE_WAS_RESET_AFTER_INIT_0x80A7, Overwrite := TRUE );
++    // Create log entry
++    CreateLogMessagePara1 ( Timestamp   := SystemTime,
++                            MessageType := MessageType.CMD,
++                            Severity    := Severity.ERROR,
++                            MessageCode := ErrorID,
++                            MessageText := 'Initialization lost: interface was reset by the RC (state {1})',
++                            Para1       := TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState));
 +  ELSE
 +    SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite := TRUE );
++    // Create log entry
++    CreateLogMessagePara1 ( Timestamp   := SystemTime,
++                            MessageType := MessageType.CMD,
++                            Severity    := Severity.ERROR,
++                            MessageCode := ErrorID,
++                            MessageText := 'Initialization lost: unknown reason (state {1})',
++                            Para1       := TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState));
 +  END_IF
  END_IF
  
@@ -6939,12 +7208,19 @@ _`MC_RobotTaskFB`: `OnCall`, `OnExecRun` step 1, `HandleLifeSign`, `HandleSeqAck
 ```diff
 --- a/MC_RobotTaskFB.OnExecRun
 +++ b/MC_RobotTaskFB.OnExecRun
-@@ -87,7 +87,7 @@
+@@ -87,7 +87,14 @@
  
         ELSE
           // TelegrammState in error          
 -         SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0xA2, Overwrite := TRUE );
 +         SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite := TRUE ); // ST-FIX F65: unknown state (16#A2 is the RI error of the RC)
++           // Create log entry
++           CreateLogMessagePara1 ( Timestamp   := SystemTime,
++                                   MessageType := MessageType.CMD,
++                                   Severity    := Severity.ERROR,
++                                   MessageCode := ErrorID,
++                                   MessageText := 'Initialization lost: unknown telegram state {1}',
++                                   Para1       := TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState));
           ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));
         END_CASE
  
@@ -7073,19 +7349,31 @@ _`MC_RobotTaskFB.AxesGroupToTelegramSequence` - remaining space for acyclic data
 ```diff
 --- a/MC_RobotTaskFB.AxesGroupToTelegramSequence
 +++ b/MC_RobotTaskFB.AxesGroupToTelegramSequence
-@@ -1,4 +1,18 @@
+@@ -1,4 +1,30 @@
                    // Check 2nd sequence active ? 
 +// ST-FIX F67: remaining space for acyclic data at least 1 byte behind the sequence header
 +IF ( CalculateSequencePayloadMax(AxesGroup := AxesGroup, Direction := ComDirection.PLC_TO_ROB,
 +                                 Sequence  := SequenceFlagEnum.PRIMARY_SEQUENCE) < 4 + 1 )
 +THEN
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_PLC_TO_ROB, Overwrite := FALSE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Telegram PLC -> RC: no space left for acyclic data');
 +  RETURN;
 +END_IF
 +IF ( CalculateSequencePayloadMax(AxesGroup := AxesGroup, Direction := ComDirection.ROB_TO_PLC,
 +                                 Sequence  := SequenceFlagEnum.PRIMARY_SEQUENCE) < 4 + 1 )
 +THEN
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_ROB_TO_PLC, Overwrite := FALSE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Telegram RC -> PLC: no space left for acyclic data');
 +  RETURN;
 +END_IF
 +
@@ -7315,7 +7603,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 ```diff
 --- a/MC_ActivateNextCommandFB.CheckParameterValid
 +++ b/MC_ActivateNextCommandFB.CheckParameterValid
-@@ -58,5 +58,16 @@
+@@ -58,5 +58,30 @@
    RETURN;
  END_IF
  
@@ -7326,12 +7614,26 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7341,7 +7643,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 ```diff
 --- a/MC_CallSubprogramFB.CheckParameterValid
 +++ b/MC_CallSubprogramFB.CheckParameterValid
-@@ -124,4 +124,23 @@
+@@ -124,4 +124,45 @@
      RETURN;                          
    END_IF
  END_FOR
@@ -7352,18 +7654,40 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(SequenceFlag),
++                          Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7373,7 +7697,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 ```diff
 --- a/MC_ReadActualPositionFB.CheckParameterValid
 +++ b/MC_ReadActualPositionFB.CheckParameterValid
-@@ -138,4 +138,23 @@
+@@ -138,4 +138,45 @@
                            Para1       :=  SINT_TO_STRING(ParCmd.ListenerID));
    RETURN;                          
  END_IF
@@ -7384,18 +7708,40 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(SequenceFlag),
++                          Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7405,7 +7751,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 ```diff
 --- a/MC_ReadActualTCPVelocityFB.CheckParameterValid
 +++ b/MC_ReadActualTCPVelocityFB.CheckParameterValid
-@@ -137,4 +137,23 @@
+@@ -137,4 +137,45 @@
                            Para1       :=  SINT_TO_STRING(ParCmd.ListenerID));
    RETURN;                          
  END_IF
@@ -7416,18 +7762,40 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(SequenceFlag),
++                          Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7439,7 +7807,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 ```diff
 --- a/MC_CollisionDetectionFB.CheckParameterValid
 +++ b/MC_CollisionDetectionFB.CheckParameterValid
-@@ -184,4 +184,11 @@
+@@ -184,4 +184,19 @@
                            Para1       := THRESHOLD_MODE_TO_STRING(ParCmd.UnitLimitAxis));
    RETURN;                          
  END_IF
@@ -7450,6 +7818,14 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(SequenceFlag),
++                          Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7459,7 +7835,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 ```diff
 --- a/MC_LoadMeasurementSequentialFB.CheckParameterValid
 +++ b/MC_LoadMeasurementSequentialFB.CheckParameterValid
-@@ -98,4 +98,11 @@
+@@ -98,4 +98,19 @@
                            Para1       := VALID_REAL_TO_STRING(ParCmd.Mass));
    RETURN;                          
  END_IF
@@ -7470,6 +7846,14 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(SequenceFlag),
++                          Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7479,7 +7863,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 ```diff
 --- a/MC_WriteLoadDataFB.CheckParameterValid
 +++ b/MC_WriteLoadDataFB.CheckParameterValid
-@@ -274,4 +274,11 @@
+@@ -274,4 +274,19 @@
                            Para1       := VALID_REAL_TO_STRING(ParCmd.LoadData.IZ));
    RETURN;                          
  END_IF
@@ -7490,6 +7874,14 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(SequenceFlag),
++                          Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7559,7 +7951,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_MoveSuperImposedFB.CheckParameterValid
 +++ b/MC_MoveSuperImposedFB.CheckParameterValid
-@@ -511,4 +511,22 @@
+@@ -511,4 +511,42 @@
    RETURN;
  END_IF
  
@@ -7569,18 +7961,38 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Invalid Parameter ParCmd.EmitterID (< -127)');
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7590,7 +8002,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_ReactAtTriggerFB.CheckParameterValid
 +++ b/MC_ReactAtTriggerFB.CheckParameterValid
-@@ -78,4 +78,16 @@
+@@ -78,4 +78,30 @@
    RETURN;
  END_IF
  
@@ -7600,12 +8012,26 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7615,7 +8041,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_ReadActualForceFB.CheckParameterValid
 +++ b/MC_ReadActualForceFB.CheckParameterValid
-@@ -154,4 +154,17 @@
+@@ -154,4 +154,31 @@
                            Para1       :=  SINT_TO_STRING(ParCmd.ListenerID));
    RETURN;                          
  END_IF
@@ -7626,12 +8052,26 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7641,7 +8081,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_RedefineTrackingPosFB.CheckParameterValid
 +++ b/MC_RedefineTrackingPosFB.CheckParameterValid
-@@ -182,4 +182,17 @@
+@@ -182,4 +182,31 @@
                            Para1       :=  SINT_TO_STRING(ParCmd.ListenerID));
    RETURN;                          
  END_IF
@@ -7652,12 +8092,26 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7667,7 +8121,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_SetTriggerErrorFB.CheckParameterValid
 +++ b/MC_SetTriggerErrorFB.CheckParameterValid
-@@ -129,4 +129,10 @@
+@@ -129,4 +129,17 @@
    RETURN;
  END_IF
  
@@ -7677,6 +8131,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7686,7 +8147,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_SetTriggerRegisterFB.CheckParameterValid
 +++ b/MC_SetTriggerRegisterFB.CheckParameterValid
-@@ -178,4 +178,10 @@
+@@ -178,4 +178,17 @@
    RETURN;
  END_IF
  
@@ -7696,6 +8157,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7705,7 +8173,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_SetTriggerLimitFB.CheckParameterValid
 +++ b/MC_SetTriggerLimitFB.CheckParameterValid
-@@ -142,4 +142,11 @@
+@@ -142,4 +142,18 @@
                            Para1       := SINT_TO_STRING(ParCmd.EmitterID));
    RETURN;
  END_IF
@@ -7716,6 +8184,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7725,7 +8200,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_SetTriggerMotionFB.CheckParameterValid
 +++ b/MC_SetTriggerMotionFB.CheckParameterValid
-@@ -169,5 +169,18 @@
+@@ -169,5 +169,31 @@
                              Para2       := DINT_TO_STRING(_idx));
      RETURN;
    END_IF
@@ -7738,12 +8213,25 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Invalid Parameter ParCmd.EmitterID (< -127)');
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7753,7 +8241,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_SetTriggerUserFB.CheckParameterValid
 +++ b/MC_SetTriggerUserFB.CheckParameterValid
-@@ -76,4 +76,10 @@
+@@ -76,4 +76,18 @@
    RETURN;
  END_IF
  
@@ -7763,6 +8251,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(SequenceFlag),
++                          Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7772,7 +8268,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_WriteFrameDataFB.CheckParameterValid
 +++ b/MC_WriteFrameDataFB.CheckParameterValid
-@@ -217,4 +217,10 @@
+@@ -217,4 +217,18 @@
    RETURN;                          
  END_IF
  
@@ -7782,6 +8278,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(SequenceFlag),
++                          Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7791,7 +8295,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_StopSubprogramFB.CheckParameterValid
 +++ b/MC_StopSubprogramFB.CheckParameterValid
-@@ -116,4 +116,29 @@
+@@ -116,4 +116,57 @@
                            Para1       := SINT_TO_STRING(ParCmd.ListenerID));                            
    RETURN;
  END_IF
@@ -7802,24 +8306,52 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Invalid Parameter ParCmd.EmitterID (< -127)');
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID = 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}',
++                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 +IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessagePara2 ( Timestamp   := AxesGroup.State.SystemTime,
++                          MessageType := MessageType.CMD,
++                          Severity    := Severity.ERROR,
++                          MessageCode := ErrorID,
++                          MessageText := 'Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}',
++                          Para1       := SEQUENCE_FLAG_TO_STRING(SequenceFlag),
++                          Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
 ```
@@ -7973,17 +8505,29 @@ _`RobotLibraryBaseExecuteFB/EnableFB.OnExecStart` - input `Priority` never check
 ```diff
 --- a/RobotLibraryBaseExecuteFB.OnExecStart
 +++ b/RobotLibraryBaseExecuteFB.OnExecStart
-@@ -1,2 +1,10 @@
+@@ -1,2 +1,22 @@
 -                  
 -                
 +// ST-FIX F71: Priority (1 = very high ... 4 = low, table 7-1)
 +IF ( Priority < PriorityLevel.VERY_HIGH )
 +THEN
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_HIGH, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Invalid input Priority: higher than VERY_HIGH');
 +  Error := TRUE;
 +ELSIF ( Priority > PriorityLevel.LOW )
 +THEN
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_LOW, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Invalid input Priority: lower than LOW');
 +  Error := TRUE;
 +END_IF
 ```
@@ -7993,17 +8537,29 @@ _`RobotLibraryBaseExecuteFB/EnableFB.OnExecStart` - input `Priority` never check
 ```diff
 --- a/RobotLibraryBaseEnableFB.OnExecStart
 +++ b/RobotLibraryBaseEnableFB.OnExecStart
-@@ -1,2 +1,10 @@
+@@ -1,2 +1,22 @@
 -                  
 -                
 +// ST-FIX F71: Priority (1 = very high ... 4 = low, table 7-1)
 +IF ( Priority < PriorityLevel.VERY_HIGH )
 +THEN
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_HIGH, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Invalid input Priority: higher than VERY_HIGH');
 +  Error := TRUE;
 +ELSIF ( Priority > PriorityLevel.LOW )
 +THEN
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_LOW, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Invalid input Priority: lower than LOW');
 +  Error := TRUE;
 +END_IF
 ```
@@ -8019,8 +8575,8 @@ _`MC_CallSubprogramFB.CheckParameterValid` - acyclic data > 190 bytes not reject
 ```diff
 --- a/MC_CallSubprogramFB.CheckParameterValid
 +++ b/MC_CallSubprogramFB.CheckParameterValid
-@@ -144,3 +144,11 @@
-   SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
+@@ -166,3 +166,17 @@
+                           Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
    RETURN;
  END_IF
 +
@@ -8029,6 +8585,12 @@ _`MC_CallSubprogramFB.CheckParameterValid` - acyclic data > 190 bytes not reject
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLICDATA_TOO_LARGE, Overwrite := TRUE );
++  // Create log entry
++  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                     MessageType := MessageType.CMD,
++                     Severity    := Severity.ERROR,
++                     MessageCode := ErrorID,
++                     MessageText := 'Invalid Parameter ParCmd.Data: more than 190 bytes');
 +  RETURN;
 +END_IF
 ```

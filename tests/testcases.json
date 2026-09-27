@@ -2405,6 +2405,13 @@
   "status": "active"
  },
  {
+  "id": "UT-TOOL-069",
+  "test": "tests/unit/tools/test_export_xml.py::test_export_refuses_set_error_without_log_entry",
+  "title": "ST coding rule 7: every new SetError is followed by a log entry like in the library.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-PKG-001",
   "test": "tests/unit/test_logging_bridge.py::test_levels",
   "title": "Levels",

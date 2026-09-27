@@ -820,9 +820,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         # ST-FIX F67: remaining space for acyclic data at least 1 byte behind the sequence header
         if self.CalculateSequencePayloadMax(AxesGroup=AxesGroup, Direction=ComDirection.PLC_TO_ROB, Sequence=SequenceFlag.PRIMARY_SEQUENCE) < 4 + 1:
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_PLC_TO_ROB, Overwrite=False)
+            # Create log entry
+            self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Telegram PLC -> RC: no space left for acyclic data')
             return AxesGroupToTelegramSequence
         if self.CalculateSequencePayloadMax(AxesGroup=AxesGroup, Direction=ComDirection.ROB_TO_PLC, Sequence=SequenceFlag.PRIMARY_SEQUENCE) < 4 + 1:
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_ROB_TO_PLC, Overwrite=False)
+            # Create log entry
+            self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Telegram RC -> PLC: no space left for acyclic data')
             return AxesGroupToTelegramSequence
 
         # ST-FIX F63: SEQUENCE_MAX_PAYLOAD_SIZE per sequence, see below
@@ -5529,10 +5533,16 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             # telegram state (16#A1..16#AD), interface reset by the RC (16#80A7) or unknown (16#80A2)
             if AxesGroup.Cyclic.RobToPlc.TelegramState >= TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE and AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_173_SERVER_CONNECTION_LOST:
                 self.SetError(ErrorID=AxesGroup.Cyclic.RobToPlc.TelegramState, Overwrite=True)
+                # Create log entry
+                self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Initialization lost: RI error {1} of the RC', Para1=TELEGRAM_STATE_TO_STRING(State=AxesGroup.Cyclic.RobToPlc.TelegramState))
             elif AxesGroup.Cyclic.RobToPlc.TelegramState == TelegramState.READY_FOR_INITIALIZATION or AxesGroup.Cyclic.RobToPlc.TelegramState == TelegramState.READY_TO_RESUME:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INTERFACE_WAS_RESET_AFTER_INIT_0x80A7, Overwrite=True)
+                # Create log entry
+                self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Initialization lost: interface was reset by the RC (state {1})', Para1=TELEGRAM_STATE_TO_STRING(State=AxesGroup.Cyclic.RobToPlc.TelegramState))
             else:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite=True)
+                # Create log entry
+                self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Initialization lost: unknown reason (state {1})', Para1=TELEGRAM_STATE_TO_STRING(State=AxesGroup.Cyclic.RobToPlc.TelegramState))
 
         # Warning for ACR Registers running low
         if AxesGroup.Acyclic.ActiveCommandRegister.CurrentAcrUsagePercent > RobotLibraryParameter.ACR_USAGE_WARNING_LIMIT:
@@ -5639,6 +5649,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                         case _:
                             # TelegrammState in error
                             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INIT_LOST_UNKNOWN_0x80A2, Overwrite=True)  # ST-FIX F65: unknown state (16#A2 is the RI error of the RC)
+                            # Create log entry
+                            self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Initialization lost: unknown telegram state {1}', Para1=TELEGRAM_STATE_TO_STRING(State=AxesGroup.Cyclic.RobToPlc.TelegramState))
                             self.ErrorAddTxt = trunc_str(CONCAT('_stepCmd = ', DINT_TO_STRING(self._stepCmd)), 40)
 
                 # timeout exceeded ?

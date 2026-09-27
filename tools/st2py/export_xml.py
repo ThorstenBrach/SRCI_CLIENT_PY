@@ -773,19 +773,30 @@ def _check_enum_literals(text: str, pous: dict[str, Pou]) -> None:
         )
 
 
+def _parts_with_library_text(
+    key: str, pou: Pou, orig: dict[str, Pou], clones: dict[str, str]
+) -> list[tuple[str, str, str]]:
+    """(part, new text, text of the library) of a POU; a cloned POU also knows the text of its
+    template (the copied code is library code)."""
+    befores = [p for p in (orig.get(key), orig.get(clones.get(key, ""))) if p is not None]
+    parts = [("body", pou.body.src, "\n".join(b.body.src for b in befores))]
+    for mkey, m in pou.methods.items():
+        old = "\n".join(b.methods[mkey].body.src for b in befores if mkey in b.methods)
+        parts.append((m.name, m.body.src, old))
+    return parts
+
+
 _THEN_ON_LINE = re.compile(r"^\s*(?:(?:IF|ELSIF)\b.*\bTHEN\b|(?:THEN|ELSE)\s+(?!//)\S)")
 
 
-def _check_then_layout(orig: dict[str, Pou], final: dict[str, Pou]) -> None:
+def _check_then_layout(
+    orig: dict[str, Pou], final: dict[str, Pou], clones: dict[str, str] | None = None
+) -> None:
     """New or changed ST lines keep ``THEN`` on its own line below the ``IF`` and put no
     statement behind ``THEN`` / ``ELSE`` (ST coding rules 4). Lines of the library are not checked."""
     problems = []
     for key, pou in final.items():
-        before = orig.get(key)
-        parts = [("body", pou.body.src, before.body.src if before else "")]
-        for mkey, m in pou.methods.items():
-            old = before.methods.get(mkey) if before else None
-            parts.append((m.name, m.body.src, old.body.src if old else ""))
+        parts = _parts_with_library_text(key, pou, orig, clones or {})
         for part, src, old_src in parts:
             known = Counter(line.strip() for line in old_src.splitlines())
             for line in src.splitlines():
@@ -797,6 +808,29 @@ def _check_then_layout(orig: dict[str, Pou], final: dict[str, Pou]) -> None:
                 problems.append(f"{pou.name}.{part}: {line.strip()}")
     if problems:
         raise ExportError("THEN must be on its own line below the IF: " + "; ".join(problems[:10]))
+
+
+def _check_error_logs(
+    orig: dict[str, Pou], final: dict[str, Pou], clones: dict[str, str] | None = None
+) -> None:
+    """Every new ``SetError`` is followed by a log entry (``CreateLogMessage...``) like in the
+    library (ST coding rules 7). Lines of the library are not checked."""
+    problems = []
+    for key, pou in final.items():
+        parts = _parts_with_library_text(key, pou, orig, clones or {})
+        for part, src, old_src in parts:
+            known = Counter(line.strip() for line in old_src.splitlines())
+            lines = src.splitlines()
+            for i, line in enumerate(lines):
+                if "SetError(" not in line.split("//")[0]:
+                    continue
+                if known[line.strip()] > 0:
+                    known[line.strip()] -= 1
+                    continue
+                if not any("CreateLogMessage" in follow for follow in lines[i + 1 : i + 6]):
+                    problems.append(f"{pou.name}.{part}: {line.strip()}")
+    if problems:
+        raise ExportError("SetError without log entry: " + "; ".join(problems[:10]))
 
 
 def _well_formed(text: str) -> None:
@@ -812,7 +846,9 @@ def export(xml: Path = DEFAULT_XML, cfg: Config = CONFIG) -> ExportResult:
 
     apply_patches(final, cfg)
     _check_enum_literals(text, final)
-    _check_then_layout(orig, final)
+    clone_sources = {c.target.upper(): c.source.upper() for c in cfg.clones}
+    _check_then_layout(orig, final, clone_sources)
+    _check_error_logs(orig, final, clone_sources)
     add_text, add_vars = _added_decls(cfg)
     result = ExportResult("")
     clones = {c.target.upper(): c for c in cfg.clones}

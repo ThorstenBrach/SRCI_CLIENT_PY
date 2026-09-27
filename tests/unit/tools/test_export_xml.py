@@ -98,3 +98,17 @@ def test_export_refuses_then_on_the_if_line(st: str) -> None:
     )
     with pytest.raises(ExportError, match="THEN must be on its own line"):
         export(cfg=cfg)
+
+
+def test_export_refuses_set_error_without_log_entry() -> None:
+    """ST coding rule 7: every new SetError is followed by a log entry like in the library."""
+    st = (
+        "IF ( ParCmd.Mode = 0 )\nTHEN\n"
+        "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );\n"
+        "END_IF"
+    )
+    cfg = replace(
+        CONFIG, appends=[*CONFIG.appends, BodyAppend("MC_GroupResetFB", "CheckFunctionSupported", st, "test")]
+    )
+    with pytest.raises(ExportError, match="SetError without log entry"):
+        export(cfg=cfg)

@@ -38,6 +38,7 @@ from srci.fb._internal.BaseFBs.RobotLibraryLogFB import RobotLibraryLogFB
 from srci.fb._internal.Recv.RobotLibraryResponseDataFB import RobotLibraryResponseDataFB
 from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommandDataFB
 from srci.functions.Common import CheckTimeout
+from srci.functions.Convert.TO_STRING.EXECUTION_MODE_TO_STRING import EXECUTION_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.MESSAGE_CODE_TO_STRING import MESSAGE_CODE_TO_STRING
 from srci.functions.Convert.TO_STRING.WORD_TO_STRING_HEX import WORD_TO_STRING_HEX
 from srci.iec.rt import CONCAT, copy_into, copy_value, trunc_str, wrap
@@ -162,6 +163,8 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
             if CheckTimeout(rTimer=self._timerCmd) == RobotLibraryConstants.OK:
                 self.AxesGroup.Acyclic.ActiveCommandRegister.RemoveCmd(UniqueID=self._uniqueID)
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD, Overwrite=True)
+                # Create log entry
+                self.CreateLogMessage(Timestamp=self.AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='No response of the RC within the command timeout')
                 self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         self.CheckParameterChanged(AxesGroup=self.AxesGroup)
 
@@ -240,6 +243,8 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
                 pass
             case _:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PARAM_EXECUTION_MODE, Overwrite=True)
+                # Create log entry
+                self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid ExecutionMode = {1}', Para1=EXECUTION_MODE_TO_STRING(Value=self._cmdHeader.ExecMode))
                 self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         return CreateCommandPayload
 
@@ -367,6 +372,8 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
         # ST-FIX F61: state ERROR without error code (or with severity INFO/WARNING) -> 16#8613
         if self._rspHeader.State == CmdMessageState.ERROR and self.ErrorID == RobotLibraryConstants.OK:
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_ROBOT_ERROR_NO_ID, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessage(Timestamp=Timestamp, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Response of the RC with state ERROR but without error code')
         ParseResponsePayload = ResponseData.PayloadPtr
         return ParseResponsePayload
 

@@ -184,9 +184,13 @@ class RobotLibraryBaseExecuteFB(RobotLibraryBaseFB):
         # ST-FIX F71: Priority (1 = very high ... 4 = low, table 7-1)
         if self.Priority < PriorityLevel.VERY_HIGH:
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_HIGH, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessage(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid input Priority: higher than VERY_HIGH')
             self.Error = True
         elif self.Priority > PriorityLevel.LOW:
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PRIORITY_TOO_LOW, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessage(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid input Priority: lower than LOW')
             self.Error = True
         return OnExecStart
 

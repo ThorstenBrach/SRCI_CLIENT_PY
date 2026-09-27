@@ -43,6 +43,7 @@ from srci.functions.Convert.TO_STRING.AREA_TYPE_TO_STRING import AREA_TYPE_TO_ST
 from srci.functions.Convert.TO_STRING.DEFINITION_MODE_TO_STRING import DEFINITION_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.IEC_DATE_TO_STRING import IEC_DATE_TO_STRING
 from srci.functions.Convert.TO_STRING.IEC_TIME_TO_STRING import IEC_TIME_TO_STRING
+from srci.functions.Convert.TO_STRING.PROCESSING_MODE_TO_STRING import PROCESSING_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
 from srci.functions.Convert.TO_STRING.WORK_AREA_REACTION_MODE_TO_STRING import WORK_AREA_REACTION_MODE_TO_STRING
 from srci.iec.conv import BOOL_TO_STRING, DINT_TO_STRING, REAL_TO_STRING, UINT_TO_STRING, USINT_TO_STRING
@@ -515,6 +516,8 @@ class MC_WriteWorkAreaFB(RobotLibraryBaseExecuteFB):
                 # undefined ProcessingMode -> error, not sent (ST-FIX F49)
                 self._command.ExecMode = self.ExecMode
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite=True)
+                # Create log entry
+                self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ProcessingMode = {1}', Para1=PROCESSING_MODE_TO_STRING(Value=self.ProcessingMode))
                 self.OnUpdateStateFlags(State=CmdMessageState.ERROR)
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority

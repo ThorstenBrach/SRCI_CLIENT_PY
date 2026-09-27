@@ -545,6 +545,8 @@ class MC_MoveLinearRelativeFB(RobotLibraryBaseExecuteFB):
         if self.ParCmd.ReferenceType != ReferenceType.TOOL and self.ParCmd.ReferenceType != ReferenceType.FRAME:
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ReferenceType = {1}', Para1=REFERENCE_TYPE_TO_STRING(Value=self.ParCmd.ReferenceType))
             return CheckParameterValid
         return CheckParameterValid
 
