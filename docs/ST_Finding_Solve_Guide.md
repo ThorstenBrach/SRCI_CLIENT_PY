@@ -6594,37 +6594,37 @@ _`MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - t
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns := BYTE_TO_SINT(_turns AND 16#07);
 +IF ( ( _turns AND 16#08 ) <> 0 )
 +THEN
-+  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns;
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns := INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns));
 +END_IF
 +_turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J2_J1); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns := BYTE_TO_SINT(_turns AND 16#07);
 +IF ( ( _turns AND 16#08 ) <> 0 )
 +THEN
-+  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns;
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns := INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns));
 +END_IF
 +_turns := GetHalfeByteLo(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J4_J3); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns := BYTE_TO_SINT(_turns AND 16#07);
 +IF ( ( _turns AND 16#08 ) <> 0 )
 +THEN
-+  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns;
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns := INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns));
 +END_IF
 +_turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J4_J3); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns := BYTE_TO_SINT(_turns AND 16#07);
 +IF ( ( _turns AND 16#08 ) <> 0 )
 +THEN
-+  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns;
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns := INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns));
 +END_IF
 +_turns := GetHalfeByteLo(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns := BYTE_TO_SINT(_turns AND 16#07);
 +IF ( ( _turns AND 16#08 ) <> 0 )
 +THEN
-+  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns;
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns := INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns));
 +END_IF
 +_turns := GetHalfeByteHi(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := BYTE_TO_SINT(_turns AND 16#07);
 +IF ( ( _turns AND 16#08 ) <> 0 )
 +THEN
-+  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns;
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns));
 +END_IF
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns       := BYTE_TO_SINT                        (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1);
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.E1                       :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.E1;
@@ -6638,13 +6638,13 @@ _`MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - t
 +++ b/MC_RobotTaskFB.AxesGroupFromTelegramCyclicOptional
 @@ -50,7 +50,11 @@
  THEN
-   AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns;
+   AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns := INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns));
  END_IF
 -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns       := BYTE_TO_SINT                        (Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1);
 +AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns := BYTE_TO_SINT(Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1 AND 16#7F); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +IF ( ( Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1 AND 16#80 ) <> 0 )
 +THEN
-+  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns := -AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns;
++  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns := INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns));
 +END_IF
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.E1                       :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.E1;
  AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo  :=                                      Telegram.RobToPlc.CyclicOptional.CartesianPosition.ToolNo; // ST-FIX F59: tool/frame of the returned position
@@ -6664,7 +6664,7 @@ _`MC_RobotTaskFB.AxesGroupFrom/ToTelegramCyclicOptional`, `CombineHalfSints` - t
 +  // ST-FIX F60: sign + magnitude (spec 5.5.4.4)
 +  IF ( AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns < 0 )
 +  THEN
-+    Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 := (SINT_TO_BYTE(-AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns) AND 16#7F) OR 16#80;
++    Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 := (INT_TO_BYTE(-SINT_TO_INT(AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns)) AND 16#7F) OR 16#80;
 +  ELSE
 +    Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 := SINT_TO_BYTE(AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns) AND 16#7F;
 +  END_IF
@@ -8685,7 +8685,7 @@ _`RobotLibraryBaseFB.OnCall`, `AxesGroupMessageLogFB.AddMessageLog`, `AlarmMessa
 +  _alarmMessage.Timestamp   := AxesGroup.State.SystemTime;
 +  _alarmMessage.MessageType := MessageType.CMD;
 +  _alarmMessage.MessageCode := ErrorID;
-+  _alarmMessage.AcrID       := _uniqueID;
++  _alarmMessage.AcrID       := UDINT_TO_UINT(_uniqueID);
 +  _alarmMessage.CmdType     := _cmdHeader.CmdTyp;
 +  _alarmMessage.MessageText := CONCAT(MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(ErrorID)));
 +  AxesGroup.MessageLog.AddMessageLog( MessageLog := _alarmMessage );
@@ -8700,7 +8700,7 @@ _`RobotLibraryBaseFB.OnCall`, `AxesGroupMessageLogFB.AddMessageLog`, `AlarmMessa
 +  _alarmMessage.Timestamp   := AxesGroup.State.SystemTime;
 +  _alarmMessage.MessageType := MessageType.CMD;
 +  _alarmMessage.MessageCode := WarningID;
-+  _alarmMessage.AcrID       := _uniqueID;
++  _alarmMessage.AcrID       := UDINT_TO_UINT(_uniqueID);
 +  _alarmMessage.CmdType     := _cmdHeader.CmdTyp;
 +  _alarmMessage.MessageText := CONCAT(MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(WarningID)));
 +  AxesGroup.MessageLog.AddMessageLog( MessageLog := _alarmMessage );
@@ -8715,7 +8715,7 @@ _`RobotLibraryBaseFB.OnCall`, `AxesGroupMessageLogFB.AddMessageLog`, `AlarmMessa
 +  _alarmMessage.Timestamp   := AxesGroup.State.SystemTime;
 +  _alarmMessage.MessageType := MessageType.CMD;
 +  _alarmMessage.MessageCode := InfoID;
-+  _alarmMessage.AcrID       := _uniqueID;
++  _alarmMessage.AcrID       := UDINT_TO_UINT(_uniqueID);
 +  _alarmMessage.CmdType     := _cmdHeader.CmdTyp;
 +  _alarmMessage.MessageText := CONCAT(MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(InfoID)));
 +  AxesGroup.MessageLog.AddMessageLog( MessageLog := _alarmMessage );
@@ -8738,7 +8738,6 @@ Change the DUTs / enums / constants of the library:
 - **F35** Enum `CmdType.MoveCircularAbsolute` := 2106 (add the element if missing) - F35: spec 6.3.13 Type 2106 (library 2109)
 - **F35** Enum `CmdType.MoveCircularRelative` := 2107 (add the element if missing) - F35: spec Type 2107 (library 2106)
 - **F35** Enum `CmdType.MoveLinearAbsoluteJ` := 2109 (add the element if missing) - F35: spec 6.3.12 Type 2109 (missing in the library)
-- **F35** Enum `CmdType.SoftSwitchTcp` := 7300 (add the element if missing) - F35: spec Type 7300 (missing in the library)
 - **F41** Field `VelocityRate` (initial value `-1.0`) in `MoveApproachDirectParCmd`, `MoveApproachLinearParCmd`, `MoveAxesAbsoluteParCmd`, `MoveAxesRelativeParCmd`, `MoveCircularAbsoluteParCmd`, `MoveCircularCamParCmd`, `MoveCircularRelativeParCmd`, `MoveDepartDirectParCmd`, `MoveDepartLinearParCmd`, `MoveDirectAbsoluteParCmd`, `MoveDirectOffsetParCmd`, `MoveDirectRelativeParCmd`, `MoveLinearAbsoluteJParCmd`, `MoveLinearAbsoluteParCmd`, `MoveLinearCamParCmd`, `MoveLinearOffsetParCmd`, `MoveLinearRelativeParCmd`, `MovePickPlaceDirectParCmd`, `MovePickPlaceLinearParCmd`, `ReturnToPrimaryParCmd`, `SearchHardStopJParCmd`, `SearchHardStopParCmd` - ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)
 - **F41** Field `AccelerationRate` (initial value `-1.0`) in `MoveApproachDirectParCmd`, `MoveApproachLinearParCmd`, `MoveAxesAbsoluteParCmd`, `MoveAxesRelativeParCmd`, `MoveCircularAbsoluteParCmd`, `MoveCircularCamParCmd`, `MoveCircularRelativeParCmd`, `MoveDepartDirectParCmd`, `MoveDepartLinearParCmd`, `MoveDirectAbsoluteParCmd`, `MoveDirectOffsetParCmd`, `MoveDirectRelativeParCmd`, `MoveLinearAbsoluteJParCmd`, `MoveLinearAbsoluteParCmd`, `MoveLinearCamParCmd`, `MoveLinearOffsetParCmd`, `MoveLinearRelativeParCmd`, `MovePickPlaceDirectParCmd`, `MovePickPlaceLinearParCmd`, `ReturnToPrimaryParCmd`, `SearchHardStopJParCmd`, `SearchHardStopParCmd` - ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)
 - **F41** Field `DecelerationRate` (initial value `-1.0`) in `MoveApproachDirectParCmd`, `MoveApproachLinearParCmd`, `MoveAxesAbsoluteParCmd`, `MoveAxesRelativeParCmd`, `MoveCircularAbsoluteParCmd`, `MoveCircularCamParCmd`, `MoveCircularRelativeParCmd`, `MoveDepartDirectParCmd`, `MoveDepartLinearParCmd`, `MoveDirectAbsoluteParCmd`, `MoveDirectOffsetParCmd`, `MoveDirectRelativeParCmd`, `MoveLinearAbsoluteJParCmd`, `MoveLinearAbsoluteParCmd`, `MoveLinearCamParCmd`, `MoveLinearOffsetParCmd`, `MoveLinearRelativeParCmd`, `MovePickPlaceDirectParCmd`, `MovePickPlaceLinearParCmd`, `ReturnToPrimaryParCmd`, `SearchHardStopJParCmd`, `SearchHardStopParCmd` - ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the library had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)

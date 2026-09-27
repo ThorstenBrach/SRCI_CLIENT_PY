@@ -41,7 +41,8 @@ from srci.functions.Common import CheckTimeout
 from srci.functions.Convert.TO_STRING.EXECUTION_MODE_TO_STRING import EXECUTION_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.MESSAGE_CODE_TO_STRING import MESSAGE_CODE_TO_STRING
 from srci.functions.Convert.TO_STRING.WORD_TO_STRING_HEX import WORD_TO_STRING_HEX
-from srci.iec.rt import CONCAT, copy_into, copy_value, trunc_str, wrap
+from srci.iec.conv import UDINT_TO_UINT
+from srci.iec.rt import CONCAT, copy_into, copy_value, trunc_str
 from srci.iec.standard import R_TRIG, TON
 from srci.types import AlarmMessage, AxesGroupAcyclicAcrEntryRspBuffer, CmdHeader, CmdMessageState, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryInfoIdEnum, RobotLibraryWarningIdEnum, RspHeader, Severity, SystemTime
 
@@ -278,7 +279,7 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
             copy_into(self._alarmMessage.Timestamp, AxesGroup.State.SystemTime)
             self._alarmMessage.MessageType = MessageType.CMD
             self._alarmMessage.MessageCode = self.ErrorID
-            self._alarmMessage.AcrID = wrap(self._uniqueID, 'UINT')
+            self._alarmMessage.AcrID = UDINT_TO_UINT(self._uniqueID)
             self._alarmMessage.CmdType = self._cmdHeader.CmdTyp
             self._alarmMessage.MessageText = CONCAT(self.MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.ErrorID)))
             AxesGroup.MessageLog.AddMessageLog(MessageLog=self._alarmMessage)
@@ -289,7 +290,7 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
             copy_into(self._alarmMessage.Timestamp, AxesGroup.State.SystemTime)
             self._alarmMessage.MessageType = MessageType.CMD
             self._alarmMessage.MessageCode = self.WarningID
-            self._alarmMessage.AcrID = wrap(self._uniqueID, 'UINT')
+            self._alarmMessage.AcrID = UDINT_TO_UINT(self._uniqueID)
             self._alarmMessage.CmdType = self._cmdHeader.CmdTyp
             self._alarmMessage.MessageText = CONCAT(self.MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.WarningID)))
             AxesGroup.MessageLog.AddMessageLog(MessageLog=self._alarmMessage)
@@ -300,7 +301,7 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
             copy_into(self._alarmMessage.Timestamp, AxesGroup.State.SystemTime)
             self._alarmMessage.MessageType = MessageType.CMD
             self._alarmMessage.MessageCode = self.InfoID
-            self._alarmMessage.AcrID = wrap(self._uniqueID, 'UINT')
+            self._alarmMessage.AcrID = UDINT_TO_UINT(self._uniqueID)
             self._alarmMessage.CmdType = self._cmdHeader.CmdTyp
             self._alarmMessage.MessageText = CONCAT(self.MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.InfoID)))
             AxesGroup.MessageLog.AddMessageLog(MessageLog=self._alarmMessage)

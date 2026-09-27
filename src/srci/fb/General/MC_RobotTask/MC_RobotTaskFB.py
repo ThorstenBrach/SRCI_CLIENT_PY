@@ -76,7 +76,7 @@ from srci.functions.Convert.TO_STRING.SYNC_TIME_TO_STRING import SYNC_TIME_TO_ST
 from srci.functions.Convert.TO_STRING.TELEGRAM_CONTROL_TO_STRING import TELEGRAM_CONTROL_TO_STRING
 from srci.functions.Convert.TO_STRING.TELEGRAM_STATE_TO_STRING import TELEGRAM_STATE_TO_STRING
 from srci.functions.Convert.TO_STRING.WORD_TO_STRING_BIN import WORD_TO_STRING_BIN
-from srci.iec.conv import BYTE_TO_SINT, DINT_TO_STRING, DINT_TO_UDINT, DINT_TO_UINT, DINT_TO_USINT, INT_TO_BYTE, SINT_TO_BYTE, STRING_TO_USINT, TIME_TO_STRING, TIME_TO_UINT, UDINT_TO_STRING, UINT_TO_DINT, UINT_TO_STRING
+from srci.iec.conv import BYTE_TO_SINT, DINT_TO_STRING, DINT_TO_UDINT, DINT_TO_UINT, DINT_TO_USINT, INT_TO_BYTE, INT_TO_SINT, SINT_TO_BYTE, SINT_TO_INT, STRING_TO_USINT, TIME_TO_STRING, TIME_TO_UINT, UDINT_TO_STRING, UINT_TO_DINT, UINT_TO_STRING
 from srci.iec.rt import ADR, CONCAT, LIMIT, LOWER_BOUND, MID, MIN, SysDepMemCmp, UPPER_BOUND, array_type, bit, copy_into, set_bit, st_for_end, trunc_str, wrap
 from srci.iec.standard import F_TRIG, R_TRIG, TON
 from srci.types import AxesGroupAcyclicAcrEntryCmdBuffer, AxesGroupStateDataChanged, BufferStateCmd, CmdType, ComDirection, ControlHalfByte, DefaultDynamics, ExecutionMode, FragmentAction, Frame, Load, MessageType, PriorityLevel, RaSequenceState, ReferenceDynamics, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryInfoIdEnum, RobotLibraryParameter, RobotLibraryWarningIdEnum, RobotTaskParCfg, RobotWorkArea, SWLimits, SequenceFlag, SequenceFlagEnum, Severity, SyncMode, SyncTime, SystemTime, Telegram, TelegramState, Tool
@@ -528,30 +528,30 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         self._turns = GetHalfeByteLo(Value=self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J2_J1)  # ST-FIX F60: sign + magnitude (spec 5.5.4.4)
         AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns = BYTE_TO_SINT(self._turns & 7)
         if self._turns & 8 != 0:
-            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns = wrap(-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns, 'SINT')
+            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns = INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J1Turns))
         self._turns = GetHalfeByteHi(Value=self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J2_J1)  # ST-FIX F60: sign + magnitude (spec 5.5.4.4)
         AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns = BYTE_TO_SINT(self._turns & 7)
         if self._turns & 8 != 0:
-            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns = wrap(-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns, 'SINT')
+            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns = INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J2Turns))
         self._turns = GetHalfeByteLo(Value=self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J4_J3)  # ST-FIX F60: sign + magnitude (spec 5.5.4.4)
         AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns = BYTE_TO_SINT(self._turns & 7)
         if self._turns & 8 != 0:
-            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns = wrap(-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns, 'SINT')
+            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns = INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J3Turns))
         self._turns = GetHalfeByteHi(Value=self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J4_J3)  # ST-FIX F60: sign + magnitude (spec 5.5.4.4)
         AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns = BYTE_TO_SINT(self._turns & 7)
         if self._turns & 8 != 0:
-            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns = wrap(-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns, 'SINT')
+            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns = INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J4Turns))
         self._turns = GetHalfeByteLo(Value=self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5)  # ST-FIX F60: sign + magnitude (spec 5.5.4.4)
         AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns = BYTE_TO_SINT(self._turns & 7)
         if self._turns & 8 != 0:
-            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns = wrap(-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns, 'SINT')
+            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns = INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J5Turns))
         self._turns = GetHalfeByteHi(Value=self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_J6_J5)  # ST-FIX F60: sign + magnitude (spec 5.5.4.4)
         AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns = BYTE_TO_SINT(self._turns & 7)
         if self._turns & 8 != 0:
-            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns = wrap(-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns, 'SINT')
+            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns = INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.J6Turns))
         AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns = BYTE_TO_SINT(self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1 & 127)  # ST-FIX F60: sign + magnitude (spec 5.5.4.4)
         if self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.Turns_E1 & 128 != 0:
-            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns = wrap(-AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns, 'SINT')
+            AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns = INT_TO_SINT(-SINT_TO_INT(AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.TurnNumber.E1Turns))
         AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.E1 = self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.E1
         AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CoordinateSystem.ToolNo = self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.ToolNo  # ST-FIX F59: tool/frame of the returned position
         AxesGroup.CyclicOptional.RobToPlc.CartesianPosition.CurrentCoordinateSystem.ToolNo = self.Telegram.RobToPlc.CyclicOptional.CartesianPosition.CurrentlyUsedToolNo
@@ -692,7 +692,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             self.Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_J6_J5 = CombineHalfSints(HalfSintHi=AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.J6Turns, HalfSintLo=AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.J5Turns)
             # ST-FIX F60: sign + magnitude (spec 5.5.4.4)
             if AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns < 0:
-                self.Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 = SINT_TO_BYTE(-AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns) & 127 | 128
+                self.Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 = INT_TO_BYTE(-SINT_TO_INT(AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns)) & 127 | 128
             else:
                 self.Telegram.PlcToRob.CyclicOptional.CartesianPosition.Turns_E1 = SINT_TO_BYTE(AxesGroup.CyclicOptional.PlcToRob.CartesianPosition.TurnNumber.E1Turns) & 127
 

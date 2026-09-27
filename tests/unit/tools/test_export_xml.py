@@ -112,3 +112,13 @@ def test_export_refuses_set_error_without_log_entry() -> None:
     )
     with pytest.raises(ExportError, match="SetError without log entry"):
         export(cfg=cfg)
+
+
+def test_export_refuses_implicit_integer_narrowing() -> None:
+    """Compiler error C0032 (TwinCAT build of the fixed XML): no implicit integer narrowing."""
+    st = "_command.ParSeq := _uniqueID; // UDINT -> BYTE"
+    cfg = replace(
+        CONFIG, appends=[*CONFIG.appends, BodyAppend("MC_GroupResetFB", "CheckFunctionSupported", st, "test")]
+    )
+    with pytest.raises(ExportError, match="C0032"):
+        export(cfg=cfg)

@@ -36,9 +36,9 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
-| [UT-TOOL](#ut-tool) | Code generators and tools | 69 | 215 |
+| [UT-TOOL](#ut-tool) | Code generators and tools | 70 | 216 |
 | [UT-PKG](#ut-pkg) | Package, logging | 15 | 15 |
-| | **Total** | **355** | **3552** |
+| | **Total** | **356** | **3553** |
 
 ## Test methodology
 
@@ -568,6 +568,7 @@ Code generators and tools
 | UT-TOOL-067 | Added variables are in the plain text and in the structured interface. | 1 | `test_fixed_xml_declares_added_variables_twice` |
 | UT-TOOL-068 | ST coding rule 4: THEN on its own line below the IF, no statement behind THEN/ELSE. | 3 | `test_export_refuses_then_on_the_if_line` |
 | UT-TOOL-069 | ST coding rule 7: every new SetError is followed by a log entry like in the library. | 1 | `test_export_refuses_set_error_without_log_entry` |
+| UT-TOOL-070 | Compiler error C0032 (TwinCAT build of the fixed XML): no implicit integer narrowing. | 1 | `test_export_refuses_implicit_integer_narrowing` |
 
 ## UT-PKG
 

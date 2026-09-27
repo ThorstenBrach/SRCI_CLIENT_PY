@@ -207,7 +207,7 @@ def apply_field_adds(lib: Library, adds: tuple[FieldAdd, ...] = FIELD_ADDS) -> N
         struct = lib.structs.get(add.struct)
         if struct is None:
             raise OverrideError(f"field add target {add.struct} not found")
-        if any(f.name == add.name for f in struct.fields):
+        if any(f.name.lower() == add.name.lower() for f in struct.fields):  # ST: case-insensitive
             raise OverrideError(
                 f"field add {add.struct}.{add.name} is obsolete (the field exists) - remove it"
             )
@@ -250,7 +250,6 @@ ENUM_OVERRIDES: tuple[EnumOverride, ...] = (
     EnumOverride(
         "CmdType", "MoveLinearAbsoluteJ", 2109, "F35: spec 6.3.12 Type 2109 (missing in the library)"
     ),
-    EnumOverride("CmdType", "SoftSwitchTcp", 7300, "F35: spec Type 7300 (missing in the library)"),
     EnumOverride(
         "RobotLibraryErrorIdEnum",
         "ERR_INVALID_PARAM_EMITTERID_EQUALS_LISTENERID",
@@ -417,7 +416,7 @@ def apply_enum_overrides(lib: Library, overrides: tuple[EnumOverride, ...] = ENU
         if enum is None:
             raise OverrideError(f"override target enum {ov.enum} not found")
         for i, value in enumerate(enum.values):
-            if value.name == ov.name:
+            if value.name.lower() == ov.name.lower():  # ST names are case-insensitive
                 if value.value_expr.strip() == str(ov.value):
                     raise OverrideError(
                         f"override {ov.enum}.{ov.name} is obsolete (XML already has the value) - remove it"

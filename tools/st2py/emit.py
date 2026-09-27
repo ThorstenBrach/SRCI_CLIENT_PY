@@ -203,6 +203,8 @@ class PouEmitter:
         self.hand_methods = cfg.hand_methods.get(pou.name, {})
         self.warnings: list[str] = []
         self.box_names: dict[str, str] = {}
+        # integer assignments the ST compiler rejects as implicit narrowing (C0032), see assign_one
+        self.narrowing: list[str] = []
 
     # ------------------------------------------------------------------ imports
 
@@ -811,6 +813,15 @@ class PouEmitter:
         m = CONV_RE.match(up)
         if m and m.group(1) in ELEMS and m.group(2) in ELEMS and up.upper() not in self.pous:
             v = self.expr(args[0].value)
+            src_type = m.group(1).upper()
+            vt = self._st_int_type(v)
+            if (
+                src_type in INT_TYPES
+                and vt is not None
+                and not isinstance(v.node, py.Constant)
+                and _size(vt) > _size(src_type)
+            ):
+                self.narrowing.append(f"{up}({src(v.node)})  ({vt} -> {src_type})")
             dst = m.group(2)
             dst = {"TIME_OF_DAY": "TOD", "DATE_AND_TIME": "DT"}.get(dst, dst)
             t: SType = STRING if dst in ("STRING", "WSTRING") else SElem(dst)
@@ -1239,7 +1250,26 @@ class PouEmitter:
             out.add(indent, line + (trailing if i == len(targets) - 1 else ""))
             value = self.expr(target)
 
+    def _st_int_type(self, value: R) -> str | None:
+        """Integer type of an expression as the ST compiler sees it (unary minus: at least INT)."""
+        t = value.type
+        if not (isinstance(t, SElem) and t.name in INT_TYPES) or isinstance(value.node, py.BinOp):
+            return None  # arithmetic: the type of the literals is not known here
+        if isinstance(value.node, py.UnaryOp) and isinstance(value.node.op, py.USub) and _size(t.name) < 2:
+            return "INT"
+        return t.name
+
+    def _check_narrowing(self, lv: Lv, value: R) -> None:
+        t = lv.type
+        if not (isinstance(t, SElem) and t.name in INT_TYPES) or isinstance(value.node, py.Constant):
+            return
+        vt = self._st_int_type(value)
+        if vt is not None and _size(vt) > _size(t.name):
+            self.narrowing.append(f"{src(lv.node)} := {src(value.node)}  ({vt} -> {t.name})")
+
     def assign_one(self, lv: Lv, value: R, ref: bool) -> str:
+        if not ref and lv.bit is None:
+            self._check_narrowing(lv, value)
         if lv.bit is not None:
             base, bitno = lv.bit
             node = Cl(self.use_rt("set_bit"), [base.node, C(bitno), value.node])

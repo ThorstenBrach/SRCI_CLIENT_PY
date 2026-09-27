@@ -1892,7 +1892,7 @@ def _f74_message(edge: str, ident: str, severity: str) -> str:
         "  _alarmMessage.Timestamp   := AxesGroup.State.SystemTime;\n"
         "  _alarmMessage.MessageType := MessageType.CMD;\n"
         f"  _alarmMessage.MessageCode := {ident};\n"
-        "  _alarmMessage.AcrID       := _uniqueID;\n"
+        "  _alarmMessage.AcrID       := UDINT_TO_UINT(_uniqueID);\n"
         "  _alarmMessage.CmdType     := _cmdHeader.CmdTyp;\n"
         f"  _alarmMessage.MessageText := CONCAT(MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING({ident})));\n"
         "  AxesGroup.MessageLog.AddMessageLog( MessageLog := _alarmMessage );\n"
@@ -2405,7 +2405,7 @@ CONFIG = Config(
             "\\1\\2 := BYTE_TO_SINT(_turns AND 16#07);\n"
             "\\1IF ( ( _turns AND 16#08 ) <> 0 )\n"
             "\\1THEN\n"
-            "\\1  \\2 := -\\2;\n"
+            "\\1  \\2 := INT_TO_SINT(-SINT_TO_INT(\\2));\n"
             "\\1END_IF",
             "F60: cyclic turn numbers RC -> PLC decoded as two's complement nibble (like F3)",
             regex=True,
@@ -2419,7 +2419,7 @@ CONFIG = Config(
             "\\1\\2 := BYTE_TO_SINT(\\3 AND 16#7F); // ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
             "\\1IF ( ( \\3 AND 16#80 ) <> 0 )\n"
             "\\1THEN\n"
-            "\\1  \\2 := -\\2;\n"
+            "\\1  \\2 := INT_TO_SINT(-SINT_TO_INT(\\2));\n"
             "\\1END_IF",
             "F60: cyclic turn numbers RC -> PLC decoded as two's complement nibble (like F3)",
             regex=True,
@@ -2433,7 +2433,7 @@ CONFIG = Config(
             "\\1// ST-FIX F60: sign + magnitude (spec 5.5.4.4)\n"
             "\\1IF ( \\3 < 0 )\n"
             "\\1THEN\n"
-            "\\1  \\2 := (SINT_TO_BYTE(-\\3) AND 16#7F) OR 16#80;\n"
+            "\\1  \\2 := (INT_TO_BYTE(-SINT_TO_INT(\\3)) AND 16#7F) OR 16#80;\n"
             "\\1ELSE\n"
             "\\1  \\2 := SINT_TO_BYTE(\\3) AND 16#7F;\n"
             "\\1END_IF",

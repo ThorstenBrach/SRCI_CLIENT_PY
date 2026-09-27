@@ -3424,8 +3424,6 @@ class CmdType(_iec.IecIntEnum):
     """
     MoveLinearAbsoluteJ = 2109
     """[Override: F35: spec 6.3.12 Type 2109 (missing in the library)]"""
-    SoftSwitchTcp = 7300
-    """[Override: F35: spec Type 7300 (missing in the library)]"""
 
 
 _iec.register_enum(CmdType, _iec.UINT)

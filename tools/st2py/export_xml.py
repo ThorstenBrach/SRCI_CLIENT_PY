@@ -570,7 +570,7 @@ def _plain_insert_field(plain: str, after: str | None, line: str) -> str:
 
 def _plain_enum(plain: str, name: str, value: int, note: str) -> str:
     text = f"16#{value:04X}" if "16#" in plain else str(value)
-    m = re.search(rf"^([ \t]*{re.escape(name)}\s*:=\s*)([^,\s/]+)", plain, re.M)
+    m = re.search(rf"^([ \t]*{re.escape(name)}\s*:=\s*)([^,\s/]+)", plain, re.M | re.I)
     if m:
         return plain[: m.start(2)] + text + plain[m.end(2) :]
     elems = list(re.finditer(r"^([ \t]*)\w+\s*:=\s*[^,\s/]+(,?)", plain, re.M))
@@ -627,7 +627,7 @@ def _apply_types(text: str, result: ExportResult) -> str:
         note = _fix_note(ov.reason)
 
         def enum(block: str, ov: EnumOverride = ov, note: str = note) -> str:
-            m = re.search(rf'<value name="{re.escape(ov.name)}" value="([^"]*)" />', block)
+            m = re.search(rf'<value name="{re.escape(ov.name)}" value="([^"]*)" />', block, re.I)
             if m:
                 value = f"16#{ov.value:04X}" if m.group(1).startswith("16#") else str(ov.value)
                 block = block[: m.start(1)] + value + block[m.end(1) :]
@@ -833,6 +833,26 @@ def _check_error_logs(
         raise ExportError("SetError without log entry: " + "; ".join(problems[:10]))
 
 
+def _check_narrowing(xml: Path, cfg: Config) -> None:
+    """Integer assignments / conversions that the ST compiler rejects as implicit narrowing
+    (C0032, e.g. ``sintVar := -sintVar`` is INT, ``uintVar := udintVar``), found by the types of
+    the transpiler. The library itself has none, so every hit comes from a correction."""
+    from .__main__ import load
+    from .module import ModuleEmitter
+
+    env, reg = load(xml, cfg)
+    problems = []
+    for key, pou in sorted(env.pous.items()):
+        target = reg.get(key)
+        if target is None or target.hand:
+            continue
+        emitter = ModuleEmitter(env, reg, pou, cfg)
+        emitter.emit_module()
+        problems += [f"{pou.name}: {n}" for n in emitter.narrowing]
+    if problems:
+        raise ExportError("implicit integer narrowing (compiler error C0032): " + "; ".join(problems[:10]))
+
+
 def _well_formed(text: str) -> None:
     ET.fromstring(text)
 
@@ -849,6 +869,7 @@ def export(xml: Path = DEFAULT_XML, cfg: Config = CONFIG) -> ExportResult:
     clone_sources = {c.target.upper(): c.source.upper() for c in cfg.clones}
     _check_then_layout(orig, final, clone_sources)
     _check_error_logs(orig, final, clone_sources)
+    _check_narrowing(xml, cfg)
     add_text, add_vars = _added_decls(cfg)
     result = ExportResult("")
     clones = {c.target.upper(): c for c in cfg.clones}
