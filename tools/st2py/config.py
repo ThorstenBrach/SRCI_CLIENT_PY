@@ -2058,7 +2058,7 @@ CONFIG = Config(
             "MC_SoftSwitchTcpFB",
             "CreateCommandPayload",
             "_command.CmdTyp                    :=  CmdType.ShiftPosition;",
-            "_command.CmdTyp                    :=  CmdType.SoftSwitchTcp; // ST-FIX F35",
+            "_command.CmdTyp                    :=  CmdType.SoftSwitchTCP; // ST-FIX F35",
             "F35: SoftSwitchTcp was sent as ShiftPosition",
         ),
         SourcePatch(

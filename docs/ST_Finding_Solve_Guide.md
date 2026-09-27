@@ -3257,7 +3257,7 @@ _`CmdType` enum, `MC_MoveLinearAbsoluteJFB`, `MC_SoftSwitchTcpFB` - wrong comman
 @@ -1,5 +1,5 @@
                    // set command parameter 
 -_command.CmdTyp                    :=  CmdType.ShiftPosition;
-+_command.CmdTyp                    :=  CmdType.SoftSwitchTcp; // ST-FIX F35
++_command.CmdTyp                    :=  CmdType.SoftSwitchTCP; // ST-FIX F35
  _command.ExecMode                  :=  ExecMode;
  _command.ParSeq                    := _command.ParSeq;
  _command.Priority                  :=  Priority;
