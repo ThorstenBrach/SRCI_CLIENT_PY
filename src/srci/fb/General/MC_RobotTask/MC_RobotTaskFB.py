@@ -79,7 +79,7 @@ from srci.functions.Convert.TO_STRING.WORD_TO_STRING_BIN import WORD_TO_STRING_B
 from srci.iec.conv import BYTE_TO_SINT, DINT_TO_STRING, DINT_TO_UDINT, DINT_TO_UINT, DINT_TO_USINT, INT_TO_BYTE, SINT_TO_BYTE, STRING_TO_USINT, TIME_TO_STRING, TIME_TO_UINT, UDINT_TO_STRING, UINT_TO_DINT, UINT_TO_STRING
 from srci.iec.rt import ADR, CONCAT, LIMIT, LOWER_BOUND, MID, MIN, SysDepMemCmp, UPPER_BOUND, array_type, bit, copy_into, set_bit, st_for_end, trunc_str, wrap
 from srci.iec.standard import F_TRIG, R_TRIG, TON
-from srci.types import AxesGroupAcyclicAcrEntryCmdBuffer, AxesGroupStateDataChanged, BufferStateCmd, CmdType, ComDirection, ControlHalfByte, DefaultDynamics, ExecutionMode, FragmentAction, Frame, Load, MessageType, PriorityLevel, RaSequenceState, ReferenceDynamics, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryInfoIdEnum, RobotLibraryParameter, RobotLibraryWarningIdEnum, RobotTaskParCfg, RobotWorkArea, SWLimits, SequenceFlag, Severity, SyncMode, SyncTime, SystemTime, Telegram, TelegramState, Tool
+from srci.types import AxesGroupAcyclicAcrEntryCmdBuffer, AxesGroupStateDataChanged, BufferStateCmd, CmdType, ComDirection, ControlHalfByte, DefaultDynamics, ExecutionMode, FragmentAction, Frame, Load, MessageType, PriorityLevel, RaSequenceState, ReferenceDynamics, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryInfoIdEnum, RobotLibraryParameter, RobotLibraryWarningIdEnum, RobotTaskParCfg, RobotWorkArea, SWLimits, SequenceFlag, SequenceFlagEnum, Severity, SyncMode, SyncTime, SystemTime, Telegram, TelegramState, Tool
 
 if TYPE_CHECKING:
     from srci.interfaces.IMessageLogger import IMessageLogger

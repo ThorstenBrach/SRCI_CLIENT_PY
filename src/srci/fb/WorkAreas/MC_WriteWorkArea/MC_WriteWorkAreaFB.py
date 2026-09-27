@@ -47,7 +47,7 @@ from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_
 from srci.functions.Convert.TO_STRING.WORK_AREA_REACTION_MODE_TO_STRING import WORK_AREA_REACTION_MODE_TO_STRING
 from srci.iec.conv import BOOL_TO_STRING, DINT_TO_STRING, REAL_TO_STRING, UINT_TO_STRING, USINT_TO_STRING
 from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, trunc_str, wrap
-from srci.types import AreaType, CmdMessageState, CmdType, DefinitionMode, ExecutionMode, MessageType, PriorityLevel, ProcessingMode, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, SystemTime, WorkAreaReactionMode, WriteWorkAreaOutCmd, WriteWorkAreaParCmd, WriteWorkAreaRecvData, WriteWorkAreaSendData
+from srci.types import AreaType, CmdMessageState, CmdType, DefinitionMode, ExecutionMode, MessageType, PriorityLevel, ProcessingMode, ProcessingModeEnum, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, SystemTime, WorkAreaReactionMode, WriteWorkAreaOutCmd, WriteWorkAreaParCmd, WriteWorkAreaRecvData, WriteWorkAreaSendData
 
 if TYPE_CHECKING:
     from srci.interfaces.IMessageLogger import IMessageLogger
@@ -500,15 +500,9 @@ class MC_WriteWorkAreaFB(RobotLibraryBaseExecuteFB):
         # ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
         match self.ProcessingMode:
             case ProcessingMode.BUFFERED | ProcessingMode.TRIGGER_BUFFERED:
-                if False:
-                    self._command.ExecMode = ExecutionMode.SEQUENCE_SECONDARY
-                else:
-                    self._command.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
+                self._command.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
             case ProcessingMode.ABORTING | ProcessingMode.TRIGGER_ABORTING:
-                if False:
-                    self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY
-                else:
-                    self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY
+                self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY
             case ProcessingMode.PARALLEL | ProcessingMode.TRIGGER_ONCE:
                 self._command.ExecMode = ExecutionMode.PARALLEL
             case ProcessingMode.CONTINUOUS | ProcessingMode.TRIGGER_CONTINUOUS:

@@ -745,6 +745,33 @@ def _check_roundtrip(text: str, xml: Path) -> None:
             raise ExportError(f"{xml.name}: escaping differs from the export - the tool must be adapted")
 
 
+def _check_enum_literals(text: str, pous: dict[str, Pou]) -> None:
+    """``Type.VALUE`` must not be used where a variable has the name of the enum type (e.g. the
+    input ``ProcessingMode : ProcessingMode``): the compiler reads it as member access on the
+    variable - the library uses the alias types (``ProcessingModeEnum``) there."""
+    enums = set(re.findall(r'<dataType name="([^"]+)">\s*<baseType>\s*<enum>', text))
+    problems = []
+    for pou in pous.values():
+        if pou.kind == "INTERFACE":
+            continue
+        names: set[str] = set()
+        cur: Pou | None = pou
+        while cur is not None:
+            names |= {v.name for v in cur.vars}
+            cur = pous.get(cur.extends.upper()) if cur.extends else None
+        parts: list[tuple[str, str, set[str]]] = [("body", pou.body.src, set())] + [
+            (m.name, m.body.src, {v.name for v in m.vars}) for m in pou.methods.values()
+        ]
+        for part, src, local in parts:
+            for enum in enums & (names | local):
+                for m in re.finditer(rf"(?<![.\w]){enum}\.[A-Z_]\w*", src):
+                    problems.append(f"{pou.name}.{part}: {m.group(0)}")
+    if problems:
+        raise ExportError(
+            "enum literal hidden by a variable of the same name: " + ", ".join(sorted(set(problems)))
+        )
+
+
 def _well_formed(text: str) -> None:
     ET.fromstring(text)
 
@@ -757,6 +784,7 @@ def export(xml: Path = DEFAULT_XML, cfg: Config = CONFIG) -> ExportResult:
     from .__main__ import apply_patches  # the same corrections as the transpiler
 
     apply_patches(final, cfg)
+    _check_enum_literals(text, final)
     add_text, add_vars = _added_decls(cfg)
     result = ExportResult("")
     clones = {c.target.upper(): c for c in cfg.clones}

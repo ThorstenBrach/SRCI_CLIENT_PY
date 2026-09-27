@@ -254,14 +254,14 @@ def _exec_mode_from_aborting(pou: str) -> SourcePatch:
         "CreateCommandPayload",
         _EXEC_MODE,
         "// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)\n"
-        "IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN\n"
-        "  IF ( AbortingMode = AbortingMode.ABORT ) THEN\n"
+        "IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN\n"
+        "  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN\n"
         "    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;\n"
         "  ELSE\n"
         "    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;\n"
         "  END_IF\n"
         "ELSE\n"
-        "  IF ( AbortingMode = AbortingMode.ABORT ) THEN\n"
+        "  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN\n"
         "    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;\n"
         "  ELSE\n"
         "    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;\n"
@@ -273,26 +273,39 @@ def _exec_mode_from_aborting(pou: str) -> SourcePatch:
 
 
 def _exec_mode_from_processing(pou: str, sequence_flag: bool) -> SourcePatch:
-    secondary = "SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE" if sequence_flag else "FALSE"
+    """F51; blocks without ``SequenceFlag`` input always use the primary sequence.
+
+    Enum literals use the alias types (``ProcessingModeEnum``, ``SequenceFlagEnum``): the inputs
+    have the same name as the enum types, so ``ProcessingMode.BUFFERED`` is a member access on the
+    input for the ST compiler."""
+
+    def seq(secondary: str, primary: str) -> str:
+        if not sequence_flag:
+            return f"    _command.ExecMode := ExecutionMode.{primary};\n"
+        return (
+            "    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )\n"
+            f"    THEN _command.ExecMode := ExecutionMode.{secondary};\n"
+            f"    ELSE _command.ExecMode := ExecutionMode.{primary};\n"
+            "    END_IF\n"
+        )
+
     return SourcePatch(
         pou,
         "CreateCommandPayload",
         _EXEC_MODE,
         "// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77\n"
         "CASE ProcessingMode OF\n"
-        "  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:\n"
-        f"    IF ( {secondary} ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;\n"
-        "    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF\n"
-        "  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:\n"
-        f"    IF ( {secondary} ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;\n"
-        "    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF\n"
-        "  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:\n"
+        "  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:\n"
+        + seq("SEQUENCE_SECONDARY", "SEQUENCE_PRIMARY")
+        + "  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:\n"
+        + seq("SEQUENCE_ABORT_OTHERS_SECONDARY", "SEQUENCE_ABORT_OTHERS_PRIMARY")
+        + "  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:\n"
         "    _command.ExecMode := ExecutionMode.PARALLEL;\n"
-        "  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:\n"
+        "  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:\n"
         "    _command.ExecMode := ExecutionMode.CONTINUOUS;\n"
-        "  ProcessingMode.TRIGGER_MULTIPLE:\n"
+        "  ProcessingModeEnum.TRIGGER_MULTIPLE:\n"
         "    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;\n"
-        "  ProcessingMode.DEACTIVATE:\n"
+        "  ProcessingModeEnum.DEACTIVATE:\n"
         "    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;\n"
         "ELSE\n"
         "  // undefined ProcessingMode -> error, not sent (ST-FIX F49)\n"
@@ -959,8 +972,16 @@ F45_OUTPUTS = (
 )
 
 
+# enum types with the same name as inputs of the blocks: ST code uses the alias type, because
+# for the compiler ``ProcessingMode.BUFFERED`` is a member access on the input ``ProcessingMode``
+_ENUM_ALIAS = {
+    n: f"{n}Enum" for n in ("ProcessingMode", "SequenceFlag", "AbortingMode", "LogLevel", "MessageLevel")
+}
+
+
 def _enum_check(pou: str, expr: str, enum: str, values: tuple[str, ...], error: str) -> BodyAppend:
     """F49: an enum parameter was not checked -> undefined values were sent to the RC."""
+    enum = _ENUM_ALIAS.get(enum, enum)
     cond = " AND\n    ".join(f"( {expr} <> {enum}.{v} )" for v in values)
     return BodyAppend(
         pou,
@@ -1311,11 +1332,11 @@ F63_PATCHES = (
         "    THEN\n"
         "      SEQUENCE_MAX_PAYLOAD_SIZE := CalculateSequencePayloadMax(AxesGroup := AxesGroup,\n"
         "                                                               Direction := ComDirection.PLC_TO_ROB,\n"
-        "                                                               Sequence  := SequenceFlag.PRIMARY_SEQUENCE);\n"
+        "                                                               Sequence  := SequenceFlagEnum.PRIMARY_SEQUENCE);\n"
         "    ELSE\n"
         "      SEQUENCE_MAX_PAYLOAD_SIZE := CalculateSequencePayloadMax(AxesGroup := AxesGroup,\n"
         "                                                               Direction := ComDirection.PLC_TO_ROB,\n"
-        "                                                               Sequence  := SequenceFlag.SECONDARY_SEQUENCE);\n"
+        "                                                               Sequence  := SequenceFlagEnum.SECONDARY_SEQUENCE);\n"
         "    END_IF\n"
         "    Telegram.PlcToRob.Sequence[_seqIdx].Header.PayloadLength := 0;\n"
         "    FOR _idx := 0 TO RobotLibraryParameter.FRAGMENT_MAX\n"
@@ -1490,13 +1511,13 @@ C_PATCHES = (
         "IF ( _parCfg.Com.TwoSequences ) // ST-FIX F63",
         "// ST-FIX F67: remaining space for acyclic data at least 1 byte behind the sequence header\n"
         "IF ( CalculateSequencePayloadMax(AxesGroup := AxesGroup, Direction := ComDirection.PLC_TO_ROB,\n"
-        "                                 Sequence  := SequenceFlag.PRIMARY_SEQUENCE) < 4 + 1 )\n"
+        "                                 Sequence  := SequenceFlagEnum.PRIMARY_SEQUENCE) < 4 + 1 )\n"
         "THEN\n"
         "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_PLC_TO_ROB, Overwrite := FALSE );\n"
         "  RETURN;\n"
         "END_IF\n"
         "IF ( CalculateSequencePayloadMax(AxesGroup := AxesGroup, Direction := ComDirection.ROB_TO_PLC,\n"
-        "                                 Sequence  := SequenceFlag.PRIMARY_SEQUENCE) < 4 + 1 )\n"
+        "                                 Sequence  := SequenceFlagEnum.PRIMARY_SEQUENCE) < 4 + 1 )\n"
         "THEN\n"
         "  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_ROB_TO_PLC, Overwrite := FALSE );\n"
         "  RETURN;\n"
@@ -1598,14 +1619,14 @@ _LISTENER_CHECKED = (
     "MC_ReadRealsFB", "MC_SetTriggerRegisterFB", "MC_WaitForTriggerFB", "MC_SetTriggerErrorFB",
     "MC_ReactAtTriggerFB", "MC_SetTriggerLimitFB", "MC_SetTriggerMotionFB",
 )  # fmt: skip
-_TRIGGER_MODE = "( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED )"
+_TRIGGER_MODE = "( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED )"
 _TRIGGER_FUNCTIONS = (  # table 6-603 ff.: ListenerID 0 = start immediately
     "MC_SetTriggerErrorFB", "MC_SetTriggerLimitFB", "MC_SetTriggerMotionFB", "MC_SetTriggerRegisterFB",
     "MC_SetTriggerUserFB",
 )  # fmt: skip
 _SEQUENCE_MODE = (
-    "(( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR "
-    "( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING ))"
+    "(( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR "
+    "( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING ))"
 )
 
 
@@ -1630,12 +1651,12 @@ def _f69(pou: str) -> BodyAppend:
                 f"{_TRIGGER_MODE} AND ( ParCmd.ListenerID = 0 )", "ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO"
             )
         text += _check(
-            f"( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT {_TRIGGER_MODE} AND ( ParCmd.ListenerID > 0 )",
+            f"( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT {_TRIGGER_MODE} AND ( ParCmd.ListenerID > 0 )",
             "ERR_LISTENERID_NOT_ALLOWED",
         )
     if pou in _SF_FBS:
         text += _check(
-            f"( ( {_SEQUENCE_MODE} ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )",
+            f"( ( {_SEQUENCE_MODE} ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )",
             "ERR_SEQFLAG_INVALID_IN_PROC_MODE",
         )
     return BodyAppend(pou, "CheckParameterValid", text, _F69)

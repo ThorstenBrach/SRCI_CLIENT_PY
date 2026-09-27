@@ -285,15 +285,9 @@ class MC_SetTriggerRegisterFB(RobotLibraryBaseExecuteFB):
         # ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
         match self.ProcessingMode:
             case ProcessingMode.BUFFERED | ProcessingMode.TRIGGER_BUFFERED:
-                if False:
-                    self._command.ExecMode = ExecutionMode.SEQUENCE_SECONDARY
-                else:
-                    self._command.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
+                self._command.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
             case ProcessingMode.ABORTING | ProcessingMode.TRIGGER_ABORTING:
-                if False:
-                    self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY
-                else:
-                    self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY
+                self._command.ExecMode = ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY
             case ProcessingMode.PARALLEL | ProcessingMode.TRIGGER_ONCE:
                 self._command.ExecMode = ExecutionMode.PARALLEL
             case ProcessingMode.CONTINUOUS | ProcessingMode.TRIGGER_CONTINUOUS:

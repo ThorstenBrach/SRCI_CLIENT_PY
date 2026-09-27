@@ -4188,9 +4188,9 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
  END_IF
 +
 +// ST-FIX F49: ParCmd.SequenceFlag was not checked
-+IF ( ( ParCmd.SequenceFlag <> SequenceFlag.NO_SEQUENCE ) AND
-+    ( ParCmd.SequenceFlag <> SequenceFlag.PRIMARY_SEQUENCE ) AND
-+    ( ParCmd.SequenceFlag <> SequenceFlag.SECONDARY_SEQUENCE ) )
++IF ( ( ParCmd.SequenceFlag <> SequenceFlagEnum.NO_SEQUENCE ) AND
++    ( ParCmd.SequenceFlag <> SequenceFlagEnum.PRIMARY_SEQUENCE ) AND
++    ( ParCmd.SequenceFlag <> SequenceFlagEnum.SECONDARY_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED, Overwrite := TRUE );
@@ -4209,9 +4209,9 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
  END_IF
 +
 +// ST-FIX F49: ParCmd.SequenceFlag was not checked
-+IF ( ( ParCmd.SequenceFlag <> SequenceFlag.NO_SEQUENCE ) AND
-+    ( ParCmd.SequenceFlag <> SequenceFlag.PRIMARY_SEQUENCE ) AND
-+    ( ParCmd.SequenceFlag <> SequenceFlag.SECONDARY_SEQUENCE ) )
++IF ( ( ParCmd.SequenceFlag <> SequenceFlagEnum.NO_SEQUENCE ) AND
++    ( ParCmd.SequenceFlag <> SequenceFlagEnum.PRIMARY_SEQUENCE ) AND
++    ( ParCmd.SequenceFlag <> SequenceFlagEnum.SECONDARY_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_NOT_ALLOWED, Overwrite := TRUE );
@@ -4320,16 +4320,16 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
  END_IF
 +
 +// ST-FIX F49: ParCmd.ProcessingMode was not checked
-+IF ( ( ParCmd.ProcessingMode <> ProcessingMode.BUFFERED ) AND
-+    ( ParCmd.ProcessingMode <> ProcessingMode.ABORTING ) AND
-+    ( ParCmd.ProcessingMode <> ProcessingMode.PARALLEL ) AND
-+    ( ParCmd.ProcessingMode <> ProcessingMode.CONTINUOUS ) AND
-+    ( ParCmd.ProcessingMode <> ProcessingMode.DEACTIVATE ) AND
-+    ( ParCmd.ProcessingMode <> ProcessingMode.TRIGGER_BUFFERED ) AND
-+    ( ParCmd.ProcessingMode <> ProcessingMode.TRIGGER_ABORTING ) AND
-+    ( ParCmd.ProcessingMode <> ProcessingMode.TRIGGER_ONCE ) AND
-+    ( ParCmd.ProcessingMode <> ProcessingMode.TRIGGER_CONTINUOUS ) AND
-+    ( ParCmd.ProcessingMode <> ProcessingMode.TRIGGER_MULTIPLE ) )
++IF ( ( ParCmd.ProcessingMode <> ProcessingModeEnum.BUFFERED ) AND
++    ( ParCmd.ProcessingMode <> ProcessingModeEnum.ABORTING ) AND
++    ( ParCmd.ProcessingMode <> ProcessingModeEnum.PARALLEL ) AND
++    ( ParCmd.ProcessingMode <> ProcessingModeEnum.CONTINUOUS ) AND
++    ( ParCmd.ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND
++    ( ParCmd.ProcessingMode <> ProcessingModeEnum.TRIGGER_BUFFERED ) AND
++    ( ParCmd.ProcessingMode <> ProcessingModeEnum.TRIGGER_ABORTING ) AND
++    ( ParCmd.ProcessingMode <> ProcessingModeEnum.TRIGGER_ONCE ) AND
++    ( ParCmd.ProcessingMode <> ProcessingModeEnum.TRIGGER_CONTINUOUS ) AND
++    ( ParCmd.ProcessingMode <> ProcessingModeEnum.TRIGGER_MULTIPLE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_DEFINED, Overwrite := TRUE );
@@ -4388,14 +4388,14 @@ _motion blocks: inputs `AbortingMode`, `SequenceFlag` - checked but not used: th
  _command.CmdTyp               :=  CmdType.BrakeTest;
 -_command.ExecMode             :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4416,14 +4416,14 @@ _motion blocks: inputs `AbortingMode`, `SequenceFlag` - checked but not used: th
  _command.CmdTyp               :=  CmdType.MoveDepartDirect;
 -_command.ExecMode             :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4444,14 +4444,14 @@ _motion blocks: inputs `AbortingMode`, `SequenceFlag` - checked but not used: th
  _command.CmdTyp            :=  CmdType.DynamicSpline;
 -_command.ExecMode          :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4472,14 +4472,14 @@ _motion blocks: inputs `AbortingMode`, `SequenceFlag` - checked but not used: th
  _command.CmdTyp            :=  CmdType.MoveAxesAbsolute;
 -_command.ExecMode          :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4500,14 +4500,14 @@ _motion blocks: inputs `AbortingMode`, `SequenceFlag` - checked but not used: th
  _command.CmdTyp            :=  CmdType.MoveCircularCam;
 -_command.ExecMode          :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4530,14 +4530,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularRelativeFB`, `MC_MoveDirect
  _command.CmdTyp             :=  CmdType.LoadMeasurementAutomatic;
 -_command.ExecMode           :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4558,14 +4558,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularRelativeFB`, `MC_MoveDirect
  _command.CmdTyp                    :=  CmdType.MoveApproachDirect;
 -_command.ExecMode                  :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4586,14 +4586,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularRelativeFB`, `MC_MoveDirect
  _command.CmdTyp                    :=  CmdType.MoveApproachLinear;
 -_command.ExecMode                  :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4614,14 +4614,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularRelativeFB`, `MC_MoveDirect
  _command.CmdTyp                    :=  CmdType.MoveAxesRelative;
 -_command.ExecMode                  :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4644,14 +4644,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
  _command.CmdTyp              :=  CmdType.MoveDepartLinear;
 -_command.ExecMode            :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4672,14 +4672,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
  _command.CmdTyp              :=  CmdType.MovePickPlaceDirect;
 -_command.ExecMode            :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4700,14 +4700,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
  _command.CmdTyp              :=  CmdType.MovePickPlaceLinear;
 -_command.ExecMode            :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4728,14 +4728,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
  _command.CmdTyp           :=  CmdType.SearchHardstop;
 -_command.ExecMode         :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4756,14 +4756,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
  _command.CmdTyp   :=  CmdType.WaitTime;
 -_command.ExecMode :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from AbortingMode and SequenceFlag (spec table 5-77)
-+IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
 +  END_IF
 +ELSE
-+  IF ( AbortingMode = AbortingMode.ABORT ) THEN
++  IF ( AbortingMode = AbortingModeEnum.ABORT ) THEN
 +    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
 +  ELSE
 +    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
@@ -4779,25 +4779,23 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_ActivateNextCommandFB.CreateCommandPayload
 +++ b/MC_ActivateNextCommandFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,25 @@
                    // set command parameter 
  _command.CmdTyp     :=  CmdType.ActivateNextCommand;
 -_command.ExecMode   :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -4815,25 +4813,29 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_CallSubprogramFB.CreateCommandPayload
 +++ b/MC_CallSubprogramFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.CallSubprogram;
 -_command.ExecMode     :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -4851,25 +4853,29 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_ReadActualPositionFB.CreateCommandPayload
 +++ b/MC_ReadActualPositionFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.ReadActualPosition;
 -_command.ExecMode     :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -4887,25 +4893,29 @@ Same change (same `-`/`+` lines) in: `MC_MoveCircularAbsoluteFB`, `MC_SoftSwitch
 ```diff
 --- a/MC_ReadAnalogInputFB.CreateCommandPayload
 +++ b/MC_ReadAnalogInputFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.ReadAnalogInput;
 -_command.ExecMode     :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -4925,25 +4935,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_CollisionDetectionFB.CreateCommandPayload
 +++ b/MC_CollisionDetectionFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp               :=  CmdType.CollisionDetection;
 -_command.ExecMode             :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -4961,25 +4975,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_LoadMeasurementSequentialFB.CreateCommandPayload
 +++ b/MC_LoadMeasurementSequentialFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.LoadMeasurementSequential;
 -_command.ExecMode :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -4997,25 +5015,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteLoadDataFB.CreateCommandPayload
 +++ b/MC_WriteLoadDataFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.WriteLoadData;
 -_command.ExecMode :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5033,25 +5055,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteToolDataFB.CreateCommandPayload
 +++ b/MC_WriteToolDataFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.WriteToolData;
 -_command.ExecMode :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5069,25 +5095,23 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_MoveSuperImposedFB.CreateCommandPayload
 +++ b/MC_MoveSuperImposedFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,25 @@
                    // set command parameter 
  _command.CmdTyp               :=  CmdType.MoveSuperImposed;
 -_command.ExecMode             :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5105,25 +5129,23 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReactAtTriggerFB.CreateCommandPayload
 +++ b/MC_ReactAtTriggerFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,25 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.ReactAtTrigger;
 -_command.ExecMode     :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5141,25 +5163,23 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_SetTriggerRegisterFB.CreateCommandPayload
 +++ b/MC_SetTriggerRegisterFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,25 @@
                    // set command parameter 
  _command.CmdTyp       :=  CmdType.SetTriggerRegister;
 -_command.ExecMode     :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5177,25 +5197,23 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadActualForceFB.CreateCommandPayload
 +++ b/MC_ReadActualForceFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,25 @@
                    // set command parameter 
  _command.CmdTyp          :=  CmdType.ReadActualForce;
 -_command.ExecMode        :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5213,25 +5231,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadActualTCPVelocityFB.CreateCommandPayload
 +++ b/MC_ReadActualTCPVelocityFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.ReadActualTCPVelocity;
 -_command.ExecMode                  :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5249,25 +5271,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadDigitalInputsFB.CreateCommandPayload
 +++ b/MC_ReadDigitalInputsFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.ReadDigitalInputs;
 -_command.ExecMode                  :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5285,25 +5311,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_ReadSystemVariableFB.CreateCommandPayload
 +++ b/MC_ReadSystemVariableFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp         :=  CmdType.ReadSystemVariable;
 -_command.ExecMode       :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5321,25 +5351,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteSystemVariableFB.CreateCommandPayload
 +++ b/MC_WriteSystemVariableFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp         :=  CmdType.WriteSystemVariable;
 -_command.ExecMode       :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5357,25 +5391,23 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_RedefineTrackingPosFB.CreateCommandPayload
 +++ b/MC_RedefineTrackingPosFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,25 @@
                    // set command parameter 
  _command.CmdTyp                 :=  CmdType.RedefineTrackingPos;
 -_command.ExecMode               :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5393,25 +5425,23 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_SetTriggerLimitFB.CreateCommandPayload
 +++ b/MC_SetTriggerLimitFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,25 @@
                    // set command parameter 
  _command.CmdTyp                 :=  CmdType.SetTriggerLimit;
 -_command.ExecMode               :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5429,25 +5459,23 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_SetTriggerErrorFB.CreateCommandPayload
 +++ b/MC_SetTriggerErrorFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,25 @@
                    // set command parameter 
  _command.CmdTyp                    :=  CmdType.SetTriggerError;
 -_command.ExecMode                  :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5465,25 +5493,23 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_SetTriggerMotionFB.CreateCommandPayload
 +++ b/MC_SetTriggerMotionFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,25 @@
                    // set command parameter 
  _command.CmdTyp             :=  CmdType.SetTriggerMotion;
 -_command.ExecMode           :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5501,25 +5527,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_StopSubprogramFB.CreateCommandPayload
 +++ b/MC_StopSubprogramFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp     :=  CmdType.StopSubprogram;
 -_command.ExecMode   :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5537,25 +5567,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WaitForTriggerFB.CreateCommandPayload
 +++ b/MC_WaitForTriggerFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp          :=  CmdType.WaitForTrigger;
 -_command.ExecMode        :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5573,25 +5607,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteDigitalOutputsFB.CreateCommandPayload
 +++ b/MC_WriteDigitalOutputsFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp        :=  CmdType.WriteDigitalOutputs;
 -_command.ExecMode      :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5609,25 +5647,29 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteFrameDataFB.CreateCommandPayload
 +++ b/MC_WriteFrameDataFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,31 @@
                    // set command parameter 
  _command.CmdTyp    :=  CmdType.WriteFrameData;
 -_command.ExecMode  :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++    END_IF
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    IF ( SequenceFlag = SequenceFlagEnum.SECONDARY_SEQUENCE )
++    THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
++    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++    END_IF
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -5645,25 +5687,23 @@ Same change (same `-`/`+` lines) in: `MC_ReadDigitalOutputsFB`, `MC_ReadIntegers
 ```diff
 --- a/MC_WriteWorkAreaFB.CreateCommandPayload
 +++ b/MC_WriteWorkAreaFB.CreateCommandPayload
-@@ -1,6 +1,27 @@
+@@ -1,6 +1,25 @@
                    // set command parameter 
  _command.CmdTyp   :=  CmdType.WriteWorkArea;
 -_command.ExecMode :=  ExecMode;
 +// ST-FIX F51: ExecutionMode from ProcessingMode (and SequenceFlag), spec table 5-77
 +CASE ProcessingMode OF
-+  ProcessingMode.BUFFERED, ProcessingMode.TRIGGER_BUFFERED:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY; END_IF
-+  ProcessingMode.ABORTING, ProcessingMode.TRIGGER_ABORTING:
-+    IF ( FALSE ) THEN _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_SECONDARY;
-+    ELSE _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY; END_IF
-+  ProcessingMode.PARALLEL, ProcessingMode.TRIGGER_ONCE:
++  ProcessingModeEnum.BUFFERED, ProcessingModeEnum.TRIGGER_BUFFERED:
++    _command.ExecMode := ExecutionMode.SEQUENCE_PRIMARY;
++  ProcessingModeEnum.ABORTING, ProcessingModeEnum.TRIGGER_ABORTING:
++    _command.ExecMode := ExecutionMode.SEQUENCE_ABORT_OTHERS_PRIMARY;
++  ProcessingModeEnum.PARALLEL, ProcessingModeEnum.TRIGGER_ONCE:
 +    _command.ExecMode := ExecutionMode.PARALLEL;
-+  ProcessingMode.CONTINUOUS, ProcessingMode.TRIGGER_CONTINUOUS:
++  ProcessingModeEnum.CONTINUOUS, ProcessingModeEnum.TRIGGER_CONTINUOUS:
 +    _command.ExecMode := ExecutionMode.CONTINUOUS;
-+  ProcessingMode.TRIGGER_MULTIPLE:
++  ProcessingModeEnum.TRIGGER_MULTIPLE:
 +    _command.ExecMode := ExecutionMode.TRIGGER_MULTIPLE;
-+  ProcessingMode.DEACTIVATE:
++  ProcessingModeEnum.DEACTIVATE:
 +    _command.ExecMode := ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER;
 +ELSE
 +  // undefined ProcessingMode -> error, not sent (ST-FIX F49)
@@ -6515,11 +6555,11 @@ _`MC_RobotTaskFB`: `HandleSeqAck`, `AxesGroupToTelegram(Sequence)`, `CheckParame
 +    THEN
 +      SEQUENCE_MAX_PAYLOAD_SIZE := CalculateSequencePayloadMax(AxesGroup := AxesGroup,
 +                                                               Direction := ComDirection.PLC_TO_ROB,
-+                                                               Sequence  := SequenceFlag.PRIMARY_SEQUENCE);
++                                                               Sequence  := SequenceFlagEnum.PRIMARY_SEQUENCE);
 +    ELSE
 +      SEQUENCE_MAX_PAYLOAD_SIZE := CalculateSequencePayloadMax(AxesGroup := AxesGroup,
 +                                                               Direction := ComDirection.PLC_TO_ROB,
-+                                                               Sequence  := SequenceFlag.SECONDARY_SEQUENCE);
++                                                               Sequence  := SequenceFlagEnum.SECONDARY_SEQUENCE);
 +    END_IF
 +    Telegram.PlcToRob.Sequence[_seqIdx].Header.PayloadLength := 0;
 +    FOR _idx := 0 TO RobotLibraryParameter.FRAGMENT_MAX
@@ -6868,13 +6908,13 @@ _`MC_RobotTaskFB.AxesGroupToTelegramSequence` - remaining space for acyclic data
                    // Check 2nd sequence active ? 
 +// ST-FIX F67: remaining space for acyclic data at least 1 byte behind the sequence header
 +IF ( CalculateSequencePayloadMax(AxesGroup := AxesGroup, Direction := ComDirection.PLC_TO_ROB,
-+                                 Sequence  := SequenceFlag.PRIMARY_SEQUENCE) < 4 + 1 )
++                                 Sequence  := SequenceFlagEnum.PRIMARY_SEQUENCE) < 4 + 1 )
 +THEN
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_PLC_TO_ROB, Overwrite := FALSE );
 +  RETURN;
 +END_IF
 +IF ( CalculateSequencePayloadMax(AxesGroup := AxesGroup, Direction := ComDirection.ROB_TO_PLC,
-+                                 Sequence  := SequenceFlag.PRIMARY_SEQUENCE) < 4 + 1 )
++                                 Sequence  := SequenceFlagEnum.PRIMARY_SEQUENCE) < 4 + 1 )
 +THEN
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_ACYCLIC_AREA_TO_SMALL_ROB_TO_PLC, Overwrite := FALSE );
 +  RETURN;
@@ -7113,13 +7153,13 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 -
 -                
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
@@ -7139,19 +7179,19 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7171,19 +7211,19 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7203,19 +7243,19 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7237,7 +7277,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7257,7 +7297,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7277,7 +7317,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7362,13 +7402,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
@@ -7387,13 +7427,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
  
 -                
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
@@ -7413,13 +7453,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
@@ -7439,13 +7479,13 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
@@ -7464,7 +7504,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
  
 -                
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
@@ -7483,7 +7523,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
  
 -                
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
@@ -7503,7 +7543,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
@@ -7531,7 +7571,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
@@ -7550,7 +7590,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
  
 -                
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7569,7 +7609,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
  
 -                
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7595,19 +7635,19 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_EMITTERID_NOT_ALLOWED, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID = 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingMode.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND NOT ( ProcessingMode >= ProcessingModeEnum.TRIGGER_BUFFERED ) AND ( ParCmd.ListenerID > 0 )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_NOT_ALLOWED, Overwrite := TRUE );
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingMode.BUFFERED ) OR ( ProcessingMode = ProcessingMode.ABORTING ) OR ( ProcessingMode = ProcessingMode.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingMode.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlag.NO_SEQUENCE ) )
++IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
