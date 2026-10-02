@@ -758,6 +758,20 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-040",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_shows_a_core_only_robot",
+  "title": "A robot with only the profile \"Core\" (e.g.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-041",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_uses_only_core_functions",
+  "title": "The example calls only blocks of Core functions (the JAKA MiniCobo supports only Core).",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",

@@ -42,6 +42,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import copy
+import dataclasses
 import logging
 import sys
 import time
@@ -69,6 +70,21 @@ PORT = 5000
 TELEGRAM_LENGTH = 256  # bytes per direction = PROFINET module size of the robot
 JOINTS = 6  # MiniCobo: 6 axes
 MAX_DELTA = 30.0  # [deg] largest relative move this example accepts
+
+# Functions of the profile "Core" in RCSupportedFunctions (spec table 5-2; CreateServerLog,
+# ReadServerLog, CreateClientLog and ReadClientLog have no bit). This example only uses Core
+# functions: the RobotTask (ReadRobotData, ExchangeConfiguration, ReadMessages), GroupReset,
+# EnableRobot, ChangeSpeedOverride, ReadRobotSWLimits, ReadActualPosition, MoveAxesAbsolute,
+# GroupStop. The synchronization of user data is off (no ReadWorkArea etc. during the init).
+CORE = (
+    "ReadRobotData", "EnableRobot", "GroupReset", "ReadActualPosition", "ReadActualPositionCyclic",
+    "ExchangeConfiguration", "SetSequence", "ChangeSpeedOverride", "ReadMessages",
+    "ReadRobotReferenceDynamics", "WriteFrameData", "WriteToolData", "WriteLoadData",
+    "WriteRobotReferenceDynamics", "WriteRobotDefaultDynamics", "ReadRobotDefaultDynamics",
+    "ReadFrameData", "ReadToolData", "ReadLoadData", "ReadRobotSWLimits", "GroupJog",
+    "MoveLinearAbsolute", "MoveDirectAbsolute", "MoveAxesAbsolute", "GroupStop", "GroupContinue",
+    "GroupInterrupt", "ReturnToPrimary",
+)  # fmt: skip
 
 # ---------------------------------------------------------------------------- output
 
@@ -176,15 +192,32 @@ def show_robot(client: SrciClient) -> None:
     show("RCFirmwareVersion", robot.RCFirmwareVersion)
     show("RCInterpreterVersion", robot.RCInterpreterVersion)
     show("InterpreterCycleTime [ms]", robot.InterpreterCycleTime)
-    show("supports MoveAxesAbsolute", robot.RCSupportedFunctions.MoveAxesAbsolute)
-    show("supports MoveLinearAbsolute", robot.RCSupportedFunctions.MoveLinearAbsolute)
-    show("supports GroupJog", robot.RCSupportedFunctions.GroupJog)
+    show_supported_functions(robot.RCSupportedFunctions)
 
     section("Configuration (ExchangeConfiguration)")
     config = ag.State.ConfigurationData
     show("HighestToolIndex", config.HighestToolIndex)
     show("HighestFrameIndex", config.HighestFrameIndex)
     show("HighestLoadIndex", config.HighestLoadIndex)
+
+
+def show_supported_functions(functions: Any) -> None:
+    """RCSupportedFunctions (spec table 6-18): the Core functions, then the number of the others."""
+    core_missing = [name for name in CORE if not getattr(functions, name)]
+    others = [
+        f.name
+        for f in dataclasses.fields(functions)
+        if f.name not in CORE and not f.name.startswith(("Byte", "Reserved")) and getattr(functions, f.name)
+    ]
+    show("Core functions supported", f"{len(CORE) - len(core_missing)} of {len(CORE)}")
+    if core_missing:
+        show("Core functions missing", ", ".join(core_missing))
+    if not others:
+        show("other functions supported", "none (Core profile only)")
+    elif len(others) <= 8:
+        show("other functions supported", ", ".join(others))
+    else:
+        show("other functions supported", f"{len(others)} (e.g. {', '.join(others[:5])}, ...)")
 
 
 def read_limits(client: SrciClient) -> Any:

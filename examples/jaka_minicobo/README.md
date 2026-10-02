@@ -15,6 +15,13 @@ The PLC only forwards the telegrams (256 bytes in, 256 bytes out, lockstep); the
 (`MC_RobotTaskFB`, commands) runs in Python. The PLC project is `SRCI_TcpGateway` (TwinCAT,
 TF6310, `FB_SrciTcpGateway`).
 
+The JAKA MiniCobo supports only the profile **Core**, so the example uses only Core functions:
+the RobotTask (ReadRobotData, ExchangeConfiguration, ReadMessages), GroupReset, EnableRobot,
+ChangeSpeedOverride, ReadRobotSWLimits, ReadActualPosition, MoveAxesAbsolute and GroupStop. The
+synchronization of user data stays off (it would need e.g. ReadWorkArea, which is not Core).
+`info` shows which Core functions the robot reports in `RCSupportedFunctions` and whether it
+reports anything beyond Core.
+
 ## 1. Prerequisites
 
 | What | Check |
@@ -44,7 +51,7 @@ python minicobo.py info --host 192.168.2.10 --port 5000 --length 256
 ```
 
 Shows: initialization (TelegramState, SRCI version of the RC, time), robot data (manufacturer,
-serial numbers, firmware, supported functions), configuration (tool/frame/load indices), software
+serial numbers, firmware, Core functions supported / missing), configuration (tool/frame/load indices), software
 limits, actual position (joints and Cartesian, tool 0 / frame 0), messages of the RC and
 round-trip times of the TCP connection.
 

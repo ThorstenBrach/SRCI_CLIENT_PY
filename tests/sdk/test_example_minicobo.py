@@ -89,3 +89,28 @@ def test_minicobo_rejects_unsafe_arguments(minicobo: ModuleType, args: list[str]
     with pytest.raises(SystemExit) as exc:
         minicobo.main(["move", "--sdk-tcp", *args])
     assert exc.value.code == 2
+
+
+def test_minicobo_shows_a_core_only_robot(minicobo: ModuleType, capsys: pytest.CaptureFixture[str]) -> None:
+    """A robot with only the profile "Core" (e.g. JAKA MiniCobo): missing Core functions are named,
+    no other functions are reported."""
+    from srci.types import AxesGroup
+
+    functions = AxesGroup().State.RobotData.RCSupportedFunctions
+    for name in minicobo.CORE:
+        setattr(functions, name, True)
+    functions.GroupJog = False
+    minicobo.show_supported_functions(functions)
+    out = capsys.readouterr().out
+    assert "27 of 28" in out and "Core functions missing         GroupJog" in out
+    assert "none (Core profile only)" in out
+
+
+def test_minicobo_uses_only_core_functions() -> None:
+    """The example calls only blocks of Core functions (the JAKA MiniCobo supports only Core)."""
+    import re
+
+    used = set(re.findall(r"MC_(\w+?)FB\(", SCRIPT.read_text(encoding="utf-8")))
+    core = {"GroupReset", "EnableRobot", "ChangeSpeedOverride", "ReadRobotSWLimits", "ReadActualPosition",
+            "MoveAxesAbsolute", "GroupStop"}  # fmt: skip
+    assert used and used <= core, used - core
