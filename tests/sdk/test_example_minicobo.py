@@ -44,7 +44,7 @@ def minicobo(sdk_library: str) -> ModuleType:
 
 def test_minicobo_info_does_not_enable(minicobo: ModuleType, capsys: pytest.CaptureFixture[str]) -> None:
     """info: initialization, robot data, SW limits and position over the TCP gateway - no enable."""
-    assert minicobo.main(["info", "--sdk-tcp", "--fast"]) == 0
+    assert minicobo.main(["info", "--sdk-tcp", "--fast", "--no-log"]) == 0
     out = capsys.readouterr().out
     assert "TelegramState                  INITIALIZED" in out
     assert "RCManufacturer" in out and "J6 [deg]" in out
@@ -53,7 +53,10 @@ def test_minicobo_info_does_not_enable(minicobo: ModuleType, capsys: pytest.Capt
 
 def test_minicobo_move_relative_and_back(minicobo: ModuleType, capsys: pytest.CaptureFixture[str]) -> None:
     """move: one joint relative to the actual position and back, then disabled."""
-    assert minicobo.main(["move", "--sdk-tcp", "--fast", "--yes", "--joint", "3", "--delta", "-7.5"]) == 0
+    assert (
+        minicobo.main(["move", "--sdk-tcp", "--fast", "--yes", "--joint", "3", "--delta", "-7.5", "--no-log"])
+        == 0
+    )
     out = capsys.readouterr().out
     assert "J3=   -7.50" in out.split("reached")[1].splitlines()[0]
     assert "back at start" in out and out.rstrip().endswith("done")
@@ -65,7 +68,7 @@ def test_minicobo_move_is_cancelled_without_confirmation(
 ) -> None:
     """move without --yes asks first; anything but yes cancels before the robot is enabled."""
     monkeypatch.setattr("builtins.input", lambda _prompt: "no")
-    assert minicobo.main(["move", "--sdk-tcp", "--fast"]) == 0
+    assert minicobo.main(["move", "--sdk-tcp", "--fast", "--no-log"]) == 0
     out = capsys.readouterr().out
     assert "cancelled" in out and "EnableRobot" not in out
 
@@ -78,7 +81,7 @@ def test_minicobo_reports_an_unreachable_gateway(
     with socket.socket() as s:  # a free port nobody listens on
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
-    assert minicobo.main(["info", "--host", "127.0.0.1", "--port", str(port)]) == 1
+    assert minicobo.main(["info", "--host", "127.0.0.1", "--port", str(port), "--no-log"]) == 1
     assert "FB_SrciTcpGateway enabled" in capsys.readouterr().out
 
 
@@ -87,7 +90,7 @@ def test_minicobo_reports_an_unreachable_gateway(
 )
 def test_minicobo_rejects_unsafe_arguments(minicobo: ModuleType, args: list[str]) -> None:
     with pytest.raises(SystemExit) as exc:
-        minicobo.main(["move", "--sdk-tcp", *args])
+        minicobo.main(["move", "--sdk-tcp", "--no-log", *args])
     assert exc.value.code == 2
 
 
@@ -114,3 +117,30 @@ def test_minicobo_uses_only_core_functions() -> None:
     core = {"GroupReset", "EnableRobot", "ChangeSpeedOverride", "ReadRobotSWLimits", "ReadActualPosition",
             "MoveAxesAbsolute", "GroupStop"}  # fmt: skip
     assert used and used <= core, used - core
+
+
+def test_minicobo_writes_a_log_file(
+    minicobo: ModuleType, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The log file holds the system log of the library, the telegrams and the transport."""
+    log = tmp_path / "minicobo.log"
+    assert minicobo.main(["info", "--sdk-tcp", "--fast", "--log", str(log)]) == 0
+    text = log.read_text(encoding="utf-8")
+    assert "srci.plc" in text and "Robot Task Enabled" in text
+    assert "srci.telegram" in text and "PLC->RC 25 " in text and "RC->PLC 25 " in text
+    assert str(log) in capsys.readouterr().out
+
+
+def test_minicobo_diagnoses_a_robot_that_sends_nothing(
+    minicobo: ModuleType, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The PLC answers, but RobotInData stays 0 (PROFINET not in data exchange): the diagnosis
+    shows the step, the TelegramState and the raw headers."""
+    from srci.sim.gateway import PlcGatewaySimulator
+
+    with PlcGatewaySimulator(lambda _telegram: bytes(256), 256, 256) as gateway:
+        args = ["info", "--host", "127.0.0.1", "--port", str(gateway.port), "--timeout", "8", "--no-log"]
+        assert minicobo.main(args) == 1
+    out = capsys.readouterr().out
+    assert "RobotTask step / ErrorID       1 / 16#0006" in out
+    assert "RobotInData is all 0" in out and "header PLC -> RC               25 " in out

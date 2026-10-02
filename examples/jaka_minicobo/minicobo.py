@@ -47,6 +47,7 @@ import logging
 import sys
 import time
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 from srci.api import CommandError, SrciClient, WaitTimeoutError
@@ -145,10 +146,61 @@ def create_client(transport: Transport, args: argparse.Namespace, simulator: boo
     cfg.Com.LifeSignTimeOut = args.lifesign_ms
     # messages of the robot controller from severity WARNING on
     cfg.Rob.Parameter.MessageLevel = MessageLevel.WARNING
-    if args.debug:
-        client.program.external_logger = PythonLogger()  # every telegram -> logger srci.plc
+    if args.log or args.debug:
+        # system log of all function blocks -> logger srci.plc (log file / console)
+        client.program.external_logger = PythonLogger()
         client.program.log_level = Severity.DEBUG
     return client
+
+
+_HANDLERS: list[logging.Handler] = []
+
+
+def setup_logging(args: argparse.Namespace) -> None:
+    """Console: warnings (everything with --debug). Log file: everything - the system log of the
+    library (logger srci.plc), the transport (srci.transport) and the telegrams (srci.telegram)."""
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    for handler in _HANDLERS:  # main() called again (tests)
+        root.removeHandler(handler)
+        handler.close()
+    _HANDLERS.clear()
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG if args.debug else logging.WARNING)
+    console.setFormatter(logging.Formatter("%(name)s %(message)s"))
+    root.addHandler(console)
+    _HANDLERS.append(console)
+    if args.log:
+        file = logging.FileHandler(args.log, mode="w", encoding="utf-8")
+        file.setLevel(logging.DEBUG)
+        file.setFormatter(
+            logging.Formatter("%(asctime)s.%(msecs)03d %(levelname)-7s %(name)-14s %(message)s", "%H:%M:%S")
+        )
+        root.addHandler(file)
+        _HANDLERS.append(file)
+
+
+def trace_telegrams(transport: Transport, every: bool) -> None:
+    """Log the telegrams (logger srci.telegram, level DEBUG, hex): the first 50 exchanges, then
+    every change of the header (TelegramState, Control) and every 100th exchange; all of them
+    with ``every``."""
+    log = logging.getLogger("srci.telegram")
+    exchange = transport.exchange
+    count = 0
+    last_key = b""
+
+    def traced(out: bytes | bytearray) -> bytes:
+        nonlocal count, last_key
+        answer = exchange(out)
+        count += 1
+        key = bytes(out[6:7]) + answer[3:4]  # AxesGroupID/Control PLC -> RC, TelegramState RC -> PLC
+        if every or count <= 50 or key != last_key or count % 100 == 0:
+            log.debug("#%d PLC->RC %s", count, bytes(out).hex(" "))
+            log.debug("#%d RC->PLC %s", count, bytes(answer).hex(" "))
+        last_key = key
+        return answer
+
+    transport.exchange = traced  # type: ignore[method-assign]  # trace wrapper on this instance
 
 
 def initialize(client: SrciClient, transport: Transport, timeout: float) -> None:
@@ -156,26 +208,47 @@ def initialize(client: SrciClient, transport: Transport, timeout: float) -> None
     started = time.monotonic()
     try:
         client.wait_initialized(timeout=timeout)
-    except WaitTimeoutError:
-        ag = client.program.axes_group
-        rt = client.program.robot_task
-        print("  not initialized - diagnosis:")
-        show("TelegramState", ag.Cyclic.RobToPlc.TelegramState.name)
-        show("RobotTask ErrorID", f"16#{int(rt.ErrorID):04X}")
-        show("transport", transport.statistics)
-        print(
-            "  hints: exchanges = 0, timeouts > 0 -> the gateway accepts, but does not answer\n"
-            "         (gateway Connected / ErrorID, lengths in MAIN);\n"
-            "         ERROR_163_TELEGRAM_LENGTH_MISMATCH -> --length must match the PROFINET module;\n"
-            "         UNDEFINED with exchanges > 0 -> the PLC answers, but the RC sends nothing\n"
-            "         (PROFINET mapping of RobotInData, robot in SRCI/remote mode?)"
-        )
+    except (CommandError, WaitTimeoutError):
+        diagnose_initialization(client, transport)
         raise
     rt_ag = client.program.axes_group.Cyclic.RobToPlc
     show("Initialized", client.program.robot_task.Initialized)
     show("TelegramState", rt_ag.TelegramState.name)
     show("SRCI version RC", f"{rt_ag.SRCIVersion.MajorVersion}.{rt_ag.SRCIVersion.MinorVersion}")
     show("time until initialized [s]", f"{time.monotonic() - started:.2f}")
+
+
+def diagnose_initialization(client: SrciClient, transport: Transport) -> None:
+    """Why the RobotTask is not initialized: its step, the TelegramState and the raw headers."""
+    program = client.program
+    rt = program.robot_task
+    rx = bytes(program._in[:18])  # last telegram RC -> PLC (header)
+    tx = bytes(program._out[:18])  # last telegram PLC -> RC (header)
+    print("  not initialized - diagnosis:")
+    show("RobotTask step / ErrorID", f"{rt._stepCmd} / 16#{int(rt.ErrorID):04X} {rt.ErrorAddTxt}")
+    show(
+        "TelegramState (RC)",
+        f"{rx[3] if len(rx) > 3 else '?'} {program.axes_group.Cyclic.RobToPlc.TelegramState.name}",
+    )
+    show("header RC -> PLC", rx.hex(" "))
+    show("header PLC -> RC", tx.hex(" "))
+    show("transport", transport.statistics)
+    if not any(rx):
+        print(
+            "  -> the PLC answers, but RobotInData is all 0: the robot sends nothing over PROFINET\n"
+            "     (PROFINET device in data exchange? RobotInData linked to the SRCI input module?\n"
+            "      SRCI/PROFINET control active on the robot?)"
+        )
+    elif rx[0] == 0:
+        print(
+            "  -> byte 0 (SRCI version) is 0: RobotInData does not start with the SRCI telegram (module order?)"
+        )
+    print(
+        "  hints: step 1 + ERR_TIMEOUT_CMD -> the RC never reported INITIALIZED (state above);\n"
+        "         ERROR_163_TELEGRAM_LENGTH_MISMATCH -> --length must match the PROFINET module;\n"
+        "         steps 2..7 -> the RC is initialized, but does not answer a command\n"
+        "         (ReadMessages, ExchangeConfiguration, ReadRobotData) - run with --debug"
+    )
 
 
 # ---------------------------------------------------------------------------- info
@@ -345,7 +418,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     ap.add_argument("--timeout", type=float, default=15.0, help="time for the initialization [s]")
     ap.add_argument("--yes", action="store_true", help="move without asking")
-    ap.add_argument("--debug", action="store_true", help="log every telegram (logger srci.plc)")
+    ap.add_argument("--debug", action="store_true", help="show the whole log on the console as well")
+    ap.add_argument(
+        "--log", metavar="FILE", help="log file (default minicobo_<date>_<time>.log in the current folder)"
+    )
+    ap.add_argument("--no-log", action="store_true", help="no log file")
+    ap.add_argument("--trace-all", action="store_true", help="log file: every telegram (else only changes)")
     ap.add_argument("--sdk-tcp", action="store_true", help="dry run against the SDK simulator (no robot)")
     ap.add_argument("--fast", action="store_true", help="simulator only: do not wait for the cycle time")
     args = ap.parse_args(argv)
@@ -356,12 +434,20 @@ def main(argv: list[str] | None = None) -> int:
     if not (0 < args.velocity <= 100 or args.velocity == -1):
         ap.error("--velocity must be in 0 < x <= 100 or -1")
 
-    logging.basicConfig(level=logging.DEBUG if args.debug else logging.WARNING, format="%(name)s %(message)s")
+    if args.no_log:
+        args.log = None
+    elif args.log is None:
+        args.log = f"minicobo_{time.strftime('%Y%m%d_%H%M%S')}.log"
+    setup_logging(args)
+    if args.log:
+        print(f"log file {Path(args.log).resolve()}")
 
     target = "SDK simulator" if args.sdk_tcp else f"{args.host}:{args.port}"
     print(f"SRCI gateway {target}, telegrams {args.length}/{args.length} bytes")
     try:
         with open_transport(args) as (transport, simulator):
+            if args.log:
+                trace_telegrams(transport, args.trace_all)
             client = create_client(transport, args, simulator)
             try:
                 initialize(client, transport, args.timeout)
@@ -384,7 +470,7 @@ def main(argv: list[str] | None = None) -> int:
             "  is the PLC running, FB_SrciTcpGateway enabled (Listening) and the port open in the firewall?"
         )
         return 1
-    print("\ndone")
+    print("\ndone" + (f" - log file {Path(args.log).resolve()}" if args.log else ""))
     return 0
 
 

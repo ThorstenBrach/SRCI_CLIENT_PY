@@ -26,7 +26,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 31 | 31 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 41 | 66 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 43 | 68 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 70 | 216 |
 | [UT-PKG](#ut-pkg) | Package, logging | 15 | 15 |
-| | **Total** | **368** | **3568** |
+| | **Total** | **370** | **3570** |
 
 ## Test methodology
 
@@ -264,6 +264,8 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-039 | Minicobo rejects unsafe arguments | 4 | `test_minicobo_rejects_unsafe_arguments` |
 | SDK-LOOP-040 | A robot with only the profile "Core" (e.g. | 1 | `test_minicobo_shows_a_core_only_robot` |
 | SDK-LOOP-041 | The example calls only blocks of Core functions (the JAKA MiniCobo supports only Core). | 1 | `test_minicobo_uses_only_core_functions` |
+| SDK-LOOP-042 | The log file holds the system log of the library, the telegrams and the transport. | 1 | `test_minicobo_writes_a_log_file` |
+| SDK-LOOP-043 | The PLC answers, but RobotInData stays 0 (PROFINET not in data exchange): the diagnosis shows the step, the TelegramState and the raw headers. | 1 | `test_minicobo_diagnoses_a_robot_that_sends_nothing` |
 
 ## TCP
 

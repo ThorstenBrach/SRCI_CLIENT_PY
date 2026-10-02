@@ -772,6 +772,20 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-042",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_writes_a_log_file",
+  "title": "The log file holds the system log of the library, the telegrams and the transport.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-043",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_diagnoses_a_robot_that_sends_nothing",
+  "title": "The PLC answers, but RobotInData stays 0 (PROFINET not in data exchange): the diagnosis shows the step, the TelegramState and the raw headers.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",

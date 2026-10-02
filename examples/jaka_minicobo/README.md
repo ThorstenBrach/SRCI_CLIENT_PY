@@ -83,7 +83,10 @@ MoveAxesAbsolute to the target → MoveAxesAbsolute back → EnableRobot off.
 | `--lifesign-ms` | 100 | LifeSign timeout of the RC (sent with ExchangeConfiguration) |
 | `--timeout` | 15 | time for the initialization [s] |
 | `--yes` | – | move without confirmation |
-| `--debug` | – | log every telegram and every block (logger `srci.plc`) |
+| `--log FILE` | `minicobo_<date>_<time>.log` | log file in the current folder (see 7.) |
+| `--no-log` | – | no log file |
+| `--trace-all` | – | log file: every telegram (default: the first 50, every change of TelegramState/Control, every 100th) |
+| `--debug` | – | show the whole log on the console as well |
 | `--sdk-tcp`, `--fast` | – | dry run against the SDK simulator |
 
 ## 6. Troubleshooting
@@ -99,5 +102,58 @@ MoveAxesAbsolute to the target → MoveAxesAbsolute back → EnableRobot off.
 | `16#8E03 … Optional parameter value not supported` | the RC does not support an optional parameter (e.g. `VelocityRate`): `--velocity -1` |
 | move refused (`16#8xxx`) | the message text in the "Messages" section names the reason (mode, enable, limits) |
 
-With `--debug` every telegram and every state change of the RobotTask is logged; `transport`
-in the output shows round-trip times and reconnects.
+If the RobotTask does not initialize, the script prints a diagnosis: the step of the RobotTask,
+the TelegramState and the first 18 bytes of both telegrams. `RobotInData is all 0` means the PLC
+answers, but the robot sends nothing over PROFINET.
+
+## 7. Log file
+
+Every run writes `minicobo_<date>_<time>.log` into the current folder (path at the start and at
+the end of the output):
+
+| Logger | Content |
+|---|---|
+| `srci.plc` | system log of all function blocks at level DEBUG: state changes of the RobotTask, commands sent, responses, errors (the same texts as `SystemLog` in the PLC) |
+| `srci.telegram` | the raw telegrams as hex (`#n PLC->RC …`, `#n RC->PLC …`): the first 50 exchanges, every change of Control/TelegramState and every 100th; `--trace-all` logs every telegram |
+| `srci.transport` | connect, timeouts, reconnects |
+
+Header bytes for reading the telegram trace: PLC→RC byte 0 SRCI version (16#25 from this
+library), byte 1 LifeSign, bytes 2..5 lengths, byte 6 AxesGroupID (high nibble) / Control (low
+nibble: 1 INITIALIZE, 3 RESET); RC→PLC byte 1 LifeSign (high nibble), byte 3 TelegramState
+(254 READY_FOR_INITIALIZATION, 255 INITIALIZED, 161..173 errors).
+
+## 8. VS Code: run and debug
+
+Add a configuration to `.vscode/launch.json` of the `SRCI_PY` folder (the folder is not part of
+the repository; one entry per command / target):
+
+```json
+{
+  "name": "MiniCobo: info (robot, no motion)",
+  "type": "debugpy",
+  "request": "launch",
+  "program": "${workspaceFolder}/examples/jaka_minicobo/minicobo.py",
+  "args": ["info"],
+  "cwd": "${workspaceFolder}/examples/jaka_minicobo",
+  "console": "integratedTerminal",
+  "justMyCode": false
+}
+```
+
+Further entries: `"args": ["move", "--joint", "6", "--delta", "5"]` (the robot moves),
+`"args": ["info", "--sdk-tcp", "--fast"]` / `["move", "--sdk-tcp", "--fast", "--yes"]` (SDK
+simulator, breakpoints ok).
+
+1. Open the folder `SRCI_PY` in VS Code, install the extension "Python" (with "Python Debugger").
+2. Select the interpreter of the venv: Ctrl+Shift+P → "Python: Select Interpreter" →
+   `.venv\Scripts\python.exe`.
+3. Set a breakpoint (F9) and start a configuration with F5. `justMyCode` is off, so you can also
+   step into the library (`src/srci`, e.g. `MC_RobotTaskFB.py`).
+
+**Breakpoints with the real robot:** a breakpoint stops all threads, including the cycle thread
+of `SrciClient`. No telegram is sent while the program stands - after the LifeSign timeout
+(100 ms) the robot controller leaves the initialized state, and the TCP connection runs into its
+response timeout. After continuing, the RobotTask has to initialize again (restart the script).
+So: with the real robot use the log file; for stepping through the code use the configurations
+"against the SDK simulator" (`--sdk-tcp --fast`: the cycles run only while the script waits, a
+breakpoint does not break anything there).
