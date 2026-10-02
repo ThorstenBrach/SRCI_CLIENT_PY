@@ -723,6 +723,41 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-035",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_info_does_not_enable",
+  "title": "Info: initialization, robot data, SW limits and position over the TCP gateway - no enable.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-036",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_move_relative_and_back",
+  "title": "Move: one joint relative to the actual position and back, then disabled.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-037",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_move_is_cancelled_without_confirmation",
+  "title": "Move without --yes asks first; anything but yes cancels before the robot is enabled.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-038",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_reports_an_unreachable_gateway",
+  "title": "Minicobo reports an unreachable gateway",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-039",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_rejects_unsafe_arguments",
+  "title": "Minicobo rejects unsafe arguments",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",

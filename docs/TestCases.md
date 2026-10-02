@@ -26,7 +26,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 31 | 31 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 34 | 56 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 39 | 64 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 70 | 216 |
 | [UT-PKG](#ut-pkg) | Package, logging | 15 | 15 |
-| | **Total** | **361** | **3558** |
+| | **Total** | **366** | **3566** |
 
 ## Test methodology
 
@@ -257,6 +257,11 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-032 | Diagnosis for PLC tests: the Python client (one RobotTask cycle per telegram) sends the LifeSign without gaps; a PLC that runs its RobotTask several cycles per telegram shows gaps. | 1 | `test_sdk_server_reports_gaps_in_the_plc_lifesign` |
 | SDK-LOOP-033 | --dump diagnosis: the decoded headers show Control INITIALIZE and the TelegramState. | 1 | `test_sdk_server_dump_shows_the_initialization` |
 | SDK-LOOP-034 | --dump diagnosis: short telegrams and unknown Control/TelegramState values are shown. | 1 | `test_decode_header_of_short_or_unknown_values` |
+| SDK-LOOP-035 | Info: initialization, robot data, SW limits and position over the TCP gateway - no enable. | 1 | `test_minicobo_info_does_not_enable` |
+| SDK-LOOP-036 | Move: one joint relative to the actual position and back, then disabled. | 1 | `test_minicobo_move_relative_and_back` |
+| SDK-LOOP-037 | Move without --yes asks first; anything but yes cancels before the robot is enabled. | 1 | `test_minicobo_move_is_cancelled_without_confirmation` |
+| SDK-LOOP-038 | Minicobo reports an unreachable gateway | 1 | `test_minicobo_reports_an_unreachable_gateway` |
+| SDK-LOOP-039 | Minicobo rejects unsafe arguments | 4 | `test_minicobo_rejects_unsafe_arguments` |
 
 ## TCP
 
