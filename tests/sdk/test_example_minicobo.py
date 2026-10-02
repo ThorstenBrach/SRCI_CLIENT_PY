@@ -144,3 +144,22 @@ def test_minicobo_diagnoses_a_robot_that_sends_nothing(
     out = capsys.readouterr().out
     assert "RobotTask step / ErrorID       1 / 16#0006" in out
     assert "RobotInData is all 0" in out and "header PLC -> RC               25 " in out
+
+
+def test_minicobo_sends_an_older_srci_version(minicobo: ModuleType, tmp_path: Path) -> None:
+    """--srci-version 1.3: byte 0 of the PLC -> RC header is 16#23 (major 1 in bits 5..7, minor 3);
+    the version of the library is restored afterwards."""
+    from srci.types import RobotLibraryConstants
+
+    log = tmp_path / "v13.log"
+    assert minicobo.main(["info", "--sdk-tcp", "--fast", "--srci-version", "1.3", "--log", str(log)]) == 0
+    assert "PLC->RC 23 " in log.read_text(encoding="utf-8")
+    version = RobotLibraryConstants.SRCIVersion
+    assert (version.MajorVersion, version.MinorVersion) == (1, 5)
+
+
+@pytest.mark.parametrize("value", ["1", "1.x", "8.0", "1.32"])
+def test_minicobo_rejects_an_invalid_srci_version(minicobo: ModuleType, value: str) -> None:
+    with pytest.raises(SystemExit) as exc:
+        minicobo.main(["info", "--sdk-tcp", "--no-log", "--srci-version", value])
+    assert exc.value.code == 2

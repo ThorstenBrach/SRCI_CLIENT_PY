@@ -78,6 +78,7 @@ MoveAxesAbsolute to the target → MoveAxesAbsolute back → EnableRobot off.
 |---|---|---|
 | `--host`, `--port` | 192.168.2.10, 5000 | PLC gateway |
 | `--length` | 256 | telegram length per direction = PROFINET module size |
+| `--srci-version` | 1.5 | SRCI version in byte 0 of the header (e.g. `1.3` = 16#23 for an RC with an older SRCI version) |
 | `--joint`, `--delta` | 6, 5.0 | joint and relative move [deg] (`move`) |
 | `--override`, `--velocity` | 10, 10 | speed override / velocity rate [%] (`move`) |
 | `--lifesign-ms` | 100 | LifeSign timeout of the RC (sent with ExchangeConfiguration) |

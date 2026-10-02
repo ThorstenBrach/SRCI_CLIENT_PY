@@ -62,7 +62,7 @@ from srci.fb import (
 )
 from srci.logging_bridge import PythonLogger
 from srci.transport import TcpTransport, Transport, TransportConnectError
-from srci.types import MessageLevel, Severity
+from srci.types import MessageLevel, RobotLibraryConstants, Severity
 
 # ---------------------------------------------------------------------------- configuration
 
@@ -397,6 +397,11 @@ def read_position_quiet(client: SrciClient) -> Any:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("command", choices=["info", "move"])
+    ap.add_argument(
+        "--srci-version",
+        default="1.5",
+        help="SRCI version sent to the RC in byte 0 of the header, e.g. 1.3 (default 1.5 of the library)",
+    )
     ap.add_argument("--host", default=HOST, help=f"IP of the PLC gateway (default {HOST})")
     ap.add_argument("--port", type=int, default=PORT, help=f"TCP port of the PLC gateway (default {PORT})")
     ap.add_argument(
@@ -434,6 +439,13 @@ def main(argv: list[str] | None = None) -> int:
     if not (0 < args.velocity <= 100 or args.velocity == -1):
         ap.error("--velocity must be in 0 < x <= 100 or -1")
 
+    try:
+        major, minor = (int(part) for part in args.srci_version.split("."))
+        if not (0 <= major <= 7 and 0 <= minor <= 31):
+            raise ValueError
+    except ValueError:
+        ap.error("--srci-version must be <major>.<minor>, major 0..7, minor 0..31 (e.g. 1.3)")
+
     if args.no_log:
         args.log = None
     elif args.log is None:
@@ -443,7 +455,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"log file {Path(args.log).resolve()}")
 
     target = "SDK simulator" if args.sdk_tcp else f"{args.host}:{args.port}"
-    print(f"SRCI gateway {target}, telegrams {args.length}/{args.length} bytes")
+    print(f"SRCI gateway {target}, telegrams {args.length}/{args.length} bytes, SRCI version {major}.{minor}")
+    # The RobotTask sends the version of the library (RobotLibraryConstants.SRCIVersion, byte 0:
+    # bits 5..7 major, bits 0..4 minor). An RC with an older SRCI version (e.g. 1.3) may not
+    # answer 1.5: change it for this process. The RobotTask only checks the major version of the RC.
+    version = RobotLibraryConstants.SRCIVersion
+    saved = (version.MajorVersion, version.MinorVersion)
+    version.MajorVersion, version.MinorVersion = major, minor
+    try:
+        return run(args)
+    finally:
+        version.MajorVersion, version.MinorVersion = saved
+
+
+def run(args: argparse.Namespace) -> int:
     try:
         with open_transport(args) as (transport, simulator):
             if args.log:

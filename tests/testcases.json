@@ -786,6 +786,20 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-044",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_sends_an_older_srci_version",
+  "title": "--srci-version 1.3: byte 0 of the PLC -> RC header is 16#23 (major 1 in bits 5..7, minor 3); the version of the library is restored afterwards.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-045",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_rejects_an_invalid_srci_version",
+  "title": "Minicobo rejects an invalid srci version",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",
