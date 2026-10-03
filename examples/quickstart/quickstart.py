@@ -45,7 +45,7 @@ from srci.fb import (
     MC_ReadActualPositionFB,
 )
 from srci.transport import TcpTransport, Transport
-from srci.types import BlendingMode, MessageLevel, SyncMode
+from srci.types import BlendingMode, MessageLevel, SyncMode, TurnMode
 
 # ============================================================================= settings
 
@@ -66,6 +66,10 @@ RECTANGLE = (100.0, 80.0)  # size in X and Y [mm], horizontal, starting at the T
 #   EXACT_STOP       no blending (the robot stops at every corner)
 BLENDING_MODE = BlendingMode.RAMP_OVERLAP
 BLENDING_PARAMETER = 50.0
+# TurnMode of the linear moves: USE_TURN_NUMBER (spec default), SAME (keep the turn numbers), FREE.
+# The JAKA (JSI 1.6) rejects USE_TURN_NUMBER with 16#8E10. 'python minicobo.py blending' in
+# examples/jaka_minicobo shows which TurnMode and BlendingMode a robot accepts.
+TURN_MODE = TurnMode.SAME
 REACH = (150.0, 520.0)  # the corners must lie in this distance from the base axis [mm] (MiniCobo: 580)
 
 SIMULATION = "--sim" in sys.argv
@@ -214,6 +218,7 @@ try:
             move_linear = MC_MoveLinearAbsoluteFB()  # a new instance for every move
             move_linear.ParCmd.Position = target
             move_linear.ParCmd.VelocityRate = VELOCITY
+            move_linear.ParCmd.TurnMode = TURN_MODE
             move_linear.ParCmd.BlendingMode = BLENDING_MODE  # blend into the next move
             move_linear.ParCmd.BlendingParameter[0] = BLENDING_PARAMETER
             moves.append(move_linear)
@@ -231,6 +236,7 @@ try:
     #   target.Z += 50.0
     #   move_linear = MC_MoveLinearAbsoluteFB()
     #   move_linear.ParCmd.Position = target
+    #   move_linear.ParCmd.TurnMode = TURN_MODE
     #   move_linear.ParCmd.VelocityRate = VELOCITY
     #   client.execute(move_linear, timeout=60.0)
 

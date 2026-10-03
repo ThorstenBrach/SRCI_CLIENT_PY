@@ -66,7 +66,7 @@ from srci.fb import (
 )
 from srci.logging_bridge import PythonLogger
 from srci.transport import TcpTransport, Transport, TransportConnectError
-from srci.types import BlendingMode, MessageLevel, RobotLibraryConstants, Severity
+from srci.types import BlendingMode, MessageLevel, RobotLibraryConstants, Severity, TurnMode
 
 # ---------------------------------------------------------------------------- configuration
 
@@ -402,11 +402,62 @@ BLENDING_PROBES = [
 ]
 
 
+def _probe_pair(client: SrciClient, kind: str, mode: BlendingMode, par: tuple[float, float],
+                turn_mode: TurnMode) -> str:  # fmt: skip
+    """A tiny move with ``mode`` (1 mm up / J6 +0.5 deg) and an EXACT_STOP move back; the result of
+    the first one. A move the RC does not finish within 15 s is stopped (GroupStop + GroupReset)."""
+    out = client.execute(MC_ReadActualPositionFB()).OutCmd
+    first: Any
+    back: Any
+    if kind == "linear":
+        start_c = copy.deepcopy(out.ActualCartesianPosition)
+        up = copy.deepcopy(start_c)
+        up.Z += 1.0
+        first, back = MC_MoveLinearAbsoluteFB(), MC_MoveLinearAbsoluteFB()
+        first.ParCmd.Position, back.ParCmd.Position = up, start_c
+        first.ParCmd.TurnMode = back.ParCmd.TurnMode = turn_mode
+    else:
+        start_j = copy.deepcopy(out.ActualJointPosition)
+        turned = copy.deepcopy(start_j)
+        turned.J6 += 0.5
+        first, back = MC_MoveAxesAbsoluteFB(), MC_MoveAxesAbsoluteFB()
+        first.ParCmd.JointPosition, back.ParCmd.JointPosition = turned, start_j
+    first.ParCmd.BlendingMode = mode
+    first.ParCmd.BlendingParameter[0], first.ParCmd.BlendingParameter[1] = par
+    client.start(first)
+    client.start(back)  # BlendingMode EXACT_STOP (default)
+    try:
+        client.wait_done(first, timeout=15.0)
+        result = "accepted"
+    except CommandError as exc:
+        result = f"rejected 16#{exc.error_id:04X}" + {
+            0x8E05: " (BlendingMode not supported)",
+            0x8E10: " (TurnMode not supported)",
+        }.get(exc.error_id, "")
+    except WaitTimeoutError:
+        result = "no answer within 15 s"
+    hanging = result.startswith("no answer")
+    try:
+        client.wait_done(back, timeout=15.0)
+    except CommandError as exc:
+        if result == "accepted":
+            result = f"accepted, but the move back failed: {exc}"
+    except WaitTimeoutError:
+        hanging = True
+        if result == "accepted":
+            result = "accepted, but the move back did not finish within 15 s"
+    if hanging:  # a move is still running on the RC: stop it
+        client.execute(MC_GroupStopFB(), timeout=5.0, check=False)
+    if result != "accepted":  # reset the error of the rejected command
+        client.execute(MC_GroupResetFB(), timeout=5.0, check=False)
+    return result
+
+
 def probe_blending(client: SrciClient, args: argparse.Namespace) -> None:
-    """Which blending modes does the RC accept? For every mode and MoveLinearAbsolute /
-    MoveAxesAbsolute: a tiny move with that mode (1 mm up / J6 +0.5 deg) and back with EXACT_STOP.
-    16#8E05 = mode not supported (the command is rejected, the robot does not move)."""
-    section("Blending modes")
+    """Which TurnMode and which blending modes does the RC accept? Tiny moves (1 mm up / J6
+    +0.5 deg) and back. A rejected command is not executed (16#8E05: BlendingMode, 16#8E10:
+    TurnMode not supported)."""
+    section("TurnMode and blending modes")
     if not args.yes and not confirm(
         "THE ROBOT WILL MOVE A LITTLE (1 mm / 0.5 deg). Is the working area clear?"
     ):
@@ -414,48 +465,31 @@ def probe_blending(client: SrciClient, args: argparse.Namespace) -> None:
         return
     client.execute(MC_GroupResetFB())
     enable = client.enable(MC_EnableRobotFB())
-    results: list[tuple[str, str, str]] = []
     try:
         override = MC_ChangeSpeedOverrideFB()
         override.ParCmd.Override = args.override
         client.execute(override)
-        for mode, (p0, p1) in BLENDING_PROBES:
+        # 1. TurnMode of linear moves (without blending)
+        turn_ok = []
+        for turn_mode in TurnMode:
+            result = _probe_pair(client, "linear", BlendingMode.EXACT_STOP, (0.0, 0.0), turn_mode)
+            show(f"TurnMode {turn_mode.name}", result)
+            if result == "accepted":
+                turn_ok.append(turn_mode)
+        if not turn_ok:
+            show("blending", "not tested - no TurnMode works for MoveLinearAbsolute")
+            return
+        turn_mode = TurnMode.SAME if TurnMode.SAME in turn_ok else turn_ok[0]
+        # 2. blending modes (linear with the working TurnMode, joint moves)
+        supported = []
+        for mode, par in BLENDING_PROBES:
             for kind in ("linear", "axes"):
-                out = client.execute(MC_ReadActualPositionFB()).OutCmd
-                if kind == "linear":
-                    start_c = copy.deepcopy(out.ActualCartesianPosition)
-                    up = copy.deepcopy(start_c)
-                    up.Z += 1.0
-                    first: Any = MC_MoveLinearAbsoluteFB()
-                    first.ParCmd.Position = up
-                    back: Any = MC_MoveLinearAbsoluteFB()
-                    back.ParCmd.Position = start_c
-                else:
-                    start_j = copy.deepcopy(out.ActualJointPosition)
-                    turned = copy.deepcopy(start_j)
-                    turned.J6 += 0.5
-                    first = MC_MoveAxesAbsoluteFB()
-                    first.ParCmd.JointPosition = turned
-                    back = MC_MoveAxesAbsoluteFB()
-                    back.ParCmd.JointPosition = start_j
-                first.ParCmd.BlendingMode = mode
-                first.ParCmd.BlendingParameter[0], first.ParCmd.BlendingParameter[1] = p0, p1
-                client.start(first)
-                client.start(back)  # BlendingMode EXACT_STOP (default)
-                try:
-                    client.wait_done(first, timeout=30.0)
-                    result = "accepted"
-                except CommandError as exc:
-                    result = (
-                        "not supported (16#8E05)"
-                        if exc.error_id == 0x8E05
-                        else f"error 16#{exc.error_id:04X}"
-                    )
-                client.wait_done(back, timeout=30.0, check=False)
-                results.append((mode.name, kind, result))
+                result = _probe_pair(client, kind, mode, par, turn_mode)
                 show(f"{mode.name} ({kind})", result)
-                if result != "accepted":
-                    client.execute(MC_GroupResetFB(), check=False)
+                if result == "accepted":
+                    supported.append(f"{mode.name} ({kind})")
+        show("TurnMode for linear moves", ", ".join(t.name for t in turn_ok))
+        show("blending supported", ", ".join(supported) if supported else "none - use EXACT_STOP")
     except BaseException:
         print("\n  stopping the robot (GroupStop)")
         with contextlib.suppress(Exception):
@@ -463,8 +497,6 @@ def probe_blending(client: SrciClient, args: argparse.Namespace) -> None:
         raise
     finally:
         client.disable(enable)
-    supported = sorted({m for m, _, r in results if r == "accepted"})
-    show("supported", ", ".join(supported) if supported else "none - use EXACT_STOP")
 
 
 def read_position_quiet(client: SrciClient) -> Any:
