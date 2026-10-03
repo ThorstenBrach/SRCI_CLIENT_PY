@@ -75,11 +75,11 @@ if SIMULATION:
     sim.set_move_cycles(100)  # a simulated move takes 1 s
     transport = sdk_transport(sim, TELEGRAM_LENGTH, TELEGRAM_LENGTH)
 else:
-    if (
-        "--yes" not in sys.argv
-        and input("THE ROBOT WILL MOVE. Is the working area clear? [yes/no] ") != "yes"
-    ):
-        sys.exit(0)
+    if "--yes" not in sys.argv:
+        answer = input("THE ROBOT WILL MOVE. Is the working area clear? [y/n] ")
+        if answer.strip().lower() not in ("y", "yes", "j", "ja"):
+            print("cancelled")
+            sys.exit(0)
     transport = TcpTransport(HOST, PORT, TELEGRAM_LENGTH, TELEGRAM_LENGTH, response_timeout=0.1)
 
 # the client runs the RobotTask cyclically in the background (like a PLC task)
