@@ -115,7 +115,7 @@ def test_minicobo_uses_only_core_functions() -> None:
 
     used = set(re.findall(r"MC_(\w+?)FB\(", SCRIPT.read_text(encoding="utf-8")))
     core = {"GroupReset", "EnableRobot", "ChangeSpeedOverride", "ReadRobotSWLimits", "ReadActualPosition",
-            "MoveAxesAbsolute", "MoveLinearAbsolute", "GroupStop"}  # fmt: skip
+            "MoveAxesAbsolute", "MoveLinearAbsolute", "GroupStop", "GroupContinue"}  # fmt: skip
     assert used and used <= core, used - core
 
 

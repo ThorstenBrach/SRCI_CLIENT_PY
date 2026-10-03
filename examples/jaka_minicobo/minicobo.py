@@ -57,6 +57,7 @@ from srci.api import CommandError, SrciClient, WaitTimeoutError
 from srci.fb import (
     MC_ChangeSpeedOverrideFB,
     MC_EnableRobotFB,
+    MC_GroupContinueFB,
     MC_GroupResetFB,
     MC_GroupStopFB,
     MC_MoveAxesAbsoluteFB,
@@ -400,6 +401,13 @@ def move_relative(client: SrciClient, args: argparse.Namespace) -> None:
         show("EnableRobot.Enabled", enable.Enabled)
 
 
+PROBE_ERRORS = {
+    0x8E05: " (BlendingMode not supported)",
+    0x8E09: " (ConfigMode not supported)",
+    0x8E10: " (TurnMode not supported)",
+    0x8E19: " (ConfigModes must be identical)",
+}
+
 # blending modes of spec table 6-9 with a typical parameter ([0], [1])
 BLENDING_PROBES = [
     (BlendingMode.DEFINED_VELOCITY, (50.0, 0.0)),  # velocity at the corner [%]
@@ -414,7 +422,7 @@ BLENDING_PROBES = [
 def _probe_pair(client: SrciClient, kind: str, mode: BlendingMode, par: tuple[float, float],
                 turn_mode: TurnMode, config_mode: int = 0) -> str:  # fmt: skip
     """A tiny move with ``mode`` (1 mm up / J6 +0.5 deg) and an EXACT_STOP move back; the result of
-    the first one. A move the RC does not finish within 15 s is stopped (GroupStop + GroupReset)."""
+    the first one. After a failed probe: GroupStop, GroupReset, GroupContinue."""
     out = client.execute(MC_ReadActualPositionFB()).OutCmd
     first: Any
     back: Any
@@ -437,33 +445,45 @@ def _probe_pair(client: SrciClient, kind: str, mode: BlendingMode, par: tuple[fl
         first.ParCmd.JointPosition, back.ParCmd.JointPosition = turned, start_j
     first.ParCmd.BlendingMode = mode
     first.ParCmd.BlendingParameter[0], first.ParCmd.BlendingParameter[1] = par
+    # 1. the probe move alone: a rejected command answers with ERROR at once; an accepted one
+    #    with blending may wait (BUFFERED) for its successor
     client.start(first)
-    client.start(back)  # BlendingMode EXACT_STOP (default)
-    try:
-        client.wait_done(first, timeout=15.0)
-        result = "accepted"
-    except CommandError as exc:
-        result = f"rejected 16#{exc.error_id:04X}" + {
-            0x8E05: " (BlendingMode not supported)",
-            0x8E10: " (TurnMode not supported)",
-        }.get(exc.error_id, "")
-    except WaitTimeoutError:
-        result = "no answer within 15 s"
-    hanging = result.startswith("no answer")
-    try:
-        # after a rejected first move some RCs (JAKA) keep the move back INTERRUPTED -> stop it soon
-        client.wait_done(back, timeout=15.0 if result == "accepted" else 3.0)
-    except CommandError as exc:
-        if result == "accepted":
-            result = f"accepted, but the move back failed: {exc}"
-    except WaitTimeoutError:
-        hanging = True
-        if result == "accepted":
-            result = "accepted, but the move back did not finish within 15 s"
-    if hanging:  # a move is still running on the RC: stop it
-        client.execute(MC_GroupStopFB(), timeout=5.0, check=False)
-    if result != "accepted":  # reset the error of the rejected command
+    seen: dict[str, int] = {}
+
+    def answered() -> bool:
+        if first.Error:
+            seen["error"] = int(first.ErrorID)
+        return bool(first.Error or first.Done or first.Active or first.CommandAborted)
+
+    with contextlib.suppress(WaitTimeoutError):
+        client.run_until(answered, 2.0, "probe move")
+    if "error" in seen:
+        client.wait_done(first, timeout=5.0, check=False)
+        code = seen["error"]
+        result = f"rejected 16#{code:04X}" + PROBE_ERRORS.get(code, "")
+    else:
+        # 2. accepted (or still waiting): the move back with EXACT_STOP
+        client.start(back)
+        try:
+            client.wait_done(first, timeout=15.0)
+            result = "accepted"
+        except CommandError as exc:
+            result = f"rejected 16#{exc.error_id:04X}" + PROBE_ERRORS.get(exc.error_id, "")
+        except WaitTimeoutError:
+            result = "no answer within 15 s"
+        try:
+            client.wait_done(back, timeout=15.0 if result == "accepted" else 3.0)
+        except (CommandError, WaitTimeoutError) as exc:
+            if result == "accepted":
+                result = f"accepted, but the move back failed: {exc}"
+    if result != "accepted":
+        # after an error the JAKA interrupts the sequence: the next moves stay INTERRUPTED until
+        # GroupContinue -> reset the error, stop a move that is still running, continue
+        # (not GroupStop followed by GroupReset: then the SDK simulator finishes no more moves)
         client.execute(MC_GroupResetFB(), timeout=5.0, check=False)
+        if "error" not in seen:  # the move back was sent and may still wait
+            client.execute(MC_GroupStopFB(), timeout=5.0, check=False)
+        client.execute(MC_GroupContinueFB(), timeout=5.0, check=False)
     return result
 
 
