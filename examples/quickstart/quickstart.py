@@ -25,8 +25,9 @@
     python quickstart.py            robot behind the PLC gateway (THE ROBOT MOVES)
     python quickstart.py --sim      SRCI SDK simulator instead of a robot (no PLC needed)
 
-All moves are relative to the position of the robot at the start and end there again. Add your
-own moves in ``program()``.
+Read from top to bottom: ``main()`` (connect, switch on the robot, run the program, switch off),
+``program()`` (the moves - add your own there), the helper functions. All moves are relative to
+the position of the robot at the start and end there again.
 """
 
 from __future__ import annotations
@@ -57,88 +58,7 @@ OVERRIDE = 30.0  # speed override [%] for all moves
 VELOCITY = 30.0  # velocity of each move [% of the reference velocity]
 
 
-# ----------------------------------------------------------------------------- helpers
-
-
-def read_position(client: SrciClient) -> tuple[RobotJointPosition, RobotCartesianPosition]:
-    """Actual position: (joints [deg], cartesian [mm / deg])."""
-    out = client.execute(MC_ReadActualPositionFB()).OutCmd
-    return out.ActualJointPosition, out.ActualCartesianPosition
-
-
-def move_joints(client: SrciClient, target: RobotJointPosition) -> None:
-    """PTP move in joint space to ``target`` (RobotJointPosition, degrees)."""
-    move = MC_MoveAxesAbsoluteFB()
-    move.ParCmd.JointPosition = copy.deepcopy(target)
-    move.ParCmd.VelocityRate = VELOCITY
-    client.execute(move, timeout=60.0)
-
-
-def move_linear(client: SrciClient, target: RobotCartesianPosition) -> None:
-    """Straight line of the TCP to ``target`` (RobotCartesianPosition, mm / degrees)."""
-    move = MC_MoveLinearAbsoluteFB()
-    move.ParCmd.Position = copy.deepcopy(target)
-    move.ParCmd.VelocityRate = VELOCITY
-    client.execute(move, timeout=60.0)
-
-
-def move_direct(client: SrciClient, target: RobotCartesianPosition) -> None:
-    """PTP move to a cartesian ``target`` (the TCP path is not a straight line)."""
-    move = MC_MoveDirectAbsoluteFB()
-    move.ParCmd.Position = copy.deepcopy(target)
-    move.ParCmd.VelocityRate = VELOCITY
-    client.execute(move, timeout=60.0)
-
-
-def show(text: str, client: SrciClient) -> None:
-    joints, tcp = read_position(client)
-    print(f"{text:<28} J1..J6 = " + " ".join(f"{getattr(joints, f'J{i}'):7.2f}" for i in range(1, 7))
-          + f"   XYZ = {tcp.X:7.1f} {tcp.Y:7.1f} {tcp.Z:7.1f}")  # fmt: skip
-
-
-# ----------------------------------------------------------------------------- the program
-
-
-def program(client: SrciClient) -> None:
-    """The moves. Every target is computed from the start position - change the offsets or add
-    lines like these. Check the directions with a low OVERRIDE first: which way +20 deg on J2/J3
-    goes depends on the robot and its start pose."""
-    start_joints, _ = read_position(client)
-    show("start", client)
-
-    # 1. joint move: base (J1) +20 deg
-    target = copy.deepcopy(start_joints)
-    target.J1 += 20.0
-    move_joints(client, target)
-    show("1. J1 +20 deg", client)
-
-    # 2. joint move: bend shoulder (J2) and elbow (J3) - the TCP moves out of the upright pose
-    target.J2 += 20.0
-    target.J3 += 20.0
-    move_joints(client, target)
-    show("2. J2/J3 +20 deg", client)
-
-    # 3. straight line: TCP 50 mm down (Z), orientation unchanged
-    _, tcp = read_position(client)
-    work = copy.deepcopy(tcp)
-    tcp.Z -= 50.0
-    move_linear(client, tcp)
-    show("3. linear Z -50 mm", client)
-
-    # 4. cartesian PTP: back 50 mm up
-    move_direct(client, work)
-    show("4. direct Z +50 mm", client)
-
-    # your moves here, e.g.:
-    #   target.J6 += 30.0
-    #   move_joints(client, target)
-
-    # back to the start
-    move_joints(client, start_joints)
-    show("back at start", client)
-
-
-# ----------------------------------------------------------------------------- main
+# ----------------------------------------------------------------------------- main: connect, switch on, run the program, switch off
 
 
 def main(argv: list[str]) -> int:
@@ -184,6 +104,87 @@ def main(argv: list[str]) -> int:
             client.disable(enable)
     print("done")
     return 0
+
+
+# ----------------------------------------------------------------------------- the program
+
+
+def program(client: SrciClient) -> None:
+    """The moves. Every target is computed from the start position - change the offsets or add
+    lines like these. Check the directions with a low OVERRIDE first: which way +20 deg on J2/J3
+    goes depends on the robot and its start pose."""
+    start_joints, _ = read_position(client)
+    show("start", client)
+
+    # 1. joint move: base (J1) +20 deg
+    target = copy.deepcopy(start_joints)
+    target.J1 += 20.0
+    move_joints(client, target)
+    show("1. J1 +20 deg", client)
+
+    # 2. joint move: bend shoulder (J2) and elbow (J3) - the TCP moves out of the upright pose
+    target.J2 += 20.0
+    target.J3 += 20.0
+    move_joints(client, target)
+    show("2. J2/J3 +20 deg", client)
+
+    # 3. straight line: TCP 50 mm down (Z), orientation unchanged
+    _, tcp = read_position(client)
+    work = copy.deepcopy(tcp)
+    tcp.Z -= 50.0
+    move_linear(client, tcp)
+    show("3. linear Z -50 mm", client)
+
+    # 4. cartesian PTP: back 50 mm up
+    move_direct(client, work)
+    show("4. direct Z +50 mm", client)
+
+    # your moves here, e.g.:
+    #   target.J6 += 30.0
+    #   move_joints(client, target)
+
+    # back to the start
+    move_joints(client, start_joints)
+    show("back at start", client)
+
+
+# ----------------------------------------------------------------------------- helpers (used by program)
+
+
+def read_position(client: SrciClient) -> tuple[RobotJointPosition, RobotCartesianPosition]:
+    """Actual position: (joints [deg], cartesian [mm / deg])."""
+    out = client.execute(MC_ReadActualPositionFB()).OutCmd
+    return out.ActualJointPosition, out.ActualCartesianPosition
+
+
+def move_joints(client: SrciClient, target: RobotJointPosition) -> None:
+    """PTP move in joint space to ``target`` (RobotJointPosition, degrees)."""
+    move = MC_MoveAxesAbsoluteFB()
+    move.ParCmd.JointPosition = copy.deepcopy(target)
+    move.ParCmd.VelocityRate = VELOCITY
+    client.execute(move, timeout=60.0)
+
+
+def move_linear(client: SrciClient, target: RobotCartesianPosition) -> None:
+    """Straight line of the TCP to ``target`` (RobotCartesianPosition, mm / degrees)."""
+    move = MC_MoveLinearAbsoluteFB()
+    move.ParCmd.Position = copy.deepcopy(target)
+    move.ParCmd.VelocityRate = VELOCITY
+    client.execute(move, timeout=60.0)
+
+
+def move_direct(client: SrciClient, target: RobotCartesianPosition) -> None:
+    """PTP move to a cartesian ``target`` (the TCP path is not a straight line)."""
+    move = MC_MoveDirectAbsoluteFB()
+    move.ParCmd.Position = copy.deepcopy(target)
+    move.ParCmd.VelocityRate = VELOCITY
+    client.execute(move, timeout=60.0)
+
+
+def show(text: str, client: SrciClient) -> None:
+    joints, tcp = read_position(client)
+    print(f"{text:<28} J1..J6 = " + " ".join(f"{getattr(joints, f'J{i}'):7.2f}" for i in range(1, 7))
+          + f"   XYZ = {tcp.X:7.1f} {tcp.Y:7.1f} {tcp.Z:7.1f}")  # fmt: skip
 
 
 if __name__ == "__main__":
