@@ -27,6 +27,9 @@
     connect, initialize, show robot data, configuration, SW limits, position and messages.
     The robot is **not** enabled and does not move.
 
+``python minicobo.py blending``
+    which blending modes the RC accepts (tiny moves: 1 mm up / J6 +0.5 deg and back).
+
 ``python minicobo.py move --joint 6 --delta 5``
     enable the robot, move ONE joint by a few degrees relative to its current position
     (slow: override and velocity in %), move back, disable. **The robot moves.** Asks for
@@ -57,12 +60,13 @@ from srci.fb import (
     MC_GroupResetFB,
     MC_GroupStopFB,
     MC_MoveAxesAbsoluteFB,
+    MC_MoveLinearAbsoluteFB,
     MC_ReadActualPositionFB,
     MC_ReadRobotSWLimitsFB,
 )
 from srci.logging_bridge import PythonLogger
 from srci.transport import TcpTransport, Transport, TransportConnectError
-from srci.types import MessageLevel, RobotLibraryConstants, Severity
+from srci.types import BlendingMode, MessageLevel, RobotLibraryConstants, Severity
 
 # ---------------------------------------------------------------------------- configuration
 
@@ -387,6 +391,82 @@ def move_relative(client: SrciClient, args: argparse.Namespace) -> None:
         show("EnableRobot.Enabled", enable.Enabled)
 
 
+# blending modes of spec table 6-9 with a typical parameter ([0], [1])
+BLENDING_PROBES = [
+    (BlendingMode.DEFINED_VELOCITY, (50.0, 0.0)),  # velocity at the corner [%]
+    (BlendingMode.CORNER_DISTANCE, (5.0, 0.0)),  # radius [mm]
+    (BlendingMode.MAX_CORNER_DEVIATION, (2.0, 0.0)),  # deviation [mm]
+    (BlendingMode.CORNER_DISTANCE_2R, (5.0, 5.0)),  # radius before / after [mm]
+    (BlendingMode.RAMP_OVERLAP, (50.0, 0.0)),  # overlap of the ramps [%]
+    (BlendingMode.CORNER_DISTANCE_1R, (5.0, 0.0)),  # radius [mm]
+]
+
+
+def probe_blending(client: SrciClient, args: argparse.Namespace) -> None:
+    """Which blending modes does the RC accept? For every mode and MoveLinearAbsolute /
+    MoveAxesAbsolute: a tiny move with that mode (1 mm up / J6 +0.5 deg) and back with EXACT_STOP.
+    16#8E05 = mode not supported (the command is rejected, the robot does not move)."""
+    section("Blending modes")
+    if not args.yes and not confirm(
+        "THE ROBOT WILL MOVE A LITTLE (1 mm / 0.5 deg). Is the working area clear?"
+    ):
+        print("  cancelled")
+        return
+    client.execute(MC_GroupResetFB())
+    enable = client.enable(MC_EnableRobotFB())
+    results: list[tuple[str, str, str]] = []
+    try:
+        override = MC_ChangeSpeedOverrideFB()
+        override.ParCmd.Override = args.override
+        client.execute(override)
+        for mode, (p0, p1) in BLENDING_PROBES:
+            for kind in ("linear", "axes"):
+                out = client.execute(MC_ReadActualPositionFB()).OutCmd
+                if kind == "linear":
+                    start_c = copy.deepcopy(out.ActualCartesianPosition)
+                    up = copy.deepcopy(start_c)
+                    up.Z += 1.0
+                    first: Any = MC_MoveLinearAbsoluteFB()
+                    first.ParCmd.Position = up
+                    back: Any = MC_MoveLinearAbsoluteFB()
+                    back.ParCmd.Position = start_c
+                else:
+                    start_j = copy.deepcopy(out.ActualJointPosition)
+                    turned = copy.deepcopy(start_j)
+                    turned.J6 += 0.5
+                    first = MC_MoveAxesAbsoluteFB()
+                    first.ParCmd.JointPosition = turned
+                    back = MC_MoveAxesAbsoluteFB()
+                    back.ParCmd.JointPosition = start_j
+                first.ParCmd.BlendingMode = mode
+                first.ParCmd.BlendingParameter[0], first.ParCmd.BlendingParameter[1] = p0, p1
+                client.start(first)
+                client.start(back)  # BlendingMode EXACT_STOP (default)
+                try:
+                    client.wait_done(first, timeout=30.0)
+                    result = "accepted"
+                except CommandError as exc:
+                    result = (
+                        "not supported (16#8E05)"
+                        if exc.error_id == 0x8E05
+                        else f"error 16#{exc.error_id:04X}"
+                    )
+                client.wait_done(back, timeout=30.0, check=False)
+                results.append((mode.name, kind, result))
+                show(f"{mode.name} ({kind})", result)
+                if result != "accepted":
+                    client.execute(MC_GroupResetFB(), check=False)
+    except BaseException:
+        print("\n  stopping the robot (GroupStop)")
+        with contextlib.suppress(Exception):
+            client.execute(MC_GroupStopFB(), timeout=5.0)
+        raise
+    finally:
+        client.disable(enable)
+    supported = sorted({m for m, _, r in results if r == "accepted"})
+    show("supported", ", ".join(supported) if supported else "none - use EXACT_STOP")
+
+
 def read_position_quiet(client: SrciClient) -> Any:
     return client.execute(MC_ReadActualPositionFB()).OutCmd.ActualJointPosition
 
@@ -396,7 +476,7 @@ def read_position_quiet(client: SrciClient) -> Any:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["info", "move"])
+    ap.add_argument("command", choices=["info", "move", "blending"])
     ap.add_argument(
         "--srci-version",
         default="1.5",
@@ -480,6 +560,8 @@ def run(args: argparse.Namespace) -> int:
                 if args.command == "info":
                     read_limits(client)
                     read_position(client)
+                elif args.command == "blending":
+                    probe_blending(client, args)
                 else:
                     move_relative(client, args)
                 show_messages(client, transport)

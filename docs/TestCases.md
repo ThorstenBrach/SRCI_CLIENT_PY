@@ -26,7 +26,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 31 | 31 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 46 | 74 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 47 | 75 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 70 | 216 |
 | [UT-PKG](#ut-pkg) | Package, logging | 15 | 15 |
-| | **Total** | **373** | **3576** |
+| | **Total** | **374** | **3577** |
 
 ## Test methodology
 
@@ -269,6 +269,7 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-044 | --srci-version 1.3: byte 0 of the PLC -> RC header is 16#23 (major 1 in bits 5..7, minor 3); the version of the library is restored afterwards. | 1 | `test_minicobo_sends_an_older_srci_version` |
 | SDK-LOOP-045 | Minicobo rejects an invalid srci version | 4 | `test_minicobo_rejects_an_invalid_srci_version` |
 | SDK-LOOP-046 | Initialization with the listed ParCfg, GroupReset, EnableRobot, override, joint move into the elbow-bent pose, rectangle with 4 linear moves, back to the start position, disable (the script runs from top to bottom, so it is started as a process). | 1 | `test_quickstart_initializes_enables_moves_and_returns` |
+| SDK-LOOP-047 | Blending: every BlendingMode is tried with MoveLinearAbsolute and MoveAxesAbsolute; the simulator (harness) supports CORNER_DISTANCE and RAMP_OVERLAP, the others are 16#8E05. | 1 | `test_minicobo_probes_the_blending_modes` |
 
 ## TCP
 

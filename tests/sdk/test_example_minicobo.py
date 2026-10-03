@@ -115,7 +115,7 @@ def test_minicobo_uses_only_core_functions() -> None:
 
     used = set(re.findall(r"MC_(\w+?)FB\(", SCRIPT.read_text(encoding="utf-8")))
     core = {"GroupReset", "EnableRobot", "ChangeSpeedOverride", "ReadRobotSWLimits", "ReadActualPosition",
-            "MoveAxesAbsolute", "GroupStop"}  # fmt: skip
+            "MoveAxesAbsolute", "MoveLinearAbsolute", "GroupStop"}  # fmt: skip
     assert used and used <= core, used - core
 
 
@@ -163,3 +163,13 @@ def test_minicobo_rejects_an_invalid_srci_version(minicobo: ModuleType, value: s
     with pytest.raises(SystemExit) as exc:
         minicobo.main(["info", "--sdk-tcp", "--no-log", "--srci-version", value])
     assert exc.value.code == 2
+
+
+def test_minicobo_probes_the_blending_modes(minicobo: ModuleType, capsys: pytest.CaptureFixture[str]) -> None:
+    """blending: every BlendingMode is tried with MoveLinearAbsolute and MoveAxesAbsolute; the
+    simulator (harness) supports CORNER_DISTANCE and RAMP_OVERLAP, the others are 16#8E05."""
+    assert minicobo.main(["blending", "--sdk-tcp", "--fast", "--yes", "--no-log"]) == 0
+    out = capsys.readouterr().out
+    assert "CORNER_DISTANCE (linear)       accepted" in out
+    assert "DEFINED_VELOCITY (axes)        not supported (16#8E05)" in out
+    assert "supported                      CORNER_DISTANCE, RAMP_OVERLAP" in out

@@ -807,6 +807,13 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-047",
+  "test": "tests/sdk/test_example_minicobo.py::test_minicobo_probes_the_blending_modes",
+  "title": "Blending: every BlendingMode is tried with MoveLinearAbsolute and MoveAxesAbsolute; the simulator (harness) supports CORNER_DISTANCE and RAMP_OVERLAP, the others are 16#8E05.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",
