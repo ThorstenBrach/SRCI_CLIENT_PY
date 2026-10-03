@@ -66,7 +66,16 @@ from srci.fb import (
 )
 from srci.logging_bridge import PythonLogger
 from srci.transport import TcpTransport, Transport, TransportConnectError
-from srci.types import BlendingMode, MessageLevel, RobotLibraryConstants, Severity, TurnMode
+from srci.types import (
+    ArmConfigElbow,
+    ArmConfigShoulder,
+    ArmConfigWrist,
+    BlendingMode,
+    MessageLevel,
+    RobotLibraryConstants,
+    Severity,
+    TurnMode,
+)
 
 # ---------------------------------------------------------------------------- configuration
 
@@ -403,7 +412,7 @@ BLENDING_PROBES = [
 
 
 def _probe_pair(client: SrciClient, kind: str, mode: BlendingMode, par: tuple[float, float],
-                turn_mode: TurnMode) -> str:  # fmt: skip
+                turn_mode: TurnMode, config_mode: int = 0) -> str:  # fmt: skip
     """A tiny move with ``mode`` (1 mm up / J6 +0.5 deg) and an EXACT_STOP move back; the result of
     the first one. A move the RC does not finish within 15 s is stopped (GroupStop + GroupReset)."""
     out = client.execute(MC_ReadActualPositionFB()).OutCmd
@@ -416,6 +425,10 @@ def _probe_pair(client: SrciClient, kind: str, mode: BlendingMode, par: tuple[fl
         first, back = MC_MoveLinearAbsoluteFB(), MC_MoveLinearAbsoluteFB()
         first.ParCmd.Position, back.ParCmd.Position = up, start_c
         first.ParCmd.TurnMode = back.ParCmd.TurnMode = turn_mode
+        for move in (first, back):  # ConfigMode: 0 USE_CONFIG, 1 SAME, 2 FREE for shoulder, elbow, wrist
+            move.ParCmd.ConfigMode.Shoulder = ArmConfigShoulder(config_mode)
+            move.ParCmd.ConfigMode.Elbow = ArmConfigElbow(config_mode)
+            move.ParCmd.ConfigMode.Wrist = ArmConfigWrist(config_mode)
     else:
         start_j = copy.deepcopy(out.ActualJointPosition)
         turned = copy.deepcopy(start_j)
@@ -438,7 +451,8 @@ def _probe_pair(client: SrciClient, kind: str, mode: BlendingMode, par: tuple[fl
         result = "no answer within 15 s"
     hanging = result.startswith("no answer")
     try:
-        client.wait_done(back, timeout=15.0)
+        # after a rejected first move some RCs (JAKA) keep the move back INTERRUPTED -> stop it soon
+        client.wait_done(back, timeout=15.0 if result == "accepted" else 3.0)
     except CommandError as exc:
         if result == "accepted":
             result = f"accepted, but the move back failed: {exc}"
@@ -469,26 +483,30 @@ def probe_blending(client: SrciClient, args: argparse.Namespace) -> None:
         override = MC_ChangeSpeedOverrideFB()
         override.ParCmd.Override = args.override
         client.execute(override)
-        # 1. TurnMode of linear moves (without blending)
-        turn_ok = []
-        for turn_mode in TurnMode:
-            result = _probe_pair(client, "linear", BlendingMode.EXACT_STOP, (0.0, 0.0), turn_mode)
-            show(f"TurnMode {turn_mode.name}", result)
-            if result == "accepted":
-                turn_ok.append(turn_mode)
-        if not turn_ok:
-            show("blending", "not tested - no TurnMode works for MoveLinearAbsolute")
+        # 1. TurnMode x ConfigMode of linear moves (without blending)
+        combos: list[tuple[TurnMode, int]] = []
+        for tm in TurnMode:
+            for cm in (ArmConfigShoulder.USE_CONFIG, ArmConfigShoulder.SAME, ArmConfigShoulder.FREE):
+                result = _probe_pair(client, "linear", BlendingMode.EXACT_STOP, (0.0, 0.0), tm, cm)
+                show(f"TurnMode {tm.name}, ConfigMode {cm.name}", result)
+                if result == "accepted":
+                    combos.append((tm, int(cm)))
+        if not combos:
+            show("blending", "not tested - no TurnMode / ConfigMode works for MoveLinearAbsolute")
             return
-        turn_mode = TurnMode.SAME if TurnMode.SAME in turn_ok else turn_ok[0]
+        turn_mode, config_mode = combos[0]
         # 2. blending modes (linear with the working TurnMode, joint moves)
         supported = []
         for mode, par in BLENDING_PROBES:
             for kind in ("linear", "axes"):
-                result = _probe_pair(client, kind, mode, par, turn_mode)
+                result = _probe_pair(client, kind, mode, par, turn_mode, config_mode)
                 show(f"{mode.name} ({kind})", result)
                 if result == "accepted":
                     supported.append(f"{mode.name} ({kind})")
-        show("TurnMode for linear moves", ", ".join(t.name for t in turn_ok))
+        show(
+            "linear: TurnMode / ConfigMode",
+            ", ".join(f"{t.name}/{ArmConfigShoulder(c).name}" for t, c in combos),
+        )
         show("blending supported", ", ".join(supported) if supported else "none - use EXACT_STOP")
     except BaseException:
         print("\n  stopping the robot (GroupStop)")

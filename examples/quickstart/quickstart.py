@@ -45,7 +45,15 @@ from srci.fb import (
     MC_ReadActualPositionFB,
 )
 from srci.transport import TcpTransport, Transport
-from srci.types import BlendingMode, MessageLevel, SyncMode, TurnMode
+from srci.types import (
+    ArmConfigElbow,
+    ArmConfigShoulder,
+    ArmConfigWrist,
+    BlendingMode,
+    MessageLevel,
+    SyncMode,
+    TurnMode,
+)
 
 # ============================================================================= settings
 
@@ -66,10 +74,14 @@ RECTANGLE = (100.0, 80.0)  # size in X and Y [mm], horizontal, starting at the T
 #   EXACT_STOP       no blending (the robot stops at every corner)
 BLENDING_MODE = BlendingMode.RAMP_OVERLAP
 BLENDING_PARAMETER = 50.0
-# TurnMode of the linear moves: USE_TURN_NUMBER (spec default), SAME (keep the turn numbers), FREE.
-# The JAKA (JSI 1.6) rejects USE_TURN_NUMBER with 16#8E10. 'python minicobo.py blending' in
-# examples/jaka_minicobo shows which TurnMode and BlendingMode a robot accepts.
-TURN_MODE = TurnMode.SAME
+# TurnMode and ConfigMode (shoulder, elbow, wrist) of the linear moves - optional parameters, not
+# every RC supports every value (16#8E10 TurnMode, 16#8E09 ConfigMode not supported):
+#   TurnMode:   USE_TURN_NUMBER (spec default), SAME (keep the turn numbers), FREE
+#   ConfigMode: USE_CONFIG (spec default, config of the target position), SAME, FREE
+# The JAKA (JSI 1.6) rejects TurnMode USE_TURN_NUMBER and SAME. 'python minicobo.py blending' in
+# examples/jaka_minicobo shows which TurnMode, ConfigMode and BlendingMode a robot accepts.
+TURN_MODE = TurnMode.FREE
+CONFIG_MODE = 1  # 0 USE_CONFIG, 1 SAME, 2 FREE (for shoulder, elbow and wrist)
 REACH = (150.0, 520.0)  # the corners must lie in this distance from the base axis [mm] (MiniCobo: 580)
 
 SIMULATION = "--sim" in sys.argv
@@ -219,6 +231,9 @@ try:
             move_linear.ParCmd.Position = target
             move_linear.ParCmd.VelocityRate = VELOCITY
             move_linear.ParCmd.TurnMode = TURN_MODE
+            move_linear.ParCmd.ConfigMode.Shoulder = ArmConfigShoulder(CONFIG_MODE)
+            move_linear.ParCmd.ConfigMode.Elbow = ArmConfigElbow(CONFIG_MODE)
+            move_linear.ParCmd.ConfigMode.Wrist = ArmConfigWrist(CONFIG_MODE)
             move_linear.ParCmd.BlendingMode = BLENDING_MODE  # blend into the next move
             move_linear.ParCmd.BlendingParameter[0] = BLENDING_PARAMETER
             moves.append(move_linear)
