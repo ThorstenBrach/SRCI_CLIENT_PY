@@ -35,8 +35,8 @@ SCRIPT = Path(__file__).resolve().parents[2] / "examples" / "quickstart" / "quic
 def test_quickstart_initializes_enables_moves_and_returns(
     sdk_library: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """Initialization, GroupReset, EnableRobot, override, joint / linear / direct moves and back
-    to the start position."""
+    """Initialization with the listed ParCfg, GroupReset, EnableRobot, override, joint move into the
+    elbow-bent pose, rectangle with 4 linear moves, back to the start position, disable."""
     spec = importlib.util.spec_from_file_location("quickstart", SCRIPT)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -44,13 +44,15 @@ def test_quickstart_initializes_enables_moves_and_returns(
     assert module.main(["--sim"]) == 0
     out = capsys.readouterr().out
     for step in (
-        "1. J1 +20 deg",
-        "2. J2/J3 +20 deg",
-        "3. linear Z -50 mm",
-        "4. direct Z +50 mm",
-        "back at start",
+        "robot enabled: True",
+        "1. elbow-bent pose",
+        "2. linear to corner 1",
+        "5. linear to corner 4",
+        "7. back at start",
+        "robot enabled: False",
     ):
         assert step in out
+    assert "rectangle skipped" not in out
     start = out.split("start ")[1].splitlines()[0]
     back = out.split("back at start")[1].splitlines()[0]
     assert start.strip() == back.strip()

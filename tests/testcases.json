@@ -802,7 +802,7 @@
  {
   "id": "SDK-LOOP-046",
   "test": "tests/sdk/test_example_quickstart.py::test_quickstart_initializes_enables_moves_and_returns",
-  "title": "Initialization, GroupReset, EnableRobot, override, joint / linear / direct moves and back to the start position.",
+  "title": "Initialization with the listed ParCfg, GroupReset, EnableRobot, override, joint move into the elbow-bent pose, rectangle with 4 linear moves, back to the start position, disable.",
   "refs": [],
   "status": "active"
  },
