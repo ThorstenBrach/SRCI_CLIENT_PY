@@ -42,3 +42,6 @@ sdk_harness/
 *.so
 *.dylib
 srci_sdk_sim*
+
+# log files of the examples (minicobo_<date>_<time>.log etc.) - local only
+*.log
