@@ -800,6 +800,13 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-046",
+  "test": "tests/sdk/test_example_quickstart.py::test_quickstart_initializes_enables_moves_and_returns",
+  "title": "Initialization, GroupReset, EnableRobot, override, joint / linear / direct moves and back to the start position.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",

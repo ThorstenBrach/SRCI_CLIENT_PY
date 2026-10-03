@@ -79,6 +79,9 @@ srci.configure(TOOL_MAX=20, FRAME_MAX=20, LOAD_MAX=20)
 [examples/jaka_minicobo](examples/jaka_minicobo) is a first-steps script for a real robot behind
 the TwinCAT PLC gateway: read everything without motion (`info`), move one joint a few degrees
 and back (`move`).
+[examples/quickstart/quickstart.py](examples/quickstart/quickstart.py) is the compact template for
+users: one file - initialize, switch on the robot, a few joint / linear / direct moves, switch off
+(`--sim` runs it against the SDK simulator).
 
 # How it talks to the robot
 
