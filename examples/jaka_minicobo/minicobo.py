@@ -480,10 +480,17 @@ def _probe_pair(client: SrciClient, kind: str, mode: BlendingMode, par: tuple[fl
         # after an error the JAKA interrupts the sequence: the next moves stay INTERRUPTED until
         # GroupContinue -> reset the error, stop a move that is still running, continue
         # (not GroupStop followed by GroupReset: then the SDK simulator finishes no more moves)
-        client.execute(MC_GroupResetFB(), timeout=5.0, check=False)
+        with contextlib.suppress(CommandError, WaitTimeoutError):
+            client.execute(MC_GroupResetFB(), timeout=5.0, check=False)
         if "error" not in seen:  # the move back was sent and may still wait
-            client.execute(MC_GroupStopFB(), timeout=5.0, check=False)
-        client.execute(MC_GroupContinueFB(), timeout=5.0, check=False)
+            with contextlib.suppress(CommandError, WaitTimeoutError):
+                client.execute(MC_GroupStopFB(), timeout=5.0, check=False)
+        client.run(5)
+        status = client.program.axes_group.State.StatusRobotArm
+        if status.PrimarySequencePaused:  # GroupContinue only if paused (else the JAKA keeps it waiting)
+            with contextlib.suppress(CommandError, WaitTimeoutError):
+                client.execute(MC_GroupContinueFB(), timeout=5.0, check=False)
+            result += " [sequence was paused -> GroupContinue]"
     return result
 
 
