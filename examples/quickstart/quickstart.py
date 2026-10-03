@@ -59,7 +59,13 @@ VELOCITY = 30.0  # velocity of each move [% of the reference velocity]
 # J5 = 90 keeps the wrist away from its singularity (J5 = 0)
 READY_POSE = {"J1": 0.0, "J2": 30.0, "J3": 60.0, "J4": 0.0, "J5": 90.0, "J6": 0.0}
 RECTANGLE = (100.0, 80.0)  # size in X and Y [mm], horizontal, starting at the TCP of READY_POSE
-BLENDING_RADIUS = 20.0  # [mm] corners of the rectangle are blended with this radius
+# blending at the corners of the rectangle (spec table 6-9); not every RC supports every mode -
+# an unsupported mode is rejected with 16#8E05 (JAKA JSI 1.6: no CORNER_DISTANCE):
+#   RAMP_OVERLAP     parameter = overlap of the ramps [%] 0..100
+#   CORNER_DISTANCE  parameter = radius [mm]
+#   EXACT_STOP       no blending (the robot stops at every corner)
+BLENDING_MODE = BlendingMode.RAMP_OVERLAP
+BLENDING_PARAMETER = 50.0
 REACH = (150.0, 520.0)  # the corners must lie in this distance from the base axis [mm] (MiniCobo: 580)
 
 SIMULATION = "--sim" in sys.argv
@@ -208,8 +214,8 @@ try:
             move_linear = MC_MoveLinearAbsoluteFB()  # a new instance for every move
             move_linear.ParCmd.Position = target
             move_linear.ParCmd.VelocityRate = VELOCITY
-            move_linear.ParCmd.BlendingMode = BlendingMode.CORNER_DISTANCE  # blend with a radius ...
-            move_linear.ParCmd.BlendingParameter[0] = BLENDING_RADIUS  # ... of n mm at the corner
+            move_linear.ParCmd.BlendingMode = BLENDING_MODE  # blend into the next move
+            move_linear.ParCmd.BlendingParameter[0] = BLENDING_PARAMETER
             moves.append(move_linear)
         moves[-1].ParCmd.BlendingMode = BlendingMode.EXACT_STOP  # the last move stops exactly
         for move_linear in moves:
