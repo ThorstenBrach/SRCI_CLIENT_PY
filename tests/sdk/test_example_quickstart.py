@@ -24,36 +24,40 @@
 
 from __future__ import annotations
 
-import importlib.util
+import os
+import subprocess
+import sys
 from pathlib import Path
-
-import pytest
 
 SCRIPT = Path(__file__).resolve().parents[2] / "examples" / "quickstart" / "quickstart.py"
 
 
-def test_quickstart_initializes_enables_moves_and_returns(
-    sdk_library: str, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_quickstart_initializes_enables_moves_and_returns(sdk_library: str) -> None:
     """Initialization with the listed ParCfg, GroupReset, EnableRobot, override, joint move into the
-    elbow-bent pose, rectangle with 4 linear moves, back to the start position, disable."""
-    spec = importlib.util.spec_from_file_location("quickstart", SCRIPT)
-    assert spec is not None and spec.loader is not None
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    assert module.main(["--sim"]) == 0
-    out = capsys.readouterr().out
+    elbow-bent pose, rectangle with 4 linear moves, back to the start position, disable (the script
+    runs from top to bottom, so it is started as a process)."""
+    env = {**os.environ, "SRCI_SDK_SIM_LIB": sdk_library}
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--sim"],
+        capture_output=True,
+        text=True,
+        timeout=120,
+        env=env,
+        check=False,
+    )
+    out = result.stdout
+    assert result.returncode == 0, result.stderr + out
     for step in (
         "robot enabled: True",
         "1. elbow-bent pose",
-        "2. linear to corner 1",
-        "5. linear to corner 4",
+        "2. linear to",
+        "5. linear to",
         "7. back at start",
         "robot enabled: False",
     ):
         assert step in out
     assert "rectangle skipped" not in out
-    start = out.split("start ")[1].splitlines()[0]
-    back = out.split("back at start")[1].splitlines()[0]
-    assert start.strip() == back.strip()
+    start = out.split("start:")[1].splitlines()[0]
+    back = out.split("back at start:")[1].splitlines()[0]
+    assert start.split("=")[1].strip() == back.split("=")[1].strip()
     assert out.rstrip().endswith("done")

@@ -268,7 +268,7 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-043 | The PLC answers, but RobotInData stays 0 (PROFINET not in data exchange): the diagnosis shows the step, the TelegramState and the raw headers. | 1 | `test_minicobo_diagnoses_a_robot_that_sends_nothing` |
 | SDK-LOOP-044 | --srci-version 1.3: byte 0 of the PLC -> RC header is 16#23 (major 1 in bits 5..7, minor 3); the version of the library is restored afterwards. | 1 | `test_minicobo_sends_an_older_srci_version` |
 | SDK-LOOP-045 | Minicobo rejects an invalid srci version | 4 | `test_minicobo_rejects_an_invalid_srci_version` |
-| SDK-LOOP-046 | Initialization with the listed ParCfg, GroupReset, EnableRobot, override, joint move into the elbow-bent pose, rectangle with 4 linear moves, back to the start position, disable. | 1 | `test_quickstart_initializes_enables_moves_and_returns` |
+| SDK-LOOP-046 | Initialization with the listed ParCfg, GroupReset, EnableRobot, override, joint move into the elbow-bent pose, rectangle with 4 linear moves, back to the start position, disable (the script runs from top to bottom, so it is started as a process). | 1 | `test_quickstart_initializes_enables_moves_and_returns` |
 
 ## TCP
 
