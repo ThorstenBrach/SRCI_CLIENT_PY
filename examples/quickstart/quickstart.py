@@ -45,7 +45,7 @@ from srci.fb import (
     MC_ReadActualPositionFB,
 )
 from srci.transport import TcpTransport, Transport
-from srci.types import MessageLevel, SyncMode
+from srci.types import BlendingMode, MessageLevel, SyncMode
 
 # ============================================================================= settings
 
@@ -59,6 +59,7 @@ VELOCITY = 30.0  # velocity of each move [% of the reference velocity]
 # J5 = 90 keeps the wrist away from its singularity (J5 = 0)
 READY_POSE = {"J1": 0.0, "J2": 30.0, "J3": 60.0, "J4": 0.0, "J5": 90.0, "J6": 0.0}
 RECTANGLE = (100.0, 80.0)  # size in X and Y [mm], horizontal, starting at the TCP of READY_POSE
+BLENDING_RADIUS = 20.0  # [mm] corners of the rectangle are blended with this radius
 REACH = (150.0, 520.0)  # the corners must lie in this distance from the base axis [mm] (MiniCobo: 580)
 
 SIMULATION = "--sim" in sys.argv
@@ -184,7 +185,7 @@ try:
     client.execute(move_axes, timeout=60.0)
     print("1. elbow-bent pose")
 
-    # 2..5. rectangle with linear moves in the horizontal plane, orientation unchanged
+    # 2..5. rectangle with linear moves in the horizontal plane, orientation unchanged, blended corners
     position = client.execute(MC_ReadActualPositionFB()).OutCmd
     corner = position.ActualCartesianPosition  # TCP in the elbow-bent pose
     print(f"   TCP:             X={corner.X:.1f} Y={corner.Y:.1f} Z={corner.Z:.1f} mm")
@@ -195,15 +196,29 @@ try:
         print(f"rectangle skipped: corners {min(radii):.0f}..{max(radii):.0f} mm from the base axis, "
               f"allowed {REACH[0]:.0f}..{REACH[1]:.0f} mm - change READY_POSE or RECTANGLE")  # fmt: skip
     else:
-        for n, (dx, dy) in enumerate(offsets, start=2):
+        # client.execute() waits until a move is DONE -> the robot stops at every corner.
+        # For blending, all moves are sent in advance: one function block instance per move,
+        # client.start() only gives the rising edge on Execute, the RC buffers the moves
+        # (AbortingMode BUFFER, the default) and blends from one into the next.
+        moves = []
+        for dx, dy in offsets:
             target = copy.deepcopy(corner)
             target.X += dx
             target.Y += dy
-            move_linear = MC_MoveLinearAbsoluteFB()
+            move_linear = MC_MoveLinearAbsoluteFB()  # a new instance for every move
             move_linear.ParCmd.Position = target
             move_linear.ParCmd.VelocityRate = VELOCITY
-            client.execute(move_linear, timeout=60.0)
-            print(f"{n}. linear to X={target.X:.1f} Y={target.Y:.1f}")
+            move_linear.ParCmd.BlendingMode = BlendingMode.CORNER_DISTANCE  # blend with a radius ...
+            move_linear.ParCmd.BlendingParameter[0] = BLENDING_RADIUS  # ... of n mm at the corner
+            moves.append(move_linear)
+        moves[-1].ParCmd.BlendingMode = BlendingMode.EXACT_STOP  # the last move stops exactly
+        for move_linear in moves:
+            client.start(move_linear)  # send all moves, do not wait
+        for n, move_linear in enumerate(moves, start=2):
+            client.wait_done(move_linear, timeout=60.0)  # Done in this order; resets Execute
+            print(
+                f"{n}. linear to X={move_linear.ParCmd.Position.X:.1f} Y={move_linear.ParCmd.Position.Y:.1f}"
+            )
 
     # 6. your moves here - e.g. 50 mm up in a straight line:
     #   target = copy.deepcopy(corner)
