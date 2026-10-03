@@ -79,7 +79,7 @@ MoveAxesAbsolute to the target → MoveAxesAbsolute back → EnableRobot off.
 | `--host`, `--port` | 192.168.2.10, 5000 | PLC gateway |
 | `--length` | 256 | telegram length per direction = PROFINET module size |
 | `--srci-version` | 1.5 | SRCI version in byte 0 of the header (e.g. `1.3` = 16#23 for an RC with an older SRCI version) |
-| command `blending` | – | which BlendingModes the RC accepts: every mode with a 1 mm linear / 0.5° joint move and back (`16#8E05` = not supported) |
+| command `blending` | – | which TurnMode/ConfigMode and BlendingModes the RC accepts: every mode with a 1 mm linear / 0.5° joint move and back (`16#8E05` = not supported). After every failed probe the robot is switched off and on again (GroupReset in between): on the JAKA only the first move after EnableRobot starts at once, after an error the next moves stay BUFFERED/INTERRUPTED. `--mode`/`--turn-mode`/`--config-mode` probe a single combination |
 | `--joint`, `--delta` | 6, 5.0 | joint and relative move [deg] (`move`) |
 | `--override`, `--velocity` | 10, 10 | speed override / velocity rate [%] (`move`) |
 | `--lifesign-ms` | 100 | LifeSign timeout of the RC (sent with ExchangeConfiguration) |

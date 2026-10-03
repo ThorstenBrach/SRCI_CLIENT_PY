@@ -494,6 +494,17 @@ def _probe_pair(client: SrciClient, kind: str, mode: BlendingMode, par: tuple[fl
     return result
 
 
+def _restart(client: SrciClient, enable: MC_EnableRobotFB) -> MC_EnableRobotFB:
+    """After a failed probe: robot off, GroupReset, robot on. In the logs of the JAKA only the
+    first move after EnableRobot starts at once (ACTIVE); after an error or GroupStop the next
+    moves stay BUFFERED/INTERRUPTED, and the later probes would only show that."""
+    with contextlib.suppress(CommandError, WaitTimeoutError):
+        client.disable(enable)
+    with contextlib.suppress(CommandError, WaitTimeoutError):
+        client.execute(MC_GroupResetFB(), timeout=5.0, check=False)
+    return client.enable(MC_EnableRobotFB())
+
+
 def probe_blending(client: SrciClient, args: argparse.Namespace) -> None:
     """Which TurnMode and which blending modes does the RC accept? Tiny moves (1 mm up / J6
     +0.5 deg) and back. A rejected command is not executed (16#8E05: BlendingMode, 16#8E10:
@@ -512,8 +523,8 @@ def probe_blending(client: SrciClient, args: argparse.Namespace) -> None:
         client.execute(override)
         combos: list[tuple[TurnMode, int]] = []
         if args.mode or args.turn_mode:
-            # one combination only (a fresh connection per probe: after an error the JAKA
-            # interrupts the following moves and the later probes are not reliable)
+            # one combination only (the most reliable result: the probe is the first move
+            # after EnableRobot)
             combos.append(
                 (TurnMode[args.turn_mode or "FREE"], int(ArmConfigShoulder[args.config_mode or "SAME"]))
             )
@@ -525,6 +536,8 @@ def probe_blending(client: SrciClient, args: argparse.Namespace) -> None:
                     show(f"TurnMode {tm.name}, ConfigMode {cm.name}", result)
                     if result == "accepted":
                         combos.append((tm, int(cm)))
+                    else:
+                        enable = _restart(client, enable)
             if not combos:
                 show("blending", "not tested - no TurnMode / ConfigMode works for MoveLinearAbsolute")
                 return
@@ -541,6 +554,8 @@ def probe_blending(client: SrciClient, args: argparse.Namespace) -> None:
                 show(f"{mode.name} ({kind})", result)
                 if result == "accepted":
                     supported.append(f"{mode.name} ({kind})")
+                else:
+                    enable = _restart(client, enable)
         show(
             "linear: TurnMode / ConfigMode",
             ", ".join(f"{t.name}/{ArmConfigShoulder(c).name}" for t, c in combos),
