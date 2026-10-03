@@ -510,21 +510,32 @@ def probe_blending(client: SrciClient, args: argparse.Namespace) -> None:
         override = MC_ChangeSpeedOverrideFB()
         override.ParCmd.Override = args.override
         client.execute(override)
-        # 1. TurnMode x ConfigMode of linear moves (without blending)
         combos: list[tuple[TurnMode, int]] = []
-        for tm in TurnMode:
-            for cm in (ArmConfigShoulder.USE_CONFIG, ArmConfigShoulder.SAME, ArmConfigShoulder.FREE):
-                result = _probe_pair(client, "linear", BlendingMode.EXACT_STOP, (0.0, 0.0), tm, cm)
-                show(f"TurnMode {tm.name}, ConfigMode {cm.name}", result)
-                if result == "accepted":
-                    combos.append((tm, int(cm)))
-        if not combos:
-            show("blending", "not tested - no TurnMode / ConfigMode works for MoveLinearAbsolute")
-            return
+        if args.mode or args.turn_mode:
+            # one combination only (a fresh connection per probe: after an error the JAKA
+            # interrupts the following moves and the later probes are not reliable)
+            combos.append(
+                (TurnMode[args.turn_mode or "FREE"], int(ArmConfigShoulder[args.config_mode or "SAME"]))
+            )
+        else:
+            # 1. TurnMode x ConfigMode of linear moves (without blending)
+            for tm in TurnMode:
+                for cm in (ArmConfigShoulder.USE_CONFIG, ArmConfigShoulder.SAME, ArmConfigShoulder.FREE):
+                    result = _probe_pair(client, "linear", BlendingMode.EXACT_STOP, (0.0, 0.0), tm, cm)
+                    show(f"TurnMode {tm.name}, ConfigMode {cm.name}", result)
+                    if result == "accepted":
+                        combos.append((tm, int(cm)))
+            if not combos:
+                show("blending", "not tested - no TurnMode / ConfigMode works for MoveLinearAbsolute")
+                return
         turn_mode, config_mode = combos[0]
         # 2. blending modes (linear with the working TurnMode, joint moves)
         supported = []
-        for mode, par in BLENDING_PROBES:
+        probes = BLENDING_PROBES
+        if args.mode:
+            all_modes = [(BlendingMode.EXACT_STOP, (0.0, 0.0)), *BLENDING_PROBES]
+            probes = [(m, p) for m, p in all_modes if m.name == args.mode]
+        for mode, par in probes:
             for kind in ("linear", "axes"):
                 result = _probe_pair(client, kind, mode, par, turn_mode, config_mode)
                 show(f"{mode.name} ({kind})", result)
@@ -563,6 +574,19 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--port", type=int, default=PORT, help=f"TCP port of the PLC gateway (default {PORT})")
     ap.add_argument(
         "--length", type=int, default=TELEGRAM_LENGTH, help="telegram length [bytes] per direction"
+    )
+    ap.add_argument(
+        "--mode",
+        choices=[m.name for m in BlendingMode],
+        help="blending: test this BlendingMode only (TurnMode FREE / ConfigMode SAME unless given)",
+    )
+    ap.add_argument(
+        "--turn-mode", choices=[t.name for t in TurnMode], help="blending: TurnMode of the linear probe"
+    )
+    ap.add_argument(
+        "--config-mode",
+        choices=["USE_CONFIG", "SAME", "FREE"],
+        help="blending: ConfigMode of the linear probe",
     )
     ap.add_argument(
         "--joint", type=int, default=6, choices=range(1, JOINTS + 1), help="joint to move (default 6)"
