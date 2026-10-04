@@ -118,7 +118,7 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | [F73](#f73) | `MC_ReadActualPositionCyclicFB.OnExecRun` - ToolNo/FrameNo −1 ("currently used", 255 in the telegram) never equal to the returned coordinate system → `Enabled` never set, outputs never updated (D-10) | 1 | `MC_ReadActualPositionCyclicFB` |
 | [F74](#f74) | `RobotLibraryBaseFB.OnCall`, `AxesGroupMessageLogFB.AddMessageLog`, `AlarmMessage` - messages of the command only with the severity of the last RC response → client-side errors (parameter check) never in the message buffer; `AcrID`/`CmdType` missing (E-01, E-03) | 3 | `AxesGroupMessageLogFB`, `RobotLibraryBaseFB`, data types |
 | [F75](#f75) | enums `RobotLibraryErrorIdEnum`, `RobotLibraryInfoIdEnum` - IDs of the spec missing (16#8D52…8D60, 8D89…8D98, 8E22, 16#6C70, 6D54); names with a wrong value (`ERR_LIFESIGN_TIMEOUT_0x8005` = 16#8004, `ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8_0x80A8`) (E-05, C-08) | 0 | data types |
-| [F76](#f76) | `MC_GroupResetFB.OnExecRun` - after DONE the FastStop half byte is set back to 0. The RC counts every change of the half byte as new stopping commands (e.g. 2 -> 0 = 14), its FastStop counter stays > 0 and no motion is executed any more until the next initialization (found with SRCI Teach: GroupStop, GroupReset, next move hangs; probably also the INTERRUPTED moves of the JAKA MiniCobo) | 1 | `MC_GroupResetFB` |
+| [F76](#f76) | `MC_GroupResetFB.OnExecRun` - after DONE the FastStop half byte is set back to 0. The RC counts every change of the half byte as new stopping commands (e.g. 2 -> 0 = 14), its FastStop counter stays > 0 and no motion is executed any more until the next initialization (found with SRCI_PY_HMI: GroupStop, GroupReset, next move hangs; probably also the INTERRUPTED moves of the JAKA MiniCobo) | 1 | `MC_GroupResetFB` |
 
 ## Generated ST changes
 
@@ -8729,7 +8729,7 @@ _`RobotLibraryBaseFB.OnCall`, `AxesGroupMessageLogFB.AddMessageLog`, `AlarmMessa
 
 ### F76
 
-_`MC_GroupResetFB.OnExecRun` - after DONE the FastStop half byte is set back to 0. The RC counts every change of the half byte as new stopping commands (e.g. 2 -> 0 = 14), its FastStop counter stays > 0 and no motion is executed any more until the next initialization (found with SRCI Teach: GroupStop, GroupReset, next move hangs; probably also the INTERRUPTED moves of the JAKA MiniCobo)_
+_`MC_GroupResetFB.OnExecRun` - after DONE the FastStop half byte is set back to 0. The RC counts every change of the half byte as new stopping commands (e.g. 2 -> 0 = 14), its FastStop counter stays > 0 and no motion is executed any more until the next initialization (found with SRCI_PY_HMI: GroupStop, GroupReset, next move hangs; probably also the INTERRUPTED moves of the JAKA MiniCobo)_
 
 - F76: GroupReset set the FastStop half byte back to 0. The RC counts every change of it as new stopping commands (spec 5.6.6.2.1, e.g. 2 -> 0 = 14), its FastStop counter stays > 0 and no motion is executed any more until the next initialization
 

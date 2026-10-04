@@ -48,7 +48,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    parameter checks, messages
  - ST-FIX F76: `MC_GroupResetFB` no longer resets the FastStop half byte. After GroupStop and
    GroupReset the RC kept the sequence interrupted, so no further motion ran (found on the JAKA
-   MiniCobo and with SRCI Teach)
+   MiniCobo and with SRCI_PY_HMI)
  - ST fixes compile in TwinCAT: duplicate `CmdType.SoftSwitchTCP` (C0142), explicit conversions
    instead of implicit narrowing (C0032, F60/F74), enum aliases for literals hidden by inputs
    (F35, F51)
