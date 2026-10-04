@@ -35,6 +35,7 @@ from srci.iec.clock import FakeClock
 from srci.runtime import Runner
 from srci.runtime.runner import CycleContext
 from srci.transport import LoopbackTransport
+from srci.types import RobotTaskParCfg
 
 
 def silent_robot(size: int = 128) -> LoopbackTransport:
@@ -54,10 +55,20 @@ def test_fb_package_exports_all_function_blocks() -> None:
 
 def test_program_builds_a_telegram_of_the_configured_length() -> None:
     program = RobotProgram(send_size=128, recv_size=128)
-    assert program.config.Com.TelegramLengthPlcToRob == 128
+    assert program.ParCfg.Com.TelegramLengthPlcToRob == 128
     out = program.step(bytes(128))
     assert len(out) == 128
     assert not program.initialized and not program.commands_enabled
+
+
+def test_program_takes_the_robot_task_configuration_as_parcfg() -> None:
+    """The configuration of the RobotTask has the name of the PLC input: ``ParCfg``."""
+    cfg = RobotTaskParCfg()
+    cfg.Com.LifeSignTimeOut = 500
+    program = RobotProgram(send_size=128, recv_size=128, ParCfg=cfg)
+    assert program.ParCfg is cfg and program.ParCfg.Com.TelegramLengthRobToPlc == 128
+    program.step(bytes(128))
+    assert program.robot_task.ParCfg.Com.LifeSignTimeOut == 500
 
 
 def test_program_add_calls_blocks_and_checks_inputs() -> None:

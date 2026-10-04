@@ -155,7 +155,7 @@ def open_transport(args: argparse.Namespace) -> Iterator[tuple[Transport, bool]]
 
 def create_client(transport: Transport, args: argparse.Namespace, simulator: bool) -> SrciClient:
     client = SrciClient(transport, realtime=not (args.fast and simulator))
-    cfg = client.program.config
+    cfg = client.program.ParCfg
     # Python is no real-time system (scheduler, garbage collector): more margin than the 50 ms
     # default before the RC considers the connection lost
     cfg.Com.LifeSignTimeOut = args.lifesign_ms

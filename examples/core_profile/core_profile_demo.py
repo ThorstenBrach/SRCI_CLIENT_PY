@@ -106,7 +106,7 @@ def cartesian(pos: Any) -> str:
 def create_client(transport: Transport, realtime: bool) -> SrciClient:
     """RobotTask: the program with MC_RobotTaskFB and its configuration."""
     client = SrciClient(transport, realtime=realtime)
-    cfg = client.program.config
+    cfg = client.program.ParCfg
     # cyclic position data RC -> PLC for MC_ReadActualPositionCyclicFB (spec 5.6.3)
     cfg.Rob.OptionalCyclic.UseJointPosition = True
     cfg.Rob.OptionalCyclic.UseCartesianPosition = True

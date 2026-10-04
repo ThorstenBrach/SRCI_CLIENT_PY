@@ -2662,5 +2662,12 @@
   "title": "Background=False: cycles only while the script waits (deterministic, e.g.",
   "refs": [],
   "status": "active"
+ },
+ {
+  "id": "UT-PKG-016",
+  "test": "tests/unit/api/test_api.py::test_program_takes_the_robot_task_configuration_as_parcfg",
+  "title": "The configuration of the RobotTask has the name of the PLC input: ``ParCfg``.",
+  "refs": [],
+  "status": "active"
  }
 ]

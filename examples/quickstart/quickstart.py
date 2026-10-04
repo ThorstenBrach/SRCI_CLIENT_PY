@@ -113,7 +113,7 @@ client = SrciClient(transport)
 # ============================================================================= RobotTask parameters (ParCfg)
 # All parameters - used for the initialization. The lines commented out show the default value.
 
-cfg = client.program.config
+cfg = client.program.ParCfg
 # fmt: off
 # --- communication
 cfg.Com.TelegramLengthPlcToRob = TELEGRAM_LENGTH     # [bytes] PLC -> RC, = PROFINET module size

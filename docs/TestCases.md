@@ -37,8 +37,8 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
-| [UT-PKG](#ut-pkg) | Package, logging | 15 | 15 |
-| | **Total** | **376** | **3580** |
+| [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
+| | **Total** | **377** | **3581** |
 
 ## Test methodology
 
@@ -611,3 +611,4 @@ Package, logging
 | UT-PKG-013 | Client background set add enable disable | 1 | `test_client_background_set_add_enable_disable` |
 | UT-PKG-014 | Client background reports an exception of the cycle | 1 | `test_client_background_reports_an_exception_of_the_cycle` |
 | UT-PKG-015 | Background=False: cycles only while the script waits (deterministic, e.g. | 1 | `test_client_without_background_removes_finished_blocks` |
+| UT-PKG-016 | The configuration of the RobotTask has the name of the PLC input: ``ParCfg``. | 1 | `test_program_takes_the_robot_task_configuration_as_parcfg` |

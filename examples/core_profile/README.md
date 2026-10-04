@@ -65,7 +65,7 @@ cycle n:  command blocks (in the order they were added)  ->  MC_RobotTaskFB  -> 
                                                                         <-  telegram of the RC
 ```
 
-`RobotProgram` holds the RobotTask, its configuration (`config`, a `RobotTaskParCfg`), the user
+`RobotProgram` holds the RobotTask, its configuration (`ParCfg`, a `RobotTaskParCfg`, the input of `MC_RobotTaskFB`), the user
 data arrays (tools, frames, loads, work areas, SW limits, dynamics, logs) and the list of command
 blocks.
 
@@ -188,7 +188,7 @@ cycle – here the cyclic position data needed by `ReadActualPositionCyclic`:
 
 ```python
 client = SrciClient(transport)  # RobotProgram with MC_RobotTaskFB
-cfg = client.program.config  # RobotTaskParCfg
+cfg = client.program.ParCfg  # RobotTaskParCfg
 cfg.Rob.OptionalCyclic.UseJointPosition = True  # cyclic joint position RC -> PLC
 cfg.Rob.OptionalCyclic.UseCartesianPosition = True  # cyclic Cartesian position RC -> PLC
 cfg.Rob.Parameter.MessageLevel = MessageLevel.WARNING

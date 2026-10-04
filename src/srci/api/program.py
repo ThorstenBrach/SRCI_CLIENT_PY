@@ -78,7 +78,7 @@ class RobotProgram:
         *,
         robot_name: str = "Robot1",
         axes_group_id: int = 0,
-        config: RobotTaskParCfg | None = None,
+        ParCfg: RobotTaskParCfg | None = None,  # input name of MC_RobotTaskFB
         external_logger: IMessageLogger | None = None,
         log_level: Severity = Severity.INFO,
     ) -> None:
@@ -86,9 +86,10 @@ class RobotProgram:
         self.axes_group_id = axes_group_id
         self.robot_task = MC_RobotTaskFB()
         self.axes_group = AxesGroup()
-        self.config = config if config is not None else RobotTaskParCfg()
-        self.config.Com.TelegramLengthPlcToRob = send_size
-        self.config.Com.TelegramLengthRobToPlc = recv_size
+        # configuration of the RobotTask: input ParCfg of MC_RobotTaskFB (same name as in the PLC)
+        self.ParCfg = ParCfg if ParCfg is not None else RobotTaskParCfg()
+        self.ParCfg.Com.TelegramLengthPlcToRob = send_size
+        self.ParCfg.Com.TelegramLengthRobToPlc = recv_size
         # user data of the RobotTask (the arrays of the PLC program)
         self.tools = [Tool() for _ in range(RobotLibraryParameter.TOOL_MAX)]
         self.frames = [Frame() for _ in range(RobotLibraryParameter.FRAME_MAX)]
@@ -149,7 +150,7 @@ class RobotProgram:
             RobotName=self.robot_name,
             SystemTime=system_time_now(),
             AxesGroupID=self.axes_group_id,
-            ParCfg=self.config,
+            ParCfg=self.ParCfg,
             RobotInData=self._in,
             RobotOutData=self._out,
             UserData=self.user_data,

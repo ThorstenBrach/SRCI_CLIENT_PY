@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
  - Repository renamed to SRCI_CLIENT_PY (distribution `srci-client`, package `srci`)
+ - `RobotProgram`: the configuration of the RobotTask is `ParCfg` (keyword and attribute), the
+   name of the input of `MC_RobotTaskFB` in the PLC library (was `config`)
  - ST patches follow the ST coding rules: THEN on its own line, a log entry behind every
    `SetError`
 
