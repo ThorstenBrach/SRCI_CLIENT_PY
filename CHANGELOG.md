@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - Tests on Linux and Windows, Python 3.12 – 3.14, including a simulated robot controller;
    test case catalog and test report
  - Release workflow: wheel and source package for tags `vX.Y.Z`, release notes from this file
+ - README: teaser of the teach pendant SRCI_PY_HMI (separate repository)
 
 ### Changed
  - Repository renamed to SRCI_CLIENT_PY (distribution `srci-client`, package `srci`)

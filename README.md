@@ -88,6 +88,19 @@ srci.configure(TOOL_MAX=20, FRAME_MAX=20, LOAD_MAX=20)
   back (`move`), probe the supported TurnMode / ConfigMode / BlendingModes (`blending`).
   The README lists what the JAKA MiniCobo supports.
 
+# Teach pendant: SRCI_PY_HMI
+
+[SRCI_PY_HMI](https://github.com/ThorstenBrach/SRCI_PY_HMI) is a teach pendant built on this
+library: a web UI (NiceGUI) for setting up and teaching a robot from the browser or a tablet.
+Connect to the robot or the SDK simulator, jog in joints, base or tool, teach points, manage
+tools and frames on the robot controller and run programs with LIN / PTP / Joint steps, exact
+stop or blending and their dynamics. Hold-to-run, German / English, light and dark theme.
+
+<p>
+  <img src="docs/images/hmi_jog.png" alt="SRCI_PY_HMI: jog" width="49%">
+  <img src="docs/images/hmi_step_editor.png" alt="SRCI_PY_HMI: step editor" width="49%">
+</p>
+
 # How it talks to the robot
 
 SRCI is transported over PROFINET. A PLC acts as gateway: it exchanges the PROFINET process
