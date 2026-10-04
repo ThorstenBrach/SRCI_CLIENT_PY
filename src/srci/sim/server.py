@@ -8,7 +8,7 @@
 #
 #  Description:
 #    SDK server: the SRCI SDK simulator behind a TCP server - for PLC tests (TwinCAT,
-#    Codesys).
+#    Codesys), with a control channel for the setup of the tests.
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -33,6 +33,9 @@ robot controller, so the PLC task should run with the cycle time of the simulato
 A new connection starts with a new simulator (like a restart of the robot controller), so a
 PLC program can be restarted without restarting the server.
 
+``--control-port`` (default 5001) opens the control channel of the PLC tests
+(``srci.sim.control``): setup and state of the simulator, fault injection.
+
 The simulator needs the locally built SDK library (``SRCI_SDK_SIM_LIB``); the SDK is licensed
 and not part of the package.
 """
@@ -49,11 +52,14 @@ from pathlib import Path
 from types import TracebackType
 from typing import Self
 
+from srci.sim.control import SdkControlServer, Tamper
 from srci.sim.gateway import PlcGatewaySimulator
 from srci.sim.sdk import SdkLog, SdkNotAvailableError, SdkSimulator
 from srci.types import ControlHalfByte, TelegramState
 
 __all__ = ["SdkServer", "decode_header", "main"]
+
+CONTROL_PORT = 5001
 
 
 def _name(enum: type[IntEnum], value: int) -> str:
@@ -109,12 +115,16 @@ class SdkServer:
         self.sim = self._new_simulator()
         self.response_size = response_size
         self._connection = 0
-        self._lock = threading.Lock()
+        self.lock = threading.RLock()
+        # fault injection and log window of the control channel (srci.sim.control)
+        self.tamper = Tamper()
+        self.log_mark = 0
         # LifeSign PLC -> RC (header byte 1, low nibble) of the current connection
         self.last_number: int | None = None
         self.number_gaps = 0  # telegrams missing between two received ones
         self.number_repeats = 0  # telegrams with the same number as the one before
         self.gateway = PlcGatewaySimulator(self._handle, request_size, response_size, host=host, port=port)
+        self.control: SdkControlServer | None = None
 
     def _new_simulator(self) -> SdkSimulator:
         sim = SdkSimulator(cycle_time_ms=self._cycle_time_ms, library=self._library)
@@ -135,19 +145,41 @@ class SdkServer:
     def connections(self) -> int:
         return self.gateway.connections
 
+    def restart(self) -> None:
+        """Restart of the RC: a new simulator, no tampering, log window from the start.
+
+        A new simulator, because SdkSimulator.reset() does not bring the RI back to the initial
+        state (the next initialization of the RobotTask would time out)."""
+        with self.lock:
+            self.sim.close()
+            self.sim = self._new_simulator()
+            self.tamper = Tamper()
+            self.log_mark = 0
+            self.last_number = None
+            self.number_gaps = self.number_repeats = 0
+
+    def enable_control(self, host: str = "127.0.0.1", port: int = CONTROL_PORT) -> SdkControlServer:
+        """Control channel for PLC tests (srci.sim.control); started with the server."""
+        self.control = SdkControlServer(self, host, port)
+        if self.gateway._thread.is_alive():
+            self.control.start()
+        return self.control
+
     def _handle(self, telegram: bytes) -> bytes:
-        with self._lock:
+        with self.lock:
             if self.gateway.connections != self._connection:  # new PLC connection: restart the RC
                 self._connection = self.gateway.connections
-                self.last_number = None
-                self.number_gaps = self.number_repeats = 0
                 if self._connection > 1:
-                    # a new simulator: SdkSimulator.reset() does not bring the RI back to the
-                    # initial state, the next initialization of the RobotTask would time out
-                    self.sim.close()
-                    self.sim = self._new_simulator()
+                    self.restart()
+                else:
+                    self.last_number = None
+                    self.number_gaps = self.number_repeats = 0
             self._check_number(telegram)
+            if self.tamper.active:
+                telegram = self.tamper.request(telegram)
             answer = self.sim.exchange(telegram, self.response_size)
+            if self.tamper.active:
+                answer = self.tamper.answer(answer)
             if self.on_exchange is not None:
                 self.on_exchange(telegram, answer)
             return answer
@@ -171,9 +203,13 @@ class SdkServer:
 
     def start(self) -> Self:
         self.gateway.start()
+        if self.control is not None:
+            self.control.start()
         return self
 
     def close(self) -> None:
+        if self.control is not None:
+            self.control.stop()
         self.gateway.stop()
         self.sim.close()
 
@@ -205,6 +241,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--response-length", type=int, help="RC->PLC telegram length (default: --length)")
     ap.add_argument("--cycle-ms", type=int, default=10, help="cycle time of the simulated RC [ms]")
     ap.add_argument("--move-cycles", type=int, help="duration of a simulated motion [cycles]")
+    ap.add_argument(
+        "--control-port",
+        type=int,
+        default=CONTROL_PORT,
+        help=f"port of the control channel for PLC tests (srci.sim.control, default {CONTROL_PORT}, 0: off)",
+    )
     ap.add_argument("--lib", type=Path, help="SDK simulator library (default: SRCI_SDK_SIM_LIB / SRCI SDK)")
     ap.add_argument("--status", type=float, default=1.0, help="status line every n seconds (0: off)")
     ap.add_argument("--log", action="store_true", help="print the log messages of the SDK")
@@ -231,6 +273,8 @@ def main(argv: list[str] | None = None) -> int:
     except SdkNotAvailableError as exc:
         print(f"SDK simulator not available: {exc}", file=sys.stderr)
         return 2
+    if args.control_port:
+        server.enable_control(args.host, args.control_port)
     if args.log:
 
         def show(entry: SdkLog) -> None:
@@ -255,6 +299,8 @@ def main(argv: list[str] | None = None) -> int:
         host, port = server.address
         print(f"SRCI SDK server (SDK {server.sim.sdk_version}) on {host}:{port}, telegrams "
               f"{args.request_length or args.length}/{args.response_length or args.length} bytes - Ctrl+C ends")  # fmt: skip
+        if server.control is not None:
+            print(f"control channel for PLC tests on {server.control.address[0]}:{server.control.port}")
         try:
             while True:
                 time.sleep(args.status or 3600.0)

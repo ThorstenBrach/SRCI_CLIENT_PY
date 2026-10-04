@@ -821,6 +821,13 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-048",
+  "test": "tests/sdk/test_sdk_server.py::test_sdk_server_control_channel",
+  "title": "Control channel for PLC tests: the simulator of the connection is set up and read over the second port; RESET restarts the RC (a new initialization follows).",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",
@@ -2667,6 +2674,62 @@
   "id": "UT-PKG-016",
   "test": "tests/unit/api/test_api.py::test_program_takes_the_robot_task_configuration_as_parcfg",
   "title": "The configuration of the RobotTask has the name of the PLC input: ``ParCfg``.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-017",
+  "test": "tests/unit/sim/test_control.py::test_ping_and_errors",
+  "title": "Control channel: PING answers with the protocol version, invalid requests with ERR and the reason.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-018",
+  "test": "tests/unit/sim/test_control.py::test_simulator_setup_is_forwarded",
+  "title": "Control channel: the setup requests call the functions of the simulator (numbers as 123, 16#7B, 0x7B).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-019",
+  "test": "tests/unit/sim/test_control.py::test_get_values",
+  "title": "Control channel: GET returns the state of the simulator (joints as REAL text without exponent).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-020",
+  "test": "tests/unit/sim/test_control.py::test_last_command_and_log_window",
+  "title": "Control channel: LAST returns a field of the decoded command; COUNT_COMMANDS / LOG_CONTAINS count from MARK on.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-021",
+  "test": "tests/unit/sim/test_control.py::test_reset_starts_a_new_simulator",
+  "title": "Control channel: RESET starts a new simulator and switches the tampering off.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-022",
+  "test": "tests/unit/sim/test_control.py::test_tampering_of_the_telegrams",
+  "title": "Control channel: TAMPER SET / XOR / REQ_SET / FREEZE / KEEP_ACK change the telegrams between PLC and SDK.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-023",
+  "test": "tests/unit/sim/test_control.py::test_tamper_and_numbers",
+  "title": "Control channel: number formats of the requests; a byte beyond the telegram is ignored.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-PKG-024",
+  "test": "tests/unit/sim/test_control.py::test_cli_starts_the_control_channel",
+  "title": "``--control-port`` starts the control channel, 0 switches it off.",
   "refs": [],
   "status": "active"
  }

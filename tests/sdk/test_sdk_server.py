@@ -104,3 +104,35 @@ def test_decode_header_of_short_or_unknown_values() -> None:
         and "state 99 UNDEFINED_99" in line
         and "lifesign  3" in line
     )
+
+
+def test_sdk_server_control_channel(sdk_library: str) -> None:
+    """Control channel for PLC tests: the simulator of the connection is set up and read over
+    the second port; RESET restarts the RC (a new initialization follows)."""
+    import socket
+
+    from srci.fb import MC_ReadRobotDataFB
+
+    def ask(address: tuple[str, int], line: str) -> str:
+        with socket.create_connection(address, timeout=2.0) as conn:
+            conn.sendall(line.encode() + b"\n")
+            data = b""
+            while not data.endswith(b"\n"):
+                data += conn.recv(4096)
+        return data.decode().strip()
+
+    with SdkServer(port=0, library=Path(sdk_library)) as server:
+        control = server.enable_control(port=0)
+        control.start()
+        with _client(server) as client:
+            client.wait_initialized(timeout=10.0)
+            assert ask(control.address, "GET RI_STATE") == "OK 71"
+            assert ask(control.address, "MARK") == "OK"
+            client.execute(MC_ReadRobotDataFB())
+            assert ask(control.address, "COUNT_COMMANDS 1001").startswith("OK ")
+            assert ask(control.address, "JOINTS 1 2 3") == "OK"
+            assert ask(control.address, "GET JOINT 2") == "OK 2.0"
+            assert ask(control.address, "RESET") == "OK"
+            assert ask(control.address, "GET JOINT 2") == "OK 0.0"
+            client.wait_initialized(timeout=10.0)
+        assert ask(control.address, "LAST 999 x").startswith("ERR")

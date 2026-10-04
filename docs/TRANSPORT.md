@@ -58,3 +58,25 @@ the PLC is the TCP client and the cycle master, every telegram is one cycle of t
 (10 ms). A new connection starts a new simulator. The status line shows gaps and repeats of the
 PLC LifeSign, `--dump` the decoded telegram headers. Needs the locally built SDK library
 (`SRCI_SDK_SIM_LIB`).
+
+### Control channel
+
+The Python tests set up and check the simulator directly (`sim.set_move_cycles(20)`,
+`sim.joints`, `sim.last_command(...)`). A PLC test does the same over a second TCP port, the
+control channel (`--control-port`, default 5001, `0` switches it off; `srci.sim.control`):
+one request line, one answer line, ASCII with LF.
+
+| Request | Answer / effect |
+|---|---|
+| `PING` | `OK SRCI-SDK-CONTROL 1` |
+| `RESET` | new simulator (restart of the RC), no tampering, log window from the start |
+| `MOVE_CYCLES <n>`, `FAIL_ENABLE <0/1>`, `MOTION_ERROR <code>` | like `SdkSimulator.set_*` |
+| `COMMAND_ERROR <type> <code>`, `RESPONSE <type> <field> <value>`, `CLEAR_RESPONSES` | answers of commands the SDK does not implement |
+| `ALL_FUNCTIONS <0/1>`, `JOINTS <j1> ...` | supported functions, joint position |
+| `GET ENABLED`, `GET OVERRIDE`, `GET JOINT <n>`, `GET JOINTS`, `GET RI_STATE`, ... | state of the simulator |
+| `LAST <type> <field>` | field of the last command as the SDK decoded it |
+| `MARK`, `COUNT_COMMANDS <type>`, `LOG_CONTAINS <text>` | log window of the SDK |
+| `TAMPER FREEZE / KEEP_ACK <start> / SET <i> <v> / XOR <i> <m> / REQ_SET <i> <v> / OFF` | fault injection on the telegrams |
+
+The answer is `OK [value]` or `ERR <reason>`; numbers can be written as `123`, `16#7B` or `0x7B`.
+The TcUnit project SRCI_PLC_TEST uses it (`SdkControlFB`).

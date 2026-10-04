@@ -26,7 +26,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 32 | 33 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 47 | 75 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 48 | 76 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
@@ -37,8 +37,8 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
-| [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **377** | **3581** |
+| [UT-PKG](#ut-pkg) | Package, logging | 24 | 24 |
+| | **Total** | **386** | **3590** |
 
 ## Test methodology
 
@@ -271,6 +271,7 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-045 | Minicobo rejects an invalid srci version | 4 | `test_minicobo_rejects_an_invalid_srci_version` |
 | SDK-LOOP-046 | Initialization with the listed ParCfg, GroupReset, EnableRobot, override, joint move into the elbow-bent pose, rectangle with 4 linear moves, back to the start position, disable (the script runs from top to bottom, so it is started as a process). | 1 | `test_quickstart_initializes_enables_moves_and_returns` |
 | SDK-LOOP-047 | Blending: every TurnMode of MoveLinearAbsolute, then every BlendingMode with MoveLinearAbsolute and MoveAxesAbsolute; the simulator (harness) supports all TurnModes and CORNER_DISTANCE / MAX_CORNER_DEVIATION / RAMP_OVERLAP, the other blending modes are rejected with 16#8E05 and the probe goes on. | 1 | `test_minicobo_probes_the_blending_modes` |
+| SDK-LOOP-048 | Control channel for PLC tests: the simulator of the connection is set up and read over the second port; RESET restarts the RC (a new initialization follows). | 1 | `test_sdk_server_control_channel` |
 
 ## TCP
 
@@ -612,3 +613,11 @@ Package, logging
 | UT-PKG-014 | Client background reports an exception of the cycle | 1 | `test_client_background_reports_an_exception_of_the_cycle` |
 | UT-PKG-015 | Background=False: cycles only while the script waits (deterministic, e.g. | 1 | `test_client_without_background_removes_finished_blocks` |
 | UT-PKG-016 | The configuration of the RobotTask has the name of the PLC input: ``ParCfg``. | 1 | `test_program_takes_the_robot_task_configuration_as_parcfg` |
+| UT-PKG-017 | Control channel: PING answers with the protocol version, invalid requests with ERR and the reason. | 1 | `test_ping_and_errors` |
+| UT-PKG-018 | Control channel: the setup requests call the functions of the simulator (numbers as 123, 16#7B, 0x7B). | 1 | `test_simulator_setup_is_forwarded` |
+| UT-PKG-019 | Control channel: GET returns the state of the simulator (joints as REAL text without exponent). | 1 | `test_get_values` |
+| UT-PKG-020 | Control channel: LAST returns a field of the decoded command; COUNT_COMMANDS / LOG_CONTAINS count from MARK on. | 1 | `test_last_command_and_log_window` |
+| UT-PKG-021 | Control channel: RESET starts a new simulator and switches the tampering off. | 1 | `test_reset_starts_a_new_simulator` |
+| UT-PKG-022 | Control channel: TAMPER SET / XOR / REQ_SET / FREEZE / KEEP_ACK change the telegrams between PLC and SDK. | 1 | `test_tampering_of_the_telegrams` |
+| UT-PKG-023 | Control channel: number formats of the requests; a byte beyond the telegram is ignored. | 1 | `test_tamper_and_numbers` |
+| UT-PKG-024 | ``--control-port`` starts the control channel, 0 switches it off. | 1 | `test_cli_starts_the_control_channel` |

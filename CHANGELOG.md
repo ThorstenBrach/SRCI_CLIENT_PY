@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - `srci.sim.server`: the SDK simulator behind a lockstep TCP server, for PLC tests (TwinCAT,
    Codesys). The status line shows gaps and repeats of the PLC LifeSign; `--dump` shows the
    decoded telegram headers
+ - `srci.sim.control`: control channel of the SDK server (`--control-port`, default 5001) for the
+   TcUnit tests of the PLC library: setup of the simulator, its state, the log window and fault
+   injection on the telegrams (`RESET`, `MOVE_CYCLES`, `GET JOINT`, `LAST`, `TAMPER` ...)
  - `tools.st2py.export_xml`: writes the ST fixes back into the PLCopen XML of the PLC library.
    `--verify` regenerates everything from the fixed XML; the export refuses implicit integer
    narrowing and enum literals that an input of the same name hides
