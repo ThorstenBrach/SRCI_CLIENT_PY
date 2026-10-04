@@ -615,7 +615,11 @@ def main(argv: list[str] | None = None) -> int:
         help="velocity rate [%%] (default 10, -1 = default dynamics of the RC)",
     )
     ap.add_argument(
-        "--lifesign-ms", type=int, default=100, help="LifeSign timeout of the RC [ms] (default 100)"
+        "--lifesign-ms",
+        type=int,
+        default=500,
+        help="LifeSign timeout [ms] (default 500: the JAKA sends no LifeSign for ~200 ms while it "
+        "switches the drives off after a rejected command)",
     )
     ap.add_argument("--timeout", type=float, default=15.0, help="time for the initialization [s]")
     ap.add_argument("--yes", action="store_true", help="move without asking")

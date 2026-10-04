@@ -168,7 +168,7 @@ def test_minicobo_rejects_an_invalid_srci_version(minicobo: ModuleType, value: s
 def test_minicobo_probes_the_blending_modes(minicobo: ModuleType, capsys: pytest.CaptureFixture[str]) -> None:
     """blending: every TurnMode of MoveLinearAbsolute, then every BlendingMode with MoveLinearAbsolute
     and MoveAxesAbsolute; the simulator (harness) supports all TurnModes and CORNER_DISTANCE /
-    RAMP_OVERLAP, the other blending modes are rejected with 16#8E05 and the probe goes on."""
+    MAX_CORNER_DEVIATION / RAMP_OVERLAP, the other blending modes are rejected with 16#8E05 and the probe goes on."""
     assert minicobo.main(["blending", "--sdk-tcp", "--fast", "--yes", "--no-log"]) == 0
     out = capsys.readouterr().out
     assert "TurnMode FREE, ConfigMode SAME accepted" in out
@@ -176,5 +176,6 @@ def test_minicobo_probes_the_blending_modes(minicobo: ModuleType, capsys: pytest
     assert "DEFINED_VELOCITY (axes)        rejected 16#8E05 (BlendingMode not supported)" in out
     assert "RAMP_OVERLAP (axes)            accepted" in out  # the probe goes on after a rejection
     assert (
-        "blending supported             CORNER_DISTANCE (linear), CORNER_DISTANCE (axes), RAMP_OVERLAP" in out
+        "blending supported             CORNER_DISTANCE (linear), CORNER_DISTANCE (axes), "
+        "MAX_CORNER_DEVIATION (linear), MAX_CORNER_DEVIATION (axes), RAMP_OVERLAP" in out
     )

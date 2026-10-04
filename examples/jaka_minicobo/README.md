@@ -82,7 +82,7 @@ MoveAxesAbsolute to the target → MoveAxesAbsolute back → EnableRobot off.
 | command `blending` | – | which TurnMode/ConfigMode and BlendingModes the RC accepts: every mode with a 1 mm linear / 0.5° joint move and back (`16#8E05` = not supported). After every failed probe the robot is switched off and on again (GroupReset in between): on the JAKA only the first move after EnableRobot starts at once, after an error the next moves stay BUFFERED/INTERRUPTED. `--mode`/`--turn-mode`/`--config-mode` probe a single combination |
 | `--joint`, `--delta` | 6, 5.0 | joint and relative move [deg] (`move`) |
 | `--override`, `--velocity` | 10, 10 | speed override / velocity rate [%] (`move`) |
-| `--lifesign-ms` | 100 | LifeSign timeout of the RC (sent with ExchangeConfiguration) |
+| `--lifesign-ms` | 500 | LifeSign timeout (sent with ExchangeConfiguration, also checked by the client). The JAKA sends no LifeSign for about 200 ms while it switches the drives off after a rejected command - with 100 ms the connection was lost |
 | `--timeout` | 15 | time for the initialization [s] |
 | `--yes` | – | move without confirmation |
 | `--log FILE` | `minicobo_<date>_<time>.log` | log file in the current folder (see 7.) |

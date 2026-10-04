@@ -68,12 +68,14 @@ VELOCITY = 30.0  # velocity of each move [% of the reference velocity]
 READY_POSE = {"J1": 0.0, "J2": 30.0, "J3": 60.0, "J4": 0.0, "J5": 90.0, "J6": 0.0}
 RECTANGLE = (100.0, 80.0)  # size in X and Y [mm], horizontal, starting at the TCP of READY_POSE
 # blending at the corners of the rectangle (spec table 6-9); not every RC supports every mode -
-# an unsupported mode is rejected with 16#8E05 (JAKA JSI 1.6: no CORNER_DISTANCE, no RAMP_OVERLAP):
-#   RAMP_OVERLAP     parameter = overlap of the ramps [%] 0..100
-#   CORNER_DISTANCE  parameter = radius [mm]
-#   EXACT_STOP       no blending (the robot stops at every corner)
-BLENDING_MODE = BlendingMode.EXACT_STOP  # e.g. RAMP_OVERLAP on a robot that supports it
-BLENDING_PARAMETER = 50.0
+# an unsupported mode is rejected with 16#8E05 (JAKA MiniCobo, firmware 1.7.1: only
+# MAX_CORNER_DEVIATION - probe it with examples/jaka_minicobo/minicobo.py blending):
+#   MAX_CORNER_DEVIATION  parameter = max. deviation from the corner [mm]
+#   CORNER_DISTANCE       parameter = radius [mm]
+#   RAMP_OVERLAP          parameter = overlap of the ramps [%] 0..100
+#   EXACT_STOP            no blending (the robot stops at every corner)
+BLENDING_MODE = BlendingMode.MAX_CORNER_DEVIATION
+BLENDING_PARAMETER = 10.0
 # TurnMode and ConfigMode (shoulder, elbow, wrist) of the linear moves - optional parameters, not
 # every RC supports every value (16#8E10 TurnMode, 16#8E09 ConfigMode not supported):
 #   TurnMode:   USE_TURN_NUMBER (spec default), SAME (keep the turn numbers), FREE
@@ -115,7 +117,7 @@ cfg = client.program.config
 # --- communication
 cfg.Com.TelegramLengthPlcToRob = TELEGRAM_LENGTH     # [bytes] PLC -> RC, = PROFINET module size
 cfg.Com.TelegramLengthRobToPlc = TELEGRAM_LENGTH     # [bytes] RC -> PLC
-cfg.Com.LifeSignTimeOut = 100                        # [ms] RC: connection lost if the LifeSign stops (default 50)
+cfg.Com.LifeSignTimeOut = 500                        # [ms] connection lost if the LifeSign stops (default 50; JAKA: >= 300)
 # cfg.Com.TwoSequences = False                       # 2nd sequence in the telegram
 
 # --- client (PLC / Python)

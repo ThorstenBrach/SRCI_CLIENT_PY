@@ -816,7 +816,7 @@
  {
   "id": "SDK-LOOP-047",
   "test": "tests/sdk/test_example_minicobo.py::test_minicobo_probes_the_blending_modes",
-  "title": "Blending: every TurnMode of MoveLinearAbsolute, then every BlendingMode with MoveLinearAbsolute and MoveAxesAbsolute; the simulator (harness) supports all TurnModes and CORNER_DISTANCE / RAMP_OVERLAP, the other blending modes are rejected with 16#8E05 and the probe goes on.",
+  "title": "Blending: every TurnMode of MoveLinearAbsolute, then every BlendingMode with MoveLinearAbsolute and MoveAxesAbsolute; the simulator (harness) supports all TurnModes and CORNER_DISTANCE / MAX_CORNER_DEVIATION / RAMP_OVERLAP, the other blending modes are rejected with 16#8E05 and the probe goes on.",
   "refs": [],
   "status": "active"
  },
