@@ -33,6 +33,7 @@ robot change READY_POSE and RECTANGLE. Try new poses with a low OVERRIDE first.
 import copy
 import math
 import sys
+import time
 
 from srci.api import SrciClient
 from srci.fb import (
@@ -60,13 +61,13 @@ from srci.types import (
 HOST = "192.168.2.10"  # PLC gateway (TwinCAT FB_SrciTcpGateway)
 PORT = 5000
 TELEGRAM_LENGTH = 256  # bytes per direction, as configured in the PLC / robot
-OVERRIDE = 30.0  # speed override [%] for all moves
-VELOCITY = 30.0  # velocity of each move [% of the reference velocity]
+OVERRIDE = 100.0  # speed override [%] for all moves (first run on a new robot: 30)
+VELOCITY = 50.0  # velocity of each move [% of the reference velocity] -> effectively 50 %
 
 # elbow-bent pose [deg]: shoulder (J2) and elbow (J3) bent - away from the stretched arm;
 # J5 = 90 keeps the wrist away from its singularity (J5 = 0)
 READY_POSE = {"J1": 0.0, "J2": 30.0, "J3": 60.0, "J4": 0.0, "J5": 90.0, "J6": 0.0}
-RECTANGLE = (100.0, 80.0)  # size in X and Y [mm], horizontal, starting at the TCP of READY_POSE
+RECTANGLE = (150.0, 150.0)  # size in X and Y [mm], horizontal, starting at the TCP of READY_POSE
 # blending at the corners of the rectangle (spec table 6-9); not every RC supports every mode -
 # an unsupported mode is rejected with 16#8E05 (JAKA MiniCobo, firmware 1.7.1: only
 # MAX_CORNER_DEVIATION - probe it with examples/jaka_minicobo/minicobo.py blending):
@@ -75,7 +76,7 @@ RECTANGLE = (100.0, 80.0)  # size in X and Y [mm], horizontal, starting at the T
 #   RAMP_OVERLAP          parameter = overlap of the ramps [%] 0..100
 #   EXACT_STOP            no blending (the robot stops at every corner)
 BLENDING_MODE = BlendingMode.MAX_CORNER_DEVIATION
-BLENDING_PARAMETER = 10.0
+BLENDING_PARAMETER = 50.0  # well visible; at most about half of the shorter side
 # TurnMode and ConfigMode (shoulder, elbow, wrist) of the linear moves - optional parameters, not
 # every RC supports every value (16#8E10 TurnMode, 16#8E09 ConfigMode not supported):
 #   TurnMode:   USE_TURN_NUMBER (spec default), SAME (keep the turn numbers), FREE
@@ -240,6 +241,7 @@ try:
             move_linear.ParCmd.BlendingParameter[0] = BLENDING_PARAMETER
             moves.append(move_linear)
         moves[-1].ParCmd.BlendingMode = BlendingMode.EXACT_STOP  # the last move stops exactly
+        started = time.monotonic()
         for move_linear in moves:
             client.start(move_linear)  # send all moves, do not wait
         for n, move_linear in enumerate(moves, start=2):
@@ -247,6 +249,8 @@ try:
             print(
                 f"{n}. linear to X={move_linear.ParCmd.Position.X:.1f} Y={move_linear.ParCmd.Position.Y:.1f}"
             )
+        # compare with BLENDING_MODE = EXACT_STOP: blended corners must be clearly faster
+        print(f"   rectangle in {time.monotonic() - started:.1f} s ({BLENDING_MODE.name})")
 
     # 6. your moves here - e.g. 50 mm up in a straight line:
     #   target = copy.deepcopy(corner)
