@@ -44,22 +44,40 @@ pip install -e .
 # Quick start
 
 ```python
-import time
-
 from srci.api import SrciClient
-from srci.fb import MC_EnableRobotFB, MC_GroupResetFB, MC_MoveAxesAbsoluteFB
+from srci.fb import MC_EnableRobotFB, MC_GroupResetFB, MC_MoveAxesAbsoluteFB, MC_ReadActualPositionFB
 from srci.transport import TcpTransport
 
 with SrciClient(TcpTransport("192.168.0.10", 5000, 256, 256)) as client:
     client.wait_initialized()  # handshake with the robot controller
     client.execute(MC_GroupResetFB())
     enable = client.enable(MC_EnableRobotFB())
+
+    # execute: rising edge on Execute and wait for Done - returns when the robot is there
     move = MC_MoveAxesAbsoluteFB()
     move.ParCmd.JointPosition.J1 = 30.0
-    client.execute(move)  # returns when the robot is there
-    time.sleep(1.0)  # the cycle keeps running in the background (like a PLC task)
+    client.execute(move)
+
+    # the same in two steps: start only sets Execute, the script goes on while the robot moves
+    back = MC_MoveAxesAbsoluteFB()  # J1 = 0
+    client.start(back)
+    while not back.Done and not back.Error:
+        position = client.execute(MC_ReadActualPositionFB()).OutCmd.ActualJointPosition
+        print(f"J1 = {position.J1:.1f}")  # the cycle keeps running in the background (like a PLC task)
+    client.wait_done(back)  # resets Execute, raises CommandError on Error / CommandAborted
+
     client.disable(enable)
 ```
+
+| Call | Block type | What it does |
+|---|---|---|
+| `execute(fb)` | Execute | rising edge on `Execute`, waits for `Done` (or `Error` / `CommandAborted`: `CommandError`), resets `Execute` |
+| `start(fb)` + `wait_done(fb)` | Execute | the same in two steps, e.g. to send the next move in advance (blending) or to do something else while the robot moves |
+| `enable(fb)` / `disable(fb)` | Enable | sets `Enable` and waits until the block works (`Enabled`, `Valid`, `Active`) / resets it |
+| `add(fb)`, `set(fb, …)`, `remove(fb)` | any | call a block in every cycle and set its inputs yourself, like in a PLC program |
+
+All waiting calls have a `timeout` (`WaitTimeoutError`); `check=False` returns the block
+instead of raising `CommandError`.
 
 * `srci.fb` – all function blocks (`MC_…FB`, same inputs and outputs as in the PLC library)
 * `srci.types` – all data types and enums

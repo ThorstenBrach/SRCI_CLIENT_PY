@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    test case catalog and test report
  - Release workflow: wheel and source package for tags `vX.Y.Z`, release notes from this file
  - README: teaser of the teach pendant SRCI_PY_HMI (separate repository)
+ - README: quick start with `execute` and the alternative `start` + `wait_done`, table of the
+   `SrciClient` calls
 
 ### Changed
  - Repository renamed to SRCI_CLIENT_PY (distribution `srci-client`, package `srci`)
