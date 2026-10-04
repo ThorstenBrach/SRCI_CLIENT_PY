@@ -82,6 +82,7 @@ How to fix them in ST (exact ST diffs, generated from the corrections): [ST_Find
 | F73 | `MC_ReadActualPositionCyclicFB.OnExecRun` | ToolNo/FrameNo −1 ("currently used", 255 in the telegram) never equal to the returned coordinate system → `Enabled` never set, outputs never updated (D-10) | 6.1.6 | fixed: −1 matches any returned tool/frame |
 | F74 | `RobotLibraryBaseFB.OnCall`, `AxesGroupMessageLogFB.AddMessageLog`, `AlarmMessage` | messages of the command only with the severity of the last RC response → client-side errors (parameter check) never in the message buffer; `AcrID`/`CmdType` missing (E-01, E-03) | 5.5.11, Fig. 5-137, 7.1 | fixed: error/warning/info of the FB with their own severity, `AlarmMessage.AcrID/CmdType` (filled when the command was created) |
 | F75 | enums `RobotLibraryErrorIdEnum`, `RobotLibraryInfoIdEnum` | IDs of the spec missing (16#8D52…8D60, 8D89…8D98, 8E22, 16#6C70, 6D54); names with a wrong value (`ERR_LIFESIGN_TIMEOUT_0x8005` = 16#8004, `ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8_0x80A8`) (E-05, C-08) | tables 7-1, 7-2, 7-4 | fixed: elements added, alias names with the correct value |
+| F76 | `MC_GroupResetFB.OnExecRun` | after DONE the FastStop half byte is set back to 0. The RC counts every change of the half byte as new stopping commands (e.g. 2 -> 0 = 14), its FastStop counter stays > 0 and no motion is executed any more until the next initialization (found with SRCI Teach: GroupStop, GroupReset, next move hangs; probably also the INTERRUPTED moves of the JAKA MiniCobo) | 5.6.6.2.1 | fixed: half byte not reset (only at the initialization, RobotTask) |
 
 ## Notes on the SRCI SDK (simulation)
 
@@ -130,6 +131,10 @@ Changes inside the private SDK copy are marked `SRCI_PY CUSTOM BEGIN/END` and li
   Ack and responses were visible for one cycle only (a real RC keeps its process image until the
   Seq changes, 5.6.5.3). The buffer now persists; found with F66 (a response in an invalid frame
   was lost for good).
+- Harness (not an SDK change): the simulated robot stayed interrupted after a GroupStop (the SDK
+  stops by interrupt + clear path planner and refuses GroupContinue in SEQ_IDLE), so no motion
+  ran any more after a stop. `initiateClearPathPlanner` resets the flag (found with SRCI Teach,
+  together with F76).
 
 ## Notes on the specification
 

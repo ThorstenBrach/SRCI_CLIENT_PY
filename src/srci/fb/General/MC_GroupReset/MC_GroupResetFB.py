@@ -223,8 +223,7 @@ class MC_GroupResetFB(RobotLibraryBaseExecuteFB):
 
                     # Done, Aborted or Error ?
                     if self._response.State >= CmdMessageState.DONE:
-                        # Reset FastStop counter
-                        AxesGroup.Cyclic.PlcToRob.FastStop = 0
+                        # ST-FIX F76: FastStop half byte is not reset (the RC counts every change as stopping commands)
                         # set timeout
                         SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
                         # inc step counter

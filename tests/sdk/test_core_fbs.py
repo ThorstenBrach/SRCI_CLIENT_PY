@@ -318,6 +318,35 @@ def test_group_stop(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
     assert sdk.joints[0] < 100.0
 
 
+@pytest.mark.parametrize("reset_after_stop", [False, True])
+def test_motion_after_group_stop(robot: RobotTaskHarness, sdk: SdkSimulator, reset_after_stop: bool) -> None:
+    """After GroupStop (and GroupReset) the next motion runs again.
+
+    Regression F76: GroupReset set the FastStop half byte back to 0. The RC counts every change
+    of the half byte as new stopping commands (spec 5.6.6.2.1: 1 -> 0 = 15 increments), so its
+    FastStop counter stayed > 0 and no motion was executed any more until the next
+    initialization (also the harness kept the robot interrupted after a stop)."""
+    sdk.set_move_cycles(200)
+    enable(robot, sdk)
+    for _ in range(2):  # FastStop 0 -> 1 -> 2
+        moving = move_axes(robot, 100.0)
+        moving.Execute = True
+        robot.run(100, until=lambda: sdk.joints[0] > 5.0 or bool(moving.Error))  # noqa: B023
+        execute(robot, fb(robot, "MC_GroupStopFB"))
+        robot.run(50, until=lambda: bool(moving.CommandAborted or moving.Error))  # noqa: B023
+        assert moving.CommandAborted, state(moving)
+        moving.Execute = False
+        robot.run(2)
+        if reset_after_stop:
+            execute(robot, fb(robot, "MC_GroupResetFB"))
+    sdk.set_move_cycles(20)
+    mv = move_axes(robot, 0.0)
+    mv.Execute = True
+    robot.run(200, until=lambda: bool(mv.Done or mv.Error or mv.CommandAborted))
+    assert mv.Done, state(mv)
+    assert sdk.joints[0] == 0.0
+
+
 def jog(h: RobotTaskHarness, axis: str, cycles: int) -> Any:
     """Jogs ``axis`` (e.g. ``"Y_J2_Pos"``) in joint mode for ``cycles`` cycles (sim: 0.1 per cycle)."""
     j = fb(h, "MC_GroupJogFB", Enable=True)

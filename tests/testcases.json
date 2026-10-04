@@ -394,6 +394,13 @@
   "status": "active"
  },
  {
+  "id": "SDK-CORE-032",
+  "test": "tests/sdk/test_core_fbs.py::test_motion_after_group_stop",
+  "title": "After GroupStop (and GroupReset) the next motion runs again.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-RT-001",
   "test": "tests/sdk/test_robot_task.py::test_initialized_without_synchronization",
   "title": "RobotTask reaches Initialized without data synchronization",

@@ -1902,6 +1902,16 @@ def _f74_message(edge: str, ident: str, severity: str) -> str:
 
 E_PATCHES = (
     SourcePatch(
+        "MC_GroupResetFB",
+        "OnExecRun",
+        r"// Reset FastStop counter\s*\n\s*AxesGroup\.Cyclic\.PlcToRob\.FastStop := 0;",
+        "// ST-FIX F76: FastStop half byte is not reset (the RC counts every change as stopping commands)",
+        "F76: GroupReset set the FastStop half byte back to 0. The RC counts every change of it as new "
+        "stopping commands (spec 5.6.6.2.1, e.g. 2 -> 0 = 14), its FastStop counter stays > 0 and no "
+        "motion is executed any more until the next initialization",
+        regex=True,
+    ),
+    SourcePatch(
         "AxesGroupMessageLogFB",
         "AddMessageLog",
         "  Messages[0].MessageCode := MessageLog.MessageCode;",
