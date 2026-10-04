@@ -129,6 +129,10 @@ Python (srci)  --TCP, raw telegram-->  PLC gateway  --PROFINET-->  Robot control
                <--one reply per request--
 ```
 
+The PLC side is ready-made in [SRCI_TcpIp_Bridge](https://github.com/ThorstenBrach/SRCI_TcpIp_Bridge):
+`FB_SrciTcpIpBridge` with an example project for **TwinCAT 3** (tested with a JAKA MiniCobo) and for
+**CODESYS V3.5**.
+
 * Python is the cycle master: it sends one telegram per cycle, the PLC answers each received
   telegram with exactly one telegram (lockstep).
 * No extra framing: the telegram lengths are fixed by configuration on both sides.

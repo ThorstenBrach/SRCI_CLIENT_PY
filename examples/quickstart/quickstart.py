@@ -58,7 +58,7 @@ from srci.types import (
 
 # ============================================================================= settings
 
-HOST = "192.168.2.10"  # PLC gateway (TwinCAT FB_SrciTcpGateway)
+HOST = "192.168.2.10"  # PLC bridge (SRCI_TcpIp_Bridge, FB_SrciTcpIpBridge)
 PORT = 5000
 TELEGRAM_LENGTH = 256  # bytes per direction, as configured in the PLC / robot
 OVERRIDE = 100.0  # speed override [%] for all moves (first run on a new robot: 30)

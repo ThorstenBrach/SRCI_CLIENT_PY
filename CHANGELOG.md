@@ -38,6 +38,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - README: teaser of the teach pendant SRCI_PY_HMI (separate repository)
  - README: quick start with `execute` and the alternative `start` + `wait_done`, table of the
    `SrciClient` calls
+ - README and examples: link to the PLC side SRCI_TcpIp_Bridge (TwinCAT and CODESYS examples,
+   formerly SRCI_TcpGateway)
 
 ### Changed
  - Repository renamed to SRCI_CLIENT_PY (distribution `srci-client`, package `srci`)

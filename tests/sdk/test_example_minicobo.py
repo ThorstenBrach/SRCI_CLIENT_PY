@@ -82,7 +82,7 @@ def test_minicobo_reports_an_unreachable_gateway(
         s.bind(("127.0.0.1", 0))
         port = s.getsockname()[1]
     assert minicobo.main(["info", "--host", "127.0.0.1", "--port", str(port), "--no-log"]) == 1
-    assert "FB_SrciTcpGateway enabled" in capsys.readouterr().out
+    assert "FB_SrciTcpIpBridge enabled" in capsys.readouterr().out
 
 
 @pytest.mark.parametrize(

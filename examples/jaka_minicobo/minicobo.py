@@ -8,7 +8,7 @@
 #
 #  Description:
 #    First steps with a real robot (JAKA MiniCobo) behind a TwinCAT PLC that maps
-#    the SRCI telegrams from TCP/IP to PROFINET (SRCI_TcpGateway).
+#    the SRCI telegrams from TCP/IP to PROFINET (SRCI_TcpIp_Bridge).
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -81,7 +81,7 @@ from srci.types import (
 
 # ---------------------------------------------------------------------------- configuration
 
-HOST = "192.168.2.10"  # TwinCAT PLC (FB_SrciTcpGateway)
+HOST = "192.168.2.10"  # TwinCAT PLC (FB_SrciTcpIpBridge)
 PORT = 5000
 TELEGRAM_LENGTH = 256  # bytes per direction = PROFINET module size of the robot
 JOINTS = 6  # MiniCobo: 6 axes
@@ -694,7 +694,7 @@ def run(args: argparse.Namespace) -> int:
     except TransportConnectError as exc:
         print(f"\nERROR: {exc}")
         print(
-            "  is the PLC running, FB_SrciTcpGateway enabled (Listening) and the port open in the firewall?"
+            "  is the PLC running, FB_SrciTcpIpBridge enabled (Listening) and the port open in the firewall?"
         )
         return 1
     print("\ndone" + (f" - log file {Path(args.log).resolve()}" if args.log else ""))

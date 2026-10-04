@@ -8,13 +8,13 @@
 - `blending`: probe which TurnMode / ConfigMode and BlendingModes the robot accepts (tiny moves)
 
 ```
-PC (Python, srci)  --TCP 192.168.2.10:5000-->  TwinCAT PLC (FB_SrciTcpGateway)  --PROFINET-->  JAKA MiniCobo (SRCI)
+PC (Python, srci)  --TCP 192.168.2.10:5000-->  TwinCAT PLC (FB_SrciTcpIpBridge)  --PROFINET-->  JAKA MiniCobo (SRCI)
                    <-- 256 bytes per request --                                 <-- 256 bytes --
 ```
 
 The PLC only forwards the telegrams (256 bytes in, 256 bytes out, lockstep); the whole SRCI logic
-(`MC_RobotTaskFB`, commands) runs in Python. The PLC project is `SRCI_TcpGateway` (TwinCAT,
-TF6310, `FB_SrciTcpGateway`).
+(`MC_RobotTaskFB`, commands) runs in Python. The PLC project is the TwinCAT example of
+[SRCI_TcpIp_Bridge](https://github.com/ThorstenBrach/SRCI_TcpIp_Bridge) (TF6310, `FB_SrciTcpIpBridge`).
 
 The JAKA MiniCobo supports only the profile **Core**, so the example uses only Core functions:
 the RobotTask (ReadRobotData, ExchangeConfiguration, ReadMessages), GroupReset, EnableRobot,
@@ -29,7 +29,7 @@ reports anything beyond Core.
 | What | Check |
 |---|---|
 | Python ≥ 3.12 with the `srci` package | `pip install -e .` in the SRCI_PY clone (or the wheel) |
-| PLC gateway running | `GVL_Gateway.Gateway.Listening = TRUE`, port 5000 open in the Windows firewall of the PLC |
+| PLC gateway running | `GVL_Bridge.Bridge.Listening = TRUE`, port 5000 open in the Windows firewall of the PLC |
 | PROFINET | the robot is an online PROFINET device of the PLC, `RobotInData`/`RobotOutData` are linked to its SRCI input/output modules (256 bytes each) |
 | Robot | SRCI/PROFINET control enabled on the JAKA controller (see the JAKA documentation), no pending error, operating mode that allows external control |
 | Network | the PC reaches 192.168.2.10 (`ping 192.168.2.10`) |
