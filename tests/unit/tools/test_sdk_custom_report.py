@@ -55,3 +55,15 @@ def test_unpaired_markers(tmp_path: Path) -> None:
     code = "/* >>> SRCI_PY CUSTOM BEGIN [C-002] x */\n/* <<< SRCI_PY CUSTOM END [C-003] */\n"
     _, problems = scan(make_sdk(tmp_path, code, "C-002 C-003"))
     assert len(problems) == 2
+
+
+def test_original_code_kept_as_comment(tmp_path: Path) -> None:
+    """A block that comments out the original code: the BEGIN line opens the comment, the END line
+    closes it (``<<< ... END [C-001] */`` without its own ``/*``)."""
+    code = """/* >>> SRCI_PY CUSTOM BEGIN [C-001] original code (moved)
+int b;
+<<< SRCI_PY CUSTOM END [C-001] */
+"""
+    blocks, problems = scan(make_sdk(tmp_path, code, "| C-001 | a.cpp | moved |"))
+    assert [(b.id, b.begin, b.end, b.reason) for b in blocks] == [("C-001", 1, 3, "original code (moved)")]
+    assert problems == []

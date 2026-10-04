@@ -2552,6 +2552,13 @@
   "status": "active"
  },
  {
+  "id": "UT-TOOL-071",
+  "test": "tests/unit/tools/test_sdk_custom_report.py::test_original_code_kept_as_comment",
+  "title": "A block that comments out the original code: the BEGIN line opens the comment, the END line closes it (``<<< ...",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-PKG-001",
   "test": "tests/unit/test_logging_bridge.py::test_levels",
   "title": "Levels",

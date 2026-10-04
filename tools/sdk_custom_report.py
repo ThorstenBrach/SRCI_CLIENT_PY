@@ -42,7 +42,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-BEGIN = re.compile(r"SRCI_PY CUSTOM BEGIN \[(?P<id>C-\d{3})\]\s*(?P<reason>.*?)\s*\*/")
+BEGIN = re.compile(r"SRCI_PY CUSTOM BEGIN \[(?P<id>C-\d{3})\]\s*(?P<reason>.*?)\s*(?:\*/)?\s*$")
 END = re.compile(r"SRCI_PY CUSTOM END \[(?P<id>C-\d{3})\]")
 SOURCE_DIRS = ("src", "include", "lib")
 SUFFIXES = {".cpp", ".h", ".hpp", ".c"}

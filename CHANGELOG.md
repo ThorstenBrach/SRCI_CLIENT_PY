@@ -50,6 +50,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - ST fixes compile in TwinCAT: duplicate `CmdType.SoftSwitchTCP` (C0142), explicit conversions
    instead of implicit narrowing (C0032, F60/F74), enum aliases for literals hidden by inputs
    (F35, F51)
+ - `tools.sdk_custom_report` accepts a CUSTOM block that keeps the original SDK code as a comment
+   (BEGIN opens the comment, END closes it)
 
 ### Tested with
  - JAKA MiniCobo (controller 1.7.1, SRCI 1.1, profile Core) behind the TwinCAT PLC gateway.
