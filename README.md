@@ -21,8 +21,10 @@ More information about SRCI :
 
 All functions of the SRCI Core Profile are implemented and tested automatically on Linux and Windows with Python 3.12 – 3.14, including tests against a simulated robot controller.
 
+First tests with a real robot were successful: a JAKA MiniCobo (SRCI 1.1, profile Core) behind a TwinCAT PLC gateway initializes, switches on, jogs and moves joint, direct and linear, also with blended corners (see [examples/jaka_minicobo](examples/jaka_minicobo)).
+
 Despite this progress, the software is still some way off from being ready for practical use.
-Tests with real robots and further optimizations are required to ensure the functionality.
+Tests with further robots and further optimizations are required to ensure the functionality.
 
 # Software delivery
 
@@ -74,14 +76,17 @@ import srci
 srci.configure(TOOL_MAX=20, FRAME_MAX=20, LOAD_MAX=20)
 ```
 
-**Example:** [examples/core_profile](examples/core_profile) executes every function of the profile
-"Core" and explains the library step by step ([README](examples/core_profile/README.md)).
-[examples/jaka_minicobo](examples/jaka_minicobo) is a first-steps script for a real robot behind
-the TwinCAT PLC gateway: read everything without motion (`info`), move one joint a few degrees
-and back (`move`).
-[examples/quickstart/quickstart.py](examples/quickstart/quickstart.py) is the compact template for
-users: one file - initialize, switch on the robot, a few joint / linear / direct moves, switch off
-(`--sim` runs it against the SDK simulator).
+**Examples:**
+
+* [examples/quickstart/quickstart.py](examples/quickstart/quickstart.py) – the compact template for
+  users, one flat script: initialize, switch on the robot, joint and direct moves, a linear
+  rectangle with blended corners, switch off (`--sim` runs it against the SDK simulator).
+* [examples/core_profile](examples/core_profile) – executes every function of the profile "Core"
+  and explains the library step by step ([README](examples/core_profile/README.md)).
+* [examples/jaka_minicobo](examples/jaka_minicobo) – first steps with a real robot behind the
+  TwinCAT PLC gateway: read everything without motion (`info`), move one joint a few degrees and
+  back (`move`), probe the supported TurnMode / ConfigMode / BlendingModes (`blending`).
+  The README lists what the JAKA MiniCobo supports.
 
 # How it talks to the robot
 
@@ -112,7 +117,13 @@ mypy
 ```
 
 Some tests run against a simulated robot controller that is built from a licensed SRCI SDK. The
-SDK is not part of this repository; without it these tests are skipped.
+SDK is not part of this repository; without it these tests are skipped. With the locally built
+SDK library, `python -m srci.sim.server --port 5000 --length 256` also offers the simulator as a
+TCP server for PLC tests (the PLC is the client, see [docs/TRANSPORT.md](docs/TRANSPORT.md)).
+
+The fixes of the ST code found while porting are listed in [docs/ST_FINDINGS.md](docs/ST_FINDINGS.md);
+`python -m tools.st2py.export_xml` writes them back into the PLCopen XML of the PLC library
+([docs/ST_XML_EXPORT.md](docs/ST_XML_EXPORT.md)).
 
 Every test has a unique, stable ID; all test cases are described in
 [docs/TestCases.md](docs/TestCases.md). `pytest --tc-report build/test-report` writes a test

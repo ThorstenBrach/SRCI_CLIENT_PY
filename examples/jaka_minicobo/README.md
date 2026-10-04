@@ -1,10 +1,11 @@
 # Example: first steps with a JAKA MiniCobo behind a TwinCAT PLC gateway
 
-[`minicobo.py`](minicobo.py) connects to a real robot over the PLC gateway and does two things:
+[`minicobo.py`](minicobo.py) connects to a real robot over the PLC gateway and has three commands:
 
 - `info`: initialize and read everything that does not move the robot
 - `move`: enable the robot and move **one** joint by a few degrees relative to its current
   position, then back
+- `blending`: probe which TurnMode / ConfigMode and BlendingModes the robot accepts (tiny moves)
 
 ```
 PC (Python, srci)  --TCP 192.168.2.10:5000-->  TwinCAT PLC (FB_SrciTcpGateway)  --PROFINET-->  JAKA MiniCobo (SRCI)
@@ -17,7 +18,8 @@ TF6310, `FB_SrciTcpGateway`).
 
 The JAKA MiniCobo supports only the profile **Core**, so the example uses only Core functions:
 the RobotTask (ReadRobotData, ExchangeConfiguration, ReadMessages), GroupReset, EnableRobot,
-ChangeSpeedOverride, ReadRobotSWLimits, ReadActualPosition, MoveAxesAbsolute and GroupStop. The
+ChangeSpeedOverride, ReadRobotSWLimits, ReadActualPosition, MoveAxesAbsolute, MoveLinearAbsolute
+(`blending`) and GroupStop. The
 synchronization of user data stays off (it would need e.g. ReadWorkArea, which is not Core).
 `info` shows which Core functions the robot reports in `RCSupportedFunctions` and whether it
 reports anything beyond Core.
@@ -79,19 +81,33 @@ MoveAxesAbsolute to the target → MoveAxesAbsolute back → EnableRobot off.
 | `--host`, `--port` | 192.168.2.10, 5000 | PLC gateway |
 | `--length` | 256 | telegram length per direction = PROFINET module size |
 | `--srci-version` | 1.5 | SRCI version in byte 0 of the header (e.g. `1.3` = 16#23 for an RC with an older SRCI version) |
-| command `blending` | – | which TurnMode/ConfigMode and BlendingModes the RC accepts: every mode with a 1 mm linear / 0.5° joint move and back (`16#8E05` = not supported). After every failed probe the robot is switched off and on again (GroupReset in between): on the JAKA only the first move after EnableRobot starts at once, after an error the next moves stay BUFFERED/INTERRUPTED. `--mode`/`--turn-mode`/`--config-mode` probe a single combination |
+| command `blending` | – | which TurnMode/ConfigMode and BlendingModes the RC accepts: every mode with a 1 mm linear / 0.5° joint move and back (`16#8E05` = not supported). After every failed probe the robot is switched off, reset (GroupReset) and on again: the JAKA switches its drives off after a rejected command. `--mode`/`--turn-mode`/`--config-mode` probe a single combination |
 | `--joint`, `--delta` | 6, 5.0 | joint and relative move [deg] (`move`) |
 | `--override`, `--velocity` | 10, 10 | speed override / velocity rate [%] (`move`) |
 | `--lifesign-ms` | 500 | LifeSign timeout (sent with ExchangeConfiguration, also checked by the client). The JAKA sends no LifeSign for about 200 ms while it switches the drives off after a rejected command - with 100 ms the connection was lost |
 | `--timeout` | 15 | time for the initialization [s] |
 | `--yes` | – | move without confirmation |
-| `--log FILE` | `minicobo_<date>_<time>.log` | log file in the current folder (see 7.) |
+| `--log FILE` | `minicobo_<date>_<time>.log` | log file in the current folder (see 8.) |
 | `--no-log` | – | no log file |
 | `--trace-all` | – | log file: every telegram (default: the first 50, every change of TelegramState/Control, every 100th) |
 | `--debug` | – | show the whole log on the console as well |
 | `--sdk-tcp`, `--fast` | – | dry run against the SDK simulator |
 
-## 6. Troubleshooting
+## 6. Results with the JAKA MiniCobo
+
+Controller 1.7.1 (tested with 1.7.1_46), SRCI 1.1:
+
+| Item | Result |
+|---|---|
+| Functions | the 28 functions of the profile Core, nothing beyond |
+| MoveLinearAbsolute | TurnMode only FREE (others `16#8E10`), ConfigMode SAME or FREE (USE_CONFIG `16#8E09`) |
+| Blending | only MAX_CORNER_DEVIATION, for linear and joint moves; all other modes `16#8E05`. The quickstart drives its rectangle visibly blended with 50 mm deviation at 50 % velocity |
+| Rejected command | the RC reports a pending error and switches the drives off (EnableRobot goes to ERROR). It sends no LifeSign for about 200 ms meanwhile, so use a LifeSign timeout of 500 ms (default) |
+| Pending error | EnableRobot is refused with `16#8C04` until the error is reset: GroupReset first |
+| After GroupStop | the next motion runs after GroupReset (needed ST-FIX F76: GroupReset must not reset the FastStop half byte) |
+| Firmware | the automatic update to controller 1.7.2 broke the PROFINET communication with JSI 1.6.33 (the inputs stayed 0); 1.7.1 works |
+
+## 7. Troubleshooting
 
 | Symptom | Cause / check |
 |---|---|
@@ -102,13 +118,14 @@ MoveAxesAbsolute to the target → MoveAxesAbsolute back → EnableRobot off.
 | `ERROR_164_SRCI_MAJOR_VERSION_INCOMPATIBLE` | SRCI version of the robot firmware ≠ 1.x |
 | initialized, then lost again (LifeSign timeout) | Python cycle too slow or blocked: `MaxInterval` of the gateway, `--lifesign-ms` higher, PLC task / PROFINET cycle shorter |
 | `16#8E03 … Optional parameter value not supported` | the RC does not support an optional parameter (e.g. `VelocityRate`): `--velocity -1` |
+| EnableRobot refused, `16#8C04` | an error of the RC is pending (e.g. from the last connection): GroupReset first (`move` and `blending` do that) |
 | move refused (`16#8xxx`) | the message text in the "Messages" section names the reason (mode, enable, limits) |
 
 If the RobotTask does not initialize, the script prints a diagnosis: the step of the RobotTask,
 the TelegramState and the first 18 bytes of both telegrams. `RobotInData is all 0` means the PLC
 answers, but the robot sends nothing over PROFINET.
 
-## 7. Log file
+## 8. Log file
 
 Every run writes `minicobo_<date>_<time>.log` into the current folder (path at the start and at
 the end of the output):
@@ -124,7 +141,7 @@ library), byte 1 LifeSign, bytes 2..5 lengths, byte 6 AxesGroupID (high nibble) 
 nibble: 1 INITIALIZE, 3 RESET); RC→PLC byte 1 LifeSign (high nibble), byte 3 TelegramState
 (254 READY_FOR_INITIALIZATION, 255 INITIALIZED, 161..173 errors).
 
-## 8. VS Code: run and debug
+## 9. VS Code: run and debug
 
 Add a configuration to `.vscode/launch.json` of the `SRCI_PY` folder (the folder is not part of
 the repository; one entry per command / target):
@@ -154,7 +171,7 @@ simulator, breakpoints ok).
 
 **Breakpoints with the real robot:** a breakpoint stops all threads, including the cycle thread
 of `SrciClient`. No telegram is sent while the program stands - after the LifeSign timeout
-(100 ms) the robot controller leaves the initialized state, and the TCP connection runs into its
+(500 ms) the robot controller leaves the initialized state, and the TCP connection runs into its
 response timeout. After continuing, the RobotTask has to initialize again (restart the script).
 So: with the real robot use the log file; for stepping through the code use the configurations
 "against the SDK simulator" (`--sdk-tcp --fast`: the cycles run only while the script waits, a

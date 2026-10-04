@@ -28,7 +28,8 @@
     The robot is **not** enabled and does not move.
 
 ``python minicobo.py blending``
-    which blending modes the RC accepts (tiny moves: 1 mm up / J6 +0.5 deg and back).
+    which TurnMode / ConfigMode and blending modes the RC accepts (tiny moves: 1 mm up /
+    J6 +0.5 deg and back).
 
 ``python minicobo.py move --joint 6 --delta 5``
     enable the robot, move ONE joint by a few degrees relative to its current position
@@ -477,9 +478,8 @@ def _probe_pair(client: SrciClient, kind: str, mode: BlendingMode, par: tuple[fl
             if result == "accepted":
                 result = f"accepted, but the move back failed: {exc}"
     if result != "accepted":
-        # after an error the JAKA interrupts the sequence: the next moves stay INTERRUPTED until
-        # GroupContinue -> reset the error, stop a move that is still running, continue
-        # (not GroupStop followed by GroupReset: then the SDK simulator finishes no more moves)
+        # reset the error, stop a move that is still running and continue a paused sequence
+        # (the caller then restarts the robot, see _restart)
         with contextlib.suppress(CommandError, WaitTimeoutError):
             client.execute(MC_GroupResetFB(), timeout=5.0, check=False)
         if "error" not in seen:  # the move back was sent and may still wait
@@ -495,9 +495,9 @@ def _probe_pair(client: SrciClient, kind: str, mode: BlendingMode, par: tuple[fl
 
 
 def _restart(client: SrciClient, enable: MC_EnableRobotFB) -> MC_EnableRobotFB:
-    """After a failed probe: robot off, GroupReset, robot on. In the logs of the JAKA only the
-    first move after EnableRobot starts at once (ACTIVE); after an error or GroupStop the next
-    moves stay BUFFERED/INTERRUPTED, and the later probes would only show that."""
+    """After a failed probe: robot off, GroupReset, robot on. The JAKA switches its drives off
+    after a rejected command (EnableRobot goes to ERROR), so every probe starts from a freshly
+    enabled robot."""
     with contextlib.suppress(CommandError, WaitTimeoutError):
         client.disable(enable)
     with contextlib.suppress(CommandError, WaitTimeoutError):

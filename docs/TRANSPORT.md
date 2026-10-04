@@ -44,8 +44,17 @@ Python (srci)  --TCP, raw telegram-->  PLC gateway  --PROFINET-->  Robot control
 
 ## Other transports
 
-- `LoopbackTransport(handler, …)` - in-process, e.g. with the SDK simulator (M5).
+- `LoopbackTransport(handler, …)` - in-process, e.g. with the SDK simulator.
 - `FaultInjectingTransport(inner, FaultPlan(...))` - deterministic faults for tests
   (timeout, lost request, disconnect, bit flip, stale answer, protocol violation).
 - `srci.sim.gateway.PlcGatewaySimulator` - TCP server that behaves like the gateway PLC
-  (used by the TCP tests, later with the SDK behind it).
+  (used by the TCP tests and by `--sdk-tcp` of the examples, with the SDK simulator behind it).
+
+## SDK server for PLC tests
+
+`python -m srci.sim.server --port 5000 --length 256` runs the SDK simulator behind a TCP server
+with the same protocol, so a PLC (TwinCAT, Codesys) can test the SRCI PLC library against it:
+the PLC is the TCP client and the cycle master, every telegram is one cycle of the simulator
+(10 ms). A new connection starts a new simulator. The status line shows gaps and repeats of the
+PLC LifeSign, `--dump` the decoded telegram headers. Needs the locally built SDK library
+(`SRCI_SDK_SIM_LIB`).
