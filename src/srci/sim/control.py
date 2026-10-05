@@ -49,6 +49,7 @@ Answer: ``OK [value]`` or ``ERR <reason>``. Numbers can be written as ``123``, `
     MARK                          start of the log window (COUNT_COMMANDS, LOG_CONTAINS)
     COUNT_COMMANDS <type>         commands of <type> the SDK accepted since MARK
     LOG_CONTAINS <text>           1 if a log message of the SDK since MARK contains <text>
+    MAX_SEVERITY                  highest severity of the log messages since MARK (0: none)
     TAMPER FREEZE                 answer RC -> PLC frozen (the last answer is repeated)
     TAMPER KEEP_ACK <start>       acknowledge of the sequence at <start> kept, no response
     TAMPER SET <index> <value>    byte of the answer RC -> PLC overwritten
@@ -167,6 +168,7 @@ class SdkControlServer:
             "MARK": self._mark,
             "COUNT_COMMANDS": self._count_commands,
             "LOG_CONTAINS": self._log_contains,
+            "MAX_SEVERITY": self._max_severity,
             "TAMPER": self._tamper,
         }
 
@@ -326,6 +328,10 @@ class SdkControlServer:
             raise ControlError("LOG_CONTAINS <text>")
         text = " ".join(args)
         return str(int(any(text in log for log in self._logs())))
+
+    def _max_severity(self, args: list[str]) -> str:
+        logs = self.server.sim.logs[self.server.log_mark :]
+        return str(max((log.severity for log in logs), default=0))
 
     def _tamper(self, args: list[str]) -> str:
         if not args:

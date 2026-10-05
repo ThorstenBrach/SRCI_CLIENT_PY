@@ -75,7 +75,7 @@ one request line, one answer line, ASCII with LF.
 | `ALL_FUNCTIONS <0/1>`, `JOINTS <j1> ...` | supported functions, joint position |
 | `GET ENABLED`, `GET OVERRIDE`, `GET JOINT <n>`, `GET JOINTS`, `GET RI_STATE`, ... | state of the simulator |
 | `LAST <type> <field>` | field of the last command as the SDK decoded it |
-| `MARK`, `COUNT_COMMANDS <type>`, `LOG_CONTAINS <text>` | log window of the SDK |
+| `MARK`, `COUNT_COMMANDS <type>`, `LOG_CONTAINS <text>`, `MAX_SEVERITY` | log window of the SDK |
 | `TAMPER FREEZE / KEEP_ACK <start> / SET <i> <v> / XOR <i> <m> / REQ_SET <i> <v> / OFF` | fault injection on the telegrams |
 
 The answer is `OK [value]` or `ERR <reason>`; numbers can be written as `123`, `16#7B` or `0x7B`.

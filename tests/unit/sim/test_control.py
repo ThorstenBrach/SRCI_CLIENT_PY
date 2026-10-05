@@ -157,10 +157,11 @@ def test_get_values(server: SdkServer) -> None:
 
 
 def test_last_command_and_log_window(server: SdkServer) -> None:
-    """Control channel: LAST returns a field of the decoded command; COUNT_COMMANDS / LOG_CONTAINS count from MARK on."""
+    """Control channel: LAST returns a field of the decoded command; COUNT_COMMANDS / LOG_CONTAINS / MAX_SEVERITY count from MARK on."""
     sim: FakeSim = server.sim  # type: ignore[assignment]
     sim.last[2104] = {"@ExecutionMode": "7", "VelocityRate": "5000"}
     sim.logs.append(SdkLog(0, 0, 0, 0, "Command MoveAxesAbsolute (2104), cmdID 1: EMPTY -> BUFFERED"))
+    assert ask(server, "MAX_SEVERITY") == ["OK 0"]
     assert ask(server, "LAST 2104 @ExecutionMode", "LAST 2104 Missing", "LAST 1 x") == [
         "OK 7",
         "ERR no field Missing",
