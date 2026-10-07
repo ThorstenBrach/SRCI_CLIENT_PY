@@ -616,7 +616,7 @@ Package, logging
 | UT-PKG-017 | Control channel: PING answers with the protocol version, invalid requests with ERR and the reason. | 1 | `test_ping_and_errors` |
 | UT-PKG-018 | Control channel: the setup requests call the functions of the simulator (numbers as 123, 16#7B, 0x7B). | 1 | `test_simulator_setup_is_forwarded` |
 | UT-PKG-019 | Control channel: GET returns the state of the simulator (joints as REAL text without exponent). | 1 | `test_get_values` |
-| UT-PKG-020 | Control channel: LAST returns a field of the decoded command; COUNT_COMMANDS / LOG_CONTAINS count from MARK on. | 1 | `test_last_command_and_log_window` |
+| UT-PKG-020 | Control channel: LAST returns a field of the decoded command; COUNT_COMMANDS / LOG_CONTAINS / MAX_SEVERITY count from MARK on. | 1 | `test_last_command_and_log_window` |
 | UT-PKG-021 | Control channel: RESET starts a new simulator and switches the tampering off. | 1 | `test_reset_starts_a_new_simulator` |
 | UT-PKG-022 | Control channel: TAMPER SET / XOR / REQ_SET / FREEZE / KEEP_ACK change the telegrams between PLC and SDK. | 1 | `test_tampering_of_the_telegrams` |
 | UT-PKG-023 | Control channel: number formats of the requests; a byte beyond the telegram is ignored. | 1 | `test_tamper_and_numbers` |

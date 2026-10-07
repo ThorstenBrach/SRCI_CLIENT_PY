@@ -2701,7 +2701,7 @@
  {
   "id": "UT-PKG-020",
   "test": "tests/unit/sim/test_control.py::test_last_command_and_log_window",
-  "title": "Control channel: LAST returns a field of the decoded command; COUNT_COMMANDS / LOG_CONTAINS count from MARK on.",
+  "title": "Control channel: LAST returns a field of the decoded command; COUNT_COMMANDS / LOG_CONTAINS / MAX_SEVERITY count from MARK on.",
   "refs": [],
   "status": "active"
  },
