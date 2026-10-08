@@ -43,6 +43,10 @@ from srci.types import JogMode, ProcessingMode, RobotLibraryErrorIdEnum, Sequenc
 from srci.types.iec import new_instance
 from tests.robot_task_harness import SIZE, RobotTaskHarness
 
+# error of the RC for an invalid DecelerationRate: SDK 1.0.0-RC2 16#8D06 (below the minimum rate),
+# previous SDK version 16#8E03 (every DecelerationRate rejected)
+RC_DECELERATION_ERRORS = (0x8D06, 0x8E03)
+
 MOVE_CYCLES = 20
 
 
@@ -250,13 +254,14 @@ def test_move_axes_absolute_before_enable(robot: RobotTaskHarness, sdk: SdkSimul
 
 
 def test_move_axes_absolute_deceleration_rate(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
-    """The SDK rejects every DecelerationRate except "not set" (validateDynamicsParameters, 0x8E03)."""
+    """The RC rejects a DecelerationRate below its minimum rate (simulation: 1 %). SDK 1.0.0-RC2
+    answers 16#8D06; the previous SDK version rejected every DecelerationRate with 16#8E03."""
     enable(robot, sdk)
     mv = move_axes(robot, 10.0)
-    mv.ParCmd.DecelerationRate = 100.0
+    mv.ParCmd.DecelerationRate = 0.5
     mv.Execute = True
     robot.run(100, until=lambda: bool(mv.Done or mv.Error))
-    assert mv.Error and mv.ErrorID == 0x8E03, state(mv)
+    assert mv.Error and mv.ErrorID in RC_DECELERATION_ERRORS, state(mv)
 
 
 def test_buffered_moves(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:

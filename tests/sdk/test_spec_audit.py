@@ -125,13 +125,13 @@ def test_f61_parameter_error_sets_error_in_the_same_cycle() -> None:
 
 
 def test_f61_error_of_the_rc_resets_busy_at_once() -> None:
-    """F61 (B-01): an error of the RC (16#8E03) -> Error with ErrorID, Busy FALSE, no cycle with
-    ErrorID but without Error."""
+    """F61 (B-01): an error of the RC (DecelerationRate below the minimum: 16#8D06, previous SDK
+    version 16#8E03) -> Error with ErrorID, Busy FALSE, no cycle with ErrorID but without Error."""
     with robot() as (_, h):
-        mv = move_axes(h, DecelerationRate=100.0)
+        mv = move_axes(h, DecelerationRate=0.5)
         mv.Execute = True
         problems = run_checked(h, [mv], 50, until=lambda: mv.Error)
-        assert mv.Error and mv.ErrorID == 0x8E03 and not mv.Busy
+        assert mv.Error and mv.ErrorID in (0x8D06, 0x8E03) and not mv.Busy
         assert problems == []
 
 
@@ -445,7 +445,7 @@ def test_f74_client_error_is_in_the_message_buffer_with_acr_entry_and_type() -> 
         h.rt.LogLevel = Severity.DEBUG
         bad = move_axes(h, VelocityRate=500.0)
         bad.Execute = True
-        rc = move_axes(h, DecelerationRate=100.0)
+        rc = move_axes(h, DecelerationRate=0.5)
         rc.Execute = True
         h.run(50, until=lambda: bool(bad.Error and rc.Error))
         h.run(2)
@@ -455,7 +455,7 @@ def test_f74_client_error_is_in_the_message_buffer_with_acr_entry_and_type() -> 
         client = by_code[RobotLibraryErrorIdEnum.ERR_VELOCITY_INVALID]
         assert client.Severity == Severity.ERROR  # not sent: no ACR entry / command type
         assert "MC_MoveAxesAbsoluteFB" in client.MessageText
-        server = by_code[0x8E03]
+        server = by_code.get(0x8D06) or by_code[0x8E03]  # SDK 1.0.0-RC2 / previous version
         assert server.AcrID > 0 and server.CmdType == CmdType.MoveAxesAbsolute
 
 

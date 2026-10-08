@@ -178,7 +178,7 @@ Core function blocks against the SDK
 | SDK-CORE-011 | ReadActualPosition: Valid while enabled | 1 | `test_read_actual_position_valid` |
 | SDK-CORE-012 | MoveAxesAbsolute moves the robot to the target joint position (Done, position reached) | 1 | `test_move_axes_absolute` |
 | SDK-CORE-013 | Without power the command stays buffered (sequence interrupted), GroupContinue starts it. | 1 | `test_move_axes_absolute_before_enable` |
-| SDK-CORE-014 | The SDK rejects every DecelerationRate except "not set" (validateDynamicsParameters, 0x8E03). | 1 | `test_move_axes_absolute_deceleration_rate` |
+| SDK-CORE-014 | The RC rejects a DecelerationRate below its minimum rate (simulation: 1 %). | 1 | `test_move_axes_absolute_deceleration_rate` |
 | SDK-CORE-015 | Two buffered MoveAxesAbsolute are executed one after the other | 1 | `test_buffered_moves` |
 | SDK-CORE-016 | MoveDirectAbsolute moves the robot to the target position | 1 | `test_move_direct_absolute` |
 | SDK-CORE-017 | MoveLinearAbsolute moves the robot to the target position | 1 | `test_move_linear_absolute` |
@@ -235,7 +235,7 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-009 | SDK behind the PLC gateway simulator: identical results via TcpTransport. | 1 | `test_same_handshake_over_tcp` |
 | SDK-LOOP-010 | Every function of the profile "Core" (spec table 5-2) is executed without error - with ``--fast`` synchronous without waiting, without it in real time with the cycle in the background thread of the client. | 3 | `test_core_profile_demo` |
 | SDK-LOOP-011 | F61 (B-01/B-02): a parameter error sets ErrorID and Error in the same cycle. | 1 | `test_f61_parameter_error_sets_error_in_the_same_cycle` |
-| SDK-LOOP-012 | F61 (B-01): an error of the RC (16#8E03) -> Error with ErrorID, Busy FALSE, no cycle with ErrorID but without Error. | 1 | `test_f61_error_of_the_rc_resets_busy_at_once` |
+| SDK-LOOP-012 | F61 (B-01): an error of the RC (DecelerationRate below the minimum: 16#8D06, previous SDK version 16#8E03) -> Error with ErrorID, Busy FALSE, no cycle with ErrorID but without Error. | 1 | `test_f61_error_of_the_rc_resets_busy_at_once` |
 | SDK-LOOP-013 | F61 (B-03, BUF-01): commands that find no free ACR entry (16#8618) end with Error and without Busy; all outputs stay consistent. | 1 | `test_f61_register_full_does_not_leave_busy` |
 | SDK-LOOP-014 | F61 (B-04): GroupJog with an error of the RC (robot not enabled): Active is never TRUE together with Error, Error follows ErrorID. | 1 | `test_f61_group_jog_active_and_error_exclusive` |
 | SDK-LOOP-015 | F63 (A-01...A-06): with two telegram sequences the RobotTask initializes, and several commands at once are exchanged over both sequences in the order of the Seq numbers. | 1 | `test_f63_two_sequences_initialize_and_execute_commands` |
