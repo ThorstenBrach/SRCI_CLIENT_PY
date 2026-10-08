@@ -179,7 +179,10 @@ class SdkControlServer:
         return self.address[1]
 
     def start(self) -> SdkControlServer:
-        self._thread.start()
+        """Start the control channel (idempotent: ``SdkServer.enable_control`` already starts it
+        when the server is running)."""
+        if not self._thread.is_alive():
+            self._thread.start()
         return self
 
     def stop(self) -> None:
