@@ -123,7 +123,7 @@ class ModuleEmitter(PouEmitter):
         if isinstance(t, SString):
             return C("")
         if isinstance(t, SEnum):
-            first = next(iter(self.env.gen.enum_classes[t.name].__members__))
+            first = self.env.gen.enum_default(t.name).name  # ST-FIX F80: member 0 like TwinCAT
             return At(self.use_type(t.name), first)
         if isinstance(t, SStruct):
             return Cl(self.use_type(t.name))

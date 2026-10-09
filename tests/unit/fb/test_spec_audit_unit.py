@@ -164,3 +164,34 @@ def test_f63_ack_of_an_other_seq_is_ignored() -> None:
     ag.State.CurrentSEQ[0], ag.State.CurrentSEQ[1] = 8, 9
     host.ParseRecvPayload(ag, recv_telegram(host, (8, 0), (0x0101, 0x0202)))
     assert [cmd for cmd, _ in acr.responses] == [0x0101]
+
+
+# ------------------------------------------------------------------ F80 enum defaults like TwinCAT
+
+
+def test_f80_enum_without_initial_value_starts_with_member_0() -> None:
+    """F80: an enum without initial value starts with the member 0 if there is one (TwinCAT,
+    checked online), otherwise with the first member: TriggerCondition -> UNDEFINED (first
+    member -5), MessageLevel (no member 0) -> DEBUG."""
+    from srci.types import MessageLevel, ReadMessagesParCmd, SetTriggerMotionParCmd, TriggerCondition
+
+    par = SetTriggerMotionParCmd()
+    assert par.TriggerMode_1 == par.TriggerMode_2 == TriggerCondition.UNDEFINED
+    assert ReadMessagesParCmd().MessageLevel == MessageLevel.DEBUG
+
+
+def test_f80_set_trigger_motion_trigger_mode_2_undefined_is_allowed() -> None:
+    """F80 (spec table 6-692): TriggerMode_1 has no valid default (0 = undefined -> 16#0008);
+    TriggerMode_2 = 0 (undefined) is allowed: only TriggerMode_1 is used."""
+    from srci.fb import MC_SetTriggerMotionFB
+    from srci.types import TriggerCondition
+
+    ag, _ = new_axes_group()
+    fb = MC_SetTriggerMotionFB()
+    assert not fb.CheckParameterValid(AxesGroup=ag)
+    assert fb.ErrorID == RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD
+    fb = MC_SetTriggerMotionFB()
+    fb.ParCmd.TriggerMode_1 = TriggerCondition.START_POSITION_TIME_MS
+    fb.ParCmd.TriggerParameter_1 = 100.0
+    fb.ParCmd.TriggerMode_2 = TriggerCondition.UNDEFINED
+    assert fb.CheckParameterValid(AxesGroup=ag), fb.ErrorID

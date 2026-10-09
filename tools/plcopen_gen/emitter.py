@@ -325,6 +325,19 @@ class Generator:
             return f"_iec.InstanceType({r.name!r})"
         return f"_iec.PointerType({r.target!r})"
 
+    def enum_default(self, enum: str) -> Any:
+        """Member a variable of ``enum`` without initial value starts with, like in TwinCAT: the
+        member with the value 0 if there is one, otherwise the first member.
+
+        ST-FIX F80: before, always the first member; ``TriggerCondition`` (first member -5,
+        ``UNDEFINED`` = 0) started with -5 in Python and with ``UNDEFINED`` on the PLC (spec table
+        6-692: 0 = undefined is the default). Checked online in TwinCAT 3.1.4026:
+        ``SetTriggerMotionParCmd.TriggerMode_1`` = UNDEFINED, ``ReadMessagesParCmd.MessageLevel``
+        (no member 0) = DEBUG (first member)."""
+        members = self.enum_classes[enum]
+        zero = next((m for m in members if m.value == 0), None)
+        return zero if zero is not None else next(iter(members))
+
     def enum_member(self, enum: str, value: int) -> str:
         for name, member in self.enum_classes[enum].__members__.items():
             if member.value == value:
@@ -359,7 +372,7 @@ class Generator:
             return repr(str(self.eval_expr(init.text))), False
         if isinstance(r, REnum):
             if init is None:
-                first = next(iter(self.enum_classes[r.name]))
+                first = self.enum_default(r.name)
                 return self.enum_member(r.name, first.value), False
             if not isinstance(init, SimpleValue):
                 raise GenError("invalid enum initial value")

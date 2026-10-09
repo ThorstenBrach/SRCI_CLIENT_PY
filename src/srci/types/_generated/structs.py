@@ -11059,7 +11059,7 @@ class SetTriggerMotionParCmd:
     """SetTriggerMotionParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
-    TriggerMode_1: _e.TriggerCondition = _e.TriggerCondition.TARGET_POSITION_TIME_MS
+    TriggerMode_1: _e.TriggerCondition = _e.TriggerCondition.UNDEFINED
     """Defines the trigger condition on which the related Action function will be started:"""
     TriggerParameter_1: float = 0.0
     """
@@ -11068,7 +11068,7 @@ class SetTriggerMotionParCmd:
     % • 4: TCP velocity value of reference velocity in mm. • 5: Time in ms The value of the
     parameter must be positive
     """
-    TriggerMode_2: _e.TriggerCondition = _e.TriggerCondition.TARGET_POSITION_TIME_MS
+    TriggerMode_2: _e.TriggerCondition = _e.TriggerCondition.UNDEFINED
     """Defines the trigger condition on which the related Action function will be started:"""
     TriggerParameter_2: float = 0.0
     """

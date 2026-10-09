@@ -221,6 +221,7 @@ GEN05_MANDATORY = {
     "MC_UserLoginFB": "Username/Password",
     "MC_ReadAnalogInputFB": "Index",
     "MC_SetTriggerRegisterFB": "TriggerMode",
+    "MC_SetTriggerMotionFB": "TriggerMode_1 (0 = undefined is the default, spec table 6-692; ST-FIX F80)",
     "MC_ReadLoadDataFB": "LoadNo (load 0 cannot be read)",
     "MC_WriteLoadDataFB": "LoadNo",
     "MC_WriteFrameDataFB": "FrameNo (frame 0 = world cannot be written)",

@@ -122,6 +122,7 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | [F77](#f77) | `MC_MonitorWorkAreaFB`, `MC_MoveSuperImposedDynamicFB`, `MC_ReturnToPrimaryFB` `.OnExecRun` - blocks on `RobotLibraryBaseFB` (not on the Execute/Enable base) do not check `CMDsEnabled` → without running RobotTask they send the command into the ACR and stay `Busy` (found by the TcUnit tests of the PLC library: axes group with data; in Python only an empty axes group was tested, where the parameter check failed by chance) | 3 | `MC_MonitorWorkAreaFB`, `MC_MoveSuperImposedDynamicFB`, `MC_ReturnToPrimaryFB` |
 | [F78](#f78) | `RobotLibraryBaseEnableFB.OnCall` - the RC answered with an error, Enable FALSE starts the error clear (waits up to 5 s for a response); a new rising edge of Enable in this time is consumed while `Error` is still TRUE → nothing sent, no `Busy`, no `Error` (found by the TcUnit test PM-03: the instance is reused) | 1 | `RobotLibraryBaseEnableFB` |
 | [F79](#f79) | `MC_RobotTaskFB.OnExecRun` step 1 - the init timeout reports the *momentary* telegram state; the RobotTask answers an error state with ACK_ERROR / RESET / INITIALIZE, so the error (e.g. 16#A4 SRCI major version) is only visible part of the time → depending on the phase `ERR_TIMEOUT_CMD` instead of the reason (TcUnit test SDK-RT-007, ~4 ms per robot cycle on the PLC) | 4 | `MC_RobotTaskFB` |
+| [F80](#f80) | `MC_SetTriggerMotionFB.CheckParameterValid`, transpiler (enum defaults) - `TriggerMode_2` = 0 (undefined, the default: only `TriggerMode_1` is used) is rejected with 16#0008. The Python port started enums without initial value with the first member (`TriggerCondition` −5), TwinCAT with the member 0 (`UNDEFINED`, checked online) → GEN-05 SetTriggerMotion was green in Python and red on the PLC | 1 | `MC_SetTriggerMotionFB` |
 
 ## Generated ST changes
 
@@ -8204,7 +8205,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_SetTriggerMotionFB.CheckParameterValid
 +++ b/MC_SetTriggerMotionFB.CheckParameterValid
-@@ -169,5 +169,31 @@
+@@ -171,5 +171,31 @@
                              Para2       := DINT_TO_STRING(_idx));
      RETURN;
    END_IF
@@ -8934,6 +8935,30 @@ _`MC_RobotTaskFB.OnExecRun` step 1 - the init timeout reports the *momentary* te
             ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));
           ELSE
             ErrorID     := RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD;
+```
+
+### F80
+
+_`MC_SetTriggerMotionFB.CheckParameterValid`, transpiler (enum defaults) - `TriggerMode_2` = 0 (undefined, the default: only `TriggerMode_1` is used) is rejected with 16#0008. The Python port started enums without initial value with the first member (`TriggerCondition` −5), TwinCAT with the member 0 (`UNDEFINED`, checked online) → GEN-05 SetTriggerMotion was green in Python and red on the PLC_
+
+- F80: SetTriggerMotion: TriggerMode_2 = 0 (undefined, the default) means 'only TriggerMode_1' (spec table 6-692) but was rejected with 16#0008
+
+**MC_SetTriggerMotionFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_SetTriggerMotionFB.CheckParameterValid
++++ b/MC_SetTriggerMotionFB.CheckParameterValid
+@@ -85,7 +85,9 @@
+ 
+ 
+ // Check ParCmd.TriggerMode_2 valid ? 
+-IF (( ParCmd.TriggerMode_2 <> TriggerCondition.TARGET_POSITION_DISTANCE_PERCENT      ) AND
++// ST-FIX F80: 0 = undefined (default) is allowed: only TriggerMode_1 is used (spec table 6-692)
++IF (( ParCmd.TriggerMode_2 <> TriggerCondition.UNDEFINED                            ) AND
++    ( ParCmd.TriggerMode_2 <> TriggerCondition.TARGET_POSITION_DISTANCE_PERCENT      ) AND
+     ( ParCmd.TriggerMode_2 <> TriggerCondition. START_POSITION_DISTANCE_PERCENT      ) AND
+     ( ParCmd.TriggerMode_2 <> TriggerCondition.TARGET_POSITION_DISTANCE_ABSOLUTE     ) AND
+     ( ParCmd.TriggerMode_2 <> TriggerCondition. START_POSITION_DISTANCE_ABSOLUTE     ) AND
 ```
 
 ## Data types

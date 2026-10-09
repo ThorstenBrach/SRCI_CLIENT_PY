@@ -1418,6 +1418,20 @@
   "status": "active"
  },
  {
+  "id": "UT-FB-055",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f80_enum_without_initial_value_starts_with_member_0",
+  "title": "F80: an enum without initial value starts with the member 0 if there is one (TwinCAT, checked online), otherwise with the first member: TriggerCondition -> UNDEFINED (first member -5), MessageLevel (no member 0) -> DEBUG.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-056",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f80_set_trigger_motion_trigger_mode_2_undefined_is_allowed",
+  "title": "F80 (spec table 6-692): TriggerMode_1 has no valid default (0 = undefined -> 16#0008); TriggerMode_2 = 0 (undefined) is allowed: only TriggerMode_1 is used.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-FN-001",
   "test": "tests/unit/functions/test_convert_dt.py::test_iec_date_is_days_since_1990",
   "title": "Iec date is days since 1990",

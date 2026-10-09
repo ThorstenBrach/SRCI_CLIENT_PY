@@ -2018,6 +2018,25 @@ E_PATCHES += (
     ),
 )
 
+_F80 = (
+    "F80: SetTriggerMotion: TriggerMode_2 = 0 (undefined, the default) means 'only TriggerMode_1' "
+    "(spec table 6-692) but was rejected with 16#0008"
+)
+E_PATCHES += (
+    SourcePatch(
+        "MC_SetTriggerMotionFB",
+        "CheckParameterValid",
+        r"(// Check ParCmd\.TriggerMode_2 valid \?[ \t]*\n)"
+        r"IF \(\( ParCmd\.TriggerMode_2 <> TriggerCondition\.TARGET_POSITION_DISTANCE_PERCENT      \) AND",
+        "\\1// ST-FIX F80: 0 = undefined (default) is allowed: only TriggerMode_1 is used (spec table 6-692)\n"
+        "IF (( ParCmd.TriggerMode_2 <> TriggerCondition.UNDEFINED                            ) AND\n"
+        "    ( ParCmd.TriggerMode_2 <> TriggerCondition.TARGET_POSITION_DISTANCE_PERCENT      ) AND",
+        _F80,
+        regex=True,
+        template=True,
+    ),
+)
+
 E_VARS = (
     VarAppend(
         "MC_RobotTaskFB",

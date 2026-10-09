@@ -41,7 +41,7 @@ from srci.types import TriggerCondition
 __all__ = ['TRIGGER_CONDITION_TO_STRING']
 
 
-def TRIGGER_CONDITION_TO_STRING(*, Value: TriggerCondition = TriggerCondition.TARGET_POSITION_TIME_MS) -> str:
+def TRIGGER_CONDITION_TO_STRING(*, Value: TriggerCondition = TriggerCondition.UNDEFINED) -> str:
     TRIGGER_CONDITION_TO_STRING: str = ''
 
     match Value:
