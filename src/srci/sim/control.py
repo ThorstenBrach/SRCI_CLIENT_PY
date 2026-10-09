@@ -64,6 +64,7 @@ connection start a new one.
 from __future__ import annotations
 
 import contextlib
+import select
 import socket
 import threading
 from collections.abc import Callable
@@ -217,6 +218,10 @@ class SdkControlServer:
             try:
                 chunk = conn.recv(256)
             except TimeoutError:
+                # a new client replaces the current one: a PLC that was restarted (download,
+                # exception, reset) may leave its old connection open without ever closing it
+                if select.select([self._listener], [], [], 0)[0]:
+                    return
                 continue
             if not chunk:
                 return

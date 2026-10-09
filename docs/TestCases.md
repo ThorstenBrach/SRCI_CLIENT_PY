@@ -37,8 +37,8 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
-| [UT-PKG](#ut-pkg) | Package, logging | 24 | 24 |
-| | **Total** | **386** | **3590** |
+| [UT-PKG](#ut-pkg) | Package, logging | 25 | 25 |
+| | **Total** | **387** | **3591** |
 
 ## Test methodology
 
@@ -621,3 +621,4 @@ Package, logging
 | UT-PKG-022 | Control channel: TAMPER SET / XOR / REQ_SET / FREEZE / KEEP_ACK change the telegrams between PLC and SDK. | 1 | `test_tampering_of_the_telegrams` |
 | UT-PKG-023 | Control channel: number formats of the requests; a byte beyond the telegram is ignored. | 1 | `test_tamper_and_numbers` |
 | UT-PKG-024 | ``--control-port`` starts the control channel, 0 switches it off. | 1 | `test_cli_starts_the_control_channel` |
+| UT-PKG-025 | Control channel: a new connection replaces one that stays open without requests (PLC restarted without closing its socket), otherwise the new client would never be served. | 1 | `test_new_client_replaces_a_hanging_one` |

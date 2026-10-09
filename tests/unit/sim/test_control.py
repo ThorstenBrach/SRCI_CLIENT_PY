@@ -228,3 +228,14 @@ def test_cli_starts_the_control_channel(
     assert f"control channel for PLC tests on 127.0.0.1:{free}" in capsys.readouterr().out
     assert server_module.main(["--port", "0", "--control-port", "0"]) == 0
     assert "control channel" not in capsys.readouterr().out
+
+
+def test_new_client_replaces_a_hanging_one(server: SdkServer) -> None:
+    """Control channel: a new connection replaces one that stays open without requests (PLC
+    restarted without closing its socket), otherwise the new client would never be served."""
+    assert server.control is not None
+    with socket.create_connection(server.control.address, timeout=2.0) as old:
+        old.sendall(b"PING\n")
+        assert old.recv(256).startswith(b"OK")
+        # the old connection stays open; a second client must still get its answers
+        assert ask(server, "PING") == ["OK SRCI-SDK-CONTROL 1"]

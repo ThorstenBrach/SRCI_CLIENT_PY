@@ -2732,5 +2732,12 @@
   "title": "``--control-port`` starts the control channel, 0 switches it off.",
   "refs": [],
   "status": "active"
+ },
+ {
+  "id": "UT-PKG-025",
+  "test": "tests/unit/sim/test_control.py::test_new_client_replaces_a_hanging_one",
+  "title": "Control channel: a new connection replaces one that stays open without requests (PLC restarted without closing its socket), otherwise the new client would never be served.",
+  "refs": [],
+  "status": "active"
  }
 ]
