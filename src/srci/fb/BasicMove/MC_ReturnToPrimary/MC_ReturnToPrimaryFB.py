@@ -518,8 +518,13 @@ class MC_ReturnToPrimaryFB(RobotLibraryBaseFB):
                     # reset the falling edge
                     self._enable_F()
 
-                    # Check function is supported and parameter are valid ?
-                    if self.CheckFunctionSupported(AxesGroup=AxesGroup) & self.CheckParameterValid(AxesGroup=AxesGroup):
+                    # ST-FIX F77: commands not enabled (RobotTask not initialized) -> error like the Execute/Enable blocks
+                    if not AxesGroup.State.CMDsEnabled:
+                        self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_COMMANDS_NOT_ENABLED, Overwrite=True)
+                        # Create log entry
+                        self.CreateLogMessage(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Commands not enabled (RobotTask not initialized)')
+                        self.Error = True
+                    elif self.CheckFunctionSupported(AxesGroup=AxesGroup) & self.CheckParameterValid(AxesGroup=AxesGroup):
                         # set busy flag
                         self.Busy = True
                         # Reset command outputs

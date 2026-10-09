@@ -303,6 +303,25 @@ def test_gen07_axes_group_not_initialized(name: str) -> None:
         assert commands(sim, cmd_type(name)) == 0
 
 
+@pytest.mark.parametrize("name", [n for n in NAMES if n not in GEN07_STARTUP])
+def test_gen07_robot_task_disabled_after_initialization(name: str) -> None:
+    """Axes group with data, RobotTask disabled (variant of GEN-07): the RobotTask was initialized
+    (tools, frames, ... known) and is disabled again -> Error. ST-FIX F77: the blocks on RobotLibraryBaseFB
+    (MonitorWorkArea, MoveSuperImposedDynamic, ReturnToPrimary) did not check CMDsEnabled and
+    stayed Busy; with an empty axes group they only failed by chance (tool not available).
+    Found by the TcUnit tests of the PLC library (instances reused, axes group filled). The blocks
+    of the start-up may still talk to the RC and are left out."""
+    with robot() as (sim, h):
+        h.enable = False
+        h.run(100, until=lambda: not h.ag.State.CMDsEnabled)
+        start_log = len(sim.logs)
+        fb = block(name, h)
+        start(fb)
+        h.run(100, until=lambda: bool(fb.Error))
+        assert fb.Error and fb.ErrorID != 0, outputs(fb)
+        assert commands(sim, cmd_type(name), start_log) == 0
+
+
 # ------------------------------------------------------------------ GEN-08
 
 
@@ -403,6 +422,32 @@ def test_err02_error_of_the_rc(name: str) -> None:
         start(fb)
         h.run(100, until=lambda: finished(fb))
         assert fb.Error and fb.ErrorID == RC_ERROR, outputs(fb)
+
+
+ENABLE_RC = sorted(n for n in NAMES if not hasattr(CLASSES[n](), "Execute") and cmd_type(n) not in SDK_NATIVE)
+
+
+@pytest.mark.parametrize("name", ENABLE_RC)
+def test_err03_new_enable_after_an_error_of_the_rc(name: str) -> None:
+    """ERR-03: the RC answered with an error, Enable FALSE and TRUE again after a few cycles (the
+    same instance) -> the new command is sent. ST-FIX F78: the falling edge starts the error clear
+    (waits up to 5 s for a response); a new enable in this time was consumed while Error was still
+    TRUE -> nothing sent, no Busy, no Error. Found by the TcUnit tests (PM-03 reuses instances)."""
+    t = cmd_type(name)
+    with robot() as (sim, h):
+        sim.set_command_error(t, RC_ERROR)
+        fb = block(name, h)
+        start(fb)
+        h.run(100, until=lambda: bool(fb.Error))
+        assert fb.Error and fb.ErrorID == RC_ERROR, outputs(fb)
+        sim.set_command_error(t, 0)
+        start(fb, False)
+        h.run(5)
+        start_log = len(sim.logs)
+        start(fb)
+        h.run(100, until=lambda: finished(fb))
+        assert commands(sim, t, start_log) == 1, outputs(fb)
+        assert finished(fb) and not fb.Error, outputs(fb)
 
 
 # ------------------------------------------------------------------ PM / SEQ (motion)

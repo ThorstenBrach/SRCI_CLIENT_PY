@@ -373,6 +373,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         self._seqAckTimeout: TON = TON()
         # ST-FIX F66: lifesign of header and footer differ -> frame is not processed
         self._frameInvalid: bool = False
+        # ST-FIX F79: last error state of the RC during the initialization (reported at the init timeout)
+        self._initErrorState: TelegramState = TelegramState.UNDEFINED
         self._turns: int = 0  #  ST-FIX F60: turn number nibble
         self._restartReset: bool = False  #  ST-FIX F23: interface reset on the RC requested by a restart
         # VAR_INST of HandleAliveBit
@@ -5602,6 +5604,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     if self.CheckParameterValid(AxesGroup=AxesGroup):
                         # take configuration parameter if not yet enabled
                         copy_into(self._parCfg, self.ParCfg)
+                        # ST-FIX F79: no error state of the RC seen yet in this initialization
+                        self._initErrorState = TelegramState.UNDEFINED
                         # inc step counter
                         self._stepCmd = self._stepCmd + 1
 
@@ -5616,6 +5620,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             pass
 
                         case _ if TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE <= AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_172_TELEGRAM_NUMBER_NOT_SUPPORTED:
+                            # ST-FIX F79: remember the error state for the init timeout
+                            self._initErrorState = AxesGroup.Cyclic.RobToPlc.TelegramState
                             # clear error
                             AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.ACK_ERROR
                             AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESET  # always a reset, so that on the robot side the ACR is reseted
@@ -5657,8 +5663,12 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if CheckTimeout(rTimer=self._timerCmd) == RobotLibraryConstants.OK:
                     # Check Telegram State error ?
                     # ST-FIX F15
+                    # ST-FIX F79: error state seen during the initialization
                     if AxesGroup.Cyclic.RobToPlc.TelegramState >= TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE and AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_173_SERVER_CONNECTION_LOST:
                         self.ErrorID = AxesGroup.Cyclic.RobToPlc.TelegramState
+                        self.ErrorAddTxt = trunc_str(CONCAT('_stepCmd = ', DINT_TO_STRING(self._stepCmd)), 40)
+                    elif self._initErrorState != TelegramState.UNDEFINED:
+                        self.ErrorID = self._initErrorState
                         self.ErrorAddTxt = trunc_str(CONCAT('_stepCmd = ', DINT_TO_STRING(self._stepCmd)), 40)
                     else:
                         self.ErrorID = RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD

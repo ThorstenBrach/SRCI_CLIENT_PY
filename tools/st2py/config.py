@@ -1900,7 +1900,7 @@ def _f74_message(edge: str, ident: str, severity: str) -> str:
     )
 
 
-E_PATCHES = (
+E_PATCHES: tuple[SourcePatch, ...] = (
     SourcePatch(
         "MC_GroupResetFB",
         "OnExecRun",
@@ -1934,7 +1934,97 @@ E_PATCHES = (
         regex=True,
     ),
 )
+# ----------------------------------------------------------------------------------------------
+# F77 ... F79: found by the TcUnit tests of the PLC library (SRCI_PLC_TEST, SDK in the loop)
+_F77 = (
+    "F77: MonitorWorkArea, MoveSuperImposedDynamic, ReturnToPrimary (on RobotLibraryBaseFB, not on the "
+    "Execute/Enable base) did not check CMDsEnabled: without RobotTask they stayed Busy"
+)
+E_PATCHES += tuple(
+    SourcePatch(
+        pou,
+        "OnExecRun",
+        r"// Check function is supported and parameter are valid \?\s*\n(\s*)IF \(\( CheckFunctionSupported",
+        "// ST-FIX F77: commands not enabled (RobotTask not initialized) -> error like the Execute/Enable blocks\n"
+        "\\1IF ( NOT AxesGroup.State.CMDsEnabled )\n"
+        "\\1THEN\n"
+        "\\1  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_COMMANDS_NOT_ENABLED, Overwrite := TRUE );\n"
+        "\\1  // Create log entry\n"
+        "\\1  CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,\n"
+        "\\1                     MessageType := MessageType.CMD,\n"
+        "\\1                     Severity    := Severity.ERROR,\n"
+        "\\1                     MessageCode := ErrorID,\n"
+        "\\1                     MessageText := 'Commands not enabled (RobotTask not initialized)');\n"
+        "\\1  Error := TRUE;\n"
+        "\\1// Check function is supported and parameter are valid ?\n"
+        "\\1ELSIF (( CheckFunctionSupported",
+        _F77,
+        regex=True,
+        template=True,
+    )
+    for pou in ("MC_MonitorWorkAreaFB", "MC_MoveSuperImposedDynamicFB", "MC_ReturnToPrimaryFB")
+)
+
+_F79 = (
+    "F79: RobotTask init timeout reported the momentary telegram state; the RobotTask answers an error "
+    "state with ACK_ERROR/RESET/INITIALIZE, so the error (e.g. 16#A4 SRCI version) is only visible part "
+    "of the time -> depending on the phase ERR_TIMEOUT_CMD instead of the reason"
+)
+E_PATCHES += (
+    SourcePatch(
+        "MC_RobotTaskFB",
+        "OnExecRun",
+        "          _parCfg := ParCfg;\n",
+        "          _parCfg := ParCfg;\n"
+        "          // ST-FIX F79: no error state of the RC seen yet in this initialization\n"
+        "          _initErrorState := TelegramState.UNDEFINED;\n",
+        _F79,
+    ),
+    SourcePatch(
+        "MC_RobotTaskFB",
+        "OnExecRun",
+        r"(TelegramState\.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE\.\.TelegramState\.ERROR_172_TELEGRAM_NUMBER_NOT_SUPPORTED:\s*\n)",
+        "\\1\n"
+        "           // ST-FIX F79: remember the error state for the init timeout\n"
+        "           _initErrorState := AxesGroup.Cyclic.RobToPlc.TelegramState;\n",
+        _F79,
+        regex=True,
+        template=True,
+    ),
+    SourcePatch(
+        "MC_RobotTaskFB",
+        "OnExecRun",
+        "         ELSE\n"
+        "           ErrorID     := RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD;\n"
+        "           ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));\n"
+        "         END_IF\n"
+        "       END_IF\n"
+        "\n"
+        "       \n"
+        "  02:",
+        "         ELSIF ( _initErrorState <> TelegramState.UNDEFINED ) // ST-FIX F79: error state seen during the initialization\n"
+        "         THEN\n"
+        "           ErrorID     := _initErrorState;\n"
+        "           ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));\n"
+        "         ELSE\n"
+        "           ErrorID     := RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD;\n"
+        "           ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));\n"
+        "         END_IF\n"
+        "       END_IF\n"
+        "\n"
+        "       \n"
+        "  02:",
+        _F79,
+    ),
+)
+
 E_VARS = (
+    VarAppend(
+        "MC_RobotTaskFB",
+        "VAR\n  /// ST-FIX F79: last error state of the RC during the initialization (reported at the init timeout)\n"
+        "  _initErrorState : TelegramState;\nEND_VAR",
+        _F79,
+    ),
     VarAppend(
         "RobotLibraryBaseFB",
         "VAR\n  /// ST-FIX F74: message of the command for the message buffer\n  _alarmMessage : AlarmMessage;\nEND_VAR",
@@ -2490,6 +2580,21 @@ CONFIG = Config(
             "  // ST-FIX F23: a new enable ends a pending cancel / error clear of the previous enable\n"
             "  _cancel := FALSE;\n  _stepCancel := 0;\n  _clearError := FALSE;\n  _stepClearError := 0;\n",
             "F23: a pending cancel (5 s) of the previous enable reset the block after the new enable",
+        ),
+        SourcePatch(
+            "RobotLibraryBaseEnableFB",
+            "OnCall",
+            "  _stepClearError := 0;\n  OnExecStart(AxesGroup := AxesGroup);\n",
+            "  _stepClearError := 0;\n"
+            "  // ST-FIX F78: an error of the previous enable that is still being cleared (falling edge, up\n"
+            "  // to 5 s) is cleared now - otherwise the block (start only without Error) consumes the\n"
+            "  // rising edge and the new enable is ignored (not sent, no Busy, no Error)\n"
+            "  IF ( Error ) AND ( ErrorID <> RobotLibraryErrorIdEnum.ERR_COMMANDS_NOT_ENABLED )\n"
+            "  THEN\n"
+            "    Reset();\n"
+            "  END_IF\n"
+            "  OnExecStart(AxesGroup := AxesGroup);\n",
+            "F78: a new enable while the error of the previous enable was still being cleared was ignored",
         ),
         *_swap_no_and_data_changed("MC_ReadToolDataFB", "ToolData.ToolNoReturn", "ToolNoReturn", "6-190"),
         *_swap_no_and_data_changed("MC_ReadFrameDataFB", "FrameNoReturn", "FrameNoReturn", "6-184"),

@@ -36,6 +36,13 @@
   "status": "active"
  },
  {
+  "id": "ERR-03",
+  "test": "tests/sdk/test_methodology.py::test_err03_new_enable_after_an_error_of_the_rc",
+  "title": "The RC answered with an error, Enable FALSE and TRUE again after a few cycles (the same instance) -> the new command is sent.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "GEN-04",
   "test": "tests/sdk/test_methodology.py::test_gen04_not_executed",
   "title": "Valid command, not executed -> all outputs FALSE / 0, nothing sent.",
@@ -87,6 +94,13 @@
   "refs": [
    "Siemens x-09 \"AbortingMode is not defined\", ST-FIX F48"
   ],
+  "status": "active"
+ },
+ {
+  "id": "MET-001",
+  "test": "tests/sdk/test_methodology.py::test_gen07_robot_task_disabled_after_initialization",
+  "title": "Axes group with data, RobotTask disabled (variant of GEN-07): the RobotTask was initialized (tools, frames, ...",
+  "refs": [],
   "status": "active"
  },
  {
@@ -488,6 +502,13 @@
   "id": "SDK-RT-013",
   "test": "tests/sdk/test_robot_task.py::test_client_to_server_keeps_the_plc_data",
   "title": "F16: the internal start-up read must not overwrite the user data with the RC data.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-014",
+  "test": "tests/sdk/test_robot_task.py::test_incompatible_srci_major_version_at_any_cycle_time",
+  "title": "ST-FIX F79: the reason of the failed initialization does not depend on the moment of the timeout.",
   "refs": [],
   "status": "active"
  },

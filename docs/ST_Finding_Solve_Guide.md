@@ -119,6 +119,9 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | [F74](#f74) | `RobotLibraryBaseFB.OnCall`, `AxesGroupMessageLogFB.AddMessageLog`, `AlarmMessage` - messages of the command only with the severity of the last RC response → client-side errors (parameter check) never in the message buffer; `AcrID`/`CmdType` missing (E-01, E-03) | 3 | `AxesGroupMessageLogFB`, `RobotLibraryBaseFB`, data types |
 | [F75](#f75) | enums `RobotLibraryErrorIdEnum`, `RobotLibraryInfoIdEnum` - IDs of the spec missing (16#8D52…8D60, 8D89…8D98, 8E22, 16#6C70, 6D54); names with a wrong value (`ERR_LIFESIGN_TIMEOUT_0x8005` = 16#8004, `ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8_0x80A8`) (E-05, C-08) | 0 | data types |
 | [F76](#f76) | `MC_GroupResetFB.OnExecRun` - after DONE the FastStop half byte is set back to 0. The RC counts every change of the half byte as new stopping commands (e.g. 2 -> 0 = 14), its FastStop counter stays > 0 and no motion is executed any more until the next initialization (found with SRCI_PY_HMI: GroupStop, GroupReset, next move hangs; probably also the INTERRUPTED moves of the JAKA MiniCobo) | 1 | `MC_GroupResetFB` |
+| [F77](#f77) | `MC_MonitorWorkAreaFB`, `MC_MoveSuperImposedDynamicFB`, `MC_ReturnToPrimaryFB` `.OnExecRun` - blocks on `RobotLibraryBaseFB` (not on the Execute/Enable base) do not check `CMDsEnabled` → without running RobotTask they send the command into the ACR and stay `Busy` (found by the TcUnit tests of the PLC library: axes group with data; in Python only an empty axes group was tested, where the parameter check failed by chance) | 3 | `MC_MonitorWorkAreaFB`, `MC_MoveSuperImposedDynamicFB`, `MC_ReturnToPrimaryFB` |
+| [F78](#f78) | `RobotLibraryBaseEnableFB.OnCall` - the RC answered with an error, Enable FALSE starts the error clear (waits up to 5 s for a response); a new rising edge of Enable in this time is consumed while `Error` is still TRUE → nothing sent, no `Busy`, no `Error` (found by the TcUnit test PM-03: the instance is reused) | 1 | `RobotLibraryBaseEnableFB` |
+| [F79](#f79) | `MC_RobotTaskFB.OnExecRun` step 1 - the init timeout reports the *momentary* telegram state; the RobotTask answers an error state with ACK_ERROR / RESET / INITIALIZE, so the error (e.g. 16#A4 SRCI major version) is only visible part of the time → depending on the phase `ERR_TIMEOUT_CMD` instead of the reason (TcUnit test SDK-RT-007, ~4 ms per robot cycle on the PLC) | 4 | `MC_RobotTaskFB` |
 
 ## Generated ST changes
 
@@ -1092,7 +1095,7 @@ _`RobotLibraryBaseEnableFB` / `MC_RobotTaskFB.Reset` - disabling the RobotTask s
 ```diff
 --- a/MC_RobotTaskFB.OnExecRun
 +++ b/MC_RobotTaskFB.OnExecRun
-@@ -49,7 +49,15 @@
+@@ -51,7 +51,15 @@
           END_IF
         END_IF
       
@@ -1109,7 +1112,7 @@ _`RobotLibraryBaseEnableFB` / `MC_RobotTaskFB.Reset` - disabling the RobotTask s
  
           TelegramState.UNDEFINED : ;
           
-@@ -104,6 +112,7 @@
+@@ -109,6 +117,7 @@
                                     Para1       := TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState));
           ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));
         END_CASE
@@ -8748,6 +8751,189 @@ _`MC_GroupResetFB.OnExecRun` - after DONE the FastStop half byte is set back to 
             // set timeout
             SetTimeout(PT := _timeoutCmd, rTimer := _timerCmd);
             // inc step counter
+```
+
+### F77
+
+_`MC_MonitorWorkAreaFB`, `MC_MoveSuperImposedDynamicFB`, `MC_ReturnToPrimaryFB` `.OnExecRun` - blocks on `RobotLibraryBaseFB` (not on the Execute/Enable base) do not check `CMDsEnabled` → without running RobotTask they send the command into the ACR and stay `Busy` (found by the TcUnit tests of the PLC library: axes group with data; in Python only an empty axes group was tested, where the parameter check failed by chance)_
+
+- F77: MonitorWorkArea, MoveSuperImposedDynamic, ReturnToPrimary (on RobotLibraryBaseFB, not on the Execute/Enable base) did not check CMDsEnabled: without RobotTask they stayed Busy
+
+**MC_MonitorWorkAreaFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_MonitorWorkAreaFB.OnExecRun
++++ b/MC_MonitorWorkAreaFB.OnExecRun
+@@ -14,8 +14,19 @@
+          // reset the falling edge
+         _enable_F();
+         
++         // ST-FIX F77: commands not enabled (RobotTask not initialized) -> error like the Execute/Enable blocks
++         IF ( NOT AxesGroup.State.CMDsEnabled )
++         THEN
++           SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_COMMANDS_NOT_ENABLED, Overwrite := TRUE );
++           // Create log entry
++           CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                              MessageType := MessageType.CMD,
++                              Severity    := Severity.ERROR,
++                              MessageCode := ErrorID,
++                              MessageText := 'Commands not enabled (RobotTask not initialized)');
++           Error := TRUE;
+          // Check function is supported and parameter are valid ?
+-         IF (( CheckFunctionSupported( AxesGroup := AxesGroup )) AND
++         ELSIF (( CheckFunctionSupported( AxesGroup := AxesGroup )) AND
+              ( CheckParameterValid   ( AxesGroup := AxesGroup )))
+          THEN      
+            // set busy flag
+```
+
+**MC_MoveSuperImposedDynamicFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_MoveSuperImposedDynamicFB.OnExecRun
++++ b/MC_MoveSuperImposedDynamicFB.OnExecRun
+@@ -14,8 +14,19 @@
+          // reset the falling edge
+         _enable_F();       
+         
++         // ST-FIX F77: commands not enabled (RobotTask not initialized) -> error like the Execute/Enable blocks
++         IF ( NOT AxesGroup.State.CMDsEnabled )
++         THEN
++           SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_COMMANDS_NOT_ENABLED, Overwrite := TRUE );
++           // Create log entry
++           CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                              MessageType := MessageType.CMD,
++                              Severity    := Severity.ERROR,
++                              MessageCode := ErrorID,
++                              MessageText := 'Commands not enabled (RobotTask not initialized)');
++           Error := TRUE;
+          // Check function is supported and parameter are valid ?
+-         IF (( CheckFunctionSupported( AxesGroup := AxesGroup )) AND
++         ELSIF (( CheckFunctionSupported( AxesGroup := AxesGroup )) AND
+              ( CheckParameterValid   ( AxesGroup := AxesGroup )))
+          THEN      
+            // set busy flag
+```
+
+**MC_ReturnToPrimaryFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_ReturnToPrimaryFB.OnExecRun
++++ b/MC_ReturnToPrimaryFB.OnExecRun
+@@ -14,8 +14,19 @@
+          // reset the falling edge
+         _enable_F();   
+     
++         // ST-FIX F77: commands not enabled (RobotTask not initialized) -> error like the Execute/Enable blocks
++         IF ( NOT AxesGroup.State.CMDsEnabled )
++         THEN
++           SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_COMMANDS_NOT_ENABLED, Overwrite := TRUE );
++           // Create log entry
++           CreateLogMessage ( Timestamp   := AxesGroup.State.SystemTime,
++                              MessageType := MessageType.CMD,
++                              Severity    := Severity.ERROR,
++                              MessageCode := ErrorID,
++                              MessageText := 'Commands not enabled (RobotTask not initialized)');
++           Error := TRUE;
+          // Check function is supported and parameter are valid ?
+-         IF (( CheckFunctionSupported( AxesGroup := AxesGroup )) AND
++         ELSIF (( CheckFunctionSupported( AxesGroup := AxesGroup )) AND
+              ( CheckParameterValid   ( AxesGroup := AxesGroup )))      
+          THEN
+            // set busy flag
+```
+
+### F78
+
+_`RobotLibraryBaseEnableFB.OnCall` - the RC answered with an error, Enable FALSE starts the error clear (waits up to 5 s for a response); a new rising edge of Enable in this time is consumed while `Error` is still TRUE → nothing sent, no `Busy`, no `Error` (found by the TcUnit test PM-03: the instance is reused)_
+
+- F78: a new enable while the error of the previous enable was still being cleared was ignored
+
+**RobotLibraryBaseEnableFB** · `OnCall` · patch
+
+```diff
+--- a/RobotLibraryBaseEnableFB.OnCall
++++ b/RobotLibraryBaseEnableFB.OnCall
+@@ -27,6 +27,13 @@
+   _stepCancel := 0;
+   _clearError := FALSE;
+   _stepClearError := 0;
++  // ST-FIX F78: an error of the previous enable that is still being cleared (falling edge, up
++  // to 5 s) is cleared now - otherwise the block (start only without Error) consumes the
++  // rising edge and the new enable is ignored (not sent, no Busy, no Error)
++  IF ( Error ) AND ( ErrorID <> RobotLibraryErrorIdEnum.ERR_COMMANDS_NOT_ENABLED )
++  THEN
++    Reset();
++  END_IF
+   OnExecStart(AxesGroup := AxesGroup);
+ END_IF
+ 
+```
+
+### F79
+
+_`MC_RobotTaskFB.OnExecRun` step 1 - the init timeout reports the *momentary* telegram state; the RobotTask answers an error state with ACK_ERROR / RESET / INITIALIZE, so the error (e.g. 16#A4 SRCI major version) is only visible part of the time → depending on the phase `ERR_TIMEOUT_CMD` instead of the reason (TcUnit test SDK-RT-007, ~4 ms per robot cycle on the PLC)_
+
+- F79: RobotTask init timeout reported the momentary telegram state; the RobotTask answers an error state with ACK_ERROR/RESET/INITIALIZE, so the error (e.g. 16#A4 SRCI version) is only visible part of the time -> depending on the phase ERR_TIMEOUT_CMD instead of the reason
+
+**MC_RobotTaskFB** · `declaration` · variables
+
+```diff
++VAR
++  /// ST-FIX F79: last error state of the RC during the initialization (reported at the init timeout)
++  _initErrorState : TelegramState;
++END_VAR
+```
+
+**MC_RobotTaskFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_RobotTaskFB.OnExecRun
++++ b/MC_RobotTaskFB.OnExecRun
+@@ -37,6 +37,8 @@
+          THEN
+            // take configuration parameter if not yet enabled
+           _parCfg := ParCfg;
++          // ST-FIX F79: no error state of the RC seen yet in this initialization
++          _initErrorState := TelegramState.UNDEFINED;
+            // inc step counter
+           _stepCmd := _stepCmd + 1; 
+          END_IF
+```
+
+**MC_RobotTaskFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_RobotTaskFB.OnExecRun
++++ b/MC_RobotTaskFB.OnExecRun
+@@ -50,6 +50,9 @@
+          
+          TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE..TelegramState.ERROR_172_TELEGRAM_NUMBER_NOT_SUPPORTED:
+ 
++
++           // ST-FIX F79: remember the error state for the init timeout
++           _initErrorState := AxesGroup.Cyclic.RobToPlc.TelegramState;
+            // clear error
+            AxesGroup.Cyclic.PlcToRob.Control := ControlHalfByte.ACK_ERROR;        
+            AxesGroup.Cyclic.PlcToRob.Control := ControlHalfByte.RESET; // always a reset, so that on the robot side the ACR is reseted         
+```
+
+**MC_RobotTaskFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_RobotTaskFB.OnExecRun
++++ b/MC_RobotTaskFB.OnExecRun
+@@ -111,6 +111,10 @@
+              ( AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_173_SERVER_CONNECTION_LOST                   ))
+          THEN
+            ErrorID     := AxesGroup.Cyclic.RobToPlc.TelegramState;
++           ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));
++         ELSIF ( _initErrorState <> TelegramState.UNDEFINED ) // ST-FIX F79: error state seen during the initialization
++         THEN
++           ErrorID     := _initErrorState;
+            ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));
+          ELSE
+            ErrorID     := RobotLibraryErrorIdEnum.ERR_TIMEOUT_CMD;
 ```
 
 ## Data types

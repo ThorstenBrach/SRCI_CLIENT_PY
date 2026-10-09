@@ -114,6 +114,11 @@ class RobotLibraryBaseEnableFB(RobotLibraryBaseFB):
             self._stepCancel = 0
             self._clearError = False
             self._stepClearError = 0
+            # ST-FIX F78: an error of the previous enable that is still being cleared (falling edge, up
+            # to 5 s) is cleared now - otherwise the block (start only without Error) consumes the
+            # rising edge and the new enable is ignored (not sent, no Busy, no Error)
+            if self.Error and self.ErrorID != RobotLibraryErrorIdEnum.ERR_COMMANDS_NOT_ENABLED:
+                self.Reset()
             self.OnExecStart(AxesGroup=AxesGroup)
 
         # On execution cancel

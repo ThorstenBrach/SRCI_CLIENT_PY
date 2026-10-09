@@ -165,6 +165,22 @@ def test_incompatible_srci_major_version(
     assert h.rt.ErrorID == RobotLibraryErrorIdEnum.ERR_SRCI_MAJOR_VERSION_INCOMPATIBLE_0xA4
 
 
+@pytest.mark.parametrize("cycle_ms", [3, 4, 7, 10])
+def test_incompatible_srci_major_version_at_any_cycle_time(
+    sdk: SdkSimulator, clock: FakeClock, monkeypatch: pytest.MonkeyPatch, cycle_ms: int
+) -> None:
+    """ST-FIX F79: the reason of the failed initialization does not depend on the moment of the
+    timeout. The RobotTask answers the error state with ACK_ERROR / RESET / INITIALIZE, so 16#A4 is
+    only visible part of the time; before the fix the timeout reported ERR_TIMEOUT_CMD when it hit
+    another state (found by the TcUnit test SDK-RT-007: ~4 ms per robot cycle on the PLC)."""
+    monkeypatch.setattr(RobotLibraryConstants, "SRCIVersion", VersionStruct(MajorVersion=2, MinorVersion=0))
+    h = harness(sdk, clock)
+    h.cycle_time = cycle_ms / 1000
+    h.run(int(5.5 / h.cycle_time) + 50, until=lambda: bool(h.rt.Error))
+    assert h.rt.Error and not h.rt.Initialized
+    assert h.rt.ErrorID == RobotLibraryErrorIdEnum.ERR_SRCI_MAJOR_VERSION_INCOMPATIBLE_0xA4
+
+
 def freeze_lifesign(h: RobotTaskHarness, seconds: float) -> None:
     """The PLC hangs: the same telegram (same LifeSign) is sent for ``seconds`` (real time)."""
     frozen = bytes(h.rout)

@@ -21,11 +21,11 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 
 | Area | Description | Test cases | Instances |
 |---|---|---:|---:|
-| [MET](#met) | Methodology tests of all function blocks against the SDK | 16 | 1273 |
+| [MET](#met) | Methodology tests of all function blocks against the SDK | 18 | 1391 |
 | [SDK-BIL](#sdk-bil) | Bilateral tests: client payload decoded by the SDK and back | 2 | 224 |
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 32 | 33 |
-| [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 13 | 13 |
+| [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 14 | 17 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 48 | 76 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
 | [UT-PKG](#ut-pkg) | Package, logging | 25 | 25 |
-| | **Total** | **387** | **3591** |
+| | **Total** | **390** | **3713** |
 
 ## Test methodology
 
@@ -58,6 +58,7 @@ the library, also to the ones without a Siemens template:
 | GEN-09 | Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent. | 109 | Siemens x-09 "AbortingMode is not defined", ST-FIX F48 |
 | ERR-01 | Undefined value of an enum parameter -> Error. | 309 | Siemens "ErrorID": "Use ... that isn't defined" |
 | ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 109 | Siemens "ErrorID": "Error occurred during execution" |
+| ERR-03 | The RC answered with an error, Enable FALSE and TRUE again after a few cycles (the same instance) -> the new command is sent. ST-FIX F78: the falling edge starts the error clear (waits up to 5 s for a response); a new enable in this time was consumed while Error was still TRUE -> nothing sent, no Busy, no Error. Found by the TcUnit tests (PM-03 reuses instances). | 12 |  |
 | PM-01 | Two commands of the same kind -> the second one is buffered until the first one is done, both are Done in this order. | 20 | Siemens "ProcessingMode"/"AbortingMode = Buffer" |
 | PM-02 | A second command with AbortingMode ABORT aborts the active one -> first CommandAborted, second Done. | 20 | Siemens "AbortingMode = Abort" |
 | PM-03 | The ExecutionMode in the telegram follows the inputs AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary, Parallel, Continuous, Trigger Once / Multiple). | 59 | ST-FIX F51, spec table 5-77 |
@@ -127,12 +128,14 @@ Methodology tests of all function blocks against the SDK
 | BUF-02 | 16 instances started in the same cycle -> all commands are sent and every instance ends with Done or with the error of the RC (a limit of the RC is not a limit of the client). | 3 | `test_buf02_more_than_15_commands_in_one_cycle` |
 | ERR-01 | Undefined value of an enum parameter -> Error. | 309 | `test_err01_undefined_enum_value` |
 | ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 109 | `test_err02_error_of_the_rc` |
+| ERR-03 | The RC answered with an error, Enable FALSE and TRUE again after a few cycles (the same instance) -> the new command is sent. | 12 | `test_err03_new_enable_after_an_error_of_the_rc` |
 | GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 109 | `test_gen04_not_executed` |
 | GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command. | 109 | `test_gen05_default_values` |
 | GEN-06 | Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge. | 92 | `test_gen06_continuous_execute` |
 | GEN-07 | RobotTask not running -> Error (blocks of the start-up: after the command timeout). | 109 | `test_gen07_axes_group_not_initialized` |
 | GEN-08 | Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle. | 92 | `test_gen08_execute_for_one_cycle` |
 | GEN-09 | Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent. | 109 | `test_gen09_undefined_exec_mode` |
+| MET-001 | Axes group with data, RobotTask disabled (variant of GEN-07): the RobotTask was initialized (tools, frames, ... | 106 | `test_gen07_robot_task_disabled_after_initialization` |
 | PM-01 | Two commands of the same kind -> the second one is buffered until the first one is done, both are Done in this order. | 20 | `test_pm01_buffered` |
 | PM-02 | A second command with AbortingMode ABORT aborts the active one -> first CommandAborted, second Done. | 20 | `test_pm02_aborting` |
 | PM-03 | The ExecutionMode in the telegram follows the inputs AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary, Parallel, Continuous, Trigger Once / Multiple). | 59 | `test_pm03_execution_mode` |
@@ -217,6 +220,7 @@ RobotTask (communication, synchronization) against the SDK
 | SDK-RT-011 | PLC gateway (TCP server) in front of the SDK, real time with 10 ms cycles. | 1 | `test_synchronized_over_tcp` |
 | SDK-RT-012 | Log messages of the library arrive in Python logging and in the system log | 1 | `test_logging_to_python` |
 | SDK-RT-013 | F16: the internal start-up read must not overwrite the user data with the RC data. | 1 | `test_client_to_server_keeps_the_plc_data` |
+| SDK-RT-014 | ST-FIX F79: the reason of the failed initialization does not depend on the moment of the timeout. | 4 | `test_incompatible_srci_major_version_at_any_cycle_time` |
 
 ## SDK-LOOP
 
