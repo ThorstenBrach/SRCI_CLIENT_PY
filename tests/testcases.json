@@ -3,36 +3,28 @@
   "id": "BUF-01",
   "test": "tests/sdk/test_methodology.py::test_buf01_more_commands_than_register_entries",
   "title": "More motion commands started in one cycle than the active command register has entries -> the commands that fit are buffered and executed, the others end with Error ERR_NO_FREE_ACR_ENTRY; no command stays Busy.",
-  "refs": [
-   "Siemens \"1 CMD called 50 times in one cycle\""
-  ],
+  "refs": [],
   "status": "active"
  },
  {
   "id": "BUF-02",
   "test": "tests/sdk/test_methodology.py::test_buf02_more_than_15_commands_in_one_cycle",
   "title": "16 instances started in the same cycle -> all commands are sent and every instance ends with Done or with the error of the RC (a limit of the RC is not a limit of the client).",
-  "refs": [
-   "Siemens \"Call more than 15 CMDs in 1 Cycle\""
-  ],
+  "refs": [],
   "status": "active"
  },
  {
   "id": "ERR-01",
   "test": "tests/sdk/test_methodology.py::test_err01_undefined_enum_value",
   "title": "Undefined value of an enum parameter -> Error.",
-  "refs": [
-   "Siemens \"ErrorID\": \"Use ... that isn't defined\""
-  ],
+  "refs": [],
   "status": "active"
  },
  {
   "id": "ERR-02",
   "test": "tests/sdk/test_methodology.py::test_err02_error_of_the_rc",
   "title": "The RC answers with an error -> Error, ErrorID of the RC.",
-  "refs": [
-   "Siemens \"ErrorID\": \"Error occurred during execution\""
-  ],
+  "refs": [],
   "status": "active"
  },
  {
@@ -46,36 +38,28 @@
   "id": "GEN-04",
   "test": "tests/sdk/test_methodology.py::test_gen04_not_executed",
   "title": "Valid command, not executed -> all outputs FALSE / 0, nothing sent.",
-  "refs": [
-   "Siemens x-05"
-  ],
+  "refs": [],
   "status": "active"
  },
  {
   "id": "GEN-05",
   "test": "tests/sdk/test_methodology.py::test_gen05_default_values",
   "title": "Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command.",
-  "refs": [
-   "Siemens x-06"
-  ],
+  "refs": [],
   "status": "active"
  },
  {
   "id": "GEN-06",
   "test": "tests/sdk/test_methodology.py::test_gen06_continuous_execute",
   "title": "Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge.",
-  "refs": [
-   "Siemens x-07"
-  ],
+  "refs": [],
   "status": "active"
  },
  {
   "id": "GEN-07",
   "test": "tests/sdk/test_methodology.py::test_gen07_axes_group_not_initialized",
   "title": "RobotTask not running -> Error (blocks of the start-up: after the command timeout).",
-  "refs": [
-   "Siemens x-08 \"Axes group is not defined\""
-  ],
+  "refs": [],
   "status": "active"
  },
  {
@@ -83,7 +67,7 @@
   "test": "tests/sdk/test_methodology.py::test_gen08_execute_for_one_cycle",
   "title": "Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle.",
   "refs": [
-   "Siemens 1-13, spec 5.5.x \"Output status\""
+   "spec 5.5.x \"Output status\""
   ],
   "status": "active"
  },
@@ -92,7 +76,7 @@
   "test": "tests/sdk/test_methodology.py::test_gen09_undefined_exec_mode",
   "title": "Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent.",
   "refs": [
-   "Siemens x-09 \"AbortingMode is not defined\", ST-FIX F48"
+   "ST-FIX F48"
   ],
   "status": "active"
  },
@@ -107,18 +91,14 @@
   "id": "PM-01",
   "test": "tests/sdk/test_methodology.py::test_pm01_buffered",
   "title": "Two commands of the same kind -> the second one is buffered until the first one is done, both are Done in this order.",
-  "refs": [
-   "Siemens \"ProcessingMode\"/\"AbortingMode = Buffer\""
-  ],
+  "refs": [],
   "status": "active"
  },
  {
   "id": "PM-02",
   "test": "tests/sdk/test_methodology.py::test_pm02_aborting",
   "title": "A second command with AbortingMode ABORT aborts the active one -> first CommandAborted, second Done.",
-  "refs": [
-   "Siemens \"AbortingMode = Abort\""
-  ],
+  "refs": [],
   "status": "active"
  },
  {
@@ -142,7 +122,7 @@
   "test": "tests/sdk/test_methodology.py::test_seq01_secondary_sequence",
   "title": "The primary sequence is interrupted, SetSequence(secondary), a command with SequenceFlag SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted.",
   "refs": [
-   "Siemens \"SequenceFlag\", spec 5.6.4.5"
+   "spec 5.6.4.5"
   ],
   "status": "active"
  },
@@ -978,9 +958,7 @@
   "id": "GEN-03",
   "test": "tests/unit/fb/test_interface_spec.py::test_parameters_are_documented",
   "title": "Every field of ParCmd/OutCmd has a comment (taken from the PLC library into the generated types).",
-  "refs": [
-   "Siemens x-04 \"all parameters have a valid and useful comment\""
-  ],
+  "refs": [],
   "status": "active"
  },
  {

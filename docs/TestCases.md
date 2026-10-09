@@ -42,81 +42,30 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 
 ## Test methodology
 
-The test series of the Siemens unit test templates ("General FB", "ErrorID",
-"ProcessingMode", "SequenceFlag", ...) are applied as patterns to **all** function blocks of
-the library, also to the ones without a Siemens template:
+The methodology tests (general behavior of a block, error IDs, processing mode, sequences,
+buffering, ...) are applied as patterns to **all** function blocks of the library:
 
 | ID | Test | Instances | Reference |
 |---|---|---:|---|
 | GEN-01 | Every input/output of the specification exists in the function block. | 113 |  |
-| GEN-03 | Every field of ParCmd/OutCmd has a comment (taken from the PLC library into the generated types). | 1 | Siemens x-04 "all parameters have a valid and useful comment" |
-| GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 109 | Siemens x-05 |
-| GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command. | 109 | Siemens x-06 |
-| GEN-06 | Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge. | 92 | Siemens x-07 |
-| GEN-07 | RobotTask not running -> Error (blocks of the start-up: after the command timeout). | 109 | Siemens x-08 "Axes group is not defined" |
-| GEN-08 | Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle. | 92 | Siemens 1-13, spec 5.5.x "Output status" |
-| GEN-09 | Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent. | 109 | Siemens x-09 "AbortingMode is not defined", ST-FIX F48 |
-| ERR-01 | Undefined value of an enum parameter -> Error. | 309 | Siemens "ErrorID": "Use ... that isn't defined" |
-| ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 109 | Siemens "ErrorID": "Error occurred during execution" |
+| GEN-03 | Every field of ParCmd/OutCmd has a comment (taken from the PLC library into the generated types). | 1 |  |
+| GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 109 |  |
+| GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command. | 109 |  |
+| GEN-06 | Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge. | 92 |  |
+| GEN-07 | RobotTask not running -> Error (blocks of the start-up: after the command timeout). | 109 |  |
+| GEN-08 | Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle. | 92 | spec 5.5.x "Output status" |
+| GEN-09 | Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent. | 109 | ST-FIX F48 |
+| ERR-01 | Undefined value of an enum parameter -> Error. | 309 |  |
+| ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 109 |  |
 | ERR-03 | The RC answered with an error, Enable FALSE and TRUE again after a few cycles (the same instance) -> the new command is sent. ST-FIX F78: the falling edge starts the error clear (waits up to 5 s for a response); a new enable in this time was consumed while Error was still TRUE -> nothing sent, no Busy, no Error. Found by the TcUnit tests (PM-03 reuses instances). | 12 |  |
-| PM-01 | Two commands of the same kind -> the second one is buffered until the first one is done, both are Done in this order. | 20 | Siemens "ProcessingMode"/"AbortingMode = Buffer" |
-| PM-02 | A second command with AbortingMode ABORT aborts the active one -> first CommandAborted, second Done. | 20 | Siemens "AbortingMode = Abort" |
+| PM-01 | Two commands of the same kind -> the second one is buffered until the first one is done, both are Done in this order. | 20 |  |
+| PM-02 | A second command with AbortingMode ABORT aborts the active one -> first CommandAborted, second Done. | 20 |  |
 | PM-03 | The ExecutionMode in the telegram follows the inputs AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary, Parallel, Continuous, Trigger Once / Multiple). | 59 | ST-FIX F51, spec table 5-77 |
-| SEQ-01 | The primary sequence is interrupted, SetSequence(secondary), a command with SequenceFlag SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted. | 20 | Siemens "SequenceFlag", spec 5.6.4.5 |
+| SEQ-01 | The primary sequence is interrupted, SetSequence(secondary), a command with SequenceFlag SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted. | 20 | spec 5.6.4.5 |
 | REP-01 | The same instance is executed 5 times in a row (new rising edge after Done) -> every execution sends one command and ends with Done. | 92 |  |
-| BUF-01 | More motion commands started in one cycle than the active command register has entries -> the commands that fit are buffered and executed, the others end with Error ERR_NO_FREE_ACR_ENTRY; no command stays Busy. | 17 | Siemens "1 CMD called 50 times in one cycle" |
-| BUF-02 | 16 instances started in the same cycle -> all commands are sent and every instance ends with Done or with the error of the RC (a limit of the RC is not a limit of the client). | 3 | Siemens "Call more than 15 CMDs in 1 Cycle" |
+| BUF-01 | More motion commands started in one cycle than the active command register has entries -> the commands that fit are buffered and executed, the others end with Error ERR_NO_FREE_ACR_ENTRY; no command stays Busy. | 17 |  |
+| BUF-02 | 16 instances started in the same cycle -> all commands are sent and every instance ends with Done or with the error of the RC (a limit of the RC is not a limit of the client). | 3 |  |
 | TMO-01 | The RC never answers the command -> Error ERR_TIMEOUT_CMD after the command timeout (5 s), Busy FALSE; before the fix the block stayed Busy forever. | 4 | ST-FIX F53 |
-
-## Coverage of the Siemens test case templates
-
-Siemens unit test templates of the SRCI PLC library (status 2024): 4513 test cases. Every test case is classified (rules, IDs and
-SRCI_PY tests per test case in [siemens_mapping.json](siemens_mapping.json)):
-
-| Category | Test cases | Meaning |
-|---|---:|---|
-| A | 912 | automated - the test case (or its client part) is a test of SRCI_PY |
-| P | 1265 | partly - the client part is automated, the reaction of the robot controller is only simulated |
-| R | 1847 | RC behavior - the result is decided by the robot controller (motion, blending, dynamics, trigger ...); the client part is the correct transfer of the parameters (SDK-BIL) and of the RC errors (ERR-02) |
-| N | 489 | not applicable - precondition rows, display in the PLC IDE, release checks of the PLC library |
-
-| Test series | A | P | R | N | SRCI_PY tests |
-|---|---:|---:|---:|---:|---|
-| General FB | 621 | 313 | 123 | 132 | SDK-BIL, GEN-05, SDK-CORE, PM-01, SEQ-01, ERR-02, GEN-01, GEN-03, GEN-06, GEN-07, PM-02, PM-03, ERR-01, GEN-09, BUF-01, SDK-RT, UT-FB (RobotTask telegram), GEN-08, BUF-02 |
-| Dynamics | 0 | 4 | 404 | 90 | SDK-BIL, GEN-05, SEQ-01 |
-| Blending Single Lin CMD | 0 | 0 | 392 | 42 | SDK-BIL, GEN-05 |
-| ProcessingMode | 14 | 271 | 0 | 16 | PM-01, PM-02, PM-03, ERR-01, GEN-08 |
-| ErrorID | 86 | 111 | 65 | 35 | ERR-02, SDK-BIL, ERR-01, SDK-CORE, SEQ-01, GEN-09, SDK-RT, PM-01, GEN-07, BUF-02, GEN-08 |
-| SequenceFlag | 32 | 185 | 0 | 53 | SEQ-01, ERR-01, SDK-CORE, PM-01 |
-| (no series) | 6 | 206 | 18 | 12 | SDK-RT, SDK-BIL, ERR-02, GEN-05, SDK-CORE, GEN-01, GEN-03, GEN-06, GEN-07 |
-| Config and Turn | 40 | 0 | 168 | 8 | SDK-BIL, GEN-05, ERR-01 |
-| TriggerMode | 2 | 0 | 198 | 4 | SDK-BIL, GEN-05, ERR-01 |
-| Blending Multiple Lin CMD | 0 | 0 | 96 | 14 | SDK-BIL |
-| CoordinateSystems | 24 | 10 | 54 | 13 | SDK-BIL, GEN-05, ERR-01, SEQ-01, SDK-CORE |
-| SyncModes | 0 | 96 | 0 | 3 | SDK-RT |
-| ConfigMode and TurnMode | 15 | 0 | 63 | 3 | SDK-BIL, GEN-05, ERR-01 |
-| Trigger | 18 | 3 | 36 | 3 | SDK-BIL, GEN-05, ERR-02 |
-| Additional path definitions | 8 | 0 | 40 | 8 | SDK-BIL, GEN-05, ERR-01 |
-| Miscellaneous | 0 | 0 | 34 | 15 | SDK-BIL |
-| Index | 33 | 4 | 0 | 7 | SDK-BIL, ERR-02, SDK-CORE, GEN-05 |
-| RobotData | 4 | 24 | 0 | 7 | SDK-CORE, SDK-BIL, UT-FB (RobotTask telegram), GEN-05, GEN-01, GEN-03 |
-| Actions | 0 | 0 | 31 | 4 | SDK-BIL, GEN-05 |
-| EmitterID and ListenerID | 0 | 0 | 29 | 3 | SDK-BIL, GEN-05 |
-| CircMode | 0 | 0 | 18 | 2 | SDK-BIL |
-| MC_GroupJog_LRobTypes | 0 | 0 | 17 | 1 | SDK-BIL, GEN-05 |
-| SyncReaction | 2 | 13 | 0 | 1 | SDK-RT, GEN-05, SEQ-01, SDK-CORE |
-| GeneralSyncTest | 0 | 11 | 2 | 1 | SDK-RT, SDK-BIL, SDK-CORE |
-| AUT-Ext | 0 | 0 | 12 | 1 | SDK-BIL |
-| TriggerParameter | 0 | 0 | 12 | 1 | SDK-BIL, GEN-05 |
-| T1-Extern | 0 | 0 | 11 | 1 | SDK-BIL |
-| ReactionMode | 5 | 1 | 5 | 1 | SDK-BIL, GEN-05, ERR-01, SEQ-01, SDK-CORE |
-| Additional operation modes | 0 | 0 | 8 | 1 | SDK-BIL, ERR-02, GEN-05 |
-| OptionalModes | 0 | 0 | 7 | 1 | SDK-BIL, GEN-05 |
-| Movement | 0 | 5 | 1 | 1 | SEQ-01, SDK-CORE, SDK-BIL, GEN-05 |
-| MC_StopSubprogram_LRob | 2 | 3 | 0 | 1 | PM-01, SDK-CORE, SDK-BIL |
-| ReadData | 0 | 4 | 0 | 1 | PM-01, SDK-CORE |
-| Others | 0 | 0 | 3 | 1 | SDK-BIL, GEN-05 |
-| General Behaviour | 0 | 1 | 0 | 2 | SDK-CORE, SDK-BIL, GEN-05 |
 
 ## MET
 

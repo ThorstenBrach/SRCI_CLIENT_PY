@@ -10,7 +10,7 @@ Findings: [ST_FINDINGS.md](ST_FINDINGS.md).
 You fix the findings of the SRCI PLC library (Structured Text, Codesys/TwinCAT) that are already
 fixed in the Python port. Every ST change below is **exactly** the change the Python port applies
 to the ST text before it transpiles it, so the result is proven by the Python test suite
-(unit tests, bilateral tests and the Siemens methodology against the SRCI SDK).
+(unit tests, bilateral tests and the methodology tests against the SRCI SDK).
 
 1. **Scope.** Change only what this guide shows. Do not reformat, rename or "improve" other code.
    Keep the comments `// ST-FIX Fnn` of the new code - they mark the fix in the library.

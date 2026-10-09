@@ -7,8 +7,7 @@
 #  Date:        2026-09-26
 #
 #  Description:
-#    docs/TestCases.md: catalog of all test cases (registry + number of instances + coverage
-#    of
+#    docs/TestCases.md: catalog of all test cases (registry + number of instances)
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -21,12 +20,10 @@
 #
 # -------------------------------------------------------------------------
 
-"""docs/TestCases.md: catalog of all test cases (registry + number of instances + coverage of
-the Siemens test case templates)."""
+"""docs/TestCases.md: catalog of all test cases (registry + number of instances)."""
 
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
 from collections import Counter
@@ -37,16 +34,6 @@ from tools.test_report import registry
 
 ROOT = registry.ROOT
 TARGET = ROOT / "docs" / "TestCases.md"
-SIEMENS = ROOT / "docs" / "siemens_mapping.json"
-
-CATEGORIES = {
-    "A": "automated - the test case (or its client part) is a test of SRCI_PY",
-    "P": "partly - the client part is automated, the reaction of the robot controller is only simulated",
-    "R": "RC behavior - the result is decided by the robot controller (motion, blending, dynamics, "
-    "trigger ...); the client part is the correct transfer of the parameters (SDK-BIL) and of the RC "
-    "errors (ERR-02)",
-    "N": "not applicable - precondition rows, display in the PLC IDE, release checks of the PLC library",
-}
 
 
 def collect_counts() -> Counter[str]:
@@ -128,9 +115,8 @@ def render(entries: list[dict[str, Any]], counts: Counter[str]) -> str:
     out += [
         "## Test methodology",
         "",
-        'The test series of the Siemens unit test templates ("General FB", "ErrorID",',
-        '"ProcessingMode", "SequenceFlag", ...) are applied as patterns to **all** function blocks of',
-        "the library, also to the ones without a Siemens template:",
+        "The methodology tests (general behavior of a block, error IDs, processing mode, sequences,",
+        "buffering, ...) are applied as patterns to **all** function blocks of the library:",
         "",
         "| ID | Test | Instances | Reference |",
         "|---|---|---:|---|",
@@ -142,7 +128,6 @@ def render(entries: list[dict[str, Any]], counts: Counter[str]) -> str:
             f"{counts.get(str(entry['test']), 0)} | {_md(refs)} |"
         )
     out.append("")
-    out += _siemens_section()
     for code, items in per_area.items():
         out += [
             f"## {code}",
@@ -159,38 +144,6 @@ def render(entries: list[dict[str, Any]], counts: Counter[str]) -> str:
             )
         out.append("")
     return "\n".join(out)
-
-
-def _siemens_section() -> list[str]:
-    if not SIEMENS.exists():
-        return []
-    data = json.loads(SIEMENS.read_text(encoding="utf-8"))
-    cases = [dict(zip(data["columns"], row, strict=True)) for row in data["cases"]]
-    by_category = Counter(c["category"] for c in cases)
-    out = [
-        "## Coverage of the Siemens test case templates",
-        "",
-        f"{data['source']}: {len(cases)} test cases. Every test case is classified (rules, IDs and",
-        "SRCI_PY tests per test case in [siemens_mapping.json](siemens_mapping.json)):",
-        "",
-        "| Category | Test cases | Meaning |",
-        "|---|---:|---|",
-    ]
-    out += [f"| {k} | {by_category[k]} | {v} |" for k, v in CATEGORIES.items()]
-    out += ["", "| Test series | A | P | R | N | SRCI_PY tests |", "|---|---:|---:|---:|---:|---|"]
-    series: dict[str, Counter[str]] = {}
-    tests: dict[str, Counter[str]] = {}
-    for case in cases:
-        series.setdefault(case["series"], Counter())[case["category"]] += 1
-        for test in filter(None, (t.strip() for t in case["tests"].split(","))):
-            tests.setdefault(case["series"], Counter())[test] += 1
-    for name, counter in sorted(series.items(), key=lambda kv: -sum(kv[1].values())):
-        used = ", ".join(t for t, _ in tests.get(name, Counter()).most_common())
-        out.append(
-            f"| {_md(name)} | {counter['A']} | {counter['P']} | {counter['R']} | {counter['N']} | {_md(used)} |"
-        )
-    out.append("")
-    return out
 
 
 def write(path: Path = TARGET) -> None:

@@ -51,6 +51,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    part of the published client. `pip install -e "<SDK>/srci_py_harness/python"`, then
    `python -m srci_sdk_sim.server ...`; without the package the SDK tests are not collected.
    `srci.sim.gateway` stays in the client.
+ - Test cases and docs refer only to our own test IDs (GEN-04 …), the specification and the
+   ST-FIX findings; references to third-party test templates and `docs/siemens_mapping.json`
+   removed (docs/TestCases.md without the template coverage section)
  - Repository renamed to SRCI_CLIENT_PY (distribution `srci-client`, package `srci`)
  - `RobotProgram`: the configuration of the RobotTask is `ParCfg` (keyword and attribute), the
    name of the input of `MC_RobotTaskFB` in the PLC library (was `config`)
@@ -58,6 +61,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    `SetError`
 
 ### Fixed
+ - CI: `tools.test_report check` no longer fails without the SDK simulator (the SDK tests are not
+   collected there); docs/TestCases.md with the instance counts of the SDK tests is checked in
+   the job `sdk`
  - ST-FIX F59 … F75 (specification audit): FB outputs, two telegram sequences, RI errors,
    parameter checks, messages
  - ST-FIX F76: `MC_GroupResetFB` no longer resets the FastStop half byte. After GroupStop and

@@ -20,9 +20,8 @@
 #
 # -------------------------------------------------------------------------
 
-"""Interface of every function block against the specification (methodology "General FB",
-Siemens test case x-02 "Compare the inputs and outputs in the specification with the
-in/outputs of the function block").
+"""Interface of every function block against the specification (methodology: the inputs and
+outputs in the specification are compared with the in/outputs of the function block).
 
 The inputs/outputs of chapter 6 ("Associated command/response values - Application Layer",
 ``tools/spec_tables``) must exist in the function block: as input / output of the block or as
@@ -163,7 +162,7 @@ UNDOCUMENTED: set[tuple[str, str]] = set()  # F46 fixed (comments added by overr
 
 
 def test_parameters_are_documented() -> None:
-    """GEN-03 (Siemens x-04 "all parameters have a valid and useful comment"): every field of
+    """GEN-03: every field of
     ParCmd/OutCmd has a comment (taken from the PLC library into the generated types)."""
     import ast
     from pathlib import Path

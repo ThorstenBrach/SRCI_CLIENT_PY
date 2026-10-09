@@ -22,8 +22,8 @@
 
 """Methodology tests of every function block against the SRCI SDK.
 
-The test series of the Siemens test cases ("General FB", "ErrorID") applied to all function
-blocks of the library (docs/TestCases.md):
+The methodology tests (general behavior of a block, error IDs, processing mode, sequences,
+buffering) applied to all function blocks of the library (docs/TestCases.md):
 
 * GEN-04 valid command not executed: all outputs FALSE / 0, nothing sent
 * GEN-05 valid command with the default values, positive edge: Done / Enabled / Valid
@@ -201,7 +201,7 @@ def cmd_type(name: str) -> int:
 
 @pytest.mark.parametrize("name", NAMES)
 def test_gen04_not_executed(name: str) -> None:
-    """GEN-04 (Siemens x-05): valid command, not executed -> all outputs FALSE / 0, nothing sent."""
+    """GEN-04: valid command, not executed -> all outputs FALSE / 0, nothing sent."""
     with robot() as (sim, h):
         start_log = len(sim.logs)
         fb = block(name, h)
@@ -238,7 +238,7 @@ GEN05_KNOWN = {
 
 @pytest.mark.parametrize("name", NAMES)
 def test_gen05_default_values(name: str) -> None:
-    """GEN-05 (Siemens x-06): valid command with the default values, positive edge -> Done /
+    """GEN-05: valid command with the default values, positive edge -> Done /
     Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters
     without default reject the command."""
     if name in GEN05_KNOWN:
@@ -265,7 +265,7 @@ GEN06_KNOWN = {
 
 @pytest.mark.parametrize("name", EXECUTE)
 def test_gen06_continuous_execute(name: str) -> None:
-    """GEN-06 (Siemens x-07): Execute stays TRUE -> the command is executed once, Done stays
+    """GEN-06: Execute stays TRUE -> the command is executed once, Done stays
     TRUE as long as Execute is TRUE and is reset with its falling edge."""
     if name in GEN06_KNOWN:
         pytest.xfail(GEN06_KNOWN[name])
@@ -294,7 +294,7 @@ GEN07_STARTUP = {"MC_ExchangeConfigurationFB", "MC_ReadMessagesFB", "MC_ReadRobo
 
 @pytest.mark.parametrize("name", NAMES)
 def test_gen07_axes_group_not_initialized(name: str) -> None:
-    """GEN-07 (Siemens x-08 "Axes group is not defined"): RobotTask not running -> Error (blocks
+    """GEN-07: RobotTask not running -> Error (blocks
     of the start-up: after the command timeout)."""
     with robot(initialized=False) as (sim, h):
         fb = block(name, h)
@@ -328,7 +328,7 @@ def test_gen07_robot_task_disabled_after_initialization(name: str) -> None:
 
 @pytest.mark.parametrize("name", EXECUTE)
 def test_gen08_execute_for_one_cycle(name: str) -> None:
-    """GEN-08 (Siemens 1-13, spec 5.5.x "Output status"): Execute TRUE for one cycle -> the command
+    """GEN-08 (spec 5.5.x "Output status"): Execute TRUE for one cycle -> the command
     is executed anyway and Done / Error / CommandAborted is set for at least one cycle."""
     if name in GEN06_KNOWN:
         pytest.xfail(GEN06_KNOWN[name])
@@ -352,7 +352,7 @@ def test_gen08_execute_for_one_cycle(name: str) -> None:
 
 @pytest.mark.parametrize("name", NAMES)
 def test_gen09_undefined_exec_mode(name: str) -> None:
-    """GEN-09 (Siemens x-09 "AbortingMode is not defined", ST-FIX F48): undefined AbortingMode
+    """GEN-09 (ST-FIX F48): undefined AbortingMode
     (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing
     sent."""
     with robot() as (sim, h):
@@ -385,7 +385,7 @@ ERR01_KNOWN: dict[tuple[str, str], str] = {}  # F49 fixed
 
 @pytest.mark.parametrize(("name", "path"), _enum_parameters())
 def test_err01_undefined_enum_value(name: str, path: str) -> None:
-    """ERR-01 (Siemens "ErrorID": "Use ... that isn't defined"): undefined value of an enum
+    """ERR-01: undefined value of an enum
     parameter -> Error."""
     if (name, path) in ERR01_KNOWN:
         pytest.xfail(ERR01_KNOWN[(name, path)])
@@ -412,7 +412,7 @@ RC_ERROR = 0x8123
 
 @pytest.mark.parametrize("name", NAMES)
 def test_err02_error_of_the_rc(name: str) -> None:
-    """ERR-02 (Siemens "ErrorID": "Error occurred during execution"): the RC answers with an
+    """ERR-02: the RC answers with an
     error -> Error, ErrorID of the RC."""
     t = cmd_type(name)
     if t in SDK_NATIVE:
@@ -474,7 +474,7 @@ def _motion(name: str, h: RobotTaskHarness) -> Any:
 
 @pytest.mark.parametrize("name", MOTION)
 def test_pm01_buffered(name: str) -> None:
-    """PM-01 (Siemens "ProcessingMode"/"AbortingMode = Buffer"): two commands of the same kind
+    """PM-01: two commands of the same kind
     -> the second one is buffered until the first one is done, both are Done in this order."""
     if name in MOTION_KNOWN:
         pytest.xfail(MOTION_KNOWN[name])
@@ -501,7 +501,7 @@ def test_pm01_buffered(name: str) -> None:
 
 @pytest.mark.parametrize("name", MOTION)
 def test_pm02_aborting(name: str) -> None:
-    """PM-02 (Siemens "AbortingMode = Abort"): a second command with AbortingMode ABORT aborts
+    """PM-02: a second command with AbortingMode ABORT aborts
     the active one -> first CommandAborted, second Done."""
     if name in MOTION_KNOWN:
         pytest.xfail(MOTION_KNOWN[name])
@@ -583,7 +583,7 @@ def test_pm03_execution_mode(name: str) -> None:
 
 @pytest.mark.parametrize("name", MOTION)
 def test_seq01_secondary_sequence(name: str) -> None:
-    """SEQ-01 (Siemens "SequenceFlag", spec 5.6.4.5): the primary sequence is interrupted,
+    """SEQ-01 (spec 5.6.4.5): the primary sequence is interrupted,
     SetSequence(secondary), a command with SequenceFlag SECONDARY + GroupContinue is
     executed while the primary command stays interrupted, SetSequence(primary) is accepted."""
     if name in MOTION_KNOWN:
@@ -652,7 +652,7 @@ PLANNER = [n for n in MOTION if n not in MOTION_KNOWN and 2100 < cmd_type(n) < 2
 
 @pytest.mark.parametrize("name", PLANNER)
 def test_buf01_more_commands_than_register_entries(name: str) -> None:
-    """BUF-01 (Siemens "1 CMD called 50 times in one cycle"): more motion commands started in
+    """BUF-01: more motion commands started in
     one cycle than the active command register has entries -> the commands that fit are
     buffered and executed, the others end with Error ERR_NO_FREE_ACR_ENTRY; no command stays
     Busy."""
@@ -676,7 +676,7 @@ def test_buf01_more_commands_than_register_entries(name: str) -> None:
 
 @pytest.mark.parametrize("name", ["MC_GroupStopFB", "MC_GroupInterruptFB", "MC_WriteIntegersFB"])
 def test_buf02_more_than_15_commands_in_one_cycle(name: str) -> None:
-    """BUF-02 (Siemens "Call more than 15 CMDs in 1 Cycle"): 16 instances started in the same
+    """BUF-02: 16 instances started in the same
     cycle -> all commands are sent and every instance ends with Done or with the error of the
     RC (a limit of the RC is not a limit of the client)."""
     with robot() as (sim, h):

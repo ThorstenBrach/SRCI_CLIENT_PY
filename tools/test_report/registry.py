@@ -121,7 +121,7 @@ def scan(root: Path = ROOT) -> list[TestFunction]:
 
 
 def split_doc(doc: str) -> tuple[str, str]:
-    """(text, reference) of a docstring ``"GEN-05 (Siemens x-06): text"``."""
+    """(text, reference) of a docstring ``"GEN-08 (spec 5.5.x): text"``."""
     text = PATTERN_ID.sub("", " ".join(doc.split())).strip()
     ref = ""
     if text.startswith("("):
@@ -200,8 +200,8 @@ def update(entries: list[dict[str, object]], functions: list[TestFunction]) -> l
         if function.docstring:
             entry["title"] = first_sentence(function.docstring)
             _, ref = split_doc(function.docstring)
-            if ref and PATTERN_ID.match(function.docstring):
-                entry["refs"] = [ref]
+            if PATTERN_ID.match(function.docstring):
+                entry["refs"] = [ref] if ref else []
         elif not entry.get("title"):
             entry["title"] = title_from_name(function.test)
     return sorted(by_test.values(), key=lambda e: (area_order(str(e["id"]), str(e["test"])), str(e["id"])))

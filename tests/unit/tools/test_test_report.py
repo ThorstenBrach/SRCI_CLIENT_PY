@@ -49,10 +49,10 @@ def test_ids_are_unique_and_stable() -> None:
 
 
 def test_pattern_id_and_reference_from_the_docstring() -> None:
-    doc = 'GEN-07 (Siemens x-08 "Axes group is not defined"): robotTask not running -> Error.'
+    doc = 'GEN-07 (spec 5.5.x "Output status", ST-FIX F48): robotTask not running -> Error.'
     assert registry.split_doc(doc) == (
         "robotTask not running -> Error.",
-        'Siemens x-08 "Axes group is not defined"',
+        'spec 5.5.x "Output status", ST-FIX F48',
     )
     assert registry.first_sentence(doc) == "RobotTask not running -> Error."
 

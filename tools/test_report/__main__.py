@@ -25,6 +25,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import sys
 
 from tools.test_report import catalog, registry
@@ -52,7 +53,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"-> {catalog.TARGET}")
         return 0
     problems = registry.problems(entries, functions)
-    if catalog.TARGET.read_text(encoding="utf-8") != catalog.render(entries, catalog.collect_counts()):
+    if importlib.util.find_spec("srci_sdk_sim") is None:
+        # without the SDK simulator the SDK tests are not collected: their instance counts are
+        # unknown, docs/TestCases.md is checked where the SDK is installed (CI job sdk)
+        print("docs/TestCases.md not checked: srci_sdk_sim not installed (instance counts of the SDK tests)")
+    elif catalog.TARGET.read_text(encoding="utf-8") != catalog.render(entries, catalog.collect_counts()):
         problems.append("docs/TestCases.md out of date: python -m tools.test_report catalog")
     for problem in problems:
         print(problem)
