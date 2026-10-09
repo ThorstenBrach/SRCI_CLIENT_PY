@@ -79,7 +79,7 @@ def metadata() -> dict[str, Any]:
     spec = ROOT / "tools" / "spec_tables" / "spec_payload_tables.json"
     meta["specification"] = json.loads(spec.read_text(encoding="utf-8")).get("source", "")
     try:
-        from srci.sim.sdk import API_VERSION, find_sdk_library
+        from srci_sdk_sim.sdk import API_VERSION, find_sdk_library
 
         library = find_sdk_library()
         meta["sdk_library"] = library.name

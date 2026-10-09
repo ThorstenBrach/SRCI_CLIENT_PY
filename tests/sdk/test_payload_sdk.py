@@ -32,8 +32,8 @@ Every ``Add*`` / ``Get*`` call of a function block must match it.
 from __future__ import annotations
 
 import pytest
+from srci_sdk_sim.sdk import SdkSimulator, layout_pattern, sdk_layout
 
-from srci.sim.sdk import SdkSimulator, layout_pattern, sdk_layout
 from tools.payload_check import compare_sdk, fb_classes, recv_calls, sdk_fields, send_calls
 
 # known differences (docs/ST_FINDINGS.md)

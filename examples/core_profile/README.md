@@ -76,7 +76,7 @@ How the telegram reaches the robot is the job of a *transport*:
 | Transport | Use |
 |---|---|
 | `srci.transport.TcpTransport(host, port, send_size, recv_size)` | real robot: a PLC acts as gateway between TCP and PROFINET (see the main README) |
-| `srci.sim.sdk.sdk_transport(sim, …)` | SRCI SDK simulator in-process (tests, this demo) |
+| `srci_sdk_sim.sdk.sdk_transport(sim, …)` | SRCI SDK simulator in-process (tests, this demo) |
 | `srci.transport.LoopbackTransport(handler, …)` | your own simulation / unit tests |
 
 The telegram lengths (`send_size`, `recv_size`) must match the configuration of the robot /

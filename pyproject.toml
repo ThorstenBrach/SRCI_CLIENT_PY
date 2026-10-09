@@ -75,6 +75,10 @@ files = ["src/srci", "tools", "tests"]
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
+module = ["srci_sdk_sim", "srci_sdk_sim.*"]  # private SDK package (SDK repository), optional
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = ["tests.*"]
 warn_unreachable = false  # attribute narrowing across calls of stateful FBs
 strict_equality = false

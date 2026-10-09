@@ -52,18 +52,19 @@ Python (srci)  --TCP, raw telegram-->  PLC gateway  --PROFINET-->  Robot control
 
 ## SDK server for PLC tests
 
-`python -m srci.sim.server --port 5000 --length 256` runs the SDK simulator behind a TCP server
+`python -m srci_sdk_sim.server --port 5000 --length 256` runs the SDK simulator behind a TCP server
 with the same protocol, so a PLC (TwinCAT, Codesys) can test the SRCI PLC library against it:
 the PLC is the TCP client and the cycle master, every telegram is one cycle of the simulator
 (10 ms). A new connection starts a new simulator. The status line shows gaps and repeats of the
-PLC LifeSign, `--dump` the decoded telegram headers. Needs the locally built SDK library
-(`SRCI_SDK_SIM_LIB`).
+PLC LifeSign, `--dump` the decoded telegram headers. The server is part of the private SDK
+repository (package `srci_sdk_sim` in `srci_py_harness/python`, moved from `srci.sim` on
+2026-10-09); it needs the locally built SDK library (`SRCI_SDK_SIM_LIB`).
 
 ### Control channel
 
 The Python tests set up and check the simulator directly (`sim.set_move_cycles(20)`,
 `sim.joints`, `sim.last_command(...)`). A PLC test does the same over a second TCP port, the
-control channel (`--control-port`, default 5001, `0` switches it off; `srci.sim.control`):
+control channel (`--control-port`, default 5001, `0` switches it off; `srci_sdk_sim.control`):
 one request line, one answer line, ASCII with LF.
 
 | Request | Answer / effect |

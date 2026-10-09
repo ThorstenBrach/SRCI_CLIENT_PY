@@ -45,6 +45,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    formerly SRCI_TcpGateway)
 
 ### Changed
+ - The SDK simulator (`srci.sim.sdk`), the SDK server for PLC tests (`srci.sim.server`) and its
+   control channel (`srci.sim.control`) moved to the private SDK repository (package
+   `srci_sdk_sim`, `srci_py_harness/python`): they only work with the licensed SDK and are not
+   part of the published client. `pip install -e "<SDK>/srci_py_harness/python"`, then
+   `python -m srci_sdk_sim.server ...`; without the package the SDK tests are not collected.
+   `srci.sim.gateway` stays in the client.
  - Repository renamed to SRCI_CLIENT_PY (distribution `srci-client`, package `srci`)
  - `RobotProgram`: the configuration of the RobotTask is `ParCfg` (keyword and attribute), the
    name of the input of `MC_RobotTaskFB` in the PLC library (was `config`)

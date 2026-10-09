@@ -171,7 +171,7 @@ def test_compare_detects_shift_kind_length_and_strings() -> None:
 
 
 def test_sdk_fields_from_the_pattern() -> None:
-    from srci.sim.sdk import layout_pattern
+    layout_pattern = pytest.importorskip("srci_sdk_sim.sdk").layout_pattern
     from tools.payload_check import compare_sdk, sdk_fields
 
     host = [layout_pattern(i) for i in range(9)]

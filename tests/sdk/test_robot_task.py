@@ -33,11 +33,11 @@ import time
 from collections.abc import Iterator
 
 import pytest
+from srci_sdk_sim.sdk import SdkSimulator, sdk_transport
 
 import srci
 from srci.iec.clock import FakeClock, use_clock
 from srci.sim.gateway import PlcGatewaySimulator
-from srci.sim.sdk import SdkSimulator, sdk_transport
 from srci.transport import TcpTransport
 from srci.types import RobotLibraryConstants, RobotLibraryErrorIdEnum, SyncMode, TelegramState, VersionStruct
 from tests.robot_task_harness import SIZE, RobotTaskHarness

@@ -28,14 +28,22 @@ tests fail instead of being skipped silently (e.g. after a failed or forgotten b
 
 from __future__ import annotations
 
+import importlib.util
 import os
 
 import pytest
 
+# the SDK simulator (srci_sdk_sim) is part of the private SDK repository; without it the SDK
+# tests are not collected (``pip install -e "<SDK>/srci_py_harness/python"``)
+HAVE_SDK_SIM = importlib.util.find_spec("srci_sdk_sim") is not None
+collect_ignore = [] if HAVE_SDK_SIM else ["sdk"]
+
 
 def pytest_sessionstart(session: pytest.Session) -> None:
     if os.environ.get("SRCI_REQUIRE_SDK", "") not in ("", "0"):
-        from srci.sim.sdk import SdkNotAvailableError, find_sdk_library
+        if importlib.util.find_spec("srci_sdk_sim") is None:
+            raise pytest.UsageError("SRCI_REQUIRE_SDK is set, but the package srci_sdk_sim is not installed")
+        from srci_sdk_sim.sdk import SdkNotAvailableError, find_sdk_library
 
         try:
             find_sdk_library()

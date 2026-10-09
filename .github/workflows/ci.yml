@@ -125,7 +125,9 @@ jobs:
           else
             echo "::error::SDK build failed (log not shown - it may contain SDK sources; build locally)"; exit 1
           fi
-      - run: pip install -e ".[dev]" > "$RUNNER_TEMP/pip.log" 2>&1
+      - run: |
+          pip install -e ".[dev]" > "$RUNNER_TEMP/pip.log" 2>&1
+          pip install -e _sdk/srci_py_harness/python --no-deps >> "$RUNNER_TEMP/pip.log" 2>&1
         if: steps.key.outputs.ok == 'true'
       - name: SDK tests (only counts and failed test IDs are shown)
         if: steps.key.outputs.ok == 'true'

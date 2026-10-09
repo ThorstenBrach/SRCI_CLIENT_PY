@@ -26,7 +26,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 32 | 33 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 14 | 17 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 48 | 76 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 42 | 70 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
@@ -37,8 +37,8 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
-| [UT-PKG](#ut-pkg) | Package, logging | 25 | 25 |
-| | **Total** | **392** | **3715** |
+| [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
+| | **Total** | **377** | **3700** |
 
 ## Test methodology
 
@@ -257,11 +257,6 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-027 | F74 (E-01/E-03): a parameter error of the client and an error of the RC are written into the message buffer; messages of a sent command carry its ACR entry and command type. | 1 | `test_f74_client_error_is_in_the_message_buffer_with_acr_entry_and_type` |
 | SDK-LOOP-028 | E-02 (already fulfilled, no fix): GroupReset deletes the messages of the PLC buffer (5.5.11.5). | 1 | `test_e02_group_reset_clears_the_message_buffer` |
 | SDK-LOOP-029 | F75 (E-05/C-08): IDs of tables 7-1/7-4 and names with the correct value. | 1 | `test_f75_missing_ids_of_the_specification` |
-| SDK-LOOP-030 | A client (here the Python library instead of the PLC) initializes, resets and enables the robot over TCP; a new connection finds a restarted RC and initializes again. | 1 | `test_sdk_server_serves_a_plc_and_resets_the_rc_per_connection` |
-| SDK-LOOP-031 | Sdk server cli reports a missing sdk | 1 | `test_sdk_server_cli_reports_a_missing_sdk` |
-| SDK-LOOP-032 | Diagnosis for PLC tests: the Python client (one RobotTask cycle per telegram) sends the LifeSign without gaps; a PLC that runs its RobotTask several cycles per telegram shows gaps. | 1 | `test_sdk_server_reports_gaps_in_the_plc_lifesign` |
-| SDK-LOOP-033 | --dump diagnosis: the decoded headers show Control INITIALIZE and the TelegramState. | 1 | `test_sdk_server_dump_shows_the_initialization` |
-| SDK-LOOP-034 | --dump diagnosis: short telegrams and unknown Control/TelegramState values are shown. | 1 | `test_decode_header_of_short_or_unknown_values` |
 | SDK-LOOP-035 | Info: initialization, robot data, SW limits and position over the TCP gateway - no enable. | 1 | `test_minicobo_info_does_not_enable` |
 | SDK-LOOP-036 | Move: one joint relative to the actual position and back, then disabled. | 1 | `test_minicobo_move_relative_and_back` |
 | SDK-LOOP-037 | Move without --yes asks first; anything but yes cancels before the robot is enabled. | 1 | `test_minicobo_move_is_cancelled_without_confirmation` |
@@ -275,7 +270,6 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-045 | Minicobo rejects an invalid srci version | 4 | `test_minicobo_rejects_an_invalid_srci_version` |
 | SDK-LOOP-046 | Initialization with the listed ParCfg, GroupReset, EnableRobot, override, joint move into the elbow-bent pose, rectangle with 4 linear moves, back to the start position, disable (the script runs from top to bottom, so it is started as a process). | 1 | `test_quickstart_initializes_enables_moves_and_returns` |
 | SDK-LOOP-047 | Blending: every TurnMode of MoveLinearAbsolute, then every BlendingMode with MoveLinearAbsolute and MoveAxesAbsolute; the simulator (harness) supports all TurnModes and CORNER_DISTANCE / MAX_CORNER_DEVIATION / RAMP_OVERLAP, the other blending modes are rejected with 16#8E05 and the probe goes on. | 1 | `test_minicobo_probes_the_blending_modes` |
-| SDK-LOOP-048 | Control channel for PLC tests: the simulator of the connection is set up and read over the second port; RESET restarts the RC (a new initialization follows). | 1 | `test_sdk_server_control_channel` |
 
 ## TCP
 
@@ -619,12 +613,3 @@ Package, logging
 | UT-PKG-014 | Client background reports an exception of the cycle | 1 | `test_client_background_reports_an_exception_of_the_cycle` |
 | UT-PKG-015 | Background=False: cycles only while the script waits (deterministic, e.g. | 1 | `test_client_without_background_removes_finished_blocks` |
 | UT-PKG-016 | The configuration of the RobotTask has the name of the PLC input: ``ParCfg``. | 1 | `test_program_takes_the_robot_task_configuration_as_parcfg` |
-| UT-PKG-017 | Control channel: PING answers with the protocol version, invalid requests with ERR and the reason. | 1 | `test_ping_and_errors` |
-| UT-PKG-018 | Control channel: the setup requests call the functions of the simulator (numbers as 123, 16#7B, 0x7B). | 1 | `test_simulator_setup_is_forwarded` |
-| UT-PKG-019 | Control channel: GET returns the state of the simulator (joints as REAL text without exponent). | 1 | `test_get_values` |
-| UT-PKG-020 | Control channel: LAST returns a field of the decoded command; COUNT_COMMANDS / LOG_CONTAINS / MAX_SEVERITY count from MARK on. | 1 | `test_last_command_and_log_window` |
-| UT-PKG-021 | Control channel: RESET starts a new simulator and switches the tampering off. | 1 | `test_reset_starts_a_new_simulator` |
-| UT-PKG-022 | Control channel: TAMPER SET / XOR / REQ_SET / FREEZE / KEEP_ACK change the telegrams between PLC and SDK. | 1 | `test_tampering_of_the_telegrams` |
-| UT-PKG-023 | Control channel: number formats of the requests; a byte beyond the telegram is ignored. | 1 | `test_tamper_and_numbers` |
-| UT-PKG-024 | ``--control-port`` starts the control channel, 0 switches it off. | 1 | `test_cli_starts_the_control_channel` |
-| UT-PKG-025 | Control channel: a new connection replaces one that stays open without requests (PLC restarted without closing its socket), otherwise the new client would never be served. | 1 | `test_new_client_replaces_a_hanging_one` |

@@ -720,35 +720,35 @@
   "test": "tests/sdk/test_sdk_server.py::test_sdk_server_serves_a_plc_and_resets_the_rc_per_connection",
   "title": "A client (here the Python library instead of the PLC) initializes, resets and enables the robot over TCP; a new connection finds a restarted RC and initializes again.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "SDK-LOOP-031",
   "test": "tests/sdk/test_sdk_server.py::test_sdk_server_cli_reports_a_missing_sdk",
   "title": "Sdk server cli reports a missing sdk",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "SDK-LOOP-032",
   "test": "tests/sdk/test_sdk_server.py::test_sdk_server_reports_gaps_in_the_plc_lifesign",
   "title": "Diagnosis for PLC tests: the Python client (one RobotTask cycle per telegram) sends the LifeSign without gaps; a PLC that runs its RobotTask several cycles per telegram shows gaps.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "SDK-LOOP-033",
   "test": "tests/sdk/test_sdk_server.py::test_sdk_server_dump_shows_the_initialization",
   "title": "--dump diagnosis: the decoded headers show Control INITIALIZE and the TelegramState.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "SDK-LOOP-034",
   "test": "tests/sdk/test_sdk_server.py::test_decode_header_of_short_or_unknown_values",
   "title": "--dump diagnosis: short telegrams and unknown Control/TelegramState values are shown.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "SDK-LOOP-035",
@@ -846,7 +846,7 @@
   "test": "tests/sdk/test_sdk_server.py::test_sdk_server_control_channel",
   "title": "Control channel for PLC tests: the simulator of the connection is set up and read over the second port; RESET restarts the RC (a new initialization follows).",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "TCP-001",
@@ -2717,62 +2717,62 @@
   "test": "tests/unit/sim/test_control.py::test_ping_and_errors",
   "title": "Control channel: PING answers with the protocol version, invalid requests with ERR and the reason.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "UT-PKG-018",
   "test": "tests/unit/sim/test_control.py::test_simulator_setup_is_forwarded",
   "title": "Control channel: the setup requests call the functions of the simulator (numbers as 123, 16#7B, 0x7B).",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "UT-PKG-019",
   "test": "tests/unit/sim/test_control.py::test_get_values",
   "title": "Control channel: GET returns the state of the simulator (joints as REAL text without exponent).",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "UT-PKG-020",
   "test": "tests/unit/sim/test_control.py::test_last_command_and_log_window",
   "title": "Control channel: LAST returns a field of the decoded command; COUNT_COMMANDS / LOG_CONTAINS / MAX_SEVERITY count from MARK on.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "UT-PKG-021",
   "test": "tests/unit/sim/test_control.py::test_reset_starts_a_new_simulator",
   "title": "Control channel: RESET starts a new simulator and switches the tampering off.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "UT-PKG-022",
   "test": "tests/unit/sim/test_control.py::test_tampering_of_the_telegrams",
   "title": "Control channel: TAMPER SET / XOR / REQ_SET / FREEZE / KEEP_ACK change the telegrams between PLC and SDK.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "UT-PKG-023",
   "test": "tests/unit/sim/test_control.py::test_tamper_and_numbers",
   "title": "Control channel: number formats of the requests; a byte beyond the telegram is ignored.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "UT-PKG-024",
   "test": "tests/unit/sim/test_control.py::test_cli_starts_the_control_channel",
   "title": "``--control-port`` starts the control channel, 0 switches it off.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "UT-PKG-025",
   "test": "tests/unit/sim/test_control.py::test_new_client_replaces_a_hanging_one",
   "title": "Control channel: a new connection replaces one that stays open without requests (PLC restarted without closing its socket), otherwise the new client would never be served.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  }
 ]

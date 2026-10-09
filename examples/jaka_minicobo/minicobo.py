@@ -138,7 +138,13 @@ def open_transport(args: argparse.Namespace) -> Iterator[tuple[Transport, bool]]
         return
 
     from srci.sim.gateway import PlcGatewaySimulator
-    from srci.sim.sdk import SdkNotAvailableError, SdkSimulator
+
+    try:
+        from srci_sdk_sim.sdk import SdkNotAvailableError, SdkSimulator
+    except ImportError:
+        sys.exit(
+            "SDK simulator not installed (private SRCI SDK: pip install -e <SDK>/srci_py_harness/python)"
+        )
 
     try:
         sim = SdkSimulator()

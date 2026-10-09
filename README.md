@@ -152,10 +152,12 @@ mypy
 ```
 
 Some tests run against a simulated robot controller that is built from a licensed SRCI SDK. The
-SDK is not part of this repository; without it these tests are skipped. With the locally built
-SDK library, `python -m srci.sim.server --port 5000 --length 256` also offers the simulator as a
-TCP server for PLC tests (the PLC is the client, a second port is the control channel of the
-tests, see [docs/TRANSPORT.md](docs/TRANSPORT.md)).
+SDK and its Python binding (package `srci_sdk_sim`: simulator, TCP server for PLC tests, control
+channel) are not part of this repository; without them these tests are skipped. With the private
+SDK: `pip install -e "<SDK>/srci_py_harness/python"`; then
+`python -m srci_sdk_sim.server --port 5000 --length 256` also offers the simulator as a TCP
+server for PLC tests (the PLC is the client, a second port is the control channel of the tests,
+see [docs/TRANSPORT.md](docs/TRANSPORT.md)).
 
 The fixes of the ST code found while porting are listed in [docs/ST_FINDINGS.md](docs/ST_FINDINGS.md);
 `python -m tools.st2py.export_xml` writes them back into the PLCopen XML of the PLC library

@@ -93,8 +93,13 @@ SIMULATION = "--sim" in sys.argv
 
 transport: Transport
 if SIMULATION:
-    # SRCI SDK simulator in-process (needs the locally built SDK library, SRCI_SDK_SIM_LIB)
-    from srci.sim.sdk import SdkSimulator, sdk_transport
+    # SRCI SDK simulator in-process (private SDK package srci_sdk_sim with the built library)
+    try:
+        from srci_sdk_sim.sdk import SdkSimulator, sdk_transport
+    except ImportError:
+        sys.exit(
+            "SDK simulator not installed (private SRCI SDK: pip install -e <SDK>/srci_py_harness/python)"
+        )
 
     sim = SdkSimulator()
     sim.set_move_cycles(100)  # a simulated move takes 1 s

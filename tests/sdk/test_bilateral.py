@@ -43,10 +43,10 @@ from functools import cache
 from typing import Any
 
 import pytest
+from srci_sdk_sim.sdk import SdkSimulator, find_sdk_library, sdk_transport
 
 import srci
 from srci.iec.clock import FakeClock, use_clock
-from srci.sim.sdk import SdkSimulator, find_sdk_library, sdk_transport
 from tests.bilateral import Comparison, compare_fields, distinct_values, leaves, response_values
 from tests.robot_task_harness import SIZE, RobotTaskHarness
 from tools.payload_check import fb_classes, function_name, send_calls

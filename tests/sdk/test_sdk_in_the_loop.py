@@ -29,10 +29,10 @@ is done by hand here - the complete RobotTask follows in M6.
 from __future__ import annotations
 
 import pytest
+from srci_sdk_sim.sdk import SdkSimulator, sdk_transport
 
 from srci.functions.Convert.Misc import DwordToRaStatusWord, PlcOptionalCyclicToUint, RobOptionalCyclicToUint
 from srci.sim.gateway import PlcGatewaySimulator
-from srci.sim.sdk import SdkSimulator, sdk_transport
 from srci.transport import TcpTransport, Transport
 from srci.types import AxesGroup, OperationMode, TelegramRobToPlc, TelegramState
 from tests.helpers import Host, new_axes_group

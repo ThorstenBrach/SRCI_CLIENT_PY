@@ -28,8 +28,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
-
-from srci.sim.sdk import SdkNotAvailableError, SdkSimulator, find_sdk_library
+from srci_sdk_sim.sdk import SdkNotAvailableError, SdkSimulator, find_sdk_library
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:

@@ -24,6 +24,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 from pathlib import Path
 
 import pytest
@@ -68,6 +69,7 @@ def test_require_sdk_fails_without_library(monkeypatch: pytest.MonkeyPatch, tmp_
     monkeypatch.setenv("SRCI_REQUIRE_SDK", "1")
     monkeypatch.setenv("SRCI_SDK_SIM_LIB", str(tmp_path / "missing.so"))
     monkeypatch.setenv("SRCI_SDK_DIR", str(tmp_path))
-    monkeypatch.setattr("srci.sim.sdk.REPO_ROOT", tmp_path / "repo")
+    if importlib.util.find_spec("srci_sdk_sim") is not None:
+        monkeypatch.setattr("srci_sdk_sim.sdk.HARNESS_DIR", tmp_path / "harness")
     with pytest.raises(pytest.UsageError, match="SRCI_REQUIRE_SDK"):
         pytest_sessionstart(None)  # type: ignore[arg-type]

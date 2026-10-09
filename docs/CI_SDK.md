@@ -6,7 +6,9 @@ job `sdk` (`.github/workflows/ci.yml`) works like this:
 
 1. It checks out the SDK from a **private** GitHub repository with a **read-only deploy key**
    (secret `SDK_DEPLOY_KEY`).
-2. It builds the simulator library (`srci_py_harness`, Linux `.so` and Windows `.dll`) in the job.
+2. It builds the simulator library (`srci_py_harness`, Linux `.so` and Windows `.dll`) in the job
+   and installs the Python binding of the SDK repository (`srci_py_harness/python`, package
+   `srci_sdk_sim`).
 3. It runs `pytest -m sdk` with `SRCI_REQUIRE_SDK=1`: a missing library is an error, the tests are
    never skipped silently.
 4. It deletes the SDK from the runner.

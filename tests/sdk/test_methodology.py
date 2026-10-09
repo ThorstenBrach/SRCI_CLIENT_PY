@@ -50,10 +50,10 @@ from contextlib import contextmanager
 from typing import Any
 
 import pytest
+from srci_sdk_sim.sdk import SdkSimulator, find_sdk_library, sdk_transport
 
 import srci
 from srci.iec.clock import FakeClock, use_clock
-from srci.sim.sdk import SdkSimulator, find_sdk_library, sdk_transport
 from srci.types import SequenceFlag
 from tests.bilateral import distinct_values, leaves
 from tests.robot_task_harness import SIZE, RobotTaskHarness
