@@ -1410,6 +1410,20 @@
   "status": "active"
  },
  {
+  "id": "UT-FB-057",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f81_update_tool_data_stores_the_tool_in_the_plc_array",
+  "title": "F81: AxesGroupSystemDataFB.UpdateToolData (called by Write/ReadToolData) did not copy the tool into the ToolData array of the RobotTask (code commented out) - frames and loads were stored.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-058",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f82_read_actual_position_cyclic_joint_ext_sets_its_own_reading_flag",
+  "title": "F82: MC_ReadActualPositionCyclicFB set OutCmd.ReadingCartesianPositionExt instead of ReadingJointPositionExt when the extended joint position was read (copy & paste).",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-FN-001",
   "test": "tests/unit/functions/test_convert_dt.py::test_iec_date_is_days_since_1990",
   "title": "Iec date is days since 1990",

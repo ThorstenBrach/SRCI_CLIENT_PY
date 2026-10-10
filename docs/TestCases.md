@@ -30,7 +30,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
-| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 56 | 142 |
+| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 58 | 144 |
 | [UT-FN](#ut-fn) | Functions of the library | 16 | 20 |
 | [UT-IEC](#ut-iec) | IEC 61131-3 runtime (data types, timers, conversions) | 42 | 96 |
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **377** | **3700** |
+| | **Total** | **379** | **3702** |
 
 ## Test methodology
 
@@ -330,6 +330,8 @@ Function blocks (unit tests without SDK)
 | UT-FB-054 | F63: a sequence whose Ack is not the Seq that was sent (the SDK sends Ack 0 in the sequence it does not process) carries no response. | 1 | `test_f63_ack_of_an_other_seq_is_ignored` |
 | UT-FB-055 | F80: an enum without initial value starts with the member 0 if there is one (TwinCAT, checked online), otherwise with the first member: TriggerCondition -> UNDEFINED (first member -5), MessageLevel (no member 0) -> DEBUG. | 1 | `test_f80_enum_without_initial_value_starts_with_member_0` |
 | UT-FB-056 | F80 (spec table 6-692): TriggerMode_1 has no valid default (0 = undefined -> 16#0008); TriggerMode_2 = 0 (undefined) is allowed: only TriggerMode_1 is used. | 1 | `test_f80_set_trigger_motion_trigger_mode_2_undefined_is_allowed` |
+| UT-FB-057 | F81: AxesGroupSystemDataFB.UpdateToolData (called by Write/ReadToolData) did not copy the tool into the ToolData array of the RobotTask (code commented out) - frames and loads were stored. | 1 | `test_f81_update_tool_data_stores_the_tool_in_the_plc_array` |
+| UT-FB-058 | F82: MC_ReadActualPositionCyclicFB set OutCmd.ReadingCartesianPositionExt instead of ReadingJointPositionExt when the extended joint position was read (copy & paste). | 1 | `test_f82_read_actual_position_cyclic_joint_ext_sets_its_own_reading_flag` |
 
 ## UT-FN
 

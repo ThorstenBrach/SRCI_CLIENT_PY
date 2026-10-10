@@ -195,3 +195,45 @@ def test_f80_set_trigger_motion_trigger_mode_2_undefined_is_allowed() -> None:
     fb.ParCmd.TriggerParameter_1 = 100.0
     fb.ParCmd.TriggerMode_2 = TriggerCondition.UNDEFINED
     assert fb.CheckParameterValid(AxesGroup=ag), fb.ErrorID
+
+
+# ------------------------------------------------------------------ F81 / F82 (found while writing the wiki)
+
+
+def test_f81_update_tool_data_stores_the_tool_in_the_plc_array() -> None:
+    """F81: AxesGroupSystemDataFB.UpdateToolData (called by Write/ReadToolData) did not copy the
+    tool into the ToolData array of the RobotTask (code commented out) - frames and loads were
+    stored."""
+    from srci.iec.rt import ADR, array_type
+    from srci.types import Frame, FrameData, Tool, ToolData
+    from srci.types import iec as _iec
+
+    ag, _ = new_axes_group()
+    sd = ag.SystemData
+    tools = [Tool() for _ in range(4)]
+    frames = [Frame() for _ in range(4)]
+    sd.ToolDataPtr = ADR(tools, None, array_type(tools, _iec.StructType(Tool)))
+    sd.ToolDataMin, sd.ToolDataMax = 0, 3
+    sd.FrameDataPtr = ADR(frames, None, array_type(frames, _iec.StructType(Frame)))
+    sd.FrameDataMin, sd.FrameDataMax = 0, 3
+
+    sd.UpdateFrameData(FrameNo=2, FrameData=FrameData(X=12.5))
+    assert frames[2].Available and frames[2].Data.X == 12.5
+    sd.UpdateToolData(ToolNo=2, ToolData=ToolData(Z=150.0, LoadNo=1))
+    assert tools[2].Available
+    assert tools[2].Data.Z == 150.0 and tools[2].Data.LoadNo == 1
+    assert not tools[1].Available and not tools[3].Available
+
+
+def test_f82_read_actual_position_cyclic_joint_ext_sets_its_own_reading_flag() -> None:
+    """F82: MC_ReadActualPositionCyclicFB set OutCmd.ReadingCartesianPositionExt instead of
+    ReadingJointPositionExt when the extended joint position was read (copy & paste)."""
+    import inspect
+
+    from srci.fb import MC_ReadActualPositionCyclicFB
+
+    src = inspect.getsource(MC_ReadActualPositionCyclicFB)
+    joint_ext = src[src.index("if self._parCmd.ReadJointPositionExt:") :]
+    joint_ext = joint_ext[: joint_ext.index("\n\n")]
+    assert "self.OutCmd.ReadingJointPositionExt = True" in joint_ext
+    assert "self.OutCmd.ReadingCartesianPositionExt" not in joint_ext

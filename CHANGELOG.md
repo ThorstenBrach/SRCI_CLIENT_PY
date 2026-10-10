@@ -72,6 +72,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - ST fixes compile in TwinCAT: duplicate `CmdType.SoftSwitchTCP` (C0142), explicit conversions
    instead of implicit narrowing (C0032, F60/F74), enum aliases for literals hidden by inputs
    (F35, F51)
+ - ST-FIX F81: Write/ReadToolData store the tool in the `ToolData` array of the RobotTask
+   (`AxesGroupSystemDataFB.UpdateToolData`, the copy was commented out)
+ - ST-FIX F82: `MC_ReadActualPositionCyclicFB` sets `ReadingJointPositionExt` (not
+   `ReadingCartesianPositionExt`) for the extended joint position
  - `tools.sdk_custom_report` accepts a CUSTOM block that keeps the original SDK code as a comment
    (BEGIN opens the comment, END closes it)
 

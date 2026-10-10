@@ -38,7 +38,7 @@ import srci.types as _T
 from srci.iec.conv import DINT_TO_UDINT, USINT_TO_STRING
 from srci.iec.fb import FunctionBlock
 from srci.iec.rt import copy_into
-from srci.types import DefaultDynamics, Frame, FrameData, Load, LoadData, MessageType, ReferenceDynamics, RobotLibraryConstants, RobotLibraryWarningIdEnum, RobotWorkArea, RobotWorkAreaData, SWLimits, Severity, SystemTime, ToolData
+from srci.types import DefaultDynamics, Frame, FrameData, Load, LoadData, MessageType, ReferenceDynamics, RobotLibraryConstants, RobotLibraryWarningIdEnum, RobotWorkArea, RobotWorkAreaData, SWLimits, Severity, SystemTime, Tool, ToolData
 
 if TYPE_CHECKING:
     from srci.fb._internal.BaseFBs.RobotLibraryBaseFB import RobotLibraryBaseFB
@@ -258,12 +258,13 @@ class AxesGroupSystemDataFB(FunctionBlock):
                 Caller.CreateLogMessagePara1(Timestamp=SystemTime, MessageType=MessageType.CMD, Severity=Severity.WARNING, MessageCode=Caller.WarningID, MessageText='Save ToolData failed. Index {1} not available in user defined system data', Para1=USINT_TO_STRING(ToolNo))
 
             return UpdateToolData
-        # {warning 'ToDo: Compiler Fehler'}
-        # // Calculate pointer address for the index of the ToolData Array
-        # pToolData := ToolDataPtr + (( ToolNo - DINT_TO_UDINT(ToolDataMin)) * SIZEOF(Tool));
-        # // copy tool data to Array index
-        # pToolData^.Available := TRUE;
-        # pToolData^.Data := ToolData;
+
+        # ST-FIX F81: copy the tool into the ToolData array (was commented out)
+        # Calculate pointer address for the index of the ToolData Array
+        pToolData = self.ToolDataPtr + (ToolNo - DINT_TO_UDINT(self.ToolDataMin)) * 34
+        # copy tool data to Array index
+        pToolData.deref(_iec.StructType(Tool)).Available = True
+        copy_into(pToolData.deref(_iec.StructType(Tool)).Data, ToolData)
         return UpdateToolData
 
     def UpdateWorAreas(self, *, Caller: RobotLibraryBaseFB | None = None, SystemTime: _T.SystemTime | None = None, WorkAreaNo: int = 0, WorkAreaData: RobotWorkAreaData | None = None) -> int:

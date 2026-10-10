@@ -123,6 +123,8 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | [F78](#f78) | `RobotLibraryBaseEnableFB.OnCall` - the RC answered with an error, Enable FALSE starts the error clear (waits up to 5 s for a response); a new rising edge of Enable in this time is consumed while `Error` is still TRUE → nothing sent, no `Busy`, no `Error` (found by the TcUnit test PM-03: the instance is reused) | 1 | `RobotLibraryBaseEnableFB` |
 | [F79](#f79) | `MC_RobotTaskFB.OnExecRun` step 1 - the init timeout reports the *momentary* telegram state; the RobotTask answers an error state with ACK_ERROR / RESET / INITIALIZE, so the error (e.g. 16#A4 SRCI major version) is only visible part of the time → depending on the phase `ERR_TIMEOUT_CMD` instead of the reason (TcUnit test SDK-RT-007, ~4 ms per robot cycle on the PLC) | 4 | `MC_RobotTaskFB` |
 | [F80](#f80) | `MC_SetTriggerMotionFB.CheckParameterValid`, transpiler (enum defaults) - `TriggerMode_2` = 0 (undefined, the default: only `TriggerMode_1` is used) is rejected with 16#0008. The Python port started enums without initial value with the first member (`TriggerCondition` −5), TwinCAT with the member 0 (`UNDEFINED`, checked online) → GEN-05 SetTriggerMotion was green in Python and red on the PLC | 1 | `MC_SetTriggerMotionFB` |
+| [F81](#f81) | `AxesGroupSystemDataFB.UpdateToolData` - the copy into the `ToolData` array of the RobotTask is commented out (`{warning 'ToDo: Compiler Fehler'}`) → Write/ReadToolData (with `UpdateSystemData`) do not update the PLC copy; frames, loads and work areas are stored | 1 | `AxesGroupSystemDataFB` |
+| [F82](#f82) | `MC_ReadActualPositionCyclicFB.OnExecRun` - for the extended joint position `OutCmd.ReadingCartesianPositionExt` is set instead of `ReadingJointPositionExt` (copy & paste) | 1 | `MC_ReadActualPositionCyclicFB` |
 
 ## Generated ST changes
 
@@ -8959,6 +8961,59 @@ _`MC_SetTriggerMotionFB.CheckParameterValid`, transpiler (enum defaults) - `Trig
      ( ParCmd.TriggerMode_2 <> TriggerCondition. START_POSITION_DISTANCE_PERCENT      ) AND
      ( ParCmd.TriggerMode_2 <> TriggerCondition.TARGET_POSITION_DISTANCE_ABSOLUTE     ) AND
      ( ParCmd.TriggerMode_2 <> TriggerCondition. START_POSITION_DISTANCE_ABSOLUTE     ) AND
+```
+
+### F81
+
+_`AxesGroupSystemDataFB.UpdateToolData` - the copy into the `ToolData` array of the RobotTask is commented out (`{warning 'ToDo: Compiler Fehler'}`) → Write/ReadToolData (with `UpdateSystemData`) do not update the PLC copy; frames, loads and work areas are stored_
+
+- F81: AxesGroupSystemDataFB.UpdateToolData: the copy into the ToolData array of the RobotTask was commented out ('ToDo: Compiler Fehler') -> Write/ReadToolData did not update the PLC copy (frames, loads and work areas were stored)
+
+**AxesGroupSystemDataFB** · `UpdateToolData` · patch
+
+```diff
+--- a/AxesGroupSystemDataFB.UpdateToolData
++++ b/AxesGroupSystemDataFB.UpdateToolData
+@@ -25,15 +25,11 @@
+   RETURN;
+ END_IF
+ 
+-{warning 'ToDo: Compiler Fehler'}
+-(*
+-
++// ST-FIX F81: copy the tool into the ToolData array (was commented out)
+ // Calculate pointer address for the index of the ToolData Array
+ pToolData := ToolDataPtr + (( ToolNo - DINT_TO_UDINT(ToolDataMin)) * SIZEOF(Tool));
+ // copy tool data to Array index
+ pToolData^.Available := TRUE;
+ pToolData^.Data := ToolData;
+ 
+-*)
+-
+                 
+```
+
+### F82
+
+_`MC_ReadActualPositionCyclicFB.OnExecRun` - for the extended joint position `OutCmd.ReadingCartesianPositionExt` is set instead of `ReadingJointPositionExt` (copy & paste)_
+
+- F82: MC_ReadActualPositionCyclicFB set OutCmd.ReadingCartesianPositionExt instead of ReadingJointPositionExt for the extended joint position (copy & paste)
+
+**MC_ReadActualPositionCyclicFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_ReadActualPositionCyclicFB.OnExecRun
++++ b/MC_ReadActualPositionCyclicFB.OnExecRun
+@@ -88,7 +88,8 @@
+          // Set extended joint position
+          IF ( _parCmd.ReadJointPositionExt )  
+          THEN         
+-            OutCmd.ReadingCartesianPositionExt  := TRUE;         
++            // ST-FIX F82: own reading flag (was ReadingCartesianPositionExt)
++            OutCmd.ReadingJointPositionExt      := TRUE;         
+             OutCmd.JointPosition.E2             := OutCmd.JointPositionExt.E2               := AxesGroup.CyclicOptional.RobToPlc.JointPositionExt.E2;
+             OutCmd.JointPosition.E3             := OutCmd.JointPositionExt.E3               := AxesGroup.CyclicOptional.RobToPlc.JointPositionExt.E3;
+             OutCmd.JointPosition.E4             := OutCmd.JointPositionExt.E4               := AxesGroup.CyclicOptional.RobToPlc.JointPositionExt.E4;
 ```
 
 ## Data types

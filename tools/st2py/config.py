@@ -2037,6 +2037,43 @@ E_PATCHES += (
     ),
 )
 
+# ----------------------------------------------------------------------------------------------
+# F81, F82: found while writing the user manual (wiki)
+_F81 = (
+    "F81: AxesGroupSystemDataFB.UpdateToolData: the copy into the ToolData array of the RobotTask was "
+    "commented out ('ToDo: Compiler Fehler') -> Write/ReadToolData did not update the PLC copy "
+    "(frames, loads and work areas were stored)"
+)
+_F82 = (
+    "F82: MC_ReadActualPositionCyclicFB set OutCmd.ReadingCartesianPositionExt instead of "
+    "ReadingJointPositionExt for the extended joint position (copy & paste)"
+)
+E_PATCHES += (
+    SourcePatch(
+        "AxesGroupSystemDataFB",
+        "UpdateToolData",
+        r"\{warning 'ToDo: Compiler Fehler'\}\s*\(\*\s*"
+        r"(// Calculate pointer address for the index of the ToolData Array\s*\n)"
+        r"(pToolData := ToolDataPtr \+ [^\n]*\n)"
+        r"(// copy tool data to Array index\s*\n)"
+        r"(pToolData\^\.Available := TRUE;\s*\n)"
+        r"(pToolData\^\.Data := ToolData;)\s*\*\)",
+        "// ST-FIX F81: copy the tool into the ToolData array (was commented out)\n\\1\\2\\3\\4\\5",
+        _F81,
+        regex=True,
+        template=True,
+    ),
+    SourcePatch(
+        "MC_ReadActualPositionCyclicFB",
+        "OnExecRun",
+        r"(IF \( _parCmd\.ReadJointPositionExt \)\s*\n\s*THEN\s*\n(\s*))OutCmd\.ReadingCartesianPositionExt(\s*):= TRUE;",
+        "\\1// ST-FIX F82: own reading flag (was ReadingCartesianPositionExt)\n\\2OutCmd.ReadingJointPositionExt\\3    := TRUE;",
+        _F82,
+        regex=True,
+        template=True,
+    ),
+)
+
 E_VARS = (
     VarAppend(
         "MC_RobotTaskFB",
