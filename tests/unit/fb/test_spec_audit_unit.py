@@ -243,3 +243,45 @@ def test_f82_read_actual_position_cyclic_joint_ext_sets_its_own_reading_flag() -
     assert fb.OutCmd.JointPosition.E2 == 12.5
     assert fb.OutCmd.ReadingJointPositionExt
     assert not fb.OutCmd.ReadingCartesianPositionExt
+
+
+# ------------------------------------------------------------------ F83 / F84 (found while writing the wiki)
+
+
+def test_f83_deactivate_is_allowed_with_the_sequence_of_the_command() -> None:
+    """F83: the SequenceFlag check of F69 also applied to ProcessingMode DEACTIVATE: an action
+    started in a sequence (e.g. TRIGGER_BUFFERED) could not be deactivated with the same
+    SequenceFlag (16#8625), WaitForTrigger (only primary / secondary allowed) not at all."""
+    from srci.fb import MC_WaitForTriggerFB, MC_WriteDigitalOutputsFB
+    from srci.types import ProcessingMode, SequenceFlag
+
+    ag, _ = new_axes_group()
+    wait = MC_WaitForTriggerFB()
+    wait.ParCmd.ListenerID = 7
+    wait.ProcessingMode = ProcessingMode.DEACTIVATE
+    wait.SequenceFlag = SequenceFlag.PRIMARY_SEQUENCE
+    assert wait.CheckParameterValid(AxesGroup=ag), hex(wait.ErrorID)
+    out = MC_WriteDigitalOutputsFB()
+    out.ParCmd.ListenerID = 7
+    out.ProcessingMode = ProcessingMode.DEACTIVATE
+    out.SequenceFlag = SequenceFlag.SECONDARY_SEQUENCE
+    assert out.CheckParameterValid(AxesGroup=ag), hex(out.ErrorID)
+    # the check itself stays: a sequence mode without sequence is still rejected
+    out = MC_WriteDigitalOutputsFB()
+    out.ProcessingMode = ProcessingMode.BUFFERED
+    out.SequenceFlag = SequenceFlag.NO_SEQUENCE
+    assert not out.CheckParameterValid(AxesGroup=ag)
+
+
+def test_f84_move_linear_cam_accepts_trigger_delay_above_255_ms() -> None:
+    """F84: MC_MoveLinearCamFB rejected TriggerDelay > 255 ms (16#0008), although it is a UINT
+    [ms] (spec) and MC_MoveCircularCamFB accepts up to 65535."""
+    from srci.fb import MC_MoveLinearCamFB
+
+    ag, _ = new_axes_group()
+    fb = MC_MoveLinearCamFB()
+    fb.ParCmd.TriggerDelay = 1000
+    assert fb.CheckParameterValid(AxesGroup=ag), hex(fb.ErrorID)
+    fb = MC_MoveLinearCamFB()
+    fb.ParCmd.TriggerDelay = 65535
+    assert fb.CheckParameterValid(AxesGroup=ag), hex(fb.ErrorID)

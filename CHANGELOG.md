@@ -76,6 +76,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    (`AxesGroupSystemDataFB.UpdateToolData`, the copy was commented out)
  - ST-FIX F82: `MC_ReadActualPositionCyclicFB` sets `ReadingJointPositionExt` (not
    `ReadingCartesianPositionExt`) for the extended joint position
+ - ST-FIX F83: an action started in a sequence can be deactivated (`ProcessingMode` DEACTIVATE with
+   its SequenceFlag), `MC_WaitForTriggerFB` can be deactivated at all
+ - ST-FIX F84: `MC_MoveLinearCamFB` accepts `TriggerDelay` up to 65535 ms (was 255)
  - `tools.sdk_custom_report` accepts a CUSTOM block that keeps the original SDK code as a comment
    (BEGIN opens the comment, END closes it)
 

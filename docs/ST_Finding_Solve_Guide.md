@@ -125,6 +125,7 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | [F80](#f80) | `MC_SetTriggerMotionFB.CheckParameterValid`, transpiler (enum defaults) - `TriggerMode_2` = 0 (undefined, the default: only `TriggerMode_1` is used) is rejected with 16#0008. The Python port started enums without initial value with the first member (`TriggerCondition` −5), TwinCAT with the member 0 (`UNDEFINED`, checked online) → GEN-05 SetTriggerMotion was green in Python and red on the PLC | 1 | `MC_SetTriggerMotionFB` |
 | [F81](#f81) | `AxesGroupSystemDataFB.UpdateToolData` - the copy into the `ToolData` array of the RobotTask is commented out (`{warning 'ToDo: Compiler Fehler'}`) → Write/ReadToolData (with `UpdateSystemData`) do not update the PLC copy; frames, loads and work areas are stored | 1 | `AxesGroupSystemDataFB` |
 | [F82](#f82) | `MC_ReadActualPositionCyclicFB.OnExecRun` - for the extended joint position `OutCmd.ReadingCartesianPositionExt` is set instead of `ReadingJointPositionExt` (copy & paste) | 1 | `MC_ReadActualPositionCyclicFB` |
+| [F84](#f84) | `MC_MoveLinearCamFB.CheckParameterValid` - `TriggerDelay` > 255 ms rejected (16#0008), although it is a UINT [ms] and sent as UINT; `MC_MoveCircularCamFB` allows 65535 | 1 | `MC_MoveLinearCamFB` |
 
 ## Generated ST changes
 
@@ -4244,7 +4245,7 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_StopSubprogramFB.CheckParameterValid
 +++ b/MC_StopSubprogramFB.CheckParameterValid
-@@ -170,3 +170,20 @@
+@@ -171,3 +171,20 @@
                            Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
    RETURN;
  END_IF
@@ -4272,7 +4273,7 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_CollisionDetectionFB.CheckParameterValid
 +++ b/MC_CollisionDetectionFB.CheckParameterValid
-@@ -224,3 +224,20 @@
+@@ -225,3 +225,20 @@
                            Para1       := PROCESSING_MODE_TO_STRING(ParCmd.ProcessingMode));
    RETURN;
  END_IF
@@ -4391,7 +4392,7 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_WriteAnalogOutputFB.CheckParameterValid
 +++ b/MC_WriteAnalogOutputFB.CheckParameterValid
-@@ -179,3 +179,18 @@
+@@ -180,3 +180,18 @@
                            Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
    RETURN;
  END_IF
@@ -4417,7 +4418,7 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_CollisionDetectionFB.CheckParameterValid
 +++ b/MC_CollisionDetectionFB.CheckParameterValid
-@@ -200,3 +200,27 @@
+@@ -201,3 +201,27 @@
                            Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
    RETURN;
  END_IF
@@ -7650,7 +7651,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 ```diff
 --- a/MC_CallSubprogramFB.CheckParameterValid
 +++ b/MC_CallSubprogramFB.CheckParameterValid
-@@ -124,4 +124,45 @@
+@@ -124,4 +124,46 @@
      RETURN;                          
    END_IF
  END_FOR
@@ -7683,7 +7684,8 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 +                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
++// ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7704,7 +7706,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 ```diff
 --- a/MC_ReadActualPositionFB.CheckParameterValid
 +++ b/MC_ReadActualPositionFB.CheckParameterValid
-@@ -138,4 +138,45 @@
+@@ -138,4 +138,46 @@
                            Para1       :=  SINT_TO_STRING(ParCmd.ListenerID));
    RETURN;                          
  END_IF
@@ -7737,7 +7739,8 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 +                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
++// ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7758,7 +7761,7 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 ```diff
 --- a/MC_ReadActualTCPVelocityFB.CheckParameterValid
 +++ b/MC_ReadActualTCPVelocityFB.CheckParameterValid
-@@ -137,4 +137,45 @@
+@@ -137,4 +137,46 @@
                            Para1       :=  SINT_TO_STRING(ParCmd.ListenerID));
    RETURN;                          
  END_IF
@@ -7791,7 +7794,8 @@ Same change (same `-`/`+` lines) in: `MC_ReadActualForceFB`, `MC_WriteAnalogOutp
 +                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
++// ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7814,14 +7818,15 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 ```diff
 --- a/MC_CollisionDetectionFB.CheckParameterValid
 +++ b/MC_CollisionDetectionFB.CheckParameterValid
-@@ -184,4 +184,19 @@
+@@ -184,4 +184,20 @@
                            Para1       := THRESHOLD_MODE_TO_STRING(ParCmd.UnitLimitAxis));
    RETURN;                          
  END_IF
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
++// ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7842,14 +7847,15 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 ```diff
 --- a/MC_LoadMeasurementSequentialFB.CheckParameterValid
 +++ b/MC_LoadMeasurementSequentialFB.CheckParameterValid
-@@ -98,4 +98,19 @@
+@@ -98,4 +98,20 @@
                            Para1       := VALID_REAL_TO_STRING(ParCmd.Mass));
    RETURN;                          
  END_IF
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
++// ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -7870,14 +7876,15 @@ Same change (same `-`/`+` lines) in: `MC_ReadAnalogInputFB`, `MC_ReadDigitalInpu
 ```diff
 --- a/MC_WriteLoadDataFB.CheckParameterValid
 +++ b/MC_WriteLoadDataFB.CheckParameterValid
-@@ -274,4 +274,19 @@
+@@ -274,4 +274,20 @@
                            Para1       := VALID_REAL_TO_STRING(ParCmd.LoadData.IZ));
    RETURN;                          
  END_IF
 -                
 +
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
++// ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -8248,13 +8255,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_SetTriggerUserFB.CheckParameterValid
 +++ b/MC_SetTriggerUserFB.CheckParameterValid
-@@ -76,4 +76,18 @@
+@@ -76,4 +76,19 @@
    RETURN;
  END_IF
  
 -                
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
++// ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -8275,13 +8283,14 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_WriteFrameDataFB.CheckParameterValid
 +++ b/MC_WriteFrameDataFB.CheckParameterValid
-@@ -217,4 +217,18 @@
+@@ -217,4 +217,19 @@
    RETURN;                          
  END_IF
  
 -                
 +// ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
++// ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -8302,7 +8311,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_StopSubprogramFB.CheckParameterValid
 +++ b/MC_StopSubprogramFB.CheckParameterValid
-@@ -116,4 +116,57 @@
+@@ -116,4 +116,58 @@
                            Para1       := SINT_TO_STRING(ParCmd.ListenerID));                            
    RETURN;
  END_IF
@@ -8347,7 +8356,8 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 +                          Para1       := PROCESSING_MODE_TO_STRING(ProcessingMode));
 +  RETURN;
 +END_IF
-+IF ( CheckParameterValid ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
++// ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)
++IF ( CheckParameterValid ) AND ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND ( ( (( ProcessingMode = ProcessingModeEnum.BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.ABORTING ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_BUFFERED ) OR ( ProcessingMode = ProcessingModeEnum.TRIGGER_ABORTING )) ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )
 +THEN
 +  CheckParameterValid := FALSE;
 +  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite := TRUE );
@@ -8582,7 +8592,7 @@ _`MC_CallSubprogramFB.CheckParameterValid` - acyclic data > 190 bytes not reject
 ```diff
 --- a/MC_CallSubprogramFB.CheckParameterValid
 +++ b/MC_CallSubprogramFB.CheckParameterValid
-@@ -166,3 +166,17 @@
+@@ -167,3 +167,17 @@
                            Para2       := PROCESSING_MODE_TO_STRING(ProcessingMode));
    RETURN;
  END_IF
@@ -9014,6 +9024,28 @@ _`MC_ReadActualPositionCyclicFB.OnExecRun` - for the extended joint position `Ou
              OutCmd.JointPosition.E2             := OutCmd.JointPositionExt.E2               := AxesGroup.CyclicOptional.RobToPlc.JointPositionExt.E2;
              OutCmd.JointPosition.E3             := OutCmd.JointPositionExt.E3               := AxesGroup.CyclicOptional.RobToPlc.JointPositionExt.E3;
              OutCmd.JointPosition.E4             := OutCmd.JointPositionExt.E4               := AxesGroup.CyclicOptional.RobToPlc.JointPositionExt.E4;
+```
+
+### F84
+
+_`MC_MoveLinearCamFB.CheckParameterValid` - `TriggerDelay` > 255 ms rejected (16#0008), although it is a UINT [ms] and sent as UINT; `MC_MoveCircularCamFB` allows 65535_
+
+- F84: MC_MoveLinearCamFB rejected TriggerDelay > 255 ms; it is a UINT [ms] like in MC_MoveCircularCamFB
+
+**MC_MoveLinearCamFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveLinearCamFB.CheckParameterValid
++++ b/MC_MoveLinearCamFB.CheckParameterValid
+@@ -706,7 +706,7 @@
+ 
+ // Check ParCmd.TriggerDelay valid ? 
+ IF (( ParCmd.TriggerDelay <   0 ) OR
+-    ( ParCmd.TriggerDelay > 255 ))
++    ( ParCmd.TriggerDelay > 16#FFFF )) // ST-FIX F84: UINT [ms] (was 255)
+ THEN
+   // Parameter not valid
+   CheckParameterValid := FALSE;
 ```
 
 ## Data types

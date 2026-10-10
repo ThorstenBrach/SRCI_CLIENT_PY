@@ -30,7 +30,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
-| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 58 | 144 |
+| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 60 | 146 |
 | [UT-FN](#ut-fn) | Functions of the library | 16 | 20 |
 | [UT-IEC](#ut-iec) | IEC 61131-3 runtime (data types, timers, conversions) | 42 | 96 |
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **379** | **3702** |
+| | **Total** | **381** | **3704** |
 
 ## Test methodology
 
@@ -332,6 +332,8 @@ Function blocks (unit tests without SDK)
 | UT-FB-056 | F80 (spec table 6-692): TriggerMode_1 has no valid default (0 = undefined -> 16#0008); TriggerMode_2 = 0 (undefined) is allowed: only TriggerMode_1 is used. | 1 | `test_f80_set_trigger_motion_trigger_mode_2_undefined_is_allowed` |
 | UT-FB-057 | F81: AxesGroupSystemDataFB.UpdateToolData (called by Write/ReadToolData) did not copy the tool into the ToolData array of the RobotTask (code commented out) - frames and loads were stored. | 1 | `test_f81_update_tool_data_stores_the_tool_in_the_plc_array` |
 | UT-FB-058 | F82: MC_ReadActualPositionCyclicFB set OutCmd.ReadingCartesianPositionExt instead of ReadingJointPositionExt when the extended joint position was read (copy & paste). | 1 | `test_f82_read_actual_position_cyclic_joint_ext_sets_its_own_reading_flag` |
+| UT-FB-059 | F83: the SequenceFlag check of F69 also applied to ProcessingMode DEACTIVATE: an action started in a sequence (e.g. | 1 | `test_f83_deactivate_is_allowed_with_the_sequence_of_the_command` |
+| UT-FB-060 | F84: MC_MoveLinearCamFB rejected TriggerDelay > 255 ms (16#0008), although it is a UINT [ms] (spec) and MC_MoveCircularCamFB accepts up to 65535. | 1 | `test_f84_move_linear_cam_accepts_trigger_delay_above_255_ms` |
 
 ## UT-FN
 

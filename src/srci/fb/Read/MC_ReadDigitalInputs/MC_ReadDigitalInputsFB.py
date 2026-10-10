@@ -251,7 +251,8 @@ class MC_ReadDigitalInputsFB(RobotLibraryBaseExecuteFB):
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ListenerID <> 0 with ProcessingMode = {1}', Para1=PROCESSING_MODE_TO_STRING(Value=self.ProcessingMode))
             return CheckParameterValid
-        if CheckParameterValid and (((self.ProcessingMode == ProcessingMode.BUFFERED or self.ProcessingMode == ProcessingMode.ABORTING) or self.ProcessingMode == ProcessingMode.TRIGGER_BUFFERED) or self.ProcessingMode == ProcessingMode.TRIGGER_ABORTING) == (self.SequenceFlag == SequenceFlag.NO_SEQUENCE):
+        # ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)
+        if (CheckParameterValid and self.ProcessingMode != ProcessingMode.DEACTIVATE) and (((self.ProcessingMode == ProcessingMode.BUFFERED or self.ProcessingMode == ProcessingMode.ABORTING) or self.ProcessingMode == ProcessingMode.TRIGGER_BUFFERED) or self.ProcessingMode == ProcessingMode.TRIGGER_ABORTING) == (self.SequenceFlag == SequenceFlag.NO_SEQUENCE):
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SEQFLAG_INVALID_IN_PROC_MODE, Overwrite=True)
             # Create log entry

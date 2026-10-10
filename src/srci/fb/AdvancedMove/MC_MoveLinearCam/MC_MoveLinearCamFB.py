@@ -555,7 +555,8 @@ class MC_MoveLinearCamFB(RobotLibraryBaseExecuteFB):
         # Check ParCmd.RelativePosition
         # -> no plausibility check for boolean
         # Check ParCmd.TriggerDelay valid ?
-        if self.ParCmd.TriggerDelay < 0 or self.ParCmd.TriggerDelay > 255:
+        # ST-FIX F84: UINT [ms] (was 255)
+        if self.ParCmd.TriggerDelay < 0 or self.ParCmd.TriggerDelay > 65535:
             # Parameter not valid
             CheckParameterValid = False
             # Set error

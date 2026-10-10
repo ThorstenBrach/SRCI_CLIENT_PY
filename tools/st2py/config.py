@@ -1738,7 +1738,11 @@ def _f69(pou: str) -> BodyAppend:
             _PM_STR,
         )
     if pou in _SF_FBS:
+        text += (
+            "// ST-FIX F83: not for DEACTIVATE (it is sent with the SequenceFlag of the command it ends)\n"
+        )
         text += _check(
+            "( ProcessingMode <> ProcessingModeEnum.DEACTIVATE ) AND "
             f"( ( {_SEQUENCE_MODE} ) = ( SequenceFlag = SequenceFlagEnum.NO_SEQUENCE ) )",
             "ERR_SEQFLAG_INVALID_IN_PROC_MODE",
             "Invalid Parameter SequenceFlag = {1} with ProcessingMode = {2}",
@@ -2071,6 +2075,24 @@ E_PATCHES += (
         _F82,
         regex=True,
         template=True,
+    ),
+)
+
+_F83 = (
+    "F83: the SequenceFlag check of F69 also applied to DEACTIVATE: an action started in a sequence "
+    "could not be deactivated with its SequenceFlag (16#8625), WaitForTrigger not at all"
+)
+_F84 = (
+    "F84: MC_MoveLinearCamFB rejected TriggerDelay > 255 ms; it is a UINT [ms] like in MC_MoveCircularCamFB"
+)
+E_PATCHES += (
+    SourcePatch(
+        "MC_MoveLinearCamFB",
+        "CheckParameterValid",
+        r"\( ParCmd\.TriggerDelay > 255 \)\)",
+        "( ParCmd.TriggerDelay > 16#FFFF )) // ST-FIX F84: UINT [ms] (was 255)",
+        _F84,
+        regex=True,
     ),
 )
 

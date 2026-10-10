@@ -1424,6 +1424,20 @@
   "status": "active"
  },
  {
+  "id": "UT-FB-059",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f83_deactivate_is_allowed_with_the_sequence_of_the_command",
+  "title": "F83: the SequenceFlag check of F69 also applied to ProcessingMode DEACTIVATE: an action started in a sequence (e.g.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-060",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f84_move_linear_cam_accepts_trigger_delay_above_255_ms",
+  "title": "F84: MC_MoveLinearCamFB rejected TriggerDelay > 255 ms (16#0008), although it is a UINT [ms] (spec) and MC_MoveCircularCamFB accepts up to 65535.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-FN-001",
   "test": "tests/unit/functions/test_convert_dt.py::test_iec_date_is_days_since_1990",
   "title": "Iec date is days since 1990",
