@@ -228,12 +228,18 @@ def test_f81_update_tool_data_stores_the_tool_in_the_plc_array() -> None:
 def test_f82_read_actual_position_cyclic_joint_ext_sets_its_own_reading_flag() -> None:
     """F82: MC_ReadActualPositionCyclicFB set OutCmd.ReadingCartesianPositionExt instead of
     ReadingJointPositionExt when the extended joint position was read (copy & paste)."""
-    import inspect
-
     from srci.fb import MC_ReadActualPositionCyclicFB
 
-    src = inspect.getsource(MC_ReadActualPositionCyclicFB)
-    joint_ext = src[src.index("if self._parCmd.ReadJointPositionExt:") :]
-    joint_ext = joint_ext[: joint_ext.index("\n\n")]
-    assert "self.OutCmd.ReadingJointPositionExt = True" in joint_ext
-    assert "self.OutCmd.ReadingCartesianPositionExt" not in joint_ext
+    ag, _ = new_axes_group()
+    ag.State.CMDsEnabled = ag.State.Initialized = True
+    ag.State.RobotData.RCSupportedFunctions.ReadActualPositionCyclic = True
+    ag.CyclicOptional.RobToPlc.JointPositionExt.Active = True
+    ag.CyclicOptional.RobToPlc.JointPositionExt.E2 = 12.5
+    fb = MC_ReadActualPositionCyclicFB()
+    fb.ParCmd.ReadJointPositionExt = True
+    for _ in range(3):
+        fb(Enable=True, AxesGroup=ag)
+    assert fb.Enabled and not fb.Error, hex(fb.ErrorID)
+    assert fb.OutCmd.JointPosition.E2 == 12.5
+    assert fb.OutCmd.ReadingJointPositionExt
+    assert not fb.OutCmd.ReadingCartesianPositionExt
