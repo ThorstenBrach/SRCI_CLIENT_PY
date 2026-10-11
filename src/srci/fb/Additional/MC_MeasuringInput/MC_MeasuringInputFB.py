@@ -279,6 +279,10 @@ class MC_MeasuringInputFB(RobotLibraryBaseExecuteFB):
             # Reset command outputs
             SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(MeasuringInputOutCmd)), Value=0, DataLen=224)
 
+        # ST-FIX F90: MeasuringID already while the measurement is active (abort by ID)
+        if State == CmdMessageState.ACTIVE:
+            self.OutCmd.MeasuringID = self._response.MeasuringID
+
         if State == CmdMessageState.DONE:
             # Update results
             self.OutCmd.MeasuringID = self._response.MeasuringID

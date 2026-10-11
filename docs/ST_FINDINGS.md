@@ -91,6 +91,14 @@ How to fix them in ST (exact ST diffs, generated from the corrections): [ST_Find
 | F82 | `MC_ReadActualPositionCyclicFB.OnExecRun` | for the extended joint position `OutCmd.ReadingCartesianPositionExt` is set instead of `ReadingJointPositionExt` (copy & paste) | 6.1.6 | fixed |
 | F83 | `CheckParameterValid` of 22 blocks with `SequenceFlag` (part of F69) | the check "sequence mode ⇔ SequenceFlag" also applied to `ProcessingMode` DEACTIVATE: an action started in a sequence (e.g. `TRIGGER_BUFFERED` with primary sequence) could not be deactivated with the same SequenceFlag (16#8625); `MC_WaitForTriggerFB` (only primary/secondary allowed) could not be deactivated at all | 5.6.4.5, table 7-1 | fixed: DEACTIVATE excluded from the check |
 | F84 | `MC_MoveLinearCamFB.CheckParameterValid` | `TriggerDelay` > 255 ms rejected (16#0008), although it is a UINT [ms] and sent as UINT; `MC_MoveCircularCamFB` allows 65535 | 6.4.8 | fixed: limit 16#FFFF |
+| F85 | `MC_ConfigureConveyorFB.CheckParameterValid` | `ConveyorType` compared `LINEAR_CONVEYOR_TRACKING` twice, so `CIRCULAR_CONVEYOR_TRACKING` was rejected | 6.3.29 | fixed: second comparison `CIRCULAR_CONVEYOR_TRACKING` |
+| F86 | `MC_ForceControlFB.CheckParameterValid` | `ConnectionMode` tested `PLC_SENSOR_RC_ALGORITHM` twice, so `PLC_SENSOR_ALGORITHM` was rejected | 6.5.24 | fixed |
+| F87 | `MC_UserLoginFB.CheckParameterValid` | an empty `Username` was rejected also in `Mode` PASSWORD_ONLY | 6.1.10 | fixed: only with `USERNAME_AND_PASSWORD` |
+| F88 | `MC_StopSubprogramFB.CheckParameterValid` | `TargetID` (JobID / InstanceID, UINT, -1 = all) limited to 255, error `ERR_LISTENERID_MUST_BE_POSITIVE` | 6.5.21 | fixed: limit 65534, `ERR_INVALID_PAR_CMD` |
+| F89 | `MC_MoveSuperImposedFB.CheckParameterValid` | `ProcessingMode` TRIGGER_CONTINUOUS rejected, allowed by the spec | 6.3.30 | fixed |
+| F90 | `MC_MeasuringInputFB.OnApplyOutCmd` | `MeasuringID` only copied at DONE, a running measurement could not be aborted by its ID (`MC_AbortMeasuringInputFB`) | 6.4.14 | fixed: also while ACTIVE |
+| F91 | `MC_WriteAnalogOutputFB.CheckParameterValid` | `Index` 0 accepted (spec 1..32, like `MC_ReadAnalogInputFB`) | 6.4.13 | fixed |
+| F92 | `MC_UnitMeasurementFB.CheckParameterValid` | invalid `MeasuringMode` reported as `ERR_PROCESSINGMODE_NOT_ALLOWED` | 6.5.37 | fixed: `ERR_INVALID_PAR_CMD` |
 
 ## Notes on the SRCI SDK (simulation)
 

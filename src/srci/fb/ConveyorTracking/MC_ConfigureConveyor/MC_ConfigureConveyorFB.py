@@ -249,7 +249,8 @@ class MC_ConfigureConveyorFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.ConveyorType valid ?
-        if self.ParCmd.ConveyorType != ConveyorType.LINEAR_CONVEYOR_TRACKING and self.ParCmd.ConveyorType != ConveyorType.LINEAR_CONVEYOR_TRACKING:
+        # ST-FIX F85: was LINEAR twice
+        if self.ParCmd.ConveyorType != ConveyorType.LINEAR_CONVEYOR_TRACKING and self.ParCmd.ConveyorType != ConveyorType.CIRCULAR_CONVEYOR_TRACKING:
             # Parameter not valid
             CheckParameterValid = False
             # Set error

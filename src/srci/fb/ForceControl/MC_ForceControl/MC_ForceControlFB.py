@@ -244,7 +244,8 @@ class MC_ForceControlFB(RobotLibraryBaseEnableFB):
             return CheckParameterValid
 
         # Check ParCmd.ConnectionMode valid ?
-        if (self.ParCmd.ConnectionMode != SensorConnectionMode.RC_SENSOR_ALGORITHM and self.ParCmd.ConnectionMode != SensorConnectionMode.PLC_SENSOR_RC_ALGORITHM) and self.ParCmd.ConnectionMode != SensorConnectionMode.PLC_SENSOR_RC_ALGORITHM:
+        # ST-FIX F86: was PLC_SENSOR_RC_ALGORITHM twice
+        if (self.ParCmd.ConnectionMode != SensorConnectionMode.RC_SENSOR_ALGORITHM and self.ParCmd.ConnectionMode != SensorConnectionMode.PLC_SENSOR_RC_ALGORITHM) and self.ParCmd.ConnectionMode != SensorConnectionMode.PLC_SENSOR_ALGORITHM:
             # Parameter not valid
             CheckParameterValid = False
             # Set error

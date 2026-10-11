@@ -210,7 +210,8 @@ class MC_WriteAnalogOutputFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.Index valid ?
-        if self.ParCmd.Index < 0 or self.ParCmd.Index > 32:
+        # ST-FIX F91: 1..32
+        if self.ParCmd.Index < 1 or self.ParCmd.Index > 32:
             # Parameter not valid
             CheckParameterValid = False
             # Set error

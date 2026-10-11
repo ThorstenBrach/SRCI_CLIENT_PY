@@ -2096,6 +2096,95 @@ E_PATCHES += (
     ),
 )
 
+# ----------------------------------------------------------------------------------------------
+# F85 ... F92: found while writing the user manual (Optional blocks), checked against the spec
+_F85 = "F85: MC_ConfigureConveyorFB rejected CIRCULAR_CONVEYOR_TRACKING (the check compared LINEAR twice)"
+_F86 = "F86: MC_ForceControlFB rejected ConnectionMode PLC_SENSOR_ALGORITHM (the check tested PLC_SENSOR_RC_ALGORITHM twice)"
+_F87 = "F87: MC_UserLoginFB demanded a Username also in Mode PASSWORD_ONLY / LEVEL_ID_AND_PASSWORD"
+_F88 = "F88: MC_StopSubprogramFB limited TargetID (JobID / InstanceID, UINT in the telegram) to 255 and reported ERR_LISTENERID_MUST_BE_POSITIVE"
+_F89 = "F89: MC_MoveSuperImposedFB rejected ProcessingMode TRIGGER_CONTINUOUS (allowed by the spec)"
+_F90 = "F90: MC_MeasuringInputFB showed the MeasuringID only at DONE - a running measurement could not be aborted by its ID"
+_F91 = "F91: MC_WriteAnalogOutputFB accepted Index 0 (spec 1..32, like MC_ReadAnalogInputFB)"
+_F92 = "F92: MC_UnitMeasurementFB reported an invalid MeasuringMode as ERR_PROCESSINGMODE_NOT_ALLOWED"
+E_PATCHES += (
+    SourcePatch(
+        "MC_ConfigureConveyorFB",
+        "CheckParameterValid",
+        r"(\( ParCmd\.ConveyorType <> ConveyorType\.LINEAR_CONVEYOR_TRACKING \) AND[ \t]*\n\s*)"
+        r"\( ParCmd\.ConveyorType <> ConveyorType\.LINEAR_CONVEYOR_TRACKING \)\)",
+        "\\1( ParCmd.ConveyorType <> ConveyorType.CIRCULAR_CONVEYOR_TRACKING )) // ST-FIX F85: was LINEAR twice",
+        _F85,
+        regex=True,
+        template=True,
+    ),
+    SourcePatch(
+        "MC_ForceControlFB",
+        "CheckParameterValid",
+        r"(\( ParCmd\.ConnectionMode <> SensorConnectionMode\.PLC_SENSOR_RC_ALGORITHM \) AND\s*\n\s*)"
+        r"\( ParCmd\.ConnectionMode <> SensorConnectionMode\.PLC_SENSOR_RC_ALGORITHM \)\)",
+        "\\1( ParCmd.ConnectionMode <> SensorConnectionMode.PLC_SENSOR_ALGORITHM    )) // ST-FIX F86: was PLC_SENSOR_RC_ALGORITHM twice",
+        _F86,
+        regex=True,
+        template=True,
+    ),
+    SourcePatch(
+        "MC_UserLoginFB",
+        "CheckParameterValid",
+        "IF ( ParCmd.Username = '' )",
+        "IF (( ParCmd.Mode     = LogonMode.USERNAME_AND_PASSWORD ) AND // ST-FIX F87: only with user name\n"
+        "    ( ParCmd.Username = ''                              ))",
+        _F87,
+    ),
+    SourcePatch(
+        "MC_StopSubprogramFB",
+        "CheckParameterValid",
+        r"(?s)\( ParCmd\.TargetID > 255 \)\)(\s*\n\s*THEN\s*\n.*?SetError\( ErrorID := RobotLibraryErrorIdEnum\.)ERR_LISTENERID_MUST_BE_POSITIVE",
+        "( ParCmd.TargetID > 65534 )) // ST-FIX F88: UINT in the telegram, 65535 = -1\\1ERR_INVALID_PAR_CMD",
+        _F88,
+        regex=True,
+        template=True,
+    ),
+    SourcePatch(
+        "MC_MoveSuperImposedFB",
+        "CheckParameterValid",
+        r"(\( ProcessingMode <> ProcessingModeEnum\.TRIGGER_ONCE     \) AND\s*\n)",
+        "\\1    ( ProcessingMode <> ProcessingModeEnum.TRIGGER_CONTINUOUS ) AND // ST-FIX F89: allowed by the spec\n",
+        _F89,
+        regex=True,
+        template=True,
+    ),
+    SourcePatch(
+        "MC_MeasuringInputFB",
+        "OnApplyOutCmd",
+        "IF ( State = CmdMessageState.DONE )",
+        "// ST-FIX F90: MeasuringID already while the measurement is active (abort by ID)\n"
+        "IF ( State = CmdMessageState.ACTIVE )\n"
+        "THEN\n"
+        "  OutCmd.MeasuringID := _response.MeasuringID;\n"
+        "END_IF\n"
+        "\n"
+        "IF ( State = CmdMessageState.DONE )",
+        _F90,
+    ),
+    SourcePatch(
+        "MC_WriteAnalogOutputFB",
+        "CheckParameterValid",
+        r"\( ParCmd\.Index < 0   \) OR",
+        "( ParCmd.Index < 1   ) OR // ST-FIX F91: 1..32",
+        _F91,
+        regex=True,
+    ),
+    SourcePatch(
+        "MC_UnitMeasurementFB",
+        "CheckParameterValid",
+        r"(?s)(\( ParCmd\.MeasuringMode <> MeasuringUnitMode\.TIME_DURATION  \)\)\s*\n\s*THEN\s*\n.*?SetError\( ErrorID := RobotLibraryErrorIdEnum\.)ERR_PROCESSINGMODE_NOT_ALLOWED",
+        "\\1ERR_INVALID_PAR_CMD (* ST-FIX F92 *)",
+        _F92,
+        regex=True,
+        template=True,
+    ),
+)
+
 E_VARS = (
     VarAppend(
         "MC_RobotTaskFB",

@@ -126,6 +126,14 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | [F81](#f81) | `AxesGroupSystemDataFB.UpdateToolData` - the copy into the `ToolData` array of the RobotTask is commented out (`{warning 'ToDo: Compiler Fehler'}`) → Write/ReadToolData (with `UpdateSystemData`) do not update the PLC copy; frames, loads and work areas are stored | 1 | `AxesGroupSystemDataFB` |
 | [F82](#f82) | `MC_ReadActualPositionCyclicFB.OnExecRun` - for the extended joint position `OutCmd.ReadingCartesianPositionExt` is set instead of `ReadingJointPositionExt` (copy & paste) | 1 | `MC_ReadActualPositionCyclicFB` |
 | [F84](#f84) | `MC_MoveLinearCamFB.CheckParameterValid` - `TriggerDelay` > 255 ms rejected (16#0008), although it is a UINT [ms] and sent as UINT; `MC_MoveCircularCamFB` allows 65535 | 1 | `MC_MoveLinearCamFB` |
+| [F85](#f85) | `MC_ConfigureConveyorFB.CheckParameterValid` - `ConveyorType` compared `LINEAR_CONVEYOR_TRACKING` twice, so `CIRCULAR_CONVEYOR_TRACKING` was rejected | 1 | `MC_ConfigureConveyorFB` |
+| [F86](#f86) | `MC_ForceControlFB.CheckParameterValid` - `ConnectionMode` tested `PLC_SENSOR_RC_ALGORITHM` twice, so `PLC_SENSOR_ALGORITHM` was rejected | 1 | `MC_ForceControlFB` |
+| [F87](#f87) | `MC_UserLoginFB.CheckParameterValid` - an empty `Username` was rejected also in `Mode` PASSWORD_ONLY | 1 | `MC_UserLoginFB` |
+| [F88](#f88) | `MC_StopSubprogramFB.CheckParameterValid` - `TargetID` (JobID / InstanceID, UINT, -1 = all) limited to 255, error `ERR_LISTENERID_MUST_BE_POSITIVE` | 1 | `MC_StopSubprogramFB` |
+| [F89](#f89) | `MC_MoveSuperImposedFB.CheckParameterValid` - `ProcessingMode` TRIGGER_CONTINUOUS rejected, allowed by the spec | 1 | `MC_MoveSuperImposedFB` |
+| [F90](#f90) | `MC_MeasuringInputFB.OnApplyOutCmd` - `MeasuringID` only copied at DONE, a running measurement could not be aborted by its ID (`MC_AbortMeasuringInputFB`) | 1 | `MC_MeasuringInputFB` |
+| [F91](#f91) | `MC_WriteAnalogOutputFB.CheckParameterValid` - `Index` 0 accepted (spec 1..32, like `MC_ReadAnalogInputFB`) | 1 | `MC_WriteAnalogOutputFB` |
+| [F92](#f92) | `MC_UnitMeasurementFB.CheckParameterValid` - invalid `MeasuringMode` reported as `ERR_PROCESSINGMODE_NOT_ALLOWED` | 1 | `MC_UnitMeasurementFB` |
 
 ## Generated ST changes
 
@@ -7965,7 +7973,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_MoveSuperImposedFB.CheckParameterValid
 +++ b/MC_MoveSuperImposedFB.CheckParameterValid
-@@ -511,4 +511,42 @@
+@@ -512,4 +512,42 @@
    RETURN;
  END_IF
  
@@ -9046,6 +9054,192 @@ _`MC_MoveLinearCamFB.CheckParameterValid` - `TriggerDelay` > 255 ms rejected (16
  THEN
    // Parameter not valid
    CheckParameterValid := FALSE;
+```
+
+### F85
+
+_`MC_ConfigureConveyorFB.CheckParameterValid` - `ConveyorType` compared `LINEAR_CONVEYOR_TRACKING` twice, so `CIRCULAR_CONVEYOR_TRACKING` was rejected_
+
+- F85: MC_ConfigureConveyorFB rejected CIRCULAR_CONVEYOR_TRACKING (the check compared LINEAR twice)
+
+**MC_ConfigureConveyorFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ConfigureConveyorFB.CheckParameterValid
++++ b/MC_ConfigureConveyorFB.CheckParameterValid
+@@ -156,7 +156,7 @@
+ 
+ // Check ParCmd.ConveyorType valid ? 
+ IF (( ParCmd.ConveyorType <> ConveyorType.LINEAR_CONVEYOR_TRACKING ) AND  
+-    ( ParCmd.ConveyorType <> ConveyorType.LINEAR_CONVEYOR_TRACKING ))
++    ( ParCmd.ConveyorType <> ConveyorType.CIRCULAR_CONVEYOR_TRACKING )) // ST-FIX F85: was LINEAR twice
+ THEN
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+```
+
+### F86
+
+_`MC_ForceControlFB.CheckParameterValid` - `ConnectionMode` tested `PLC_SENSOR_RC_ALGORITHM` twice, so `PLC_SENSOR_ALGORITHM` was rejected_
+
+- F86: MC_ForceControlFB rejected ConnectionMode PLC_SENSOR_ALGORITHM (the check tested PLC_SENSOR_RC_ALGORITHM twice)
+
+**MC_ForceControlFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ForceControlFB.CheckParameterValid
++++ b/MC_ForceControlFB.CheckParameterValid
+@@ -127,7 +127,7 @@
+ // Check ParCmd.ConnectionMode valid ? 
+ IF (( ParCmd.ConnectionMode <> SensorConnectionMode. RC_SENSOR_ALGORITHM    ) AND  
+     ( ParCmd.ConnectionMode <> SensorConnectionMode.PLC_SENSOR_RC_ALGORITHM ) AND
+-    ( ParCmd.ConnectionMode <> SensorConnectionMode.PLC_SENSOR_RC_ALGORITHM ))
++    ( ParCmd.ConnectionMode <> SensorConnectionMode.PLC_SENSOR_ALGORITHM    )) // ST-FIX F86: was PLC_SENSOR_RC_ALGORITHM twice
+ THEN
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+```
+
+### F87
+
+_`MC_UserLoginFB.CheckParameterValid` - an empty `Username` was rejected also in `Mode` PASSWORD_ONLY_
+
+- F87: MC_UserLoginFB demanded a Username also in Mode PASSWORD_ONLY / LEVEL_ID_AND_PASSWORD
+
+**MC_UserLoginFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_UserLoginFB.CheckParameterValid
++++ b/MC_UserLoginFB.CheckParameterValid
+@@ -41,7 +41,8 @@
+ 
+ 
+ // Check ParCmd.Username valid ? 
+-IF ( ParCmd.Username = '' )
++IF (( ParCmd.Mode     = LogonMode.USERNAME_AND_PASSWORD ) AND // ST-FIX F87: only with user name
++    ( ParCmd.Username = ''                              ))
+ THEN
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+```
+
+### F88
+
+_`MC_StopSubprogramFB.CheckParameterValid` - `TargetID` (JobID / InstanceID, UINT, -1 = all) limited to 255, error `ERR_LISTENERID_MUST_BE_POSITIVE`_
+
+- F88: MC_StopSubprogramFB limited TargetID (JobID / InstanceID, UINT in the telegram) to 255 and reported ERR_LISTENERID_MUST_BE_POSITIVE
+
+**MC_StopSubprogramFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_StopSubprogramFB.CheckParameterValid
++++ b/MC_StopSubprogramFB.CheckParameterValid
+@@ -82,12 +82,12 @@
+ 
+ // Check ParCmd.TargetID valid ? 
+ IF (( ParCmd.TargetID <  -1 ) OR 
+-    ( ParCmd.TargetID > 255 ))
++    ( ParCmd.TargetID > 65534 )) // ST-FIX F88: UINT in the telegram, 65535 = -1
+ THEN
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_POSITIVE, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
+```
+
+### F89
+
+_`MC_MoveSuperImposedFB.CheckParameterValid` - `ProcessingMode` TRIGGER_CONTINUOUS rejected, allowed by the spec_
+
+- F89: MC_MoveSuperImposedFB rejected ProcessingMode TRIGGER_CONTINUOUS (allowed by the spec)
+
+**MC_MoveSuperImposedFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveSuperImposedFB.CheckParameterValid
++++ b/MC_MoveSuperImposedFB.CheckParameterValid
+@@ -23,6 +23,7 @@
+     ( ProcessingMode <> ProcessingModeEnum.CONTINUOUS       ) AND 
+     ( ProcessingMode <> ProcessingModeEnum.DEACTIVATE       ) AND 
+     ( ProcessingMode <> ProcessingModeEnum.TRIGGER_ONCE     ) AND  
++    ( ProcessingMode <> ProcessingModeEnum.TRIGGER_CONTINUOUS ) AND // ST-FIX F89: allowed by the spec
+     ( ProcessingMode <> ProcessingModeEnum.TRIGGER_MULTIPLE ))  
+ THEN
+   // Parameter not valid
+```
+
+### F90
+
+_`MC_MeasuringInputFB.OnApplyOutCmd` - `MeasuringID` only copied at DONE, a running measurement could not be aborted by its ID (`MC_AbortMeasuringInputFB`)_
+
+- F90: MC_MeasuringInputFB showed the MeasuringID only at DONE - a running measurement could not be aborted by its ID
+
+**MC_MeasuringInputFB** · `OnApplyOutCmd` · patch
+
+```diff
+--- a/MC_MeasuringInputFB.OnApplyOutCmd
++++ b/MC_MeasuringInputFB.OnApplyOutCmd
+@@ -2,6 +2,12 @@
+ THEN
+   // Reset command outputs
+   SysDepMemSet(pDest := ADR(OutCmd), Value := 0, DataLen := SIZEOF(OutCmd));         
++END_IF
++
++// ST-FIX F90: MeasuringID already while the measurement is active (abort by ID)
++IF ( State = CmdMessageState.ACTIVE )
++THEN
++  OutCmd.MeasuringID := _response.MeasuringID;
+ END_IF
+ 
+ IF ( State = CmdMessageState.DONE ) 
+```
+
+### F91
+
+_`MC_WriteAnalogOutputFB.CheckParameterValid` - `Index` 0 accepted (spec 1..32, like `MC_ReadAnalogInputFB`)_
+
+- F91: MC_WriteAnalogOutputFB accepted Index 0 (spec 1..32, like MC_ReadAnalogInputFB)
+
+**MC_WriteAnalogOutputFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_WriteAnalogOutputFB.CheckParameterValid
++++ b/MC_WriteAnalogOutputFB.CheckParameterValid
+@@ -63,7 +63,7 @@
+ END_IF
+ 
+ // Check ParCmd.Index valid ? 
+-IF (( ParCmd.Index < 0   ) OR
++IF (( ParCmd.Index < 1   ) OR // ST-FIX F91: 1..32
+     ( ParCmd.Index > 32 ))
+       
+ THEN
+```
+
+### F92
+
+_`MC_UnitMeasurementFB.CheckParameterValid` - invalid `MeasuringMode` reported as `ERR_PROCESSINGMODE_NOT_ALLOWED`_
+
+- F92: MC_UnitMeasurementFB reported an invalid MeasuringMode as ERR_PROCESSINGMODE_NOT_ALLOWED
+
+**MC_UnitMeasurementFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_UnitMeasurementFB.CheckParameterValid
++++ b/MC_UnitMeasurementFB.CheckParameterValid
+@@ -32,7 +32,7 @@
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+   // Set error
+-  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_ALLOWED, Overwrite := TRUE );
++  SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD (* ST-FIX F92 *), Overwrite := TRUE );
+   // Create log entry
+   CreateLogMessagePara1 ( Timestamp   := AxesGroup.State.SystemTime,
+                           MessageType := MessageType.CMD,
 ```
 
 ## Data types

@@ -30,7 +30,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
-| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 60 | 146 |
+| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 68 | 154 |
 | [UT-FN](#ut-fn) | Functions of the library | 16 | 20 |
 | [UT-IEC](#ut-iec) | IEC 61131-3 runtime (data types, timers, conversions) | 42 | 96 |
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
@@ -38,7 +38,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **381** | **3704** |
+| | **Total** | **389** | **3712** |
 
 ## Test methodology
 
@@ -334,6 +334,14 @@ Function blocks (unit tests without SDK)
 | UT-FB-058 | F82: MC_ReadActualPositionCyclicFB set OutCmd.ReadingCartesianPositionExt instead of ReadingJointPositionExt when the extended joint position was read (copy & paste). | 1 | `test_f82_read_actual_position_cyclic_joint_ext_sets_its_own_reading_flag` |
 | UT-FB-059 | F83: the SequenceFlag check of F69 also applied to ProcessingMode DEACTIVATE: an action started in a sequence (e.g. | 1 | `test_f83_deactivate_is_allowed_with_the_sequence_of_the_command` |
 | UT-FB-060 | F84: MC_MoveLinearCamFB rejected TriggerDelay > 255 ms (16#0008), although it is a UINT [ms] (spec) and MC_MoveCircularCamFB accepts up to 65535. | 1 | `test_f84_move_linear_cam_accepts_trigger_delay_above_255_ms` |
+| UT-FB-061 | F85: MC_ConfigureConveyorFB rejected ConveyorType CIRCULAR_CONVEYOR_TRACKING (the check compared LINEAR_CONVEYOR_TRACKING twice). | 1 | `test_f85_configure_conveyor_accepts_circular_conveyors` |
+| UT-FB-062 | F86: MC_ForceControlFB rejected ConnectionMode PLC_SENSOR_ALGORITHM (the check tested PLC_SENSOR_RC_ALGORITHM twice). | 1 | `test_f86_force_control_accepts_plc_sensor_algorithm` |
+| UT-FB-063 | F87: MC_UserLoginFB demanded a Username also in Mode PASSWORD_ONLY; with USERNAME_AND_PASSWORD an empty Username is still rejected. | 1 | `test_f87_user_login_needs_a_user_name_only_with_user_name_mode` |
+| UT-FB-064 | F88: MC_StopSubprogramFB limited TargetID to 255 although JobID / InstanceID are UINT (65535 = -1 in the telegram) and reported ERR_LISTENERID_MUST_BE_POSITIVE. | 1 | `test_f88_stop_subprogram_target_id_is_a_job_or_instance_id` |
+| UT-FB-065 | F89: MC_MoveSuperImposedFB rejected ProcessingMode TRIGGER_CONTINUOUS (allowed by the spec). | 1 | `test_f89_move_superimposed_accepts_trigger_continuous` |
+| UT-FB-066 | F90: MC_MeasuringInputFB showed the MeasuringID only at DONE, so a running measurement could not be aborted by its ID (MC_AbortMeasuringInputFB). | 1 | `test_f90_measuring_input_shows_the_measuring_id_while_active` |
+| UT-FB-067 | F91: MC_WriteAnalogOutputFB accepted Index 0 (spec 1..32, like MC_ReadAnalogInputFB). | 1 | `test_f91_write_analog_output_rejects_index_0` |
+| UT-FB-068 | F92: MC_UnitMeasurementFB reported an invalid MeasuringMode as ERR_PROCESSINGMODE_NOT_ALLOWED. | 1 | `test_f92_unit_measurement_invalid_measuring_mode_is_a_parameter_error` |
 
 ## UT-FN
 

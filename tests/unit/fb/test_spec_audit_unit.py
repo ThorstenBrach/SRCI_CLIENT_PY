@@ -285,3 +285,127 @@ def test_f84_move_linear_cam_accepts_trigger_delay_above_255_ms() -> None:
     fb = MC_MoveLinearCamFB()
     fb.ParCmd.TriggerDelay = 65535
     assert fb.CheckParameterValid(AxesGroup=ag), hex(fb.ErrorID)
+
+
+# ------------------------------------------------------------------ F85 ... F92 (Optional blocks, wiki)
+
+
+def _valid(fb: object, ag: object) -> tuple[bool, int]:
+    ok = fb.CheckParameterValid(AxesGroup=ag)  # type: ignore[attr-defined]
+    return ok, int(fb.ErrorID)  # type: ignore[attr-defined]
+
+
+def test_f85_configure_conveyor_accepts_circular_conveyors() -> None:
+    """F85: MC_ConfigureConveyorFB rejected ConveyorType CIRCULAR_CONVEYOR_TRACKING (the check compared
+    LINEAR_CONVEYOR_TRACKING twice)."""
+    from srci.fb import MC_ConfigureConveyorFB
+    from srci.types import ConveyorType
+
+    ag, _ = new_axes_group()
+    fb = MC_ConfigureConveyorFB()
+    fb.ParCmd.ConveyorType = ConveyorType.CIRCULAR_CONVEYOR_TRACKING
+    fb.ParCmd.Radius = 500.0
+    ok, err = _valid(fb, ag)
+    assert ok, hex(err)
+
+
+def test_f86_force_control_accepts_plc_sensor_algorithm() -> None:
+    """F86: MC_ForceControlFB rejected ConnectionMode PLC_SENSOR_ALGORITHM (the check tested
+    PLC_SENSOR_RC_ALGORITHM twice)."""
+    from srci.fb import MC_ForceControlFB
+    from srci.types import SensorConnectionMode
+
+    ag, _ = new_axes_group()
+    fb = MC_ForceControlFB()
+    fb.ParCmd.ConnectionMode = SensorConnectionMode.PLC_SENSOR_ALGORITHM
+    ok, err = _valid(fb, ag)
+    assert ok, hex(err)
+
+
+def test_f87_user_login_needs_a_user_name_only_with_user_name_mode() -> None:
+    """F87: MC_UserLoginFB demanded a Username also in Mode PASSWORD_ONLY; with
+    USERNAME_AND_PASSWORD an empty Username is still rejected."""
+    from srci.fb import MC_UserLoginFB
+    from srci.types import LogonMode
+
+    ag, _ = new_axes_group()
+    fb = MC_UserLoginFB()
+    fb.ParCmd.Mode = LogonMode.PASSWORD_ONLY
+    fb.ParCmd.Password = "secret"
+    ok, err = _valid(fb, ag)
+    assert ok, hex(err)
+    fb = MC_UserLoginFB()
+    fb.ParCmd.Mode = LogonMode.USERNAME_AND_PASSWORD
+    fb.ParCmd.Password = "secret"
+    assert not _valid(fb, ag)[0]
+
+
+def test_f88_stop_subprogram_target_id_is_a_job_or_instance_id() -> None:
+    """F88: MC_StopSubprogramFB limited TargetID to 255 although JobID / InstanceID are UINT
+    (65535 = -1 in the telegram) and reported ERR_LISTENERID_MUST_BE_POSITIVE."""
+    from srci.fb import MC_StopSubprogramFB
+
+    ag, _ = new_axes_group()
+    fb = MC_StopSubprogramFB()
+    fb.ParCmd.TargetID = 1000
+    ok, err = _valid(fb, ag)
+    assert ok, hex(err)
+    fb = MC_StopSubprogramFB()
+    fb.ParCmd.TargetID = -2
+    ok, err = _valid(fb, ag)
+    assert not ok and err == RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD
+
+
+def test_f89_move_superimposed_accepts_trigger_continuous() -> None:
+    """F89: MC_MoveSuperImposedFB rejected ProcessingMode TRIGGER_CONTINUOUS (allowed by the spec)."""
+    from srci.fb import MC_MoveSuperImposedFB
+    from srci.types import ProcessingMode
+
+    ag, _ = new_axes_group()
+    fb = MC_MoveSuperImposedFB()
+    fb.ProcessingMode = ProcessingMode.TRIGGER_CONTINUOUS
+    fb.ParCmd.ListenerID = 5
+    for name in ("VelocityDiffRate", "AccelerationDiffRate", "DecelerationDiffRate", "JerkDiffRate"):
+        setattr(fb.ParCmd, name, -1.0)
+    ok, err = _valid(fb, ag)
+    assert ok, hex(err)
+
+
+def test_f90_measuring_input_shows_the_measuring_id_while_active() -> None:
+    """F90: MC_MeasuringInputFB showed the MeasuringID only at DONE, so a running measurement could
+    not be aborted by its ID (MC_AbortMeasuringInputFB)."""
+    from srci.fb import MC_MeasuringInputFB
+
+    fb = MC_MeasuringInputFB()
+    rsp = response(CmdMessageState.ACTIVE)
+    rsp.Payload[4], rsp.Payload[5] = 0x01, 0x02  # MeasuringID (UINT)
+    rsp.PayloadLen = 6
+    fb.CallBack(RspData=rsp, Timestamp=SystemTime())
+    assert fb._response.MeasuringID == 0x0102  # parsed by CallBack
+    fb.OnApplyOutCmd(State=CmdMessageState.ACTIVE)  # step 1 of the cyclic call
+    assert fb.OutCmd.MeasuringID == 0x0102
+
+
+def test_f91_write_analog_output_rejects_index_0() -> None:
+    """F91: MC_WriteAnalogOutputFB accepted Index 0 (spec 1..32, like MC_ReadAnalogInputFB)."""
+    from srci.fb import MC_WriteAnalogOutputFB
+
+    ag, _ = new_axes_group()
+    fb = MC_WriteAnalogOutputFB()
+    ok, err = _valid(fb, ag)
+    assert not ok and err == RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD
+    fb = MC_WriteAnalogOutputFB()
+    fb.ParCmd.Index = 1
+    ok, err = _valid(fb, ag)
+    assert ok, hex(err)
+
+
+def test_f92_unit_measurement_invalid_measuring_mode_is_a_parameter_error() -> None:
+    """F92: MC_UnitMeasurementFB reported an invalid MeasuringMode as ERR_PROCESSINGMODE_NOT_ALLOWED."""
+    from srci.fb import MC_UnitMeasurementFB
+
+    ag, _ = new_axes_group()
+    fb = MC_UnitMeasurementFB()
+    fb.ParCmd.MeasuringMode = 7  # type: ignore[assignment]
+    ok, err = _valid(fb, ag)
+    assert not ok and err == RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD

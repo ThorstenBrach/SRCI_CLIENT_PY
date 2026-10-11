@@ -214,11 +214,12 @@ class MC_StopSubprogramFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.TargetID valid ?
-        if self.ParCmd.TargetID < -1 or self.ParCmd.TargetID > 255:
+        # ST-FIX F88: UINT in the telegram, 65535 = -1
+        if self.ParCmd.TargetID < -1 or self.ParCmd.TargetID > 65534:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_LISTENERID_MUST_BE_POSITIVE, Overwrite=True)
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.TargetID = {1}', Para1=DINT_TO_STRING(self.ParCmd.TargetID))
             return CheckParameterValid

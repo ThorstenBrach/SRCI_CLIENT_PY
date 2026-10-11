@@ -183,7 +183,8 @@ class MC_UserLoginFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.Username valid ?
-        if self.ParCmd.Username == '':
+        # ST-FIX F87: only with user name
+        if self.ParCmd.Mode == LogonMode.USERNAME_AND_PASSWORD and self.ParCmd.Username == '':
             # Parameter not valid
             CheckParameterValid = False
             # Set error

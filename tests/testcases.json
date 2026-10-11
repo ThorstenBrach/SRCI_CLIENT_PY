@@ -1438,6 +1438,62 @@
   "status": "active"
  },
  {
+  "id": "UT-FB-061",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f85_configure_conveyor_accepts_circular_conveyors",
+  "title": "F85: MC_ConfigureConveyorFB rejected ConveyorType CIRCULAR_CONVEYOR_TRACKING (the check compared LINEAR_CONVEYOR_TRACKING twice).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-062",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f86_force_control_accepts_plc_sensor_algorithm",
+  "title": "F86: MC_ForceControlFB rejected ConnectionMode PLC_SENSOR_ALGORITHM (the check tested PLC_SENSOR_RC_ALGORITHM twice).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-063",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f87_user_login_needs_a_user_name_only_with_user_name_mode",
+  "title": "F87: MC_UserLoginFB demanded a Username also in Mode PASSWORD_ONLY; with USERNAME_AND_PASSWORD an empty Username is still rejected.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-064",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f88_stop_subprogram_target_id_is_a_job_or_instance_id",
+  "title": "F88: MC_StopSubprogramFB limited TargetID to 255 although JobID / InstanceID are UINT (65535 = -1 in the telegram) and reported ERR_LISTENERID_MUST_BE_POSITIVE.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-065",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f89_move_superimposed_accepts_trigger_continuous",
+  "title": "F89: MC_MoveSuperImposedFB rejected ProcessingMode TRIGGER_CONTINUOUS (allowed by the spec).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-066",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f90_measuring_input_shows_the_measuring_id_while_active",
+  "title": "F90: MC_MeasuringInputFB showed the MeasuringID only at DONE, so a running measurement could not be aborted by its ID (MC_AbortMeasuringInputFB).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-067",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f91_write_analog_output_rejects_index_0",
+  "title": "F91: MC_WriteAnalogOutputFB accepted Index 0 (spec 1..32, like MC_ReadAnalogInputFB).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FB-068",
+  "test": "tests/unit/fb/test_spec_audit_unit.py::test_f92_unit_measurement_invalid_measuring_mode_is_a_parameter_error",
+  "title": "F92: MC_UnitMeasurementFB reported an invalid MeasuringMode as ERR_PROCESSINGMODE_NOT_ALLOWED.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-FN-001",
   "test": "tests/unit/functions/test_convert_dt.py::test_iec_date_is_days_since_1990",
   "title": "Iec date is days since 1990",

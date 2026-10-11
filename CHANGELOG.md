@@ -79,6 +79,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - ST-FIX F83: an action started in a sequence can be deactivated (`ProcessingMode` DEACTIVATE with
    its SequenceFlag), `MC_WaitForTriggerFB` can be deactivated at all
  - ST-FIX F84: `MC_MoveLinearCamFB` accepts `TriggerDelay` up to 65535 ms (was 255)
+ - ST-FIX F85: `MC_ConfigureConveyorFB` accepts `CIRCULAR_CONVEYOR_TRACKING`
+ - ST-FIX F86: `MC_ForceControlFB` accepts `ConnectionMode` `PLC_SENSOR_ALGORITHM`
+ - ST-FIX F87: `MC_UserLoginFB` needs a `Username` only in `Mode` `USERNAME_AND_PASSWORD`
+ - ST-FIX F88: `MC_StopSubprogramFB` accepts `TargetID` up to 65534, error `ERR_INVALID_PAR_CMD`
+ - ST-FIX F89: `MC_MoveSuperImposedFB` accepts `ProcessingMode` TRIGGER_CONTINUOUS
+ - ST-FIX F90: `MC_MeasuringInputFB` shows `OutCmd.MeasuringID` already while the measurement is active
+ - ST-FIX F91: `MC_WriteAnalogOutputFB` rejects `Index` 0 (1..32)
+ - ST-FIX F92: `MC_UnitMeasurementFB` reports an invalid `MeasuringMode` as `ERR_INVALID_PAR_CMD`
  - `tools.sdk_custom_report` accepts a CUSTOM block that keeps the original SDK code as a comment
    (BEGIN opens the comment, END closes it)
 

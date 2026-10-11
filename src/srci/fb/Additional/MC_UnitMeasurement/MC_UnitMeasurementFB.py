@@ -184,7 +184,8 @@ class MC_UnitMeasurementFB(RobotLibraryBaseEnableFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_ALLOWED, Overwrite=True)
+            # ST-FIX F92
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.MeasuringMode = {1}', Para1=MEASURING_UNIT_MODE_TO_STRING(Value=self.ParCmd.MeasuringMode))
             return CheckParameterValid

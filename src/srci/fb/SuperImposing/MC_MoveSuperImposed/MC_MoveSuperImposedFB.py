@@ -192,7 +192,8 @@ class MC_MoveSuperImposedFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ProcessingMode valid ?
-        if (((self.ProcessingMode != ProcessingMode.PARALLEL and self.ProcessingMode != ProcessingMode.CONTINUOUS) and self.ProcessingMode != ProcessingMode.DEACTIVATE) and self.ProcessingMode != ProcessingMode.TRIGGER_ONCE) and self.ProcessingMode != ProcessingMode.TRIGGER_MULTIPLE:
+        # ST-FIX F89: allowed by the spec
+        if ((((self.ProcessingMode != ProcessingMode.PARALLEL and self.ProcessingMode != ProcessingMode.CONTINUOUS) and self.ProcessingMode != ProcessingMode.DEACTIVATE) and self.ProcessingMode != ProcessingMode.TRIGGER_ONCE) and self.ProcessingMode != ProcessingMode.TRIGGER_CONTINUOUS) and self.ProcessingMode != ProcessingMode.TRIGGER_MULTIPLE:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
