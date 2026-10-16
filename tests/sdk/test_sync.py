@@ -155,6 +155,16 @@ def apply_read(fb: Any, h: RobotTaskHarness, data: DataSet) -> None:
     copy_into(target, source)
 
 
+# a second change of the data sets (other values than the first change)
+SECOND_CHANGE: dict[str, Callable[[RobotTaskHarness], None]] = {
+    "SWLimits": lambda h: setattr(h.sw_limits, "J1UpperLimit", 140.0),
+    "DefaultDynamics": lambda h: setattr(h.default_dynamics, "VelocityRate", 44.0),
+    "ReferenceDynamics": lambda h: setattr(h.reference_dynamics, "VelocityReference", 888.0),
+    "Tool": lambda h: setattr(h.tools[1].Data, "X", 22.5),
+    "Frame": lambda h: setattr(h.frames[1].Data, "X", 22.5),
+    "Load": lambda h: setattr(h.loads[1].Data, "Mass", 3.5),
+}
+
 DATA_SETS = [
     DataSet(
         "SWLimits",
@@ -340,6 +350,12 @@ def test_change_after_start_up_automatic(sdk: SdkSimulator, clock: FakeClock, da
     assert seen[-1] and not h.rt.Error and not h.rt.WarningID, h.history
     assert commands(sdk, data.write, since) == 1
     assert data.value(h) == data.changed
+    # a second change: AUTOMATIC keeps watching (ST-FIX F95)
+    since = len(sdk.logs)
+    SECOND_CHANGE[data.name](h)
+    h.run(400)
+    assert h.rt.Synchronized and not h.rt.Error, h.history
+    assert commands(sdk, data.write, since) == 1, "the second change is written"
 
 
 @pytest.mark.parametrize("data", DATA_SETS, ids=IDS)

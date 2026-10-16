@@ -104,6 +104,8 @@ def test_number_outside_the_range(
     number: int,
 ) -> None:
     """A number outside -1..254 is a range error of the client (table 7-1), nothing is sent (ST-FIX F98)."""
+    if number < 0 and name.startswith("MC_Write"):
+        pytest.skip("the write blocks have a USINT number (no negative values in the PLC library)")
     rejected(robot, sdk, numbered(robot, name, field, number), range_error)
 
 
