@@ -395,6 +395,230 @@
   "status": "active"
  },
  {
+  "id": "SDK-RANGE-001",
+  "test": "tests/sdk/test_parameter_ranges.py::test_number_outside_the_range",
+  "title": "A number outside -1..254 is a range error of the client (table 7-1), nothing is sent (ST-FIX F98).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-002",
+  "test": "tests/sdk/test_parameter_ranges.py::test_number_not_available_on_the_rc",
+  "title": "A number within -1..254 above the highest index of the RC is not available on the RC, nothing is sent.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-003",
+  "test": "tests/sdk/test_parameter_ranges.py::test_valid_number_after_an_invalid_one",
+  "title": "The same instance first with an invalid, then with a valid number: Done, the error is gone.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-004",
+  "test": "tests/sdk/test_parameter_ranges.py::test_tool_number_of_a_motion_outside_the_range",
+  "title": "Motion commands check ToolNo / FrameNo the same way (range before availability, ST-FIX F98).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-005",
+  "test": "tests/sdk/test_parameter_ranges.py::test_negative_rate_of_a_motion_is_the_default",
+  "title": "Every rate < 0 is the default (\"<0%: (default)\", e.g.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-006",
+  "test": "tests/sdk/test_parameter_ranges.py::test_rate_of_a_motion_above_100",
+  "title": "A rate above 100 % of a motion is rejected by the client, nothing is sent.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-007",
+  "test": "tests/sdk/test_parameter_ranges.py::test_default_dynamics_rate_too_large_for_the_telegram",
+  "title": "A default rate above 655.35 % does not fit into the telegram (UINT * 100): client error (ST-FIX F97).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-008",
+  "test": "tests/sdk/test_parameter_ranges.py::test_default_dynamics_above_100_is_sent",
+  "title": "Default rates above 100 % are allowed by the spec (6.2.14): the client sends them, the RC decides.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-009",
+  "test": "tests/sdk/test_parameter_ranges.py::test_default_dynamics_negative_rate_keeps_the_value",
+  "title": "A negative default rate keeps the current value of the RC (6.2.14), also other values than -1.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-010",
+  "test": "tests/sdk/test_parameter_ranges.py::test_default_dynamics_written_twice",
+  "title": "Written twice with different values: the read back shows the values of the second write.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-011",
+  "test": "tests/sdk/test_parameter_ranges.py::test_override_outside_the_range",
+  "title": "ChangeSpeedOverride outside 0..100 %: 16#8410, nothing is sent, the override of the RC stays.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-012",
+  "test": "tests/sdk/test_parameter_ranges.py::test_override_zero",
+  "title": "ChangeSpeedOverride 0 % is valid: Done, the override of the RC is 0.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-013",
+  "test": "tests/sdk/test_parameter_ranges.py::test_return_to_primary_without_trajectory_mode",
+  "title": "TrajectoryMode 0 (Invalid, the default) is rejected with 16#8409 (6.3.11, ST-FIX F99).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-014",
+  "test": "tests/sdk/test_parameter_ranges.py::test_load_data_round_trip",
+  "title": "WriteLoadData with every field set to a distinct value: ReadLoadData returns every field unchanged.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RANGE-015",
+  "test": "tests/sdk/test_parameter_ranges.py::test_reference_dynamics_round_trip",
+  "title": "WriteRobotReferenceDynamics with distinct values: ReadRobotReferenceDynamics returns exactly these.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-001",
+  "test": "tests/sdk/test_sync.py::test_change_after_start_up_client_to_server",
+  "title": "CLIENT_TO_SERVER after the start-up: a change on the PLC is written to the RC; Synchronized drops and comes back.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-002",
+  "test": "tests/sdk/test_sync.py::test_change_after_start_up_server_to_client",
+  "title": "SERVER_TO_CLIENT after the start-up: a change on the PLC is overwritten with the data of the RC.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-003",
+  "test": "tests/sdk/test_sync.py::test_change_after_start_up_automatic",
+  "title": "AUTOMATIC after the start-up: a change on the PLC (the most recent change) is written to the RC.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-004",
+  "test": "tests/sdk/test_sync.py::test_change_after_start_up_without_synchronization",
+  "title": "NO_SYNCHRONIZATION after the start-up: nothing is transferred, but the change is detected (Synchronized FALSE).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-005",
+  "test": "tests/sdk/test_sync.py::test_change_of_a_data_set_without_synchronization",
+  "title": "A data set disabled for synchronization (NO_SYNCHRONIZATION during and after the start-up) is not compared.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-006",
+  "test": "tests/sdk/test_sync.py::test_automatic_during_start_up_is_rejected",
+  "title": "AUTOMATIC is not available during the start-up (table 5-109): the RobotTask rejects the configuration.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-007",
+  "test": "tests/sdk/test_sync.py::test_undefined_sync_mode_is_rejected",
+  "title": "An undefined synchronization mode (7) is rejected with ERR_SYNC_MODE_INVALID and the warning of the data set.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-008",
+  "test": "tests/sdk/test_sync.py::test_sync_mode_changed_while_running",
+  "title": "A synchronization mode changed while the RobotTask runs is reported (info) and only used after a restart.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-009",
+  "test": "tests/sdk/test_sync.py::test_start_up_conflict_server_to_client",
+  "title": "SERVER_TO_CLIENT during the start-up: different PLC data are overwritten with the RC data, then Synchronized.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-010",
+  "test": "tests/sdk/test_sync.py::test_start_up_conflict_client_to_server",
+  "title": "CLIENT_TO_SERVER during the start-up: different PLC data are written to the RC, then Synchronized.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-011",
+  "test": "tests/sdk/test_sync.py::test_start_up_conflict_with_user_interaction",
+  "title": "Start-up conflict with user interaction: warning, not synchronized until the user writes or reads the data.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-012",
+  "test": "tests/sdk/test_sync.py::test_sync_mode_during_start_up_changed_while_running",
+  "title": "A changed start-up mode is only used at the next start-up: no transfer, no error or warning while running.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-013",
+  "test": "tests/sdk/test_sync.py::test_all_data_sets_disabled",
+  "title": "Synchronization deactivated for all data sets: initialized, but never synchronized (spec 5.6.7.3).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-014",
+  "test": "tests/sdk/test_sync.py::test_all_data_sets_changed_together",
+  "title": "All data sets CLIENT_TO_SERVER: changed together after the start-up, every set is written once.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-015",
+  "test": "tests/sdk/test_sync.py::test_more_elements_on_the_rc_than_on_the_plc",
+  "title": "The RC has more tools / frames / loads (20) than the PLC array (10): error, no synchronization (5.6.7.5.1).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-016",
+  "test": "tests/sdk/test_sync.py::test_more_elements_on_the_plc_than_on_the_rc",
+  "title": "The PLC array (30) is longer than on the RC (20): only the elements of the RC are read (5.6.7.5.2).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-017",
+  "test": "tests/sdk/test_sync.py::test_undefined_sync_reaction_is_rejected",
+  "title": "An undefined SyncReaction (table 5-108) is rejected by the client: error, the configuration is not sent.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-RT-001",
   "test": "tests/sdk/test_robot_task.py::test_initialized_without_synchronization",
   "title": "RobotTask reaches Initialized without data synchronization",

@@ -55,6 +55,8 @@ AREAS: list[tuple[str, str, str]] = [
     ("sdk/test_bilateral.py", "SDK-BIL", "Bilateral tests: client payload decoded by the SDK and back"),
     ("sdk/test_payload_sdk.py", "SDK-PAY", "Payload layout against the command structures of the SDK"),
     ("sdk/test_core_fbs.py", "SDK-CORE", "Core function blocks against the SDK"),
+    ("sdk/test_parameter_ranges.py", "SDK-RANGE", "Ranges of the command parameters against the SDK"),
+    ("sdk/test_sync.py", "SDK-SYNC", "Synchronization of the user data against the SDK"),
     ("sdk/test_robot_task.py", "SDK-RT", "RobotTask (communication, synchronization) against the SDK"),
     ("sdk/", "SDK-LOOP", "SDK in the loop (simulator binding)"),
     ("tcp/", "TCP", "TCP transport"),

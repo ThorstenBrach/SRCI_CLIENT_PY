@@ -39,7 +39,7 @@ from srci_sdk_sim.sdk import SdkSimulator, sdk_transport
 import srci
 from srci.iec.clock import FakeClock, use_clock
 from srci.iec.rt import copy_into
-from srci.types import JogMode, ProcessingMode, RobotLibraryErrorIdEnum, SequenceFlag
+from srci.types import JogMode, ProcessingMode, RobotLibraryErrorIdEnum, SequenceFlag, TrajectoryMode
 from srci.types.iec import new_instance
 from tests.robot_task_harness import SIZE, RobotTaskHarness
 
@@ -390,6 +390,7 @@ def test_interrupt_jog_return_to_primary_continue(robot: RobotTaskHarness, sdk: 
     rtp = fb(robot, "MC_ReturnToPrimaryFB", Enable=True)
     rtp.ParCmd.VelocityRate = rtp.ParCmd.AccelerationRate = 100.0
     rtp.ParCmd.DecelerationRate = rtp.ParCmd.JerkRate = -1.0
+    rtp.ParCmd.TrajectoryMode = TrajectoryMode.LINEAR_MOVEMENT  # 0 (default) is invalid (6.3.11)
     robot.run(300, until=lambda: bool(rtp.Done or rtp.Error))
     assert rtp.Done and rtp.OutCmd.Progress == 100.0, state(rtp)
     assert sdk.joints == pytest.approx(interrupted_at)

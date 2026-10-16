@@ -372,7 +372,8 @@ class MC_MoveLinearRelativeFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.VelocityRate valid ?
-        if (SysDepIsValidReal(Value=self.ParCmd.VelocityRate) == False or (self.ParCmd.VelocityRate < 0 and self.ParCmd.VelocityRate != -1)) or self.ParCmd.VelocityRate > 100:
+        # ST-FIX F96: every value < 0 is the default
+        if SysDepIsValidReal(Value=self.ParCmd.VelocityRate) == False or self.ParCmd.VelocityRate > 100:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -382,7 +383,8 @@ class MC_MoveLinearRelativeFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.AccelerationRate valid ?
-        if (SysDepIsValidReal(Value=self.ParCmd.AccelerationRate) == False or (self.ParCmd.AccelerationRate < 0 and self.ParCmd.AccelerationRate != -1)) or self.ParCmd.AccelerationRate > 100:
+        # ST-FIX F96: every value < 0 is the default
+        if SysDepIsValidReal(Value=self.ParCmd.AccelerationRate) == False or self.ParCmd.AccelerationRate > 100:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -392,7 +394,8 @@ class MC_MoveLinearRelativeFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.DecelerationRate valid ?
-        if (SysDepIsValidReal(Value=self.ParCmd.DecelerationRate) == False or (self.ParCmd.DecelerationRate < 0 and self.ParCmd.DecelerationRate != -1)) or self.ParCmd.DecelerationRate > 100:
+        # ST-FIX F96: every value < 0 is the default
+        if SysDepIsValidReal(Value=self.ParCmd.DecelerationRate) == False or self.ParCmd.DecelerationRate > 100:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -402,7 +405,8 @@ class MC_MoveLinearRelativeFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.JerkRate valid ?
-        if (SysDepIsValidReal(Value=self.ParCmd.JerkRate) == False or (self.ParCmd.JerkRate < 0 and self.ParCmd.JerkRate != -1)) or self.ParCmd.JerkRate > 100:
+        # ST-FIX F96: every value < 0 is the default
+        if SysDepIsValidReal(Value=self.ParCmd.JerkRate) == False or self.ParCmd.JerkRate > 100:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -417,7 +421,8 @@ class MC_MoveLinearRelativeFB(RobotLibraryBaseExecuteFB):
             CheckParameterValid = False
 
             # Check ToolNo available on RC ?
-            if self.ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex:
+            # ST-FIX F98: outside -1..254 is a range error
+            if self.ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex and self.ParCmd.ToolNo <= 254:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TOOLNO_UNAVAILABLE, Overwrite=True)
             else:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TOOLNO_RANGE, Overwrite=True)
@@ -432,7 +437,8 @@ class MC_MoveLinearRelativeFB(RobotLibraryBaseExecuteFB):
             CheckParameterValid = False
 
             # Check FrameNo available on RC ?
-            if self.ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex:
+            # ST-FIX F98: outside -1..254 is a range error
+            if self.ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex and self.ParCmd.FrameNo <= 254:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_FRAMENO_UNAVAILABLE, Overwrite=True)
             else:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_FRAMENO_RANGE, Overwrite=True)

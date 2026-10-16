@@ -228,6 +228,20 @@ for optional ones (the ST code sends −100 otherwise). Reference: `Misc.py`.
  THEN
 ```
 
+### F96
+
+`REAL_TO_PERCENT_INT`, `REAL_TO_PERCENT_UINT` – the spec defines **every** value < 0 % as the
+default ("<0%: (default)"), not only −1.0; −2.0 was sent as 65336 (653.36 %). Together with the
+generated changes of `CheckParameterValid` (below) every negative rate is accepted and sent as
+16#FFFF. Reference: `Misc.py`.
+
+```diff
+ // REAL_TO_PERCENT_INT (same in REAL_TO_PERCENT_UINT)
+-IF ( Value = -1.0 ) // ST-FIX F41: -1.0 = use the default (also for not optional parameters)
++IF ( Value < 0.0 ) // ST-FIX F41/F96: every value < 0 = use the default (also for not optional parameters)
+ THEN
+```
+
 ### F47
 
 `MC_ExchangeConfigurationFB`, `MC_ReadMessagesFB`, `MC_ReadRobotDataFB` stay Busy without a running

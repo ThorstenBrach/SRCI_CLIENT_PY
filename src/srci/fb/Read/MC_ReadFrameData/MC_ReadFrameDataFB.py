@@ -171,7 +171,8 @@ class MC_ReadFrameDataFB(RobotLibraryBaseExecuteFB):
             CheckParameterValid = False
 
             # Check FrameNo available on RC ?
-            if self.ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex:
+            # ST-FIX F98: outside -1..254 is a range error
+            if self.ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex and self.ParCmd.FrameNo <= 254:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_FRAMENO_UNAVAILABLE, Overwrite=True)
             else:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_FRAMENO_RANGE, Overwrite=True)

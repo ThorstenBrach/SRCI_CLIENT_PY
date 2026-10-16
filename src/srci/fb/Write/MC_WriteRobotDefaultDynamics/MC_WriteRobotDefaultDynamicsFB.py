@@ -168,7 +168,8 @@ class MC_WriteRobotDefaultDynamicsFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.DynamicValues.VelocityRate ?
-        if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.VelocityRate) == False:
+        # ST-FIX F97: UINT with factor 100 in the telegram
+        if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.VelocityRate) == False or self.ParCmd.DynamicValues.VelocityRate > 655.35:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -180,7 +181,8 @@ class MC_WriteRobotDefaultDynamicsFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.DynamicValues.AccelerationRate ?
-        if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.AccelerationRate) == False:
+        # ST-FIX F97: UINT with factor 100 in the telegram
+        if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.AccelerationRate) == False or self.ParCmd.DynamicValues.AccelerationRate > 655.35:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -192,7 +194,8 @@ class MC_WriteRobotDefaultDynamicsFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.DynamicValues.DecelerationRate ?
-        if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.DecelerationRate) == False:
+        # ST-FIX F97: UINT with factor 100 in the telegram
+        if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.DecelerationRate) == False or self.ParCmd.DynamicValues.DecelerationRate > 655.35:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -204,7 +207,8 @@ class MC_WriteRobotDefaultDynamicsFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.DynamicValues.JerkRate ?
-        if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.JerkRate) == False:
+        # ST-FIX F97: UINT with factor 100 in the telegram
+        if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.JerkRate) == False or self.ParCmd.DynamicValues.JerkRate > 655.35:
             # Parameter not valid
             CheckParameterValid = False
             # Set error

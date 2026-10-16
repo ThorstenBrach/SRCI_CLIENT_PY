@@ -424,7 +424,8 @@ class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
                 return CheckParameterValid
 
             # Check ParCmd.SplineData[x].VelocityRate valid ?
-            if (SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].VelocityRate) == False or (self.ParCmd.SplineData[_idx].VelocityRate < 0 and self.ParCmd.SplineData[_idx].VelocityRate != -1)) or self.ParCmd.SplineData[_idx].VelocityRate > 100:
+            # ST-FIX F96: every value < 0 is the default
+            if SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].VelocityRate) == False or self.ParCmd.SplineData[_idx].VelocityRate > 100:
                 # Parameter not valid
                 CheckParameterValid = False
                 # Set error
@@ -435,7 +436,8 @@ class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
                 return CheckParameterValid
 
             # Check ParCmd.SplineData[x].AccelerationRate valid ?
-            if (SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].AccelerationRate) == False or (self.ParCmd.SplineData[_idx].AccelerationRate < 0 and self.ParCmd.SplineData[_idx].AccelerationRate != -1)) or self.ParCmd.SplineData[_idx].AccelerationRate > 100:
+            # ST-FIX F96: every value < 0 is the default
+            if SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].AccelerationRate) == False or self.ParCmd.SplineData[_idx].AccelerationRate > 100:
                 # Parameter not valid
                 CheckParameterValid = False
                 # Set error
@@ -446,7 +448,8 @@ class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
                 return CheckParameterValid
 
             # Check ParCmd.SplineData[x].DecelerationRate valid ?
-            if (SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].DecelerationRate) == False or (self.ParCmd.SplineData[_idx].DecelerationRate < 0 and self.ParCmd.SplineData[_idx].DecelerationRate != -1)) or self.ParCmd.SplineData[_idx].DecelerationRate > 100:
+            # ST-FIX F96: every value < 0 is the default
+            if SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].DecelerationRate) == False or self.ParCmd.SplineData[_idx].DecelerationRate > 100:
                 # Parameter not valid
                 CheckParameterValid = False
                 # Set error
@@ -457,7 +460,8 @@ class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
                 return CheckParameterValid
 
             # Check ParCmd.SplineData[x].JerkRate valid ?
-            if (SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].JerkRate) == False or (self.ParCmd.SplineData[_idx].JerkRate < 0 and self.ParCmd.SplineData[_idx].JerkRate != -1)) or self.ParCmd.SplineData[_idx].JerkRate > 100:
+            # ST-FIX F96: every value < 0 is the default
+            if SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].JerkRate) == False or self.ParCmd.SplineData[_idx].JerkRate > 100:
                 # Parameter not valid
                 CheckParameterValid = False
                 # Set error

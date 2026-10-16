@@ -216,7 +216,8 @@ class MC_WriteLoadDataFB(RobotLibraryBaseExecuteFB):
             CheckParameterValid = False
 
             # Check LoadNo available on RC ?
-            if self.ParCmd.LoadNo > AxesGroup.State.ConfigurationData.HighestLoadIndex:
+            # ST-FIX F98: outside -1..254 is a range error
+            if self.ParCmd.LoadNo > AxesGroup.State.ConfigurationData.HighestLoadIndex and self.ParCmd.LoadNo <= 254:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_LOADNO_UNAVAILABLE, Overwrite=True)
             else:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_LOADNO_RANGE, Overwrite=True)

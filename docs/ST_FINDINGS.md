@@ -99,6 +99,13 @@ How to fix them in ST (exact ST diffs, generated from the corrections): [ST_Find
 | F90 | `MC_MeasuringInputFB.OnApplyOutCmd` | `MeasuringID` only copied at DONE, a running measurement could not be aborted by its ID (`MC_AbortMeasuringInputFB`) | 6.4.14 | fixed: also while ACTIVE |
 | F91 | `MC_WriteAnalogOutputFB.CheckParameterValid` | `Index` 0 accepted (spec 1..32, like `MC_ReadAnalogInputFB`) | 6.4.13 | fixed |
 | F92 | `MC_UnitMeasurementFB.CheckParameterValid` | invalid `MeasuringMode` reported as `ERR_PROCESSINGMODE_NOT_ALLOWED` | 6.5.37 | fixed: `ERR_INVALID_PAR_CMD` |
+| F93 | `MC_RobotTaskFB.HandleSync*` (7 data sets), step 10 | NO_SYNCHRONIZATION after the start-up returned before the compare: a change of an enabled data set was never detected, `InSync` and `Synchronized` stayed TRUE | 5.6.7.3 | fixed: compare always, no transfer with NO_SYNCHRONIZATION |
+| F94 | `MC_RobotTaskFB.HandleSync*` (7 data sets), step 3 | start-up conflict with `SyncUserInteraction`: the RobotTask waited forever, a write / read of the user did not resolve the conflict (the RC copy was never read again) | 5.6.7.3 | fixed: while waiting for the user the RC data are read again after every sync timeout (5 s) and compared |
+| F95 | `MC_RobotTaskFB.HandleSync*` (7 data sets), step 13 | AUTOMATIC after the start-up: the jump back to step 10 was commented out, later changes were never synchronized | 5.6.7.3 | fixed |
+| F96 | `CheckParameterValid` of 26 motion blocks, `REAL_TO_PERCENT_INT/UINT` | rates < 0 other than -1 rejected (16#8401..8404), although the spec defines every value < 0 % as the default; the conversion sent them as garbage (-2 % → 653.36 %) | e.g. 6.3.2, 6.2.14 | fixed: every negative rate is the default (16#FFFF) |
+| F97 | `MC_WriteRobotDefaultDynamicsFB.CheckParameterValid` | rates above 655.35 % sent: they do not fit into the UINT of the telegram and wrapped (655.36 % → 0 %) | 5.6.2, 6.2.14 | fixed: 16#8401..8404 (rates above 100 % stay allowed, the RC decides) |
+| F98 | `CheckParameterValid` of 44 blocks with `ToolNo` / `FrameNo` / `LoadNo` | a number outside -1..254 (e.g. 255) reported as not available on the RC (16#8413 / 16#8415 / `ERR_LOADNO_UNAVAILABLE`) | table 7-1 | fixed: range error 16#8412 / 16#8414 / 16#8418 first |
+| F99 | `MC_ReturnToPrimaryFB.CheckParameterValid` | `TrajectoryMode` 0 (Invalid, the default) accepted and sent as linear movement | 6.3.11 | fixed: 16#8409 |
 
 ## Notes on the SRCI SDK (simulation)
 

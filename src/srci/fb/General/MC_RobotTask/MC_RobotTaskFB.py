@@ -1991,6 +1991,12 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             case _:
                                 # invalid sync mode for startup
                                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                    else:
+                        # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
+                        if CheckTimeout(rTimer=self._timerSyncFrameData) == RobotLibraryConstants.OK:
+                            copy_into(AxesGroup.State.DataChanged.Frame, _dataChangedNone.Frame)
+                            SetTimeout(PT=self._timeoutSyncFrameData, rTimer=self._timerSyncFrameData)
+                            self._stepSyncFrameData = 0  # -> read the RC data and compare again
 
             # Start write frame data
             case 4:
@@ -2044,9 +2050,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             # SyncMode after startup :
             # --------------------------------------------
             case 10:
-                if AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
-                    return
-
+                # ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
                 # reset count of unsynchronised frames
                 AxesGroup.State.SyncStatePlc.UnSyncNo.Frame = 0
 
@@ -2224,9 +2228,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
                 # set timeout
                 SetTimeout(PT=self._timeoutSyncFrameData, rTimer=self._timerSyncFrameData)
+                # jump back
+                self._stepSyncFrameData = 10  # ST-FIX F95: was commented out
 
-            # jump back
-            # _rStep := 10;
             # ------------------------------------------
             # Read Data from RC and write it to PLC
             # ------------------------------------------
@@ -2555,6 +2559,12 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             case _:
                                 # invalid sync mode for startup
                                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                    else:
+                        # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
+                        if CheckTimeout(rTimer=self._timerSyncLoadData) == RobotLibraryConstants.OK:
+                            copy_into(AxesGroup.State.DataChanged.Load, _dataChangedNone.Load)
+                            SetTimeout(PT=self._timeoutSyncLoadData, rTimer=self._timerSyncLoadData)
+                            self._stepSyncLoadData = 0  # -> read the RC data and compare again
 
             # Start write Load data
             case 4:
@@ -2608,9 +2618,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             # SyncMode after startup :
             # --------------------------------------------
             case 10:
-                if AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
-                    return
-
+                # ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
                 # reset count of unsynchronised Loads
                 AxesGroup.State.SyncStatePlc.UnSyncNo.Load = 0
 
@@ -2797,9 +2805,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
                 # set timeout
                 SetTimeout(PT=self._timeoutSyncLoadData, rTimer=self._timerSyncLoadData)
+                # jump back
+                self._stepSyncLoadData = 10  # ST-FIX F95: was commented out
 
-            # jump back
-            # _rStep := 10;
             # ------------------------------------------
             # Read Data from RC and write it to PLC
             # ------------------------------------------
@@ -3072,6 +3080,12 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             case _:
                                 # invalid sync mode for startup
                                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                    else:
+                        # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
+                        if CheckTimeout(rTimer=self._timerSyncDefaultDynamics) == RobotLibraryConstants.OK:
+                            AxesGroup.State.DataChanged.DefaultDynamics = _dataChangedNone.DefaultDynamics
+                            SetTimeout(PT=self._timeoutSyncDefaultDynamics, rTimer=self._timerSyncDefaultDynamics)
+                            self._stepSyncDefaultDynamics = 0  # -> read the RC data and compare again
 
             # Start write DefaultDynamics data
             case 4:
@@ -3122,9 +3136,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             # SyncMode after startup :
             # --------------------------------------------
             case 10:
-                if AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
-                    return
-
+                # ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
                 # compare DefaultDynamics data
                 # ST-FIX F57
                 AxesGroup.State.DataChanged.DefaultDynamics = not IsDefaultDynamicsEqual(Data1=DefaultDynamics, Data2=self._defaultDynamics, IgnoreTimestamp=True)
@@ -3264,9 +3276,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
                 # set timeout
                 SetTimeout(PT=self._timeoutSyncDefaultDynamics, rTimer=self._timerSyncDefaultDynamics)
+                # jump back
+                self._stepSyncDefaultDynamics = 10  # ST-FIX F95: was commented out
 
-            # jump back
-            # _rStep := 10;
             # ------------------------------------------
             # Read Data from RC and write it to PLC
             # ------------------------------------------
@@ -3524,6 +3536,12 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             case _:
                                 # invalid sync mode for startup
                                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                    else:
+                        # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
+                        if CheckTimeout(rTimer=self._timerSyncReferenceDynamics) == RobotLibraryConstants.OK:
+                            AxesGroup.State.DataChanged.ReferenceDynamics = _dataChangedNone.ReferenceDynamics
+                            SetTimeout(PT=self._timeoutSyncReferenceDynamics, rTimer=self._timerSyncReferenceDynamics)
+                            self._stepSyncReferenceDynamics = 0  # -> read the RC data and compare again
 
             # Start write ReferenceDynamics data
             case 4:
@@ -3574,9 +3592,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             # SyncMode after startup :
             # --------------------------------------------
             case 10:
-                if AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
-                    return
-
+                # ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
                 # compare ReferenceDynamics data
                 # ST-FIX F57
                 AxesGroup.State.DataChanged.ReferenceDynamics = not IsReferenceDynamicsEqual(Data1=ReferenceDynamics, Data2=self._referenceDynamics, IgnoreTimestamp=True)
@@ -3716,9 +3732,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
                 # set timeout
                 SetTimeout(PT=self._timeoutSyncReferenceDynamics, rTimer=self._timerSyncReferenceDynamics)
+                # jump back
+                self._stepSyncReferenceDynamics = 10  # ST-FIX F95: was commented out
 
-            # jump back
-            # _rStep := 10;
             # ------------------------------------------
             # Read Data from RC and write it to PLC
             # ------------------------------------------
@@ -3981,6 +3997,12 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             case _:
                                 # invalid sync mode for startup
                                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                    else:
+                        # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
+                        if CheckTimeout(rTimer=self._timerSyncSWLimits) == RobotLibraryConstants.OK:
+                            AxesGroup.State.DataChanged.SwLimits = _dataChangedNone.SwLimits
+                            SetTimeout(PT=self._timeoutSyncSWLimits, rTimer=self._timerSyncSWLimits)
+                            self._stepSyncSWLimits = 0  # -> read the RC data and compare again
 
             # Start write SwLimits data
             case 4:
@@ -4032,9 +4054,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             # SyncMode after startup :
             # --------------------------------------------
             case 10:
-                if AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
-                    return
-
+                # ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
                 # compare SwLimits data
                 # ST-FIX F57
                 AxesGroup.State.DataChanged.SwLimits = not IsSwLimitsEqual(Data1=SWLimits, Data2=self._swLimits, IgnoreTimestamp=True)
@@ -4174,9 +4194,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
                 # set timeout
                 SetTimeout(PT=self._timeoutSyncSWLimits, rTimer=self._timerSyncSWLimits)
+                # jump back
+                self._stepSyncSWLimits = 10  # ST-FIX F95: was commented out
 
-            # jump back
-            # _rStep := 10;
             # ------------------------------------------
             # Read Data from RC and write it to PLC
             # ------------------------------------------
@@ -4484,6 +4504,12 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             case _:
                                 # invalid sync mode for startup
                                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                    else:
+                        # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
+                        if CheckTimeout(rTimer=self._timerSyncToolData) == RobotLibraryConstants.OK:
+                            copy_into(AxesGroup.State.DataChanged.Tool, _dataChangedNone.Tool)
+                            SetTimeout(PT=self._timeoutSyncToolData, rTimer=self._timerSyncToolData)
+                            self._stepSyncToolData = 0  # -> read the RC data and compare again
 
             # Start write tool data
             case 4:
@@ -4537,9 +4563,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             # SyncMode after startup :
             # --------------------------------------------
             case 10:
-                if AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
-                    return
-
+                # ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
                 # reset count of unsynchronised tools
                 AxesGroup.State.SyncStatePlc.UnSyncNo.Tool = 0
 
@@ -4717,9 +4741,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
                 # set timeout
                 SetTimeout(PT=self._timeoutSyncToolData, rTimer=self._timerSyncToolData)
+                # jump back
+                self._stepSyncToolData = 10  # ST-FIX F95: was commented out
 
-            # jump back
-            # _rStep := 10;
             # ------------------------------------------
             # Read Data from RC and write it to PLC
             # ------------------------------------------
@@ -5042,6 +5066,12 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                             case _:
                                 # invalid sync mode for startup
                                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                    else:
+                        # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
+                        if CheckTimeout(rTimer=self._timerSyncWorkArea) == RobotLibraryConstants.OK:
+                            copy_into(AxesGroup.State.DataChanged.WorkArea, _dataChangedNone.WorkArea)
+                            SetTimeout(PT=self._timeoutSyncWorkArea, rTimer=self._timerSyncWorkArea)
+                            self._stepSyncWorkArea = 0  # -> read the RC data and compare again
 
             # Start write WorkArea data
             case 4:
@@ -5095,9 +5125,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             # SyncMode after startup :
             # --------------------------------------------
             case 10:
-                if AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
-                    return
-
+                # ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
                 # reset count of unsynchronised WorkAreas
                 AxesGroup.State.SyncStatePlc.UnSyncNo.WorkArea = 0
 
@@ -5268,9 +5296,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
                 # set timeout
                 SetTimeout(PT=self._timeoutSyncWorkArea, rTimer=self._timerSyncWorkArea)
+                # jump back
+                self._stepSyncWorkArea = 10  # ST-FIX F95: was commented out
 
-            # jump back
-            # _rStep := 10;
             # ------------------------------------------
             # Read Data from RC and write it to PLC
             # ------------------------------------------

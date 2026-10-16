@@ -2185,6 +2185,156 @@ E_PATCHES += (
     ),
 )
 
+# F93 ... F95: synchronization of the user data (spec 5.6.7), found by tests/sdk/test_sync.py
+_F93 = (
+    "F93: NO_SYNCHRONIZATION after the start-up: the HandleSync* step 10 returned before the compare - "
+    "a change of an enabled data set was never detected and Synchronized stayed TRUE (spec 5.6.7.3: "
+    "the detection of changed data is independent of the SyncMode)"
+)
+_F94 = (
+    "F94: start-up conflict with SyncUserInteraction: the RobotTask waited in step 3 forever - the user "
+    "could not resolve the conflict with the write / read functions (the RC copy was never read again)"
+)
+_F95 = (
+    "F95: AUTOMATIC after the start-up: step 13 never jumped back to step 10 (commented out) - "
+    "after the first synchronization later changes were never synchronized"
+)
+# HandleSync* method -> item of DataChanged / _dataChangedNone
+_SYNC_HANDLERS = {
+    "HandleSyncFrameData": "Frame",
+    "HandleSyncLoadData": "Load",
+    "HandleSyncRobotDefaultDynamics": "DefaultDynamics",
+    "HandleSyncRobotReferenceDynamics": "ReferenceDynamics",
+    "HandleSyncRobotSWLimits": "SwLimits",
+    "HandleSyncToolData": "Tool",
+    "HandleSyncWorkArea": "WorkArea",
+}
+E_PATCHES += tuple(
+    SourcePatch(
+        "MC_RobotTaskFB",
+        method,
+        r"(10 *: *// *check synchronisation active \? *\r?\n)(\s*)IF \( AxesGroup\.Parameter\.Plc\.Parameter\.SynchronizationModes\.\w+"
+        r"\[SyncTime\.AFTER_START_UP\] = SyncMode\.NO_SYNCHRONIZATION\)\s*THEN\s*RETURN;\s*END_IF",
+        "\\1\\2// ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)",
+        _F93,
+        regex=True,
+        template=True,
+    )
+    for method in _SYNC_HANDLERS
+) + tuple(
+    SourcePatch(
+        "MC_RobotTaskFB",
+        method,
+        r"(SetError\( ErrorID := RobotLibraryErrorIdEnum\.ERR_SYNC_MODE_INVALID, Overwrite := TRUE \);\s*END_CASE\s*\n)(\s*)END_IF",
+        "\\1\\2ELSE\n"
+        "\\2  // ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again\n"
+        f"\\2  IF ( CheckTimeout(_rTimer) = RobotLibraryConstants.OK )\n"
+        "\\2  THEN\n"
+        f"\\2    AxesGroup.State.DataChanged.{item} := _dataChangedNone.{item};\n"
+        "\\2    SetTimeout(PT := _rTimeout, rTimer := _rTimer);\n"
+        "\\2   _rStep := 0; // -> read the RC data and compare again\n"
+        "\\2  END_IF\n"
+        "\\2END_IF",
+        _F94,
+        regex=True,
+        template=True,
+    )
+    for method, item in _SYNC_HANDLERS.items()
+) + tuple(
+    SourcePatch(
+        "MC_RobotTaskFB",
+        method,
+        r"(// jump back\s*\n\s*)//_rStep := 10;",
+        "\\1_rStep := 10; // ST-FIX F95: was commented out",
+        _F95,
+        regex=True,
+        template=True,
+    )
+    for method in _SYNC_HANDLERS
+)
+
+# F96 ... F99: parameter ranges (spec chapter 6 and table 7-1), found by tests/sdk/test_parameter_ranges.py
+_F96 = (
+    "F96: dynamics rates < 0 other than -1 were rejected (ERR_VELOCITY_INVALID ...) - the spec defines "
+    "every value < 0 % as the default (\"<0%: (default)\"); the conversion sent them as garbage (-2 -> 653.36 %)"
+)
+_F97 = (
+    "F97: MC_WriteRobotDefaultDynamicsFB sent rates above 655.35 % (they do not fit into the UINT of the "
+    "telegram and wrapped, 655.36 % -> 0 %) - now ERR_VELOCITY_INVALID ... ERR_JERK_INVALID"
+)
+_F98 = (
+    "F98: ToolNo / FrameNo / LoadNo outside -1..254 (e.g. 255) were reported as not available on the RC "
+    "(16#8413 / 16#8415 / ERR_LOADNO_UNAVAILABLE) instead of 16#8412 / 16#8414 / 16#8418 (table 7-1)"
+)
+_F99 = (
+    "F99: MC_ReturnToPrimaryFB accepted TrajectoryMode 0 (Invalid, the default) and sent it as linear "
+    "movement - the user must choose linear or PTP (6.3.11), now ERR_TRAJECTORYMODE_INVALID"
+)
+_F96_POUS = (
+    "MC_CreateSplineFB", "MC_DynamicSplineFB", "MC_MoveApproachDirectFB", "MC_MoveApproachLinearFB",
+    "MC_MoveAxesAbsoluteFB", "MC_MoveAxesRelativeFB", "MC_MoveCircularAbsoluteFB", "MC_MoveCircularCamFB",
+    "MC_MoveCircularRelativeFB", "MC_MoveDepartDirectFB", "MC_MoveDepartLinearFB", "MC_MoveDirectAbsoluteFB",
+    "MC_MoveDirectOffsetFB", "MC_MoveDirectRelativeFB", "MC_MoveLinearAbsoluteFB", "MC_MoveLinearAbsoluteJFB",
+    "MC_MoveLinearCamFB", "MC_MoveLinearOffsetFB", "MC_MoveLinearRelativeFB", "MC_MovePickPlaceDirectFB",
+    "MC_MovePickPlaceLinearFB", "MC_MoveSuperImposedDynamicFB", "MC_MoveSuperImposedFB", "MC_ReturnToPrimaryFB",
+    "MC_SearchHardStopFB", "MC_SearchHardStopJFB",
+)
+_F98_POUS = (
+    "MC_CalculateCartesianPositionFB", "MC_CalculateForwardKinematicFB", "MC_CalculateFrameFB",
+    "MC_CalculateInverseKinematicFB", "MC_CalculateToolFB", "MC_ForceControlFB", "MC_ForceLimitFB", "MC_GroupJogFB",
+    "MC_MoveApproachDirectFB", "MC_MoveApproachLinearFB", "MC_MoveAxesAbsoluteFB", "MC_MoveAxesRelativeFB",
+    "MC_MoveCircularAbsoluteFB", "MC_MoveCircularCamFB", "MC_MoveCircularRelativeFB", "MC_MoveDepartDirectFB",
+    "MC_MoveDepartLinearFB", "MC_MoveDirectAbsoluteFB", "MC_MoveDirectOffsetFB", "MC_MoveDirectRelativeFB",
+    "MC_MoveLinearAbsoluteFB", "MC_MoveLinearAbsoluteJFB", "MC_MoveLinearCamFB", "MC_MoveLinearOffsetFB",
+    "MC_MoveLinearRelativeFB", "MC_MovePickPlaceDirectFB", "MC_MovePickPlaceLinearFB", "MC_MoveSuperImposedDynamicFB",
+    "MC_MoveSuperImposedFB", "MC_ReadActualForceFB", "MC_ReadActualPositionCyclicFB", "MC_ReadActualPositionFB",
+    "MC_ReadActualTCPVelocityFB", "MC_ReadFrameDataFB", "MC_ReadLoadDataFB", "MC_ReadToolDataFB",
+    "MC_RedefineTrackingPosFB", "MC_ReturnToPrimaryFB", "MC_SearchHardStopFB", "MC_ShiftPositionFB",
+    "MC_SyncToConveyorFB", "MC_WriteFrameDataFB", "MC_WriteLoadDataFB", "MC_WriteToolDataFB",
+)
+E_PATCHES += tuple(
+    SourcePatch(
+        pou,
+        "CheckParameterValid",
+        r"\(\(\s*ParCmd\.([\w.\[\]]+)\s*<\s*0\s*\)\s*AND\s*\n\s*\(\s*ParCmd\.\1\s*<>\s*-1\s*\)\)\s*OR[ \t]*",
+        "(* ST-FIX F96: every value < 0 is the default *)",
+        _F96,
+        regex=True,
+    )
+    for pou in _F96_POUS
+) + tuple(
+    SourcePatch(
+        pou,
+        "CheckParameterValid",
+        r"(// Check \w+ available on RC \? *\r?\n\s*)IF \( ParCmd\.((?:Tool|Frame|Load)No) > "
+        r"(AxesGroup\.State\.ConfigurationData\.Highest\w+Index) \)",
+        "\\1IF (( ParCmd.\\2 > \\3 ) AND ( ParCmd.\\2 <= 254 )) // ST-FIX F98: outside -1..254 is a range error",
+        _F98,
+        regex=True,
+        template=True,
+    )
+    for pou in _F98_POUS
+) + tuple(
+    SourcePatch(
+        "MC_WriteRobotDefaultDynamicsFB",
+        "CheckParameterValid",
+        f"IF ( SysDepIsValidReal(ParCmd.DynamicValues.{rate}) = FALSE )",
+        f"IF (( SysDepIsValidReal(ParCmd.DynamicValues.{rate}) = FALSE ) OR\n"
+        f"    ( ParCmd.DynamicValues.{rate} > 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram",
+        _F97,
+    )
+    for rate in ("VelocityRate", "AccelerationRate", "DecelerationRate", "JerkRate")
+) + (
+    SourcePatch(
+        "MC_ReturnToPrimaryFB",
+        "CheckParameterValid",
+        r"\( ParCmd\.TrajectoryMode <> TrajectoryMode\.INVALID +\) AND\s*\n\s*",
+        "(* ST-FIX F99: INVALID (0) is not allowed *) ",
+        _F99,
+        regex=True,
+    ),
+)
+
 E_VARS = (
     VarAppend(
         "MC_RobotTaskFB",

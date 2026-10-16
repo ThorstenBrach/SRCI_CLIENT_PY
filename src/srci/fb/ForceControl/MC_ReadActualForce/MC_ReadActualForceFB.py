@@ -212,7 +212,8 @@ class MC_ReadActualForceFB(RobotLibraryBaseExecuteFB):
             CheckParameterValid = False
 
             # Check ToolNo available on RC ?
-            if self.ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex:
+            # ST-FIX F98: outside -1..254 is a range error
+            if self.ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex and self.ParCmd.ToolNo <= 254:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TOOLNO_UNAVAILABLE, Overwrite=True)
             else:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TOOLNO_RANGE, Overwrite=True)
@@ -227,7 +228,8 @@ class MC_ReadActualForceFB(RobotLibraryBaseExecuteFB):
             CheckParameterValid = False
 
             # Check FrameNo available on RC ?
-            if self.ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex:
+            # ST-FIX F98: outside -1..254 is a range error
+            if self.ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex and self.ParCmd.FrameNo <= 254:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_FRAMENO_UNAVAILABLE, Overwrite=True)
             else:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_FRAMENO_RANGE, Overwrite=True)

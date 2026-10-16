@@ -134,6 +134,13 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | [F90](#f90) | `MC_MeasuringInputFB.OnApplyOutCmd` - `MeasuringID` only copied at DONE, a running measurement could not be aborted by its ID (`MC_AbortMeasuringInputFB`) | 1 | `MC_MeasuringInputFB` |
 | [F91](#f91) | `MC_WriteAnalogOutputFB.CheckParameterValid` - `Index` 0 accepted (spec 1..32, like `MC_ReadAnalogInputFB`) | 1 | `MC_WriteAnalogOutputFB` |
 | [F92](#f92) | `MC_UnitMeasurementFB.CheckParameterValid` - invalid `MeasuringMode` reported as `ERR_PROCESSINGMODE_NOT_ALLOWED` | 1 | `MC_UnitMeasurementFB` |
+| [F93](#f93) | `MC_RobotTaskFB.HandleSync*` (7 data sets), step 10 - NO_SYNCHRONIZATION after the start-up returned before the compare: a change of an enabled data set was never detected, `InSync` and `Synchronized` stayed TRUE | 7 | `MC_RobotTaskFB` |
+| [F94](#f94) | `MC_RobotTaskFB.HandleSync*` (7 data sets), step 3 - start-up conflict with `SyncUserInteraction`: the RobotTask waited forever, a write / read of the user did not resolve the conflict (the RC copy was never read again) | 7 | `MC_RobotTaskFB` |
+| [F95](#f95) | `MC_RobotTaskFB.HandleSync*` (7 data sets), step 13 - AUTOMATIC after the start-up: the jump back to step 10 was commented out, later changes were never synchronized | 7 | `MC_RobotTaskFB` |
+| [F96](#f96) | `CheckParameterValid` of 26 motion blocks, `REAL_TO_PERCENT_INT/UINT` - rates < 0 other than -1 rejected (16#8401..8404), although the spec defines every value < 0 % as the default; the conversion sent them as garbage (-2 % → 653.36 %) | 26 | `MC_CreateSplineFB`, `MC_DynamicSplineFB`, `MC_MoveApproachDirectFB`, `MC_MoveApproachLinearFB` (+22), hand written |
+| [F97](#f97) | `MC_WriteRobotDefaultDynamicsFB.CheckParameterValid` - rates above 655.35 % sent: they do not fit into the UINT of the telegram and wrapped (655.36 % → 0 %) | 4 | `MC_WriteRobotDefaultDynamicsFB` |
+| [F98](#f98) | `CheckParameterValid` of 44 blocks with `ToolNo` / `FrameNo` / `LoadNo` - a number outside -1..254 (e.g. 255) reported as not available on the RC (16#8413 / 16#8415 / `ERR_LOADNO_UNAVAILABLE`) | 44 | `MC_CalculateCartesianPositionFB`, `MC_CalculateForwardKinematicFB`, `MC_CalculateFrameFB`, `MC_CalculateInverseKinematicFB` (+40) |
+| [F99](#f99) | `MC_ReturnToPrimaryFB.CheckParameterValid` - `TrajectoryMode` 0 (Invalid, the default) accepted and sent as linear movement | 1 | `MC_ReturnToPrimaryFB` |
 
 ## Generated ST changes
 
@@ -3132,7 +3139,7 @@ Same change (same `-`/`+` lines) in: `MC_WriteDigitalOutputsFB`, `MC_WriteDigita
 ```diff
 --- a/MC_CreateSplineFB.CheckParameterValid
 +++ b/MC_CreateSplineFB.CheckParameterValid
-@@ -501,4 +501,24 @@
+@@ -497,4 +497,24 @@
    END_IF  
  END_FOR
  
@@ -3165,7 +3172,7 @@ Same change (same `-`/`+` lines) in: `MC_WriteDigitalOutputsFB`, `MC_WriteDigita
 ```diff
 --- a/MC_DynamicSplineFB.CheckParameterValid
 +++ b/MC_DynamicSplineFB.CheckParameterValid
-@@ -602,6 +602,14 @@
+@@ -598,6 +598,14 @@
                            MessageText := 'Invalid Parameter ParCmd.StartPosition = {1}',
                            Para1       := INT_TO_STRING(ParCmd.StartPosition));
    RETURN;
@@ -4309,7 +4316,7 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_MoveLinearRelativeFB.CheckParameterValid
 +++ b/MC_MoveLinearRelativeFB.CheckParameterValid
-@@ -672,3 +672,19 @@
+@@ -668,3 +668,19 @@
  END_FOR
  
  // ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
@@ -4336,7 +4343,7 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_MovePickPlaceDirectFB.CheckParameterValid
 +++ b/MC_MovePickPlaceDirectFB.CheckParameterValid
-@@ -944,3 +944,24 @@
+@@ -940,3 +940,24 @@
  END_FOR
  
  // ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
@@ -4368,7 +4375,7 @@ _`StopSubprogram.SequenceFlag`, `MoveLinearRelative.ReferenceType`, `MovePickPla
 ```diff
 --- a/MC_MovePickPlaceLinearFB.CheckParameterValid
 +++ b/MC_MovePickPlaceLinearFB.CheckParameterValid
-@@ -926,3 +926,24 @@
+@@ -922,3 +922,24 @@
  END_FOR
  
  // ST-FIX F69: trigger IDs and SequenceFlag (table 7-1, 5.5.12.4, e.g. table 6-496)
@@ -7929,7 +7936,7 @@ Same change (same `-`/`+` lines) in: `MC_WriteToolDataFB`
 ```diff
 --- a/MC_MoveApproachDirectFB.CheckParameterValid
 +++ b/MC_MoveApproachDirectFB.CheckParameterValid
-@@ -839,4 +839,5 @@
+@@ -835,4 +835,5 @@
      RETURN;
    END_IF
  END_FOR
@@ -7943,7 +7950,7 @@ Same change (same `-`/`+` lines) in: `MC_WriteToolDataFB`
 ```diff
 --- a/MC_MoveApproachLinearFB.CheckParameterValid
 +++ b/MC_MoveApproachLinearFB.CheckParameterValid
-@@ -839,4 +839,5 @@
+@@ -835,4 +835,5 @@
      RETURN;
    END_IF
  END_FOR
@@ -7957,7 +7964,7 @@ Same change (same `-`/`+` lines) in: `MC_WriteToolDataFB`
 ```diff
 --- a/MC_MoveAxesAbsoluteFB.CheckParameterValid
 +++ b/MC_MoveAxesAbsoluteFB.CheckParameterValid
-@@ -467,4 +467,5 @@
+@@ -463,4 +463,5 @@
      RETURN;
    END_IF
  END_FOR
@@ -7973,7 +7980,7 @@ Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAb
 ```diff
 --- a/MC_MoveSuperImposedFB.CheckParameterValid
 +++ b/MC_MoveSuperImposedFB.CheckParameterValid
-@@ -512,4 +512,42 @@
+@@ -508,4 +508,42 @@
    RETURN;
  END_IF
  
@@ -9242,6 +9249,1072 @@ _`MC_UnitMeasurementFB.CheckParameterValid` - invalid `MeasuringMode` reported a
                            MessageType := MessageType.CMD,
 ```
 
+### F93
+
+_`MC_RobotTaskFB.HandleSync*` (7 data sets), step 10 - NO_SYNCHRONIZATION after the start-up returned before the compare: a change of an enabled data set was never detected, `InSync` and `Synchronized` stayed TRUE_
+
+- F93: NO_SYNCHRONIZATION after the start-up: the HandleSync* step 10 returned before the compare - a change of an enabled data set was never detected and Synchronized stayed TRUE (spec 5.6.7.3: the detection of changed data is independent of the SyncMode)
+
+**MC_RobotTaskFB** · `HandleSyncFrameData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncFrameData
++++ b/MC_RobotTaskFB.HandleSyncFrameData
+@@ -346,10 +346,7 @@
+   // --------------------------------------------
+          
+   10 : // check synchronisation active ? 
+-       IF ( AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP] = SyncMode.NO_SYNCHRONIZATION)
+-       THEN
+-         RETURN;
+-       END_IF
++       // ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
+ 
+        // reset count of unsynchronised frames
+        AxesGroup.State.SyncStatePlc.UnSyncNo.Frame := 0;
+```
+
+**MC_RobotTaskFB** · `HandleSyncLoadData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncLoadData
++++ b/MC_RobotTaskFB.HandleSyncLoadData
+@@ -349,10 +349,7 @@
+   // --------------------------------------------
+          
+   10 : // check synchronisation active ? 
+-       IF ( AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP] = SyncMode.NO_SYNCHRONIZATION)
+-       THEN
+-         RETURN;
+-       END_IF
++       // ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
+        
+        // reset count of unsynchronised Loads
+        AxesGroup.State.SyncStatePlc.UnSyncNo.Load := 0;
+```
+
+**MC_RobotTaskFB** · `HandleSyncRobotDefaultDynamics` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncRobotDefaultDynamics
++++ b/MC_RobotTaskFB.HandleSyncRobotDefaultDynamics
+@@ -283,10 +283,7 @@
+   // --------------------------------------------
+          
+   10 :// check synchronisation active ? 
+-       IF ( AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP] = SyncMode.NO_SYNCHRONIZATION)
+-       THEN
+-         RETURN;
+-       END_IF
++       // ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
+        
+        // compare DefaultDynamics data
+        AxesGroup.State.DataChanged.DefaultDynamics := NOT IsDefaultDynamicsEqual( Data1 := DefaultDynamics, Data2 := _defaultDynamics, IgnoreTimestamp := TRUE (* ST-FIX F57 *));
+```
+
+**MC_RobotTaskFB** · `HandleSyncRobotReferenceDynamics` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncRobotReferenceDynamics
++++ b/MC_RobotTaskFB.HandleSyncRobotReferenceDynamics
+@@ -283,10 +283,7 @@
+   // --------------------------------------------
+          
+   10 : // check synchronisation active ? 
+-       IF ( AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP] = SyncMode.NO_SYNCHRONIZATION)
+-       THEN
+-         RETURN;
+-       END_IF
++       // ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
+ 
+        // compare ReferenceDynamics data
+        AxesGroup.State.DataChanged.ReferenceDynamics := NOT IsReferenceDynamicsEqual( Data1 := ReferenceDynamics, Data2 := _referenceDynamics, IgnoreTimestamp := TRUE (* ST-FIX F57 *));
+```
+
+**MC_RobotTaskFB** · `HandleSyncRobotSWLimits` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncRobotSWLimits
++++ b/MC_RobotTaskFB.HandleSyncRobotSWLimits
+@@ -302,10 +302,7 @@
+   // --------------------------------------------
+          
+   10 : // check synchronisation active ? 
+-       IF ( AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP] = SyncMode.NO_SYNCHRONIZATION)
+-       THEN
+-         RETURN;
+-       END_IF
++       // ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
+ 
+        // compare SwLimits data
+        AxesGroup.State.DataChanged.SwLimits := NOT IsSwLimitsEqual( Data1 := SwLimits, Data2 := _swLimits, IgnoreTimestamp := TRUE (* ST-FIX F57 *));
+```
+
+**MC_RobotTaskFB** · `HandleSyncToolData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncToolData
++++ b/MC_RobotTaskFB.HandleSyncToolData
+@@ -346,10 +346,7 @@
+   // --------------------------------------------
+          
+   10 :// check synchronisation active ? 
+-       IF ( AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP] = SyncMode.NO_SYNCHRONIZATION)
+-       THEN
+-         RETURN;
+-       END_IF
++       // ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
+ 
+        // reset count of unsynchronised tools
+        AxesGroup.State.SyncStatePlc.UnSyncNo.Tool := 0;
+```
+
+**MC_RobotTaskFB** · `HandleSyncWorkArea` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncWorkArea
++++ b/MC_RobotTaskFB.HandleSyncWorkArea
+@@ -346,10 +346,7 @@
+   // --------------------------------------------
+          
+   10 : // check synchronisation active ? 
+-       IF ( AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP] = SyncMode.NO_SYNCHRONIZATION)
+-       THEN
+-         RETURN;
+-       END_IF
++       // ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)
+        
+        // reset count of unsynchronised WorkAreas
+        AxesGroup.State.SyncStatePlc.UnSyncNo.WorkArea := 0;
+```
+
+### F94
+
+_`MC_RobotTaskFB.HandleSync*` (7 data sets), step 3 - start-up conflict with `SyncUserInteraction`: the RobotTask waited forever, a write / read of the user did not resolve the conflict (the RC copy was never read again)_
+
+- F94: start-up conflict with SyncUserInteraction: the RobotTask waited in step 3 forever - the user could not resolve the conflict with the write / read functions (the RC copy was never read again)
+
+**MC_RobotTaskFB** · `HandleSyncFrameData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncFrameData
++++ b/MC_RobotTaskFB.HandleSyncFrameData
+@@ -274,6 +274,14 @@
+            // invalid sync mode for startup
+            SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite := TRUE );
+  	       END_CASE
++       ELSE
++         // ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
++         IF ( CheckTimeout(_rTimer) = RobotLibraryConstants.OK )
++         THEN
++           AxesGroup.State.DataChanged.Frame := _dataChangedNone.Frame;
++           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
++          _rStep := 0; // -> read the RC data and compare again
++         END_IF
+        END_IF
+      END_IF  
+ 
+```
+
+**MC_RobotTaskFB** · `HandleSyncLoadData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncLoadData
++++ b/MC_RobotTaskFB.HandleSyncLoadData
+@@ -277,6 +277,14 @@
+            // invalid sync mode for startup
+            SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite := TRUE );
+  	       END_CASE
++       ELSE
++         // ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
++         IF ( CheckTimeout(_rTimer) = RobotLibraryConstants.OK )
++         THEN
++           AxesGroup.State.DataChanged.Load := _dataChangedNone.Load;
++           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
++          _rStep := 0; // -> read the RC data and compare again
++         END_IF
+        END_IF
+      END_IF  
+ 
+```
+
+**MC_RobotTaskFB** · `HandleSyncRobotDefaultDynamics` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncRobotDefaultDynamics
++++ b/MC_RobotTaskFB.HandleSyncRobotDefaultDynamics
+@@ -214,6 +214,14 @@
+            // invalid sync mode for startup
+            SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite := TRUE );
+  	       END_CASE
++       ELSE
++         // ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
++         IF ( CheckTimeout(_rTimer) = RobotLibraryConstants.OK )
++         THEN
++           AxesGroup.State.DataChanged.DefaultDynamics := _dataChangedNone.DefaultDynamics;
++           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
++          _rStep := 0; // -> read the RC data and compare again
++         END_IF
+        END_IF
+      END_IF  
+ 
+```
+
+**MC_RobotTaskFB** · `HandleSyncRobotReferenceDynamics` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncRobotReferenceDynamics
++++ b/MC_RobotTaskFB.HandleSyncRobotReferenceDynamics
+@@ -214,6 +214,14 @@
+            // invalid sync mode for startup
+            SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite := TRUE );
+  	       END_CASE
++       ELSE
++         // ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
++         IF ( CheckTimeout(_rTimer) = RobotLibraryConstants.OK )
++         THEN
++           AxesGroup.State.DataChanged.ReferenceDynamics := _dataChangedNone.ReferenceDynamics;
++           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
++          _rStep := 0; // -> read the RC data and compare again
++         END_IF
+        END_IF
+      END_IF  
+ 
+```
+
+**MC_RobotTaskFB** · `HandleSyncRobotSWLimits` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncRobotSWLimits
++++ b/MC_RobotTaskFB.HandleSyncRobotSWLimits
+@@ -232,6 +232,14 @@
+            // invalid sync mode for startup
+            SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite := TRUE );
+  	       END_CASE
++       ELSE
++         // ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
++         IF ( CheckTimeout(_rTimer) = RobotLibraryConstants.OK )
++         THEN
++           AxesGroup.State.DataChanged.SwLimits := _dataChangedNone.SwLimits;
++           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
++          _rStep := 0; // -> read the RC data and compare again
++         END_IF
+        END_IF
+      END_IF  
+ 
+```
+
+**MC_RobotTaskFB** · `HandleSyncToolData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncToolData
++++ b/MC_RobotTaskFB.HandleSyncToolData
+@@ -274,6 +274,14 @@
+            // invalid sync mode for startup
+            SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite := TRUE );
+  	       END_CASE
++       ELSE
++         // ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
++         IF ( CheckTimeout(_rTimer) = RobotLibraryConstants.OK )
++         THEN
++           AxesGroup.State.DataChanged.Tool := _dataChangedNone.Tool;
++           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
++          _rStep := 0; // -> read the RC data and compare again
++         END_IF
+        END_IF
+      END_IF  
+ 
+```
+
+**MC_RobotTaskFB** · `HandleSyncWorkArea` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncWorkArea
++++ b/MC_RobotTaskFB.HandleSyncWorkArea
+@@ -274,6 +274,14 @@
+            // invalid sync mode for startup
+            SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite := TRUE );
+  	       END_CASE
++       ELSE
++         // ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
++         IF ( CheckTimeout(_rTimer) = RobotLibraryConstants.OK )
++         THEN
++           AxesGroup.State.DataChanged.WorkArea := _dataChangedNone.WorkArea;
++           SetTimeout(PT := _rTimeout, rTimer := _rTimer);
++          _rStep := 0; // -> read the RC data and compare again
++         END_IF
+        END_IF
+      END_IF  
+ 
+```
+
+### F95
+
+_`MC_RobotTaskFB.HandleSync*` (7 data sets), step 13 - AUTOMATIC after the start-up: the jump back to step 10 was commented out, later changes were never synchronized_
+
+- F95: AUTOMATIC after the start-up: step 13 never jumped back to step 10 (commented out) - after the first synchronization later changes were never synchronized
+
+**MC_RobotTaskFB** · `HandleSyncFrameData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncFrameData
++++ b/MC_RobotTaskFB.HandleSyncFrameData
+@@ -607,7 +607,7 @@
+        // set timeout
+        SetTimeout(PT := _rTimeout, rTimer := _rTimer);
+        // jump back
+-      //_rStep := 10;
++      _rStep := 10; // ST-FIX F95: was commented out
+ 
+ 
+   // ------------------------------------------
+```
+
+**MC_RobotTaskFB** · `HandleSyncLoadData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncLoadData
++++ b/MC_RobotTaskFB.HandleSyncLoadData
+@@ -621,7 +621,7 @@
+        // set timeout
+        SetTimeout(PT := _rTimeout, rTimer := _rTimer);
+        // jump back
+-      //_rStep := 10;
++      _rStep := 10; // ST-FIX F95: was commented out
+ 
+ 
+   // ------------------------------------------
+```
+
+**MC_RobotTaskFB** · `HandleSyncRobotDefaultDynamics` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncRobotDefaultDynamics
++++ b/MC_RobotTaskFB.HandleSyncRobotDefaultDynamics
+@@ -496,7 +496,7 @@
+        // set timeout
+        SetTimeout(PT := _rTimeout, rTimer := _rTimer);
+        // jump back
+-      //_rStep := 10;
++      _rStep := 10; // ST-FIX F95: was commented out
+ 
+ 
+   // ------------------------------------------
+```
+
+**MC_RobotTaskFB** · `HandleSyncRobotReferenceDynamics` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncRobotReferenceDynamics
++++ b/MC_RobotTaskFB.HandleSyncRobotReferenceDynamics
+@@ -496,7 +496,7 @@
+        // set timeout
+        SetTimeout(PT := _rTimeout, rTimer := _rTimer);
+        // jump back
+-      //_rStep := 10;
++      _rStep := 10; // ST-FIX F95: was commented out
+ 
+ 
+   // ------------------------------------------
+```
+
+**MC_RobotTaskFB** · `HandleSyncRobotSWLimits` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncRobotSWLimits
++++ b/MC_RobotTaskFB.HandleSyncRobotSWLimits
+@@ -515,7 +515,7 @@
+        // set timeout
+        SetTimeout(PT := _rTimeout, rTimer := _rTimer);
+        // jump back
+-      //_rStep := 10;
++      _rStep := 10; // ST-FIX F95: was commented out
+ 
+ 
+   // ------------------------------------------
+```
+
+**MC_RobotTaskFB** · `HandleSyncToolData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncToolData
++++ b/MC_RobotTaskFB.HandleSyncToolData
+@@ -607,7 +607,7 @@
+        // set timeout
+        SetTimeout(PT := _rTimeout, rTimer := _rTimer);
+        // jump back
+-      //_rStep := 10;
++      _rStep := 10; // ST-FIX F95: was commented out
+ 
+ 
+   // ------------------------------------------
+```
+
+**MC_RobotTaskFB** · `HandleSyncWorkArea` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncWorkArea
++++ b/MC_RobotTaskFB.HandleSyncWorkArea
+@@ -604,7 +604,7 @@
+        // set timeout
+        SetTimeout(PT := _rTimeout, rTimer := _rTimer);
+        // jump back
+-      //_rStep := 10;
++      _rStep := 10; // ST-FIX F95: was commented out
+ 
+ 
+   // ------------------------------------------
+```
+
+### F96
+
+_`CheckParameterValid` of 26 motion blocks, `REAL_TO_PERCENT_INT/UINT` - rates < 0 other than -1 rejected (16#8401..8404), although the spec defines every value < 0 % as the default; the conversion sent them as garbage (-2 % → 653.36 %)_
+
+- F96: dynamics rates < 0 other than -1 were rejected (ERR_VELOCITY_INVALID ...) - the spec defines every value < 0 % as the default ("<0%: (default)"); the conversion sent them as garbage (-2 -> 653.36 %)
+
+**MC_CreateSplineFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_CreateSplineFB.CheckParameterValid
++++ b/MC_CreateSplineFB.CheckParameterValid
+@@ -349,8 +349,7 @@
+   
+   // Check ParCmd.SplineData[x].VelocityRate valid ? 
+   IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].VelocityRate) = FALSE )  OR
+-      ((                   ParCmd.SplineData[_idx].VelocityRate  <     0 )  AND 
+-       (                   ParCmd.SplineData[_idx].VelocityRate <>    -1 )) OR   
++      (* ST-FIX F96: every value < 0 is the default *)
+        (                   ParCmd.SplineData[_idx].VelocityRate  >   100 ))      
+   THEN
+     // Parameter not valid
+@@ -372,8 +371,7 @@
+   
+   // Check ParCmd.SplineData[x].AccelerationRate valid ? 
+   IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].AccelerationRate) = FALSE )  OR
+-      ((                   ParCmd.SplineData[_idx].AccelerationRate  <     0 )  AND 
+-       (                   ParCmd.SplineData[_idx].AccelerationRate <>    -1 )) OR   
++      (* ST-FIX F96: every value < 0 is the default *)
+        (                   ParCmd.SplineData[_idx].AccelerationRate  >   100 ))      
+   THEN
+     // Parameter not valid
+@@ -395,8 +393,7 @@
+   
+   // Check ParCmd.SplineData[x].DecelerationRate valid ? 
+   IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].DecelerationRate) = FALSE )  OR
+-      ((                   ParCmd.SplineData[_idx].DecelerationRate  <     0 )  AND 
+-       (                   ParCmd.SplineData[_idx].DecelerationRate <>    -1 )) OR   
++      (* ST-FIX F96: every value < 0 is the default *)
+        (                   ParCmd.SplineData[_idx].DecelerationRate  >   100 ))      
+   THEN
+     // Parameter not valid
+@@ -418,8 +415,7 @@
+   
+   // Check ParCmd.SplineData[x].JerkRate valid ? 
+   IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].JerkRate) = FALSE )  OR
+-      ((                   ParCmd.SplineData[_idx].JerkRate  <     0 )  AND 
+-       (                   ParCmd.SplineData[_idx].JerkRate <>    -1 )) OR   
++      (* ST-FIX F96: every value < 0 is the default *)
+        (                   ParCmd.SplineData[_idx].JerkRate  >   100 ))      
+   THEN
+     // Parameter not valid
+```
+
+**MC_DynamicSplineFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_DynamicSplineFB.CheckParameterValid
++++ b/MC_DynamicSplineFB.CheckParameterValid
+@@ -433,8 +433,7 @@
+   
+   // Check ParCmd.SplineData[x].VelocityRate valid ? 
+   IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].VelocityRate) = FALSE )  OR
+-      ((                   ParCmd.SplineData[_idx].VelocityRate  <     0 )  AND 
+-       (                   ParCmd.SplineData[_idx].VelocityRate <>    -1 )) OR   
++      (* ST-FIX F96: every value < 0 is the default *)
+        (                   ParCmd.SplineData[_idx].VelocityRate  >   100 ))      
+   THEN
+     // Parameter not valid
+@@ -456,8 +455,7 @@
+   
+   // Check ParCmd.SplineData[x].AccelerationRate valid ? 
+   IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].AccelerationRate) = FALSE )  OR
+-      ((                   ParCmd.SplineData[_idx].AccelerationRate  <     0 )  AND 
+-       (                   ParCmd.SplineData[_idx].AccelerationRate <>    -1 )) OR   
++      (* ST-FIX F96: every value < 0 is the default *)
+        (                   ParCmd.SplineData[_idx].AccelerationRate  >   100 ))      
+   THEN
+     // Parameter not valid
+@@ -479,8 +477,7 @@
+   
+   // Check ParCmd.SplineData[x].DecelerationRate valid ? 
+   IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].DecelerationRate) = FALSE )  OR
+-      ((                   ParCmd.SplineData[_idx].DecelerationRate  <     0 )  AND 
+-       (                   ParCmd.SplineData[_idx].DecelerationRate <>    -1 )) OR   
++      (* ST-FIX F96: every value < 0 is the default *)
+        (                   ParCmd.SplineData[_idx].DecelerationRate  >   100 ))      
+   THEN
+     // Parameter not valid
+@@ -502,8 +499,7 @@
+   
+   // Check ParCmd.SplineData[x].JerkRate valid ? 
+   IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].JerkRate) = FALSE )  OR
+-      ((                   ParCmd.SplineData[_idx].JerkRate  <     0 )  AND 
+-       (                   ParCmd.SplineData[_idx].JerkRate <>    -1 )) OR   
++      (* ST-FIX F96: every value < 0 is the default *)
+        (                   ParCmd.SplineData[_idx].JerkRate  >   100 ))      
+   THEN
+     // Parameter not valid
+```
+
+**MC_MoveApproachDirectFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveApproachDirectFB.CheckParameterValid
++++ b/MC_MoveApproachDirectFB.CheckParameterValid
+@@ -467,8 +467,7 @@
+ 
+ // Check ParCmd.VelocityRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+-    ((                   ParCmd.VelocityRate  <     0 )  AND 
+-     (                   ParCmd.VelocityRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.VelocityRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -488,8 +487,7 @@
+ 
+ // Check ParCmd.AccelerationRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+-    ((                   ParCmd.AccelerationRate  <     0 )  AND 
+-     (                   ParCmd.AccelerationRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.AccelerationRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -509,8 +507,7 @@
+ 
+ // Check ParCmd.DecelerationRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+-    ((                   ParCmd.DecelerationRate  <     0 )  AND 
+-     (                   ParCmd.DecelerationRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.DecelerationRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -530,8 +527,7 @@
+ 
+ // Check ParCmd.JerkRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+-    ((                   ParCmd.JerkRate  <     0 )  AND 
+-     (                   ParCmd.JerkRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.JerkRate  >   100 ))      
+ THEN
+   // Parameter not valid
+```
+
+**MC_MoveApproachLinearFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveApproachLinearFB.CheckParameterValid
++++ b/MC_MoveApproachLinearFB.CheckParameterValid
+@@ -467,8 +467,7 @@
+ 
+ // Check ParCmd.VelocityRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+-    ((                   ParCmd.VelocityRate  <     0 )  AND 
+-     (                   ParCmd.VelocityRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.VelocityRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -488,8 +487,7 @@
+ 
+ // Check ParCmd.AccelerationRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+-    ((                   ParCmd.AccelerationRate  <     0 )  AND 
+-     (                   ParCmd.AccelerationRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.AccelerationRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -509,8 +507,7 @@
+ 
+ // Check ParCmd.DecelerationRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+-    ((                   ParCmd.DecelerationRate  <     0 )  AND 
+-     (                   ParCmd.DecelerationRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.DecelerationRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -530,8 +527,7 @@
+ 
+ // Check ParCmd.JerkRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+-    ((                   ParCmd.JerkRate  <     0 )  AND 
+-     (                   ParCmd.JerkRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.JerkRate  >   100 ))      
+ THEN
+   // Parameter not valid
+```
+
+**MC_MoveAxesAbsoluteFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveAxesAbsoluteFB.CheckParameterValid
++++ b/MC_MoveAxesAbsoluteFB.CheckParameterValid
+@@ -267,8 +267,7 @@
+ 
+ // Check ParCmd.VelocityRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+-    ((                   ParCmd.VelocityRate  <     0 )  AND 
+-     (                   ParCmd.VelocityRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.VelocityRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -288,8 +287,7 @@
+ 
+ // Check ParCmd.AccelerationRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+-    ((                   ParCmd.AccelerationRate  <     0 )  AND 
+-     (                   ParCmd.AccelerationRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.AccelerationRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -309,8 +307,7 @@
+ 
+ // Check ParCmd.DecelerationRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+-    ((                   ParCmd.DecelerationRate  <     0 )  AND 
+-     (                   ParCmd.DecelerationRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.DecelerationRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -330,8 +327,7 @@
+ 
+ // Check ParCmd.JerkRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+-    ((                   ParCmd.JerkRate  <     0 )  AND 
+-     (                   ParCmd.JerkRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.JerkRate  >   100 ))      
+ THEN
+   // Parameter not valid
+```
+
+Same change (same `-`/`+` lines) in: `MC_MoveAxesRelativeFB`, `MC_MoveCircularAbsoluteFB`, `MC_MoveCircularCamFB`, `MC_MoveCircularRelativeFB`, `MC_MoveDepartDirectFB`, `MC_MoveDepartLinearFB`, `MC_MoveDirectAbsoluteFB`, `MC_MoveDirectOffsetFB`, `MC_MoveDirectRelativeFB`, `MC_MoveLinearAbsoluteFB`, `MC_MoveLinearAbsoluteJFB`, `MC_MoveLinearCamFB`, `MC_MoveLinearOffsetFB`, `MC_MoveLinearRelativeFB`, `MC_MovePickPlaceDirectFB`, `MC_MovePickPlaceLinearFB`, `MC_ReturnToPrimaryFB`, `MC_SearchHardStopFB`, `MC_SearchHardStopJFB`
+
+**MC_MoveSuperImposedDynamicFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveSuperImposedDynamicFB.CheckParameterValid
++++ b/MC_MoveSuperImposedDynamicFB.CheckParameterValid
+@@ -316,8 +316,7 @@
+ 
+ // Check ParCmd.VelocityDiffRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.VelocityDiffRate) = FALSE )  OR
+-    ((                   ParCmd.VelocityDiffRate  <     0 )  AND 
+-     (                   ParCmd.VelocityDiffRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.VelocityDiffRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -337,8 +336,7 @@
+ 
+ // Check ParCmd.AccelerationDiffRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.AccelerationDiffRate) = FALSE )  OR
+-    ((                   ParCmd.AccelerationDiffRate  <     0 )  AND 
+-     (                   ParCmd.AccelerationDiffRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.AccelerationDiffRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -358,8 +356,7 @@
+ 
+ // Check ParCmd.DecelerationDiffRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.DecelerationDiffRate) = FALSE )  OR
+-    ((                   ParCmd.DecelerationDiffRate  <     0 )  AND 
+-     (                   ParCmd.DecelerationDiffRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.DecelerationDiffRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -379,8 +376,7 @@
+ 
+ // Check ParCmd.JerkDiffRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.JerkDiffRate) = FALSE )  OR
+-    ((                   ParCmd.JerkDiffRate  <     0 )  AND 
+-     (                   ParCmd.JerkDiffRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.JerkDiffRate  >   100 ))      
+ THEN
+   // Parameter not valid
+```
+
+**MC_MoveSuperImposedFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveSuperImposedFB.CheckParameterValid
++++ b/MC_MoveSuperImposedFB.CheckParameterValid
+@@ -356,8 +356,7 @@
+ 
+ // Check ParCmd.VelocityDiffRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.VelocityDiffRate) = FALSE )  OR
+-    ((                   ParCmd.VelocityDiffRate  <     0 )  AND 
+-     (                   ParCmd.VelocityDiffRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.VelocityDiffRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -377,8 +376,7 @@
+ 
+ // Check ParCmd.AccelerationDiffRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.AccelerationDiffRate) = FALSE )  OR
+-    ((                   ParCmd.AccelerationDiffRate  <     0 )  AND 
+-     (                   ParCmd.AccelerationDiffRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.AccelerationDiffRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -398,8 +396,7 @@
+ 
+ // Check ParCmd.DecelerationDiffRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.DecelerationDiffRate) = FALSE )  OR
+-    ((                   ParCmd.DecelerationDiffRate  <     0 )  AND 
+-     (                   ParCmd.DecelerationDiffRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.DecelerationDiffRate  >   100 ))      
+ THEN
+   // Parameter not valid
+@@ -419,8 +416,7 @@
+ 
+ // Check ParCmd.JerkDiffRate valid ? 
+ IF  (( SysDepIsValidReal(ParCmd.JerkDiffRate) = FALSE )  OR
+-    ((                   ParCmd.JerkDiffRate  <     0 )  AND 
+-     (                   ParCmd.JerkDiffRate <>    -1 )) OR   
++    (* ST-FIX F96: every value < 0 is the default *)
+      (                   ParCmd.JerkDiffRate  >   100 ))      
+ THEN
+   // Parameter not valid
+```
+
+### F97
+
+_`MC_WriteRobotDefaultDynamicsFB.CheckParameterValid` - rates above 655.35 % sent: they do not fit into the UINT of the telegram and wrapped (655.36 % → 0 %)_
+
+- F97: MC_WriteRobotDefaultDynamicsFB sent rates above 655.35 % (they do not fit into the UINT of the telegram and wrapped, 655.36 % -> 0 %) - now ERR_VELOCITY_INVALID ... ERR_JERK_INVALID
+
+**MC_WriteRobotDefaultDynamicsFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_WriteRobotDefaultDynamicsFB.CheckParameterValid
++++ b/MC_WriteRobotDefaultDynamicsFB.CheckParameterValid
+@@ -2,7 +2,8 @@
+ 
+ 
+ // Check ParCmd.DynamicValues.VelocityRate ? 
+-IF ( SysDepIsValidReal(ParCmd.DynamicValues.VelocityRate) = FALSE ) 
++IF (( SysDepIsValidReal(ParCmd.DynamicValues.VelocityRate) = FALSE ) OR
++    ( ParCmd.DynamicValues.VelocityRate > 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram 
+ THEN
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+```
+
+**MC_WriteRobotDefaultDynamicsFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_WriteRobotDefaultDynamicsFB.CheckParameterValid
++++ b/MC_WriteRobotDefaultDynamicsFB.CheckParameterValid
+@@ -23,7 +23,8 @@
+ 
+ 
+ // Check ParCmd.DynamicValues.AccelerationRate ? 
+-IF ( SysDepIsValidReal(ParCmd.DynamicValues.AccelerationRate) = FALSE ) 
++IF (( SysDepIsValidReal(ParCmd.DynamicValues.AccelerationRate) = FALSE ) OR
++    ( ParCmd.DynamicValues.AccelerationRate > 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram 
+ THEN
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+```
+
+**MC_WriteRobotDefaultDynamicsFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_WriteRobotDefaultDynamicsFB.CheckParameterValid
++++ b/MC_WriteRobotDefaultDynamicsFB.CheckParameterValid
+@@ -44,7 +44,8 @@
+ 
+ 
+ // Check ParCmd.DynamicValues.DecelerationRate ? 
+-IF ( SysDepIsValidReal(ParCmd.DynamicValues.DecelerationRate) = FALSE ) 
++IF (( SysDepIsValidReal(ParCmd.DynamicValues.DecelerationRate) = FALSE ) OR
++    ( ParCmd.DynamicValues.DecelerationRate > 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram 
+ THEN
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+```
+
+**MC_WriteRobotDefaultDynamicsFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_WriteRobotDefaultDynamicsFB.CheckParameterValid
++++ b/MC_WriteRobotDefaultDynamicsFB.CheckParameterValid
+@@ -65,7 +65,8 @@
+ 
+ 
+ // Check ParCmd.DynamicValues.JerkRate ? 
+-IF ( SysDepIsValidReal(ParCmd.DynamicValues.JerkRate) = FALSE ) 
++IF (( SysDepIsValidReal(ParCmd.DynamicValues.JerkRate) = FALSE ) OR
++    ( ParCmd.DynamicValues.JerkRate > 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram 
+ THEN
+   // Parameter not valid
+   CheckParameterValid := FALSE;
+```
+
+### F98
+
+_`CheckParameterValid` of 44 blocks with `ToolNo` / `FrameNo` / `LoadNo` - a number outside -1..254 (e.g. 255) reported as not available on the RC (16#8413 / 16#8415 / `ERR_LOADNO_UNAVAILABLE`)_
+
+- F98: ToolNo / FrameNo / LoadNo outside -1..254 (e.g. 255) were reported as not available on the RC (16#8413 / 16#8415 / ERR_LOADNO_UNAVAILABLE) instead of 16#8412 / 16#8414 / 16#8418 (table 7-1)
+
+**MC_CalculateCartesianPositionFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_CalculateCartesianPositionFB.CheckParameterValid
++++ b/MC_CalculateCartesianPositionFB.CheckParameterValid
+@@ -304,7 +304,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check FrameNo available on RC ? 
+-  IF ( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex )
++  IF (( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex ) AND ( ParCmd.FrameNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_FRAMENO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+**MC_CalculateFrameFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_CalculateFrameFB.CheckParameterValid
++++ b/MC_CalculateFrameFB.CheckParameterValid
+@@ -30,7 +30,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check FrameNo available on RC ? 
+-  IF ( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex )
++  IF (( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex ) AND ( ParCmd.FrameNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_FRAMENO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+**MC_ReadFrameDataFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ReadFrameDataFB.CheckParameterValid
++++ b/MC_ReadFrameDataFB.CheckParameterValid
+@@ -10,7 +10,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check FrameNo available on RC ? 
+-  IF ( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex )
++  IF (( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex ) AND ( ParCmd.FrameNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_FRAMENO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+Same change (same `-`/`+` lines) in: `MC_RedefineTrackingPosFB`, `MC_ShiftPositionFB`, `MC_SyncToConveyorFB`, `MC_WriteFrameDataFB`
+
+**MC_CalculateForwardKinematicFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_CalculateForwardKinematicFB.CheckParameterValid
++++ b/MC_CalculateForwardKinematicFB.CheckParameterValid
+@@ -238,7 +238,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check ToolNo available on RC ? 
+-  IF ( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex )
++  IF (( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex ) AND ( ParCmd.ToolNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TOOLNO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+@@ -266,7 +266,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check FrameNo available on RC ? 
+-  IF ( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex )
++  IF (( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex ) AND ( ParCmd.FrameNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_FRAMENO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+**MC_CalculateInverseKinematicFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_CalculateInverseKinematicFB.CheckParameterValid
++++ b/MC_CalculateInverseKinematicFB.CheckParameterValid
+@@ -304,7 +304,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check ToolNo available on RC ? 
+-  IF ( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex )
++  IF (( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex ) AND ( ParCmd.ToolNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TOOLNO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+@@ -332,7 +332,7 @@
+   CheckParameterValid := FALSE;
+ 
+   // Check FrameNo available on RC ? 
+-  IF ( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex )
++  IF (( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex ) AND ( ParCmd.FrameNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_FRAMENO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+**MC_CalculateToolFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_CalculateToolFB.CheckParameterValid
++++ b/MC_CalculateToolFB.CheckParameterValid
+@@ -35,7 +35,7 @@
+   CheckParameterValid := FALSE;
+ 
+   // Check ToolNo available on RC ? 
+-  IF ( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex )
++  IF (( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex ) AND ( ParCmd.ToolNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TOOLNO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+@@ -63,7 +63,7 @@
+   CheckParameterValid := FALSE;
+ 
+   // Check FrameNo available on RC ? 
+-  IF ( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex )
++  IF (( ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex ) AND ( ParCmd.FrameNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_FRAMENO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+Same change (same `-`/`+` lines) in: `MC_ForceControlFB`, `MC_ForceLimitFB`, `MC_GroupJogFB`, `MC_MoveApproachDirectFB`, `MC_MoveApproachLinearFB`, `MC_MoveCircularAbsoluteFB`, `MC_MoveCircularCamFB`, `MC_MoveCircularRelativeFB`, `MC_MoveDepartDirectFB`, `MC_MoveDepartLinearFB`, `MC_MoveDirectAbsoluteFB`, `MC_MoveDirectOffsetFB`, `MC_MoveDirectRelativeFB`, `MC_MoveLinearAbsoluteFB`, `MC_MoveLinearCamFB`, `MC_MoveLinearOffsetFB`, `MC_MoveLinearRelativeFB`, `MC_MovePickPlaceDirectFB`, `MC_MovePickPlaceLinearFB`, `MC_MoveSuperImposedDynamicFB`, `MC_MoveSuperImposedFB`, `MC_ReadActualForceFB`, `MC_ReadActualPositionCyclicFB`, `MC_ReadActualPositionFB`, `MC_ReadActualTCPVelocityFB`, `MC_ReturnToPrimaryFB`, `MC_SearchHardStopFB`
+
+**MC_MoveAxesAbsoluteFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveAxesAbsoluteFB.CheckParameterValid
++++ b/MC_MoveAxesAbsoluteFB.CheckParameterValid
+@@ -355,7 +355,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check ToolNo available on RC ? 
+-  IF ( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex )
++  IF (( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex ) AND ( ParCmd.ToolNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TOOLNO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+**MC_MoveAxesRelativeFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveAxesRelativeFB.CheckParameterValid
++++ b/MC_MoveAxesRelativeFB.CheckParameterValid
+@@ -355,7 +355,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check ToolNo available on RC ? 
+-  IF ( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex )
++  IF (( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex ) AND ( ParCmd.ToolNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TOOLNO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+**MC_MoveLinearAbsoluteJFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_MoveLinearAbsoluteJFB.CheckParameterValid
++++ b/MC_MoveLinearAbsoluteJFB.CheckParameterValid
+@@ -355,7 +355,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check ToolNo available on RC ? 
+-  IF ( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex )
++  IF (( ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex ) AND ( ParCmd.ToolNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_TOOLNO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+Same change (same `-`/`+` lines) in: `MC_ReadToolDataFB`, `MC_WriteToolDataFB`
+
+**MC_ReadLoadDataFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ReadLoadDataFB.CheckParameterValid
++++ b/MC_ReadLoadDataFB.CheckParameterValid
+@@ -11,7 +11,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check LoadNo available on RC ? 
+-  IF ( ParCmd.LoadNo > AxesGroup.State.ConfigurationData.HighestLoadIndex )
++  IF (( ParCmd.LoadNo > AxesGroup.State.ConfigurationData.HighestLoadIndex ) AND ( ParCmd.LoadNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LOADNO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+**MC_WriteLoadDataFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_WriteLoadDataFB.CheckParameterValid
++++ b/MC_WriteLoadDataFB.CheckParameterValid
+@@ -68,7 +68,7 @@
+   CheckParameterValid := FALSE;
+   
+   // Check LoadNo available on RC ? 
+-  IF ( ParCmd.LoadNo > AxesGroup.State.ConfigurationData.HighestLoadIndex )
++  IF (( ParCmd.LoadNo > AxesGroup.State.ConfigurationData.HighestLoadIndex ) AND ( ParCmd.LoadNo <= 254 )) // ST-FIX F98: outside -1..254 is a range error
+   THEN
+     SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_LOADNO_UNAVAILABLE, Overwrite := TRUE );
+   ELSE
+```
+
+### F99
+
+_`MC_ReturnToPrimaryFB.CheckParameterValid` - `TrajectoryMode` 0 (Invalid, the default) accepted and sent as linear movement_
+
+- F99: MC_ReturnToPrimaryFB accepted TrajectoryMode 0 (Invalid, the default) and sent it as linear movement - the user must choose linear or PTP (6.3.11), now ERR_TRAJECTORYMODE_INVALID
+
+**MC_ReturnToPrimaryFB** · `CheckParameterValid` · patch
+
+```diff
+--- a/MC_ReturnToPrimaryFB.CheckParameterValid
++++ b/MC_ReturnToPrimaryFB.CheckParameterValid
+@@ -174,8 +174,7 @@
+ 
+ 
+ // Check ParCmd.TrajectoryMode valid ? 
+-IF (( ParCmd.TrajectoryMode <> TrajectoryMode.INVALID         ) AND   
+-    ( ParCmd.TrajectoryMode <> TrajectoryMode.LINEAR_MOVEMENT ) AND
++IF ((* ST-FIX F99: INVALID (0) is not allowed *) ( ParCmd.TrajectoryMode <> TrajectoryMode.LINEAR_MOVEMENT ) AND
+     ( ParCmd.TrajectoryMode <> TrajectoryMode.PTP_MOVEMENT    ))
+ THEN
+   // Parameter not valid
+```
+
 ## Data types
 
 Change the DUTs / enums / constants of the library:
@@ -9521,6 +10594,20 @@ for optional ones (the ST code sends −100 otherwise). Reference: `Misc.py`.
  // REAL_TO_PERCENT_INT (same in REAL_TO_PERCENT_UINT)
 -IF ( Value = -1.0)  AND (IsOptional)// 16#FFFF for not supported values
 +IF ( Value = -1.0 ) // ST-FIX F41: -1.0 = use the default (also for not optional parameters)
+ THEN
+```
+
+### F96
+
+`REAL_TO_PERCENT_INT`, `REAL_TO_PERCENT_UINT` – the spec defines **every** value < 0 % as the
+default ("<0%: (default)"), not only −1.0; −2.0 was sent as 65336 (653.36 %). Together with the
+generated changes of `CheckParameterValid` (below) every negative rate is accepted and sent as
+16#FFFF. Reference: `Misc.py`.
+
+```diff
+ // REAL_TO_PERCENT_INT (same in REAL_TO_PERCENT_UINT)
+-IF ( Value = -1.0 ) // ST-FIX F41: -1.0 = use the default (also for not optional parameters)
++IF ( Value < 0.0 ) // ST-FIX F41/F96: every value < 0 = use the default (also for not optional parameters)
  THEN
 ```
 

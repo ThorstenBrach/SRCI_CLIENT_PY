@@ -229,6 +229,7 @@ GEN05_MANDATORY = {
     "MC_WriteToolDataFB": "ToolNo (tool 0 = flange cannot be written)",
     "MC_WriteRobotSWLimitsFB": "limits (0/0 for all axes)",
     "MC_CreateSplineFB": "SplineData (at least one point)",
+    "MC_ReturnToPrimaryFB": "TrajectoryMode (0 = invalid is the default, spec 6.3.11; ST-FIX F99)",
 }
 GEN05_KNOWN = {
     "MC_ActivateConveyorTrackingFB": "precondition: the RC reports ConveyorTrackingEnabled",

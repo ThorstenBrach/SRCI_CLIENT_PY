@@ -76,7 +76,7 @@ from srci.fb import (
 from srci.iec.rt import copy_into
 from srci.logging_bridge import PythonLogger
 from srci.transport import Transport
-from srci.types import AbortingMode, JogMode, MessageLevel, SequenceFlag, Severity
+from srci.types import AbortingMode, JogMode, MessageLevel, SequenceFlag, Severity, TrajectoryMode
 
 TELEGRAM_LENGTH = 256  # bytes per direction, must match the gateway / robot configuration
 TOOL = 1  # tool of all motions (index 0 = flange is fixed on the RC)
@@ -331,6 +331,7 @@ def demo_interrupt_jog_return_continue(client: SrciClient) -> None:
     # back to the position where the primary sequence was interrupted
     rtp = MC_ReturnToPrimaryFB()
     rtp.ParCmd.ToolNo = TOOL  # tool of the interrupted motion, else the RC refuses (16#8C26)
+    rtp.ParCmd.TrajectoryMode = TrajectoryMode.LINEAR_MOVEMENT  # linear or PTP, 0 is invalid
     client.add(rtp, Enable=True)  # Enable-type: moves while Enable = TRUE, Done at the position
     client.run_until(lambda: rtp.Done or rtp.Error, 30.0, "ReturnToPrimary")
     show("ReturnToPrimary.Progress [%]", rtp.OutCmd.Progress)

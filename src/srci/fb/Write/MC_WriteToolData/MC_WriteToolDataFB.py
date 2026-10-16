@@ -216,7 +216,8 @@ class MC_WriteToolDataFB(RobotLibraryBaseExecuteFB):
             CheckParameterValid = False
 
             # Check ToolNo available on RC ?
-            if self.ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex:
+            # ST-FIX F98: outside -1..254 is a range error
+            if self.ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex and self.ParCmd.ToolNo <= 254:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TOOLNO_UNAVAILABLE, Overwrite=True)
             else:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TOOLNO_RANGE, Overwrite=True)

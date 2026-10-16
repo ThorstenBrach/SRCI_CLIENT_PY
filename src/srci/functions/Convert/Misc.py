@@ -365,16 +365,17 @@ def REAL_TO_PERCENT_INT(Value: float, IsOptional: bool = False) -> int:
 
     ST-FIX F41: -1.0 ("<0 %: use the default", spec 5.x robot dynamics) is sent as 16#FFFF also
     for parameters that are not optional (ST: only with IsOptional -> -100 was sent).
+    ST-FIX F96: every value < 0 is the default (spec "<0%: (default)"), not only -1.0.
     """
-    if Value == -1.0:
+    if Value < 0.0:
         return -1  # UINT_TO_INT(16#FFFF)
     return _round_iec(Value * _FACTOR)
 
 
 # ST-Source: Functions/Convert/Misc/REAL_TO_PERCENT_UINT.st  sha256: 7e323e4b10da806a
 def REAL_TO_PERCENT_UINT(Value: float, IsOptional: bool = False) -> int:
-    """Percent value -> UINT with factor 100; -1.0 -> 16#FFFF (ST-FIX F41, see REAL_TO_PERCENT_INT)."""
-    if Value == -1.0:
+    """Percent value -> UINT with factor 100; < 0 -> 16#FFFF (ST-FIX F41/F96, see REAL_TO_PERCENT_INT)."""
+    if Value < 0.0:
         return 0xFFFF
     return _round_iec(Value * _FACTOR) & 0xFFFF  # REAL_TO_UINT: out-of-range values wrap like on the PLC
 

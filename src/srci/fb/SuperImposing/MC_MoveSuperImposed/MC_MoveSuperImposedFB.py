@@ -375,7 +375,8 @@ class MC_MoveSuperImposedFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.VelocityDiffRate valid ?
-        if (SysDepIsValidReal(Value=self.ParCmd.VelocityDiffRate) == False or (self.ParCmd.VelocityDiffRate < 0 and self.ParCmd.VelocityDiffRate != -1)) or self.ParCmd.VelocityDiffRate > 100:
+        # ST-FIX F96: every value < 0 is the default
+        if SysDepIsValidReal(Value=self.ParCmd.VelocityDiffRate) == False or self.ParCmd.VelocityDiffRate > 100:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -385,7 +386,8 @@ class MC_MoveSuperImposedFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.AccelerationDiffRate valid ?
-        if (SysDepIsValidReal(Value=self.ParCmd.AccelerationDiffRate) == False or (self.ParCmd.AccelerationDiffRate < 0 and self.ParCmd.AccelerationDiffRate != -1)) or self.ParCmd.AccelerationDiffRate > 100:
+        # ST-FIX F96: every value < 0 is the default
+        if SysDepIsValidReal(Value=self.ParCmd.AccelerationDiffRate) == False or self.ParCmd.AccelerationDiffRate > 100:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -395,7 +397,8 @@ class MC_MoveSuperImposedFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.DecelerationDiffRate valid ?
-        if (SysDepIsValidReal(Value=self.ParCmd.DecelerationDiffRate) == False or (self.ParCmd.DecelerationDiffRate < 0 and self.ParCmd.DecelerationDiffRate != -1)) or self.ParCmd.DecelerationDiffRate > 100:
+        # ST-FIX F96: every value < 0 is the default
+        if SysDepIsValidReal(Value=self.ParCmd.DecelerationDiffRate) == False or self.ParCmd.DecelerationDiffRate > 100:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -405,7 +408,8 @@ class MC_MoveSuperImposedFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.JerkDiffRate valid ?
-        if (SysDepIsValidReal(Value=self.ParCmd.JerkDiffRate) == False or (self.ParCmd.JerkDiffRate < 0 and self.ParCmd.JerkDiffRate != -1)) or self.ParCmd.JerkDiffRate > 100:
+        # ST-FIX F96: every value < 0 is the default
+        if SysDepIsValidReal(Value=self.ParCmd.JerkDiffRate) == False or self.ParCmd.JerkDiffRate > 100:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -420,7 +424,8 @@ class MC_MoveSuperImposedFB(RobotLibraryBaseExecuteFB):
             CheckParameterValid = False
 
             # Check ToolNo available on RC ?
-            if self.ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex:
+            # ST-FIX F98: outside -1..254 is a range error
+            if self.ParCmd.ToolNo > AxesGroup.State.ConfigurationData.HighestToolIndex and self.ParCmd.ToolNo <= 254:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TOOLNO_UNAVAILABLE, Overwrite=True)
             else:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TOOLNO_RANGE, Overwrite=True)
@@ -435,7 +440,8 @@ class MC_MoveSuperImposedFB(RobotLibraryBaseExecuteFB):
             CheckParameterValid = False
 
             # Check FrameNo available on RC ?
-            if self.ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex:
+            # ST-FIX F98: outside -1..254 is a range error
+            if self.ParCmd.FrameNo > AxesGroup.State.ConfigurationData.HighestFrameIndex and self.ParCmd.FrameNo <= 254:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_FRAMENO_UNAVAILABLE, Overwrite=True)
             else:
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_FRAMENO_RANGE, Overwrite=True)

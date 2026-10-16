@@ -25,6 +25,8 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-BIL](#sdk-bil) | Bilateral tests: client payload decoded by the SDK and back | 2 | 224 |
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 32 | 33 |
+| [SDK-RANGE](#sdk-range) | Ranges of the command parameters against the SDK | 15 | 47 |
+| [SDK-SYNC](#sdk-sync) | Synchronization of the user data against the SDK | 17 | 103 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 14 | 17 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 42 | 70 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
@@ -38,7 +40,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **389** | **3712** |
+| | **Total** | **421** | **3862** |
 
 ## Test methodology
 
@@ -149,6 +151,52 @@ Core function blocks against the SDK
 | SDK-CORE-030 | ST-FIX F56: 600 commands one after the other (more than 255 telegram sequences): every command gets its response. | 1 | `test_sequence_number_overflow` |
 | SDK-CORE-031 | ST-FIX F59: the position is updated also when the motion uses another tool than the one of the requested coordinate system (the ST compared the *currently used* tool with the request). | 1 | `test_read_actual_position_cyclic_with_tool` |
 | SDK-CORE-032 | After GroupStop (and GroupReset) the next motion runs again. | 2 | `test_motion_after_group_stop` |
+
+## SDK-RANGE
+
+Ranges of the command parameters against the SDK
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| SDK-RANGE-001 | A number outside -1..254 is a range error of the client (table 7-1), nothing is sent (ST-FIX F98). | 12 | `test_number_outside_the_range` |
+| SDK-RANGE-002 | A number within -1..254 above the highest index of the RC is not available on the RC, nothing is sent. | 6 | `test_number_not_available_on_the_rc` |
+| SDK-RANGE-003 | The same instance first with an invalid, then with a valid number: Done, the error is gone. | 6 | `test_valid_number_after_an_invalid_one` |
+| SDK-RANGE-004 | Motion commands check ToolNo / FrameNo the same way (range before availability, ST-FIX F98). | 1 | `test_tool_number_of_a_motion_outside_the_range` |
+| SDK-RANGE-005 | Every rate < 0 is the default ("<0%: (default)", e.g. | 4 | `test_negative_rate_of_a_motion_is_the_default` |
+| SDK-RANGE-006 | A rate above 100 % of a motion is rejected by the client, nothing is sent. | 4 | `test_rate_of_a_motion_above_100` |
+| SDK-RANGE-007 | A default rate above 655.35 % does not fit into the telegram (UINT * 100): client error (ST-FIX F97). | 4 | `test_default_dynamics_rate_too_large_for_the_telegram` |
+| SDK-RANGE-008 | Default rates above 100 % are allowed by the spec (6.2.14): the client sends them, the RC decides. | 1 | `test_default_dynamics_above_100_is_sent` |
+| SDK-RANGE-009 | A negative default rate keeps the current value of the RC (6.2.14), also other values than -1. | 1 | `test_default_dynamics_negative_rate_keeps_the_value` |
+| SDK-RANGE-010 | Written twice with different values: the read back shows the values of the second write. | 1 | `test_default_dynamics_written_twice` |
+| SDK-RANGE-011 | ChangeSpeedOverride outside 0..100 %: 16#8410, nothing is sent, the override of the RC stays. | 3 | `test_override_outside_the_range` |
+| SDK-RANGE-012 | ChangeSpeedOverride 0 % is valid: Done, the override of the RC is 0. | 1 | `test_override_zero` |
+| SDK-RANGE-013 | TrajectoryMode 0 (Invalid, the default) is rejected with 16#8409 (6.3.11, ST-FIX F99). | 1 | `test_return_to_primary_without_trajectory_mode` |
+| SDK-RANGE-014 | WriteLoadData with every field set to a distinct value: ReadLoadData returns every field unchanged. | 1 | `test_load_data_round_trip` |
+| SDK-RANGE-015 | WriteRobotReferenceDynamics with distinct values: ReadRobotReferenceDynamics returns exactly these. | 1 | `test_reference_dynamics_round_trip` |
+
+## SDK-SYNC
+
+Synchronization of the user data against the SDK
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| SDK-SYNC-001 | CLIENT_TO_SERVER after the start-up: a change on the PLC is written to the RC; Synchronized drops and comes back. | 6 | `test_change_after_start_up_client_to_server` |
+| SDK-SYNC-002 | SERVER_TO_CLIENT after the start-up: a change on the PLC is overwritten with the data of the RC. | 6 | `test_change_after_start_up_server_to_client` |
+| SDK-SYNC-003 | AUTOMATIC after the start-up: a change on the PLC (the most recent change) is written to the RC. | 6 | `test_change_after_start_up_automatic` |
+| SDK-SYNC-004 | NO_SYNCHRONIZATION after the start-up: nothing is transferred, but the change is detected (Synchronized FALSE). | 6 | `test_change_after_start_up_without_synchronization` |
+| SDK-SYNC-005 | A data set disabled for synchronization (NO_SYNCHRONIZATION during and after the start-up) is not compared. | 1 | `test_change_of_a_data_set_without_synchronization` |
+| SDK-SYNC-006 | AUTOMATIC is not available during the start-up (table 5-109): the RobotTask rejects the configuration. | 6 | `test_automatic_during_start_up_is_rejected` |
+| SDK-SYNC-007 | An undefined synchronization mode (7) is rejected with ERR_SYNC_MODE_INVALID and the warning of the data set. | 12 | `test_undefined_sync_mode_is_rejected` |
+| SDK-SYNC-008 | A synchronization mode changed while the RobotTask runs is reported (info) and only used after a restart. | 24 | `test_sync_mode_changed_while_running` |
+| SDK-SYNC-009 | SERVER_TO_CLIENT during the start-up: different PLC data are overwritten with the RC data, then Synchronized. | 6 | `test_start_up_conflict_server_to_client` |
+| SDK-SYNC-010 | CLIENT_TO_SERVER during the start-up: different PLC data are written to the RC, then Synchronized. | 6 | `test_start_up_conflict_client_to_server` |
+| SDK-SYNC-011 | Start-up conflict with user interaction: warning, not synchronized until the user writes or reads the data. | 12 | `test_start_up_conflict_with_user_interaction` |
+| SDK-SYNC-012 | A changed start-up mode is only used at the next start-up: no transfer, no error or warning while running. | 1 | `test_sync_mode_during_start_up_changed_while_running` |
+| SDK-SYNC-013 | Synchronization deactivated for all data sets: initialized, but never synchronized (spec 5.6.7.3). | 1 | `test_all_data_sets_disabled` |
+| SDK-SYNC-014 | All data sets CLIENT_TO_SERVER: changed together after the start-up, every set is written once. | 1 | `test_all_data_sets_changed_together` |
+| SDK-SYNC-015 | The RC has more tools / frames / loads (20) than the PLC array (10): error, no synchronization (5.6.7.5.1). | 3 | `test_more_elements_on_the_rc_than_on_the_plc` |
+| SDK-SYNC-016 | The PLC array (30) is longer than on the RC (20): only the elements of the RC are read (5.6.7.5.2). | 3 | `test_more_elements_on_the_plc_than_on_the_rc` |
+| SDK-SYNC-017 | An undefined SyncReaction (table 5-108) is rejected by the client: error, the configuration is not sent. | 3 | `test_undefined_sync_reaction_is_rejected` |
 
 ## SDK-RT
 

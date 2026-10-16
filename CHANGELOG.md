@@ -87,6 +87,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - ST-FIX F90: `MC_MeasuringInputFB` shows `OutCmd.MeasuringID` already while the measurement is active
  - ST-FIX F91: `MC_WriteAnalogOutputFB` rejects `Index` 0 (1..32)
  - ST-FIX F92: `MC_UnitMeasurementFB` reports an invalid `MeasuringMode` as `ERR_INVALID_PAR_CMD`
+ - ST-FIX F93: synchronization NO_SYNCHRONIZATION after the start-up detects changed data (`InSync`,
+   `Synchronized` FALSE) without transferring them
+ - ST-FIX F94: a start-up conflict with `SyncUserInteraction` is resolved by a write / read of the user
+   (the RobotTask reads the RC data again after every sync timeout)
+ - ST-FIX F95: synchronization AUTOMATIC after the start-up keeps watching for changes (step 13 jumps back)
+ - ST-FIX F96: every negative dynamics rate is the default (sent as 16#FFFF), not only -1
+ - ST-FIX F97: `MC_WriteRobotDefaultDynamicsFB` rejects rates above 655.35 % (do not fit into the telegram)
+ - ST-FIX F98: `ToolNo` / `FrameNo` / `LoadNo` outside -1..254 is a range error (16#8412 / 16#8414 / 16#8418)
+ - ST-FIX F99: `MC_ReturnToPrimaryFB` rejects `TrajectoryMode` 0 (Invalid) with 16#8409 - set
+   `TrajectoryMode` to `LINEAR_MOVEMENT` or `PTP_MOVEMENT`
+ - Tests `tests/sdk/test_parameter_ranges.py` (area SDK-RANGE): parameter ranges against the SDK
+ - Tests `tests/sdk/test_sync.py` (area SDK-SYNC): synchronization of the user data against the SDK
  - `tools.sdk_custom_report` accepts a CUSTOM block that keeps the original SDK code as a comment
    (BEGIN opens the comment, END closes it)
 
