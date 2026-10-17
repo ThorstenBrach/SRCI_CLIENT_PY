@@ -32,15 +32,11 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from .model import (
-    ArrayRef,
-    DerivedRef,
-    ElemRef,
     EnumValueDef,
     FieldDef,
     InitValue,
     Library,
     SimpleValue,
-    StructValue,
     TypeRef,
 )
 
@@ -87,36 +83,7 @@ def _matches(pattern: str, name: str) -> bool:
     return name == pattern
 
 
-_F41 = (
-    "ST-FIX F41: spec 5.x robot dynamics parameter: '<0 %: use default' (default); the library "
-    "had 0.0 = internal minimal value (the RC rejects 0 for DecelerationRate/JerkRate)"
-)
-FIELD_OVERRIDES: tuple[FieldOverride, ...] = (
-    *(
-        FieldOverride("*ParCmd", rate, SimpleValue("-1.0"), _F41)
-        for rate in ("VelocityRate", "AccelerationRate", "DecelerationRate", "JerkRate")
-    ),
-    FieldOverride(
-        "ExchangeConfigurationParCmd",
-        "LifeSignTimeOut",
-        SimpleValue("50"),
-        "ST-FIX F44: spec 5.6.6: LifeSignTimeOut default 50 ms (min 10 ms); the library had 0 (invalid)",
-    ),
-    FieldOverride(
-        "StopSubprogramOutCmd",
-        "OriginID",
-        None,
-        "ST-FIX F46: comment missing",
-        doc="OriginID of the stopped subprogram (spec 5.5.12.4 EmitterID, ListenerID, FollowID and OriginID)",
-    ),
-    FieldOverride(
-        "ReadRobotDataOutCmd",
-        "RCInterpreterVersion",
-        None,
-        "ST-FIX F46: comment missing",
-        doc="Version of the server implementation in the format X.X.X (spec table 6-18)",
-    ),
-)
+FIELD_OVERRIDES: tuple[FieldOverride, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -131,75 +98,7 @@ class FieldAdd:
     after: str | None = None  # None: at the end
 
 
-FIELD_ADDS: tuple[FieldAdd, ...] = (
-    FieldAdd(
-        "AlarmMessage",
-        "AcrID",
-        ElemRef("UINT"),
-        "Entry in the ACR of the command from which the message originated (0: no command)",
-        "ST-FIX F74: spec 5.5.11 Fig. 5-137",
-        after="MessageCode",
-    ),
-    FieldAdd(
-        "AlarmMessage",
-        "CmdType",
-        ElemRef("UINT"),
-        "Type of the command from which the message originated (0: no command)",
-        "ST-FIX F74: spec 5.5.11 Fig. 5-137",
-        after="AcrID",
-    ),
-    FieldAdd(
-        "GroupStopRecvData",
-        "AbortedSequence",
-        ElemRef("SINT"),
-        "Sequence whose commands were aborted",
-        "ST-FIX F32: byte 4 of the response (spec GroupStop)",
-    ),
-    FieldAdd(
-        "CallSubprogramOutCmd",
-        "Progress",
-        ElemRef("UINT"),
-        "Progress of the subprogram [%] (spec output Progress)",
-        "ST-FIX F45",
-    ),
-    FieldAdd(
-        "SetTriggerLimitOutCmd",
-        "Data",
-        ArrayRef("0", "11", ElemRef("REAL")),
-        "Actual values of the monitored data (spec output Data)",
-        "ST-FIX F45",
-    ),
-    FieldAdd(
-        "ExchangeConfigurationRecvData",
-        "NumberOfServerLogs",
-        ElemRef("UINT"),
-        "Number of server log entries",
-        "ST-FIX F32: bytes 28..29 of the response",
-    ),
-    FieldAdd(
-        "ExchangeConfigurationOutCmd",
-        "NumberOfServerLogs",
-        ElemRef("UINT"),
-        "Number of server log entries",
-        "ST-FIX F32",
-    ),
-    FieldAdd(
-        "AxesGroupCyclicOptionalDataCartesianPosition",
-        "CurrentCoordinateSystem",
-        DerivedRef("RobotCoordinateSystemParameters"),
-        "Tool and frame currently used by the RC (bytes 36..37 of the optional cyclic Cartesian position)",
-        "ST-FIX F59: CoordinateSystem is the tool/frame of the returned position (bytes 34..35), "
-        "the currently used tool/frame needs an own field (spec table 5-89, 6.1.6)",
-        after="CoordinateSystem",
-    ),
-    FieldAdd(
-        "ReadRobotSWLimitsOutCmd",
-        "DataChanged",
-        ElemRef("BOOL"),
-        "The limits were changed on the RC since the last synchronization",
-        "ST-FIX F32: byte 106 of the response",
-    ),
-)
+FIELD_ADDS: tuple[FieldAdd, ...] = ()
 
 
 def apply_field_adds(lib: Library, adds: tuple[FieldAdd, ...] = FIELD_ADDS) -> None:
@@ -244,169 +143,16 @@ def apply_field_overrides(lib: Library, overrides: tuple[FieldOverride, ...] = F
 
 
 # F35: command types of the PLC library that contradict the specification V1.5.9
-ENUM_OVERRIDES: tuple[EnumOverride, ...] = (
-    EnumOverride("CmdType", "MoveCircularAbsolute", 2106, "F35: spec 6.3.13 Type 2106 (library 2109)"),
-    EnumOverride("CmdType", "MoveCircularRelative", 2107, "F35: spec Type 2107 (library 2106)"),
-    EnumOverride(
-        "CmdType", "MoveLinearAbsoluteJ", 2109, "F35: spec 6.3.12 Type 2109 (missing in the library)"
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_EMITTERID_EQUALS_LISTENERID",
-        0x8D52,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_EMITTERID_INCOMPATIBLE_ACTION",
-        0x8D53,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_TRIGGER_MODE_UNKNOWN",
-        0x8D54,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_BIT_INDEX_OUT_OF_RANGE",
-        0x8D55,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_LISTENERID_INCOMPATIBLE_TRIGGER",
-        0x8D56,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_TRIGGER_PARAMETER_OUT_OF_RANGE",
-        0x8D57,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_TRIGGER_START_BEHIND_END",
-        0x8D58,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_TRIGGER_ERROR_MODE_UNKNOWN",
-        0x8D59,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_REACTION_MODE_UNKNOWN",
-        0x8D60,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_LOAD_IX_OUT_OF_RANGE",
-        0x8D89,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_LOAD_IY_OUT_OF_RANGE",
-        0x8D90,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_LOAD_IZ_OUT_OF_RANGE",
-        0x8D91,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_LOAD_RX_OUT_OF_RANGE",
-        0x8D92,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_LOAD_RY_OUT_OF_RANGE",
-        0x8D93,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_LOAD_RZ_OUT_OF_RANGE",
-        0x8D94,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_SERVER_LOG_ID_UNKNOWN",
-        0x8D95,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_SERVER_LOG_START_LINE_UNKNOWN",
-        0x8D96,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_SERVER_LOG_CONTEXT_FILTER_UNKNOWN",
-        0x8D97,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_INVALID_PARAM_CIRCMODE_UNKNOWN",
-        0x8D98,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_OPTIONAL_PARAM_EXTERNAL_TCP_NOT_SUPPORTED",
-        0x8E22,
-        "F75: table 7-1 (missing in the library)",
-    ),
-    EnumOverride("RobotLibraryInfoIdEnum", "INFO_SERVER_LOG_OLDEST_OVERWRITTEN", 0x6C70, "F75: table 7-4"),
-    EnumOverride("RobotLibraryInfoIdEnum", "INFO_TRIGGER_PARAMETERS_NOT_USED", 0x6D54, "F75: table 7-4"),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_LIFESIGN_TIMEOUT_0x8004",
-        0x8004,
-        "F75: name with the correct value (alias)",
-    ),
-    EnumOverride(
-        "RobotLibraryErrorIdEnum",
-        "ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8",
-        0x80A8,
-        "F75: name with the correct value (alias)",
-    ),
-)
+ENUM_OVERRIDES: tuple[EnumOverride, ...] = ()
 
-OVERRIDES: tuple[ConstOverride, ...] = (
-    ConstOverride(
-        group="RobotLibraryConstants",
-        name="SRCIVersion",
-        init=StructValue(
-            (
-                ("MajorVersion", SimpleValue("1")),
-                ("MinorVersion", SimpleValue("5")),
-                ("PatchVersion", SimpleValue("0")),
-            )
-        ),
-        reason="PLC library still says 1.3.0, but implements SRCI 1.5 (SDK: SRCI_VERSION 1.5)",
-    ),
+OVERRIDES: tuple[ConstOverride, ...] = tuple(
     ConstOverride(
         group="RobotLibraryParameter",
-        name="FRAGMENT_MAX",
-        init=SimpleValue("31"),
-        reason="ST-FIX F52: 10 fragments (0..9) per telegram are too few - a 256 byte telegram holds up to "
-        "27 fragments (header 8 bytes + at least 1 byte payload); fragments behind the array were dropped "
-        "although the telegram was acknowledged -> responses lost",
-    ),
+        name=name,
+        init=SimpleValue("16"),
+        reason="default of the library (16); the export of 2026-10-17 came from SRCI_PLC_TEST with 20",
+    )
+    for name in ("TOOL_MAX", "FRAME_MAX", "LOAD_MAX")
 )
 
 

@@ -22,7 +22,7 @@
 
 """SRCI enumerations - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 6d064f48fb9cb9c5)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 321833d31319a117)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa
@@ -937,7 +937,7 @@ class RobotLibraryErrorIdEnum(_iec.IecIntEnum):
     ERR_OPTIONAL_PARAM_EXTERNAL_TCP_NOT_SUPPORTED = 36386
     """
     Server Optional parameter not supported - ExternalTCP Commands: "CalculateTool",
-    "CalculateFrame" [Override: F75: table 7-1 (missing in the library)]
+    "CalculateFrame"
     """
     ERR_OPTIONAL_PARAM_RELATIVE_POS_NOT_SUPPORTED = 36400
     """
@@ -1121,47 +1121,47 @@ class RobotLibraryErrorIdEnum(_iec.IecIntEnum):
     ERR_EXEC_MODE_CHANGE_ILLEGAL = 39444
     """Server Illegal Execution Mode change"""
     ERR_INVALID_PARAM_EMITTERID_EQUALS_LISTENERID = 36178
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_EMITTERID_INCOMPATIBLE_ACTION = 36179
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_TRIGGER_MODE_UNKNOWN = 36180
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_BIT_INDEX_OUT_OF_RANGE = 36181
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_LISTENERID_INCOMPATIBLE_TRIGGER = 36182
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_TRIGGER_PARAMETER_OUT_OF_RANGE = 36183
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_TRIGGER_START_BEHIND_END = 36184
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_TRIGGER_ERROR_MODE_UNKNOWN = 36185
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_REACTION_MODE_UNKNOWN = 36192
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_LOAD_IX_OUT_OF_RANGE = 36233
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_LOAD_IY_OUT_OF_RANGE = 36240
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_LOAD_IZ_OUT_OF_RANGE = 36241
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_LOAD_RX_OUT_OF_RANGE = 36242
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_LOAD_RY_OUT_OF_RANGE = 36243
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_LOAD_RZ_OUT_OF_RANGE = 36244
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_SERVER_LOG_ID_UNKNOWN = 36245
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_SERVER_LOG_START_LINE_UNKNOWN = 36246
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_SERVER_LOG_CONTEXT_FILTER_UNKNOWN = 36247
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_INVALID_PARAM_CIRCMODE_UNKNOWN = 36248
-    """[Override: F75: table 7-1 (missing in the library)]"""
+    """ST-FIX F75: table 7-1 (missing in the library)"""
     ERR_LIFESIGN_TIMEOUT_0x8004 = 32772
-    """[Override: F75: name with the correct value (alias)]"""
+    """ST-FIX F75: name with the correct value (alias)"""
     ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8 = 32936
-    """[Override: F75: name with the correct value (alias)]"""
+    """ST-FIX F75: name with the correct value (alias)"""
 
 
 _iec.register_enum(RobotLibraryErrorIdEnum, _iec.WORD)
@@ -1350,9 +1350,9 @@ class RobotLibraryInfoIdEnum(_iec.IecIntEnum):
     additional information
     """
     INFO_SERVER_LOG_OLDEST_OVERWRITTEN = 27760
-    """[Override: F75: table 7-4]"""
+    """ST-FIX F75: table 7-4"""
     INFO_TRIGGER_PARAMETERS_NOT_USED = 27988
-    """[Override: F75: table 7-4]"""
+    """ST-FIX F75: table 7-4"""
 
 
 _iec.register_enum(RobotLibraryInfoIdEnum, _iec.WORD)
@@ -3260,15 +3260,9 @@ class CmdType(_iec.IecIntEnum):
     ReturnToPrimary = 2104
     """Return to path left during active interrupt"""
     MoveCircularAbsolute = 2106
-    """
-    Move the TCP to an absolute joint position (linear interpolation) [Override: F35: spec 6.3.13
-    Type 2106 (library 2109)]
-    """
+    """Move the TCP to an absolute joint position (linear interpolation)"""
     MoveCircularRelative = 2107
-    """
-    Move the TCP relative to the actual cartesian position (circular interpolation) [Override: F35:
-    spec Type 2107 (library 2106)]
-    """
+    """Move the TCP relative to the actual cartesian position (circular interpolation)"""
     MoveLinearOffset = 2112
     """Move the TCP relative to a reference cartesian position (linear interpolation)"""
     MoveDirectOffset = 2111
@@ -3423,7 +3417,7 @@ class CmdType(_iec.IecIntEnum):
     job or signal output time of a specified signal
     """
     MoveLinearAbsoluteJ = 2109
-    """[Override: F35: spec 6.3.12 Type 2109 (missing in the library)]"""
+    """ST-FIX F35: spec 6.3.12 Type 2109 (missing in the library)"""
 
 
 _iec.register_enum(CmdType, _iec.UINT)

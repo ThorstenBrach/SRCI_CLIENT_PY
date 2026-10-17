@@ -68,6 +68,23 @@ def test_half_bytes_and_uint() -> None:
     assert M.SwapWord(0x1234) == 0x3412
 
 
+@pytest.mark.parametrize(
+    ("turns", "bits", "coded"),
+    [(0, 3, 0x0), (1, 3, 0x1), (-1, 3, 0x9), (7, 3, 0x7), (-7, 3, 0xF), (-1, 7, 0x81), (100, 7, 0x64)],
+)
+def test_turn_sign_magnitude(turns: int, bits: int, coded: int) -> None:
+    """ST-FIX F3 (spec 5.5.4.4): turn number <-> sign + magnitude, both directions."""
+    assert M.TURN_TO_SIGN_MAGNITUDE(Turns=turns, Bits=bits) == coded
+    assert M.SIGN_MAGNITUDE_TO_TURN(Value=coded, Bits=bits) == turns
+
+
+def test_turn_sign_magnitude_limits() -> None:
+    """Out of range is clamped like the ST function; "-0" is decoded as 0."""
+    assert M.TURN_TO_SIGN_MAGNITUDE(Turns=9, Bits=3) == 0x7
+    assert M.TURN_TO_SIGN_MAGNITUDE(Turns=-9, Bits=3) == 0xF
+    assert M.SIGN_MAGNITUDE_TO_TURN(Value=0x8, Bits=3) == 0
+
+
 def test_status_word_table_5_105() -> None:
     """ST-FIX F6: bit 13 CollisionDetected, 14 RestartRequested, 15..17 acceleration states."""
     s = M.DwordToRaStatusWord(1 << 0 | 1 << 7 | 1 << 8 | 3 << 10 | 1 << 13 | 1 << 17)

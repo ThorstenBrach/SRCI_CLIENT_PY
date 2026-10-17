@@ -63,6 +63,8 @@ __all__ = [
     "PERCENT_UINT_TO_REAL",
     "REAL_TO_PERCENT_INT",
     "REAL_TO_PERCENT_UINT",
+    "SIGN_MAGNITUDE_TO_TURN",
+    "TURN_TO_SIGN_MAGNITUDE",
     "ArmConfigParameterToBytes",
     "ByteToAxisExternalUnit",
     "ByteToAxisExternalUsed",
@@ -142,6 +144,26 @@ def CombineHalfSints(HalfSintHi: int, HalfSintLo: int) -> int:
         return (min(abs(value), 7)) | (0x08 if value < 0 else 0)
 
     return (nibble(HalfSintHi) << 4) | nibble(HalfSintLo)
+
+
+# ST-Source: Functions/Convert/Misc/TURN_TO_SIGN_MAGNITUDE.st  sha256: 6bb9d3c5c045cee5
+def TURN_TO_SIGN_MAGNITUDE(Turns: int, Bits: int) -> int:
+    """ST-FIX F3: turn number -> sign + magnitude (spec 5.5.4.4, tables 5-24..5-26).
+
+    ``Bits`` value bits (3 for J1..J6, 7 for E1), the sign is the next bit; a magnitude out of
+    range is clamped (like the ST function).
+    """
+    sign_bit = 1 << Bits
+    magnitude = min(abs(Turns), sign_bit - 1)
+    return magnitude | (sign_bit if Turns < 0 else 0)
+
+
+# ST-Source: Functions/Convert/Misc/SIGN_MAGNITUDE_TO_TURN.st  sha256: 3a5aaf9481e8d0c4
+def SIGN_MAGNITUDE_TO_TURN(Value: int, Bits: int) -> int:
+    """ST-FIX F3: sign + magnitude -> turn number (spec 5.5.4.4); "-0" is 0."""
+    sign_bit = 1 << Bits
+    magnitude = Value & (sign_bit - 1)
+    return -magnitude if Value & sign_bit else magnitude
 
 
 # ST-Source: Functions/Convert/Misc/CombineBytesToUint.st  sha256: 3a15b45d66be6f3c

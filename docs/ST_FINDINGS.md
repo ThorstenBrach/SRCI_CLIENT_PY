@@ -3,6 +3,11 @@
 Found while porting. Reference: SRCI profile V1.5.9 (2024-12-04) and the SRCI SDK.
 The Python code marks every deviation with `ST-FIX <id>`; tests in `tests/unit` cover them.
 Status "fixed in Python" means: still to be fixed in the PLC library.
+
+**Since the export of 2026-10-17 (`third_party/robotlibrary/RobotLibrary.xml`) the PLC library contains
+all fixes F1 ... F103** (branch `bugfix/st-fixes`); the source patches and type overrides of the
+Python port were removed (the generated code is functionally unchanged). Findings documented only
+(F4, F7, F8, F11, F39) and open questions stay as described.
 How to fix them in ST (exact ST diffs, generated from the corrections): [ST_Finding_Solve_Guide.md](ST_Finding_Solve_Guide.md).
 
 | ID | Where (ST) | Problem | Spec / SDK | Python |

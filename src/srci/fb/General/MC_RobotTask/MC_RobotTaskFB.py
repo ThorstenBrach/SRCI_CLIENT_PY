@@ -5633,13 +5633,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                     if self.CheckParameterValid(AxesGroup=AxesGroup):
                         # take configuration parameter if not yet enabled
                         copy_into(self._parCfg, self.ParCfg)
-                        # ST-FIX F79: no error state of the RC seen yet in this initialization
-                        self._initErrorState = TelegramState.UNDEFINED
                         # ST-FIX F103: number of telegram sequences of this configuration (not of the previous enable)
                         if self._parCfg.Com.TwoSequences:
                             AxesGroup.State.SequenceCountSend = 1
                         else:
                             AxesGroup.State.SequenceCountSend = 0
+                        # ST-FIX F79: no error state of the RC seen yet in this initialization
+                        self._initErrorState = TelegramState.UNDEFINED
                         # inc step counter
                         self._stepCmd = self._stepCmd + 1
 
@@ -5656,6 +5656,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                         case _ if TelegramState.ERROR_161_TELEGRAM_CONTROL_MISMATCH_TELEGRAM_STATE <= AxesGroup.Cyclic.RobToPlc.TelegramState <= TelegramState.ERROR_172_TELEGRAM_NUMBER_NOT_SUPPORTED:
                             # ST-FIX F79: remember the error state for the init timeout
                             self._initErrorState = AxesGroup.Cyclic.RobToPlc.TelegramState
+
                             # clear error
                             AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.ACK_ERROR
                             AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESET  # always a reset, so that on the robot side the ACR is reseted

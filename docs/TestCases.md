@@ -33,14 +33,14 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
 | [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 68 | 154 |
-| [UT-FN](#ut-fn) | Functions of the library | 16 | 20 |
+| [UT-FN](#ut-fn) | Functions of the library | 18 | 28 |
 | [UT-IEC](#ut-iec) | IEC 61131-3 runtime (data types, timers, conversions) | 42 | 96 |
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **426** | **3870** |
+| | **Total** | **428** | **3878** |
 
 ## Test methodology
 
@@ -418,6 +418,8 @@ Functions of the library
 | UT-FN-014 | Sync modes | 1 | `test_sync_modes` |
 | UT-FN-015 | Real to percent int | 5 | `test_real_to_percent_int` |
 | UT-FN-016 | Percent conversions | 1 | `test_percent_conversions` |
+| UT-FN-017 | ST-FIX F3 (spec 5.5.4.4): turn number <-> sign + magnitude, both directions. | 7 | `test_turn_sign_magnitude` |
+| UT-FN-018 | Out of range is clamped like the ST function; "-0" is decoded as 0. | 1 | `test_turn_sign_magnitude_limits` |
 
 ## UT-IEC
 
@@ -583,7 +585,7 @@ Code generators and tools
 | UT-TOOL-048 | Report from results | 1 | `test_report_from_results` |
 | UT-TOOL-049 | Findings are read from st findings | 1 | `test_findings_are_read_from_st_findings` |
 | UT-TOOL-050 | Regenerate with ``python -m tools.st2py.fix_guide``. | 1 | `test_guide_is_up_to_date` |
-| UT-TOOL-051 | Every ST-FIX of hand written Python has an ST description in fix_guide_manual.md. | 1 | `test_hand_written_fixes_are_described` |
+| UT-TOOL-051 | Every ST-FIX of hand written Python has an ST description in fix_guide_manual.md (or is named there as already in the PLC library). | 1 | `test_hand_written_fixes_are_described` |
 | UT-TOOL-052 | Every step changes the st text | 1 | `test_every_step_changes_the_st_text` |
 | UT-TOOL-053 | Wheel and sdist | 1 | `test_wheel_and_sdist` |
 | UT-TOOL-054 | Summary lists failed ids without messages | 1 | `test_summary_lists_failed_ids_without_messages` |

@@ -59,6 +59,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    name of the input of `MC_RobotTaskFB` in the PLC library (was `config`)
  - ST patches follow the ST coding rules: THEN on its own line, a log entry behind every
    `SetError`
+ - Generated from the PLC library export of 2026-10-17, which contains all fixes F1 ... F103: the
+   source patches (`tools/st2py/config.py`) and type overrides (`tools/plcopen_gen/overrides.py`)
+   are removed, the generated code is functionally unchanged (only F72 and F103 differ in the
+   form of the ST code); new hand written `TURN_TO_SIGN_MAGNITUDE`, `SIGN_MAGNITUDE_TO_TURN`
+   (functions of the PLC library for F3); `docs/ST_Finding_Solve_Guide.md` only lists what is
+   still open. `RobotLibraryParameter.TOOL/FRAME/LOAD_MAX` stay 16 (the export has 20)
 
 ### Fixed
  - CI: `tools.test_report check` no longer fails without the SDK simulator (the SDK tests are not

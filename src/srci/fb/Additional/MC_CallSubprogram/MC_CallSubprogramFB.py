@@ -43,7 +43,7 @@ from srci.functions.Convert.TO_STRING.PROCESSING_MODE_TO_STRING import PROCESSIN
 from srci.functions.Convert.TO_STRING.SEQUENCE_FLAG_TO_STRING import SEQUENCE_FLAG_TO_STRING
 from srci.functions.String.StrReplace import StrReplace
 from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, SINT_TO_STRING, UINT_TO_STRING, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, LOWER_BOUND, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, UPPER_BOUND, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
+from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
 from srci.types import CallSubprogramOutCmd, CallSubprogramParCmd, CallSubprogramRecvData, CallSubprogramSendData, CmdMessageState, CmdType, ExecutionMode, MessageType, PriorityLevel, ProcessingMode, ProcessingModeEnum, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryParameter, SequenceFlag, SequenceFlagEnum, Severity, SystemTime
 
 if TYPE_CHECKING:
@@ -269,7 +269,7 @@ class MC_CallSubprogramFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # ST-FIX F72: at most 190 bytes of acyclic data (table 7-1)
-        if CheckParameterValid & (UPPER_BOUND(self.ParCmd.Data) - LOWER_BOUND(self.ParCmd.Data) + 1 > 190):
+        if CheckParameterValid and RobotLibraryParameter.SUB_PROGRAM_DATA_MAX + 1 > 190:
             CheckParameterValid = False
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_ACYCLICDATA_TOO_LARGE, Overwrite=True)
             # Create log entry

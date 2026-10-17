@@ -22,7 +22,7 @@
 
 """SRCI constants and library parameters - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 6d064f48fb9cb9c5)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 321833d31319a117)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa
@@ -47,8 +47,7 @@ class RobotLibraryConstants:
     SRCIVersion: Final[VersionStruct] = VersionStruct(MajorVersion=1, MinorVersion=5, PatchVersion=0)
     """
     Version of SRCI specification Bit 0-4 : Minor version = Features (0..31) Bit 5-7 : Major version
-    = Breaking change (0..07) [Override: PLC library still says 1.3.0, but implements SRCI 1.5 (SDK:
-    SRCI_VERSION 1.5)]
+    = Breaking change (0..07)
     """
     PLCLibraryVersion: Final[VersionStruct] = VersionStruct(MajorVersion=0, MinorVersion=0, PatchVersion=49)
     """Version of the PLC library"""
@@ -85,11 +84,23 @@ class RobotLibraryDefines:
 class RobotLibraryParameter:
     """Global variable list RobotLibraryParameter of the PLC library."""
     TOOL_MAX: ClassVar[int] = 16
-    """Maximal amount of tools"""
+    """
+    Maximal amount of tools SRCI_PLC_TEST: 20 like the SDK simulator (was the parameter of the
+    library reference) [Override: default of the library (16); the export of 2026-10-17 came from
+    SRCI_PLC_TEST with 20]
+    """
     FRAME_MAX: ClassVar[int] = 16
-    """Maximal amount of frames"""
+    """
+    Maximal amount of frames SRCI_PLC_TEST: 20 like the SDK simulator (was the parameter of the
+    library reference) [Override: default of the library (16); the export of 2026-10-17 came from
+    SRCI_PLC_TEST with 20]
+    """
     LOAD_MAX: ClassVar[int] = 16
-    """Maximal amount of loads"""
+    """
+    Maximal amount of loads SRCI_PLC_TEST: 20 like the SDK simulator (was the parameter of the
+    library reference) [Override: default of the library (16); the export of 2026-10-17 came from
+    SRCI_PLC_TEST with 20]
+    """
     WORK_AREAS_MAX: ClassVar[int] = 16
     """Maximal amount of work areas"""
     SYSTEM_LOG_MAX: ClassVar[int] = 32
@@ -113,12 +124,7 @@ class RobotLibraryParameter:
     MESSAGE_CODES_MAX: ClassVar[int] = 15
     """Maximal amount of message codes"""
     FRAGMENT_MAX: ClassVar[int] = 31
-    """
-    Maximal amount of fragments [Override: ST-FIX F52: 10 fragments (0..9) per telegram are too few
-    - a 256 byte telegram holds up to 27 fragments (header 8 bytes + at least 1 byte payload);
-    fragments behind the array were dropped although the telegram was acknowledged -> responses
-    lost]
-    """
+    """Maximal amount of fragments"""
     SWAP_BYTE_ORDER: ClassVar[bool] = True
     """Flag to indicate that the byte order must be changed"""
     INVALID_FRAMES_CHECK_TIMEOUT: ClassVar[int] = 60000

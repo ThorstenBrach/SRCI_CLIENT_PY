@@ -1865,6 +1865,20 @@
   "status": "active"
  },
  {
+  "id": "UT-FN-017",
+  "test": "tests/unit/functions/test_convert_misc.py::test_turn_sign_magnitude",
+  "title": "ST-FIX F3 (spec 5.5.4.4): turn number <-> sign + magnitude, both directions.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "UT-FN-018",
+  "test": "tests/unit/functions/test_convert_misc.py::test_turn_sign_magnitude_limits",
+  "title": "Out of range is clamped like the ST function; \"-0\" is decoded as 0.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-IEC-001",
   "test": "tests/unit/iec/test_conv.py::test_numeric_conversions",
   "title": "Numeric conversions",
@@ -2777,7 +2791,7 @@
  {
   "id": "UT-TOOL-051",
   "test": "tests/unit/tools/test_fix_guide.py::test_hand_written_fixes_are_described",
-  "title": "Every ST-FIX of hand written Python has an ST description in fix_guide_manual.md.",
+  "title": "Every ST-FIX of hand written Python has an ST description in fix_guide_manual.md (or is named there as already in the PLC library).",
   "refs": [],
   "status": "active"
  },
