@@ -47,14 +47,17 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 
 | Finding | Problem | Steps | POUs |
 |---|---|---:|---|
-
+| - | nothing open: the PLC library contains all fixes | 0 | - |
 
 ## Generated ST changes
+
+None.
 
 ## Data types
 
 Change the DUTs / enums / constants of the library:
 
+None.
 
 ## Fixes without generated diff
 

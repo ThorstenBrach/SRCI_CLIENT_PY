@@ -159,9 +159,11 @@ SDK: `pip install -e "<SDK>/srci_py_harness/python"`; then
 server for PLC tests (the PLC is the client, a second port is the control channel of the tests,
 see [docs/TRANSPORT.md](docs/TRANSPORT.md)).
 
-The fixes of the ST code found while porting are listed in [docs/ST_FINDINGS.md](docs/ST_FINDINGS.md);
-`python -m tools.st2py.export_xml` writes them back into the PLCopen XML of the PLC library
-([docs/ST_XML_EXPORT.md](docs/ST_XML_EXPORT.md)).
+The fixes of the ST code found while porting are listed in [docs/ST_FINDINGS.md](docs/ST_FINDINGS.md).
+Since the export of 2026-10-17 the PLC library contains all of them (F1 … F103), the Python code is
+generated from the library without corrections. New findings are fixed in Python first and
+transferred with [docs/ST_Finding_Solve_Guide.md](docs/ST_Finding_Solve_Guide.md) or
+`python -m tools.st2py.export_xml` ([docs/ST_XML_EXPORT.md](docs/ST_XML_EXPORT.md)).
 
 Every test has a unique, stable ID; all test cases are described in
 [docs/TestCases.md](docs/TestCases.md). `pytest --tc-report build/test-report` writes a test

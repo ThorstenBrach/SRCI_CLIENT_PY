@@ -302,7 +302,7 @@ def render(guide: Guide, digest: str) -> str:
     type_ids = {fid for fid, _ in types}
     manual = MANUAL.read_text(encoding="utf-8").strip("\n")
     manual_ids = {int(m) for m in re.findall(r"^### F(\d+)", manual, flags=re.M)}
-    out = [HEADER.format(digest=digest[:16])]
+    out = [HEADER.format(digest=digest[:16]).rstrip("\n")]
     for fid in sorted(set(groups) | type_ids | manual_ids):
         steps = groups.get(fid, [])
         pous = sorted({s.pou for s in steps})
@@ -315,7 +315,11 @@ def render(guide: Guide, digest: str) -> str:
         where = ", ".join(x for x in (where, *extra) if x)
         title = _cell(titles.get(fid, ""))
         out.append(f"| [F{fid}](#f{fid}) | {title} | {len(steps)} | {where} |")
+    if not (set(groups) | type_ids | manual_ids):
+        out.append("| - | nothing open: the PLC library contains all fixes | 0 | - |")
     out += ["", "## Generated ST changes", ""]
+    if not groups:
+        out += ["None.", ""]
     for fid, steps in groups.items():
         out += [f"### F{fid}", "", f"_{_cell(titles.get(fid, ''))}_", ""]
         reasons = list(dict.fromkeys(s.reason for s in steps))
@@ -337,7 +341,7 @@ def render(guide: Guide, digest: str) -> str:
                     names = ", ".join(f"`{s.pou}`" for s in rest)
                     out += [f"Same change (same `-`/`+` lines) in: {names}", ""]
     out += ["## Data types", "", "Change the DUTs / enums / constants of the library:", ""]
-    out += [f"- **F{fid}** {text}" if fid else f"- {text}" for fid, text in types]
+    out += [f"- **F{fid}** {text}" if fid else f"- {text}" for fid, text in types] or ["None."]
     out += ["", "## Fixes without generated diff", "", manual, ""]
     return "\n".join(out)
 

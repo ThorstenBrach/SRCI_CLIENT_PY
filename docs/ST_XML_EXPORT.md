@@ -1,5 +1,8 @@
 # Transfer of the fixes into the PLC library (PLCopen XML)
 
+> Status 2026-10-17: the PLC library contains all fixes F1 … F103, `tools/st2py/config.py` and
+> `tools/plcopen_gen/overrides.py` have no correction left; the tool is used again for new findings.
+
 The Python port corrects the ST code of the PLC library while it reads
 `third_party/robotlibrary/RobotLibrary.xml` (source patches in `tools/st2py/config.py`, type
 corrections in `tools/plcopen_gen/overrides.py`). `tools.st2py.export_xml` writes exactly these

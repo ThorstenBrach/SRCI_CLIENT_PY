@@ -40,7 +40,9 @@ Never edit generated files (header "Generated from the PLC library ... DO NOT ED
 
 ## Deviations from the ST code
 
-All deviations are listed in `tools/st2py/config.py` and `docs/ST_FINDINGS.md`:
+All deviations are listed in `tools/st2py/config.py` and `docs/ST_FINDINGS.md`. Since the
+library export of 2026-10-17 (contains F1 … F103) `config.py` has no source patch left, only the
+hand written parts below; the mechanisms stay for new findings:
 
 * **Source patches** (`SourcePatch`): small textual corrections of the ST source before
   transpiling, each with the finding id. A patch fails when its text no longer occurs in
@@ -48,19 +50,19 @@ All deviations are listed in `tools/st2py/config.py` and `docs/ST_FINDINGS.md`:
 * **Appended statements** (`BodyAppend`): ST text appended to a method, e.g.
   `CheckAddParameter := TRUE;` for the function blocks of finding F28.
 * **Hand written methods** (`Mixin`): the telegram coding of `MC_RobotTaskFB`
-  (`CreateSendPayload*`, `ParseRecvPayload*`, `Calculate*`) with ST-FIX F1, F2, F5 lives in
+  (`CreateSendPayload*`, `ParseRecvPayload*`, `Calculate*`) with ST-FIX F1, F2, F5, F63 lives in
   `MC_RobotTaskFB_Telegram.py` and is used instead of the transpiled methods.
 * **Hand written POUs**: the send/receive buffers (`RobotLibrarySendData*FB`,
   `RobotLibraryRecvData*FB`, `RobotLibraryCommandDataFB`, `RobotLibraryResponseDataFB`),
   `Functions/Common` and `Functions/Convert/Misc|DT` (they are fast and carry the ST-FIX
-  F3, F6, F9, F10, F22). Their modules start with
+  F3, F6, F9, F10, F22, F41, F60, F96 - now also in the ST code). Their modules start with
   `# ST-Source: <path>  sha256: <hash>` per unit;
   `python -m tools.st_drift <path to RobotLibrary/Library>` lists units whose ST source
   changed since porting.
 
 Where the ST code contradicts the specification (or the SDK), Python follows the
 specification, marks the place with `ST-FIX <id>` and the finding is listed in
-`docs/ST_FINDINGS.md` so that it can be fixed in the PLC library as well. Findings that
+`docs/ST_FINDINGS.md` until it is fixed in the PLC library as well. Findings that
 change behaviour but have no clear fix are *not* patched – the tests document them
 (`xfail` with the finding id).
 
