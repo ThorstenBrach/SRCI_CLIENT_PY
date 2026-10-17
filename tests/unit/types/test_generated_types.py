@@ -207,7 +207,7 @@ def test_struct_spot_checks() -> None:
 
 def test_constants() -> None:
     p = constants.RobotLibraryParameter
-    assert p.TOOL_MAX == p.FRAME_MAX == p.LOAD_MAX == 16
+    assert p.TOOL_MAX == p.FRAME_MAX == p.LOAD_MAX == 20
     v = constants.RobotLibraryConstants.SRCIVersion
     assert isinstance(v, T.VersionStruct)
 

@@ -83,23 +83,20 @@ class RobotLibraryDefines:
 
 class RobotLibraryParameter:
     """Global variable list RobotLibraryParameter of the PLC library."""
-    TOOL_MAX: ClassVar[int] = 16
+    TOOL_MAX: ClassVar[int] = 20
     """
     Maximal amount of tools SRCI_PLC_TEST: 20 like the SDK simulator (was the parameter of the
-    library reference) [Override: default of the library (16); the export of 2026-10-17 came from
-    SRCI_PLC_TEST with 20]
+    library reference)
     """
-    FRAME_MAX: ClassVar[int] = 16
+    FRAME_MAX: ClassVar[int] = 20
     """
     Maximal amount of frames SRCI_PLC_TEST: 20 like the SDK simulator (was the parameter of the
-    library reference) [Override: default of the library (16); the export of 2026-10-17 came from
-    SRCI_PLC_TEST with 20]
+    library reference)
     """
-    LOAD_MAX: ClassVar[int] = 16
+    LOAD_MAX: ClassVar[int] = 20
     """
     Maximal amount of loads SRCI_PLC_TEST: 20 like the SDK simulator (was the parameter of the
-    library reference) [Override: default of the library (16); the export of 2026-10-17 came from
-    SRCI_PLC_TEST with 20]
+    library reference)
     """
     WORK_AREAS_MAX: ClassVar[int] = 16
     """Maximal amount of work areas"""

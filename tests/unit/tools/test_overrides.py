@@ -37,7 +37,7 @@ def lib_xml():  # parsed once, copied per test
 
 
 def test_srci_version_is_1_5() -> None:
-    # PLC library still exports 1.3.0 (forgotten update), SDK implements 1.5
+    # the PLC library exported 1.3.0 until 2026-10 (was an override), SDK implements 1.5
     assert RobotLibraryConstants.SRCIVersion == VersionStruct(MajorVersion=1, MinorVersion=5, PatchVersion=0)
 
 
@@ -50,14 +50,26 @@ def test_overrides_apply_and_are_documented(lib_xml) -> None:
         assert "Override" in consts[ov.name].doc
 
 
+# an override with the value the XML already has (SRCIVersion 1.5.0 since the export of 2026-10-17)
+_SAME = ConstOverride(
+    "RobotLibraryConstants",
+    "SRCIVersion",
+    next(
+        c.init
+        for g in parse_library(Path(DEFAULT_XML)).const_groups
+        for c in g.constants
+        if c.name == "SRCIVersion"
+    ),
+    "x",
+)
+
+
 def test_obsolete_override_fails(lib_xml) -> None:
-    lib = copy.deepcopy(lib_xml)
-    apply_overrides(lib)  # now the "XML" already contains the values
     with pytest.raises(OverrideError, match="obsolete"):
-        apply_overrides(lib)
+        apply_overrides(copy.deepcopy(lib_xml), (_SAME,))
 
 
 def test_unknown_target_fails(lib_xml) -> None:
-    bad = (ConstOverride("RobotLibraryConstants", "DOES_NOT_EXIST", OVERRIDES[0].init, "x"),)
+    bad = (ConstOverride("RobotLibraryConstants", "DOES_NOT_EXIST", _SAME.init, "x"),)
     with pytest.raises(OverrideError, match="not found"):
         apply_overrides(copy.deepcopy(lib_xml), bad)

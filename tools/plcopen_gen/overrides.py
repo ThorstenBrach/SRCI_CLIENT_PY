@@ -36,7 +36,6 @@ from .model import (
     FieldDef,
     InitValue,
     Library,
-    SimpleValue,
     TypeRef,
 )
 
@@ -145,15 +144,7 @@ def apply_field_overrides(lib: Library, overrides: tuple[FieldOverride, ...] = F
 # F35: command types of the PLC library that contradict the specification V1.5.9
 ENUM_OVERRIDES: tuple[EnumOverride, ...] = ()
 
-OVERRIDES: tuple[ConstOverride, ...] = tuple(
-    ConstOverride(
-        group="RobotLibraryParameter",
-        name=name,
-        init=SimpleValue("16"),
-        reason="default of the library (16); the export of 2026-10-17 came from SRCI_PLC_TEST with 20",
-    )
-    for name in ("TOOL_MAX", "FRAME_MAX", "LOAD_MAX")
-)
+OVERRIDES: tuple[ConstOverride, ...] = ()
 
 
 def apply_enum_overrides(lib: Library, overrides: tuple[EnumOverride, ...] = ENUM_OVERRIDES) -> None:

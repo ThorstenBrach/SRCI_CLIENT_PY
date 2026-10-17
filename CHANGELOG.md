@@ -64,7 +64,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    are removed, the generated code is functionally unchanged (only F72 and F103 differ in the
    form of the ST code); new hand written `TURN_TO_SIGN_MAGNITUDE`, `SIGN_MAGNITUDE_TO_TURN`
    (functions of the PLC library for F3); `docs/ST_Finding_Solve_Guide.md` only lists what is
-   still open. `RobotLibraryParameter.TOOL/FRAME/LOAD_MAX` stay 16 (the export has 20)
+   still open
+ - `RobotLibraryParameter.TOOL_MAX`, `FRAME_MAX`, `LOAD_MAX`: default 20 (was 16) like the PLC
+   library and the SDK simulator
 
 ### Fixed
  - CI: `tools.test_report check` no longer fails without the SDK simulator (the SDK tests are not

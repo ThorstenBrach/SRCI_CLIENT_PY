@@ -48,7 +48,6 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | Finding | Problem | Steps | POUs |
 |---|---|---:|---|
 
-| [F0](#f0) |  | 0 | data types |
 
 ## Generated ST changes
 
@@ -56,9 +55,6 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 
 Change the DUTs / enums / constants of the library:
 
-- Constant `RobotLibraryParameter.TOOL_MAX` := `16` - default of the library (16); the export of 2026-10-17 came from SRCI_PLC_TEST with 20
-- Constant `RobotLibraryParameter.FRAME_MAX` := `16` - default of the library (16); the export of 2026-10-17 came from SRCI_PLC_TEST with 20
-- Constant `RobotLibraryParameter.LOAD_MAX` := `16` - default of the library (16); the export of 2026-10-17 came from SRCI_PLC_TEST with 20
 
 ## Fixes without generated diff
 
