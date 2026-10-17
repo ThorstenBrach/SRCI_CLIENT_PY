@@ -1810,13 +1810,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if self._parCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
                     return
 
-                # Check More Data on RC than on PLC -> Synchronization not possible
-                if AxesGroup.State.ConfigurationData.HighestFrameIndex > AxesGroup.SystemData.FrameDataCount:
-                    self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_FRAME_COUNT_RC_HIGHER_THAN_PLC, Overwrite=False)
-                    return
-
                 # wait for initialisation done
                 if ((AxesGroup.State.RobotData.RCSupportedFunctions.ReadFrameData and AxesGroup.State.RobotData.RCSupportedFunctions.WriteFrameData) and AxesGroup.State.Initialized) and (not self.Error):
+                    # ST-FIX F102: count check after the initialization (HighestXIndex of this connection)
+                    # Check More Data on RC than on PLC -> Synchronization not possible
+                    if AxesGroup.State.ConfigurationData.HighestFrameIndex > AxesGroup.SystemData.FrameDataCount:
+                        self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_FRAME_COUNT_RC_HIGHER_THAN_PLC, Overwrite=False)
+                        return
                     # Check PLC frames < RC frames and SyncFrame enabled ?
                     if AxesGroup.State.DataEnableSync.EnableSyncFrame == True and AxesGroup.Parameter.Rob.Parameter.HighestFrameIndex > AxesGroup.SystemData.FrameDataMax:
                         self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_FRAME_DATA_ARRAY_TOO_SHORT, Overwrite=True)
@@ -2374,13 +2374,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if self._parCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
                     return
 
-                # Check More Data on RC than on PLC -> Synchronization not possible
-                if AxesGroup.State.ConfigurationData.HighestToolIndex > AxesGroup.SystemData.LoadDataCount:
-                    self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_LOAD_COUNT_RC_HIGHER_THAN_PLC, Overwrite=False)
-                    return
-
                 # wait for initialisation done
                 if ((AxesGroup.State.RobotData.RCSupportedFunctions.ReadLoadData and AxesGroup.State.RobotData.RCSupportedFunctions.WriteLoadData) and AxesGroup.State.Initialized) and (not self.Error):
+                    # ST-FIX F102: count check after the initialization (HighestXIndex of this connection)
+                    # Check More Data on RC than on PLC -> Synchronization not possible
+                    # ST-FIX F101
+                    if AxesGroup.State.ConfigurationData.HighestLoadIndex > AxesGroup.SystemData.LoadDataCount:
+                        self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_LOAD_COUNT_RC_HIGHER_THAN_PLC, Overwrite=False)
+                        return
                     # Check PLC loads < RC Loads and SyncLoad enabled ?
                     if AxesGroup.State.DataEnableSync.EnableSyncLoad == True and AxesGroup.Parameter.Rob.Parameter.HighestLoadIndex > AxesGroup.SystemData.LoadDataMax:
                         self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_LOAD_DATA_ARRAY_TOO_SHORT, Overwrite=True)
@@ -4324,13 +4325,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if self._parCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
                     return
 
-                # Check More Data on RC than on PLC -> Synchronization not possible
-                if AxesGroup.State.ConfigurationData.HighestToolIndex > AxesGroup.SystemData.ToolDataCount:
-                    self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_TOOL_COUNT_RC_HIGHER_THAN_PLC, Overwrite=False)
-                    return
-
                 # wait for initialisation done
                 if ((AxesGroup.State.RobotData.RCSupportedFunctions.ReadToolData and AxesGroup.State.RobotData.RCSupportedFunctions.WriteToolData) and AxesGroup.State.Initialized) and (not self.Error):
+                    # ST-FIX F102: count check after the initialization (HighestXIndex of this connection)
+                    # Check More Data on RC than on PLC -> Synchronization not possible
+                    if AxesGroup.State.ConfigurationData.HighestToolIndex > AxesGroup.SystemData.ToolDataCount:
+                        self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_TOOL_COUNT_RC_HIGHER_THAN_PLC, Overwrite=False)
+                        return
                     # Check PLC tools < RC tools and SyncTool enabled ?
                     if AxesGroup.State.DataEnableSync.EnableSyncTool == True and AxesGroup.Parameter.Rob.Parameter.HighestToolIndex > AxesGroup.SystemData.ToolDataMax:
                         self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_TOOL_DATA_ARRAY_TOO_SHORT, Overwrite=True)
@@ -4885,13 +4886,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if self._parCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
                     return
 
-                # Check More Data on RC than on PLC -> Synchronization not possible
-                if AxesGroup.State.ConfigurationData.HighestWorkAreaIndex > AxesGroup.SystemData.WorkAreasCount:
-                    self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_WORKAREA_COUNT_RC_HIGHER_THAN_PLC, Overwrite=False)
-                    return
-
                 # wait for initialisation done
                 if ((AxesGroup.State.RobotData.RCSupportedFunctions.ReadWorkArea and AxesGroup.State.RobotData.RCSupportedFunctions.WriteWorkArea) and AxesGroup.State.Initialized) and (not self.Error):
+                    # ST-FIX F102: count check after the initialization (HighestXIndex of this connection)
+                    # Check More Data on RC than on PLC -> Synchronization not possible
+                    if AxesGroup.State.ConfigurationData.HighestWorkAreaIndex > AxesGroup.SystemData.WorkAreasCount:
+                        self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_WORKAREA_COUNT_RC_HIGHER_THAN_PLC, Overwrite=False)
+                        return
                     # Check PLC WorkAreas < RC WorkAreas and SyncWorkArea enabled ?
                     if AxesGroup.State.DataEnableSync.EnableSyncWorkArea == True and AxesGroup.Parameter.Rob.Parameter.HighestWorkAreaIndex > AxesGroup.SystemData.WorkAreasMax:
                         self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_WORK_AREA_ARRAY_TOO_SHORT, Overwrite=True)
@@ -5634,6 +5635,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                         copy_into(self._parCfg, self.ParCfg)
                         # ST-FIX F79: no error state of the RC seen yet in this initialization
                         self._initErrorState = TelegramState.UNDEFINED
+                        # ST-FIX F103: number of telegram sequences of this configuration (not of the previous enable)
+                        if self._parCfg.Com.TwoSequences:
+                            AxesGroup.State.SequenceCountSend = 1
+                        else:
+                            AxesGroup.State.SequenceCountSend = 0
                         # inc step counter
                         self._stepCmd = self._stepCmd + 1
 

@@ -2101,7 +2101,10 @@ E_PATCHES += (
 _F85 = "F85: MC_ConfigureConveyorFB rejected CIRCULAR_CONVEYOR_TRACKING (the check compared LINEAR twice)"
 _F86 = "F86: MC_ForceControlFB rejected ConnectionMode PLC_SENSOR_ALGORITHM (the check tested PLC_SENSOR_RC_ALGORITHM twice)"
 _F87 = "F87: MC_UserLoginFB demanded a Username also in Mode PASSWORD_ONLY / LEVEL_ID_AND_PASSWORD"
-_F88 = "F88: MC_StopSubprogramFB limited TargetID (JobID / InstanceID, UINT in the telegram) to 255 and reported ERR_LISTENERID_MUST_BE_POSITIVE"
+_F88 = (
+    "F88: MC_StopSubprogramFB limited TargetID (JobID / InstanceID, UINT in the telegram) to 255 and reported "
+    "ERR_LISTENERID_MUST_BE_POSITIVE"
+)
 _F89 = "F89: MC_MoveSuperImposedFB rejected ProcessingMode TRIGGER_CONTINUOUS (allowed by the spec)"
 _F90 = "F90: MC_MeasuringInputFB showed the MeasuringID only at DONE - a running measurement could not be aborted by its ID"
 _F91 = "F91: MC_WriteAnalogOutputFB accepted Index 0 (spec 1..32, like MC_ReadAnalogInputFB)"
@@ -2138,7 +2141,8 @@ E_PATCHES += (
     SourcePatch(
         "MC_StopSubprogramFB",
         "CheckParameterValid",
-        r"(?s)\( ParCmd\.TargetID > 255 \)\)(\s*\n\s*THEN\s*\n.*?SetError\( ErrorID := RobotLibraryErrorIdEnum\.)ERR_LISTENERID_MUST_BE_POSITIVE",
+        r"(?s)\( ParCmd\.TargetID > 255 \)\)(\s*\n\s*THEN\s*\n.*?SetError\( ErrorID := RobotLibraryErrorIdEnum\.)"
+        r"ERR_LISTENERID_MUST_BE_POSITIVE",
         "( ParCmd.TargetID > 65534 )) // ST-FIX F88: UINT in the telegram, 65535 = -1\\1ERR_INVALID_PAR_CMD",
         _F88,
         regex=True,
@@ -2177,7 +2181,8 @@ E_PATCHES += (
     SourcePatch(
         "MC_UnitMeasurementFB",
         "CheckParameterValid",
-        r"(?s)(\( ParCmd\.MeasuringMode <> MeasuringUnitMode\.TIME_DURATION  \)\)\s*\n\s*THEN\s*\n.*?SetError\( ErrorID := RobotLibraryErrorIdEnum\.)ERR_PROCESSINGMODE_NOT_ALLOWED",
+        r"(?s)(\( ParCmd\.MeasuringMode <> MeasuringUnitMode\.TIME_DURATION  \)\)\s*\n\s*THEN\s*\n"
+        r".*?SetError\( ErrorID := RobotLibraryErrorIdEnum\.)ERR_PROCESSINGMODE_NOT_ALLOWED",
         "\\1ERR_INVALID_PAR_CMD (* ST-FIX F92 *)",
         _F92,
         regex=True,
@@ -2209,54 +2214,58 @@ _SYNC_HANDLERS = {
     "HandleSyncToolData": "Tool",
     "HandleSyncWorkArea": "WorkArea",
 }
-E_PATCHES += tuple(
-    SourcePatch(
-        "MC_RobotTaskFB",
-        method,
-        r"(10 *: *// *check synchronisation active \? *\r?\n)(\s*)IF \( AxesGroup\.Parameter\.Plc\.Parameter\.SynchronizationModes\.\w+"
-        r"\[SyncTime\.AFTER_START_UP\] = SyncMode\.NO_SYNCHRONIZATION\)\s*THEN\s*RETURN;\s*END_IF",
-        "\\1\\2// ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)",
-        _F93,
-        regex=True,
-        template=True,
+E_PATCHES += (
+    tuple(
+        SourcePatch(
+            "MC_RobotTaskFB",
+            method,
+            r"(10 *: *// *check synchronisation active \? *\r?\n)(\s*)IF \( AxesGroup\.Parameter\.Plc\.Parameter\.SynchronizationModes\.\w+"
+            r"\[SyncTime\.AFTER_START_UP\] = SyncMode\.NO_SYNCHRONIZATION\)\s*THEN\s*RETURN;\s*END_IF",
+            "\\1\\2// ST-FIX F93: compare also with NO_SYNCHRONIZATION (no transfer, see the CASE below)",
+            _F93,
+            regex=True,
+            template=True,
+        )
+        for method in _SYNC_HANDLERS
     )
-    for method in _SYNC_HANDLERS
-) + tuple(
-    SourcePatch(
-        "MC_RobotTaskFB",
-        method,
-        r"(SetError\( ErrorID := RobotLibraryErrorIdEnum\.ERR_SYNC_MODE_INVALID, Overwrite := TRUE \);\s*END_CASE\s*\n)(\s*)END_IF",
-        "\\1\\2ELSE\n"
-        "\\2  // ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again\n"
-        f"\\2  IF ( CheckTimeout(_rTimer) = RobotLibraryConstants.OK )\n"
-        "\\2  THEN\n"
-        f"\\2    AxesGroup.State.DataChanged.{item} := _dataChangedNone.{item};\n"
-        "\\2    SetTimeout(PT := _rTimeout, rTimer := _rTimer);\n"
-        "\\2   _rStep := 0; // -> read the RC data and compare again\n"
-        "\\2  END_IF\n"
-        "\\2END_IF",
-        _F94,
-        regex=True,
-        template=True,
+    + tuple(
+        SourcePatch(
+            "MC_RobotTaskFB",
+            method,
+            r"(SetError\( ErrorID := RobotLibraryErrorIdEnum\.ERR_SYNC_MODE_INVALID, Overwrite := TRUE \);\s*END_CASE\s*\n)(\s*)END_IF",
+            "\\1\\2ELSE\n"
+            "\\2  // ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again\n"
+            f"\\2  IF ( CheckTimeout(_rTimer) = RobotLibraryConstants.OK )\n"
+            "\\2  THEN\n"
+            f"\\2    AxesGroup.State.DataChanged.{item} := _dataChangedNone.{item};\n"
+            "\\2    SetTimeout(PT := _rTimeout, rTimer := _rTimer);\n"
+            "\\2   _rStep := 0; // -> read the RC data and compare again\n"
+            "\\2  END_IF\n"
+            "\\2END_IF",
+            _F94,
+            regex=True,
+            template=True,
+        )
+        for method, item in _SYNC_HANDLERS.items()
     )
-    for method, item in _SYNC_HANDLERS.items()
-) + tuple(
-    SourcePatch(
-        "MC_RobotTaskFB",
-        method,
-        r"(// jump back\s*\n\s*)//_rStep := 10;",
-        "\\1_rStep := 10; // ST-FIX F95: was commented out",
-        _F95,
-        regex=True,
-        template=True,
+    + tuple(
+        SourcePatch(
+            "MC_RobotTaskFB",
+            method,
+            r"(// jump back\s*\n\s*)//_rStep := 10;",
+            "\\1_rStep := 10; // ST-FIX F95: was commented out",
+            _F95,
+            regex=True,
+            template=True,
+        )
+        for method in _SYNC_HANDLERS
     )
-    for method in _SYNC_HANDLERS
 )
 
 # F96 ... F99: parameter ranges (spec chapter 6 and table 7-1), found by tests/sdk/test_parameter_ranges.py
 _F96 = (
     "F96: dynamics rates < 0 other than -1 were rejected (ERR_VELOCITY_INVALID ...) - the spec defines "
-    "every value < 0 % as the default (\"<0%: (default)\"); the conversion sent them as garbage (-2 -> 653.36 %)"
+    'every value < 0 % as the default ("<0%: (default)"); the conversion sent them as garbage (-2 -> 653.36 %)'
 )
 _F97 = (
     "F97: MC_WriteRobotDefaultDynamicsFB sent rates above 655.35 % (they do not fit into the UINT of the "
@@ -2271,67 +2280,313 @@ _F99 = (
     "movement - the user must choose linear or PTP (6.3.11), now ERR_TRAJECTORYMODE_INVALID"
 )
 _F96_POUS = (
-    "MC_CreateSplineFB", "MC_DynamicSplineFB", "MC_MoveApproachDirectFB", "MC_MoveApproachLinearFB",
-    "MC_MoveAxesAbsoluteFB", "MC_MoveAxesRelativeFB", "MC_MoveCircularAbsoluteFB", "MC_MoveCircularCamFB",
-    "MC_MoveCircularRelativeFB", "MC_MoveDepartDirectFB", "MC_MoveDepartLinearFB", "MC_MoveDirectAbsoluteFB",
-    "MC_MoveDirectOffsetFB", "MC_MoveDirectRelativeFB", "MC_MoveLinearAbsoluteFB", "MC_MoveLinearAbsoluteJFB",
-    "MC_MoveLinearCamFB", "MC_MoveLinearOffsetFB", "MC_MoveLinearRelativeFB", "MC_MovePickPlaceDirectFB",
-    "MC_MovePickPlaceLinearFB", "MC_MoveSuperImposedDynamicFB", "MC_MoveSuperImposedFB", "MC_ReturnToPrimaryFB",
-    "MC_SearchHardStopFB", "MC_SearchHardStopJFB",
+    "MC_CreateSplineFB",
+    "MC_DynamicSplineFB",
+    "MC_MoveApproachDirectFB",
+    "MC_MoveApproachLinearFB",
+    "MC_MoveAxesAbsoluteFB",
+    "MC_MoveAxesRelativeFB",
+    "MC_MoveCircularAbsoluteFB",
+    "MC_MoveCircularCamFB",
+    "MC_MoveCircularRelativeFB",
+    "MC_MoveDepartDirectFB",
+    "MC_MoveDepartLinearFB",
+    "MC_MoveDirectAbsoluteFB",
+    "MC_MoveDirectOffsetFB",
+    "MC_MoveDirectRelativeFB",
+    "MC_MoveLinearAbsoluteFB",
+    "MC_MoveLinearAbsoluteJFB",
+    "MC_MoveLinearCamFB",
+    "MC_MoveLinearOffsetFB",
+    "MC_MoveLinearRelativeFB",
+    "MC_MovePickPlaceDirectFB",
+    "MC_MovePickPlaceLinearFB",
+    "MC_MoveSuperImposedDynamicFB",
+    "MC_MoveSuperImposedFB",
+    "MC_ReturnToPrimaryFB",
+    "MC_SearchHardStopFB",
+    "MC_SearchHardStopJFB",
 )
 _F98_POUS = (
-    "MC_CalculateCartesianPositionFB", "MC_CalculateForwardKinematicFB", "MC_CalculateFrameFB",
-    "MC_CalculateInverseKinematicFB", "MC_CalculateToolFB", "MC_ForceControlFB", "MC_ForceLimitFB", "MC_GroupJogFB",
-    "MC_MoveApproachDirectFB", "MC_MoveApproachLinearFB", "MC_MoveAxesAbsoluteFB", "MC_MoveAxesRelativeFB",
-    "MC_MoveCircularAbsoluteFB", "MC_MoveCircularCamFB", "MC_MoveCircularRelativeFB", "MC_MoveDepartDirectFB",
-    "MC_MoveDepartLinearFB", "MC_MoveDirectAbsoluteFB", "MC_MoveDirectOffsetFB", "MC_MoveDirectRelativeFB",
-    "MC_MoveLinearAbsoluteFB", "MC_MoveLinearAbsoluteJFB", "MC_MoveLinearCamFB", "MC_MoveLinearOffsetFB",
-    "MC_MoveLinearRelativeFB", "MC_MovePickPlaceDirectFB", "MC_MovePickPlaceLinearFB", "MC_MoveSuperImposedDynamicFB",
-    "MC_MoveSuperImposedFB", "MC_ReadActualForceFB", "MC_ReadActualPositionCyclicFB", "MC_ReadActualPositionFB",
-    "MC_ReadActualTCPVelocityFB", "MC_ReadFrameDataFB", "MC_ReadLoadDataFB", "MC_ReadToolDataFB",
-    "MC_RedefineTrackingPosFB", "MC_ReturnToPrimaryFB", "MC_SearchHardStopFB", "MC_ShiftPositionFB",
-    "MC_SyncToConveyorFB", "MC_WriteFrameDataFB", "MC_WriteLoadDataFB", "MC_WriteToolDataFB",
+    "MC_CalculateCartesianPositionFB",
+    "MC_CalculateForwardKinematicFB",
+    "MC_CalculateFrameFB",
+    "MC_CalculateInverseKinematicFB",
+    "MC_CalculateToolFB",
+    "MC_ForceControlFB",
+    "MC_ForceLimitFB",
+    "MC_GroupJogFB",
+    "MC_MoveApproachDirectFB",
+    "MC_MoveApproachLinearFB",
+    "MC_MoveAxesAbsoluteFB",
+    "MC_MoveAxesRelativeFB",
+    "MC_MoveCircularAbsoluteFB",
+    "MC_MoveCircularCamFB",
+    "MC_MoveCircularRelativeFB",
+    "MC_MoveDepartDirectFB",
+    "MC_MoveDepartLinearFB",
+    "MC_MoveDirectAbsoluteFB",
+    "MC_MoveDirectOffsetFB",
+    "MC_MoveDirectRelativeFB",
+    "MC_MoveLinearAbsoluteFB",
+    "MC_MoveLinearAbsoluteJFB",
+    "MC_MoveLinearCamFB",
+    "MC_MoveLinearOffsetFB",
+    "MC_MoveLinearRelativeFB",
+    "MC_MovePickPlaceDirectFB",
+    "MC_MovePickPlaceLinearFB",
+    "MC_MoveSuperImposedDynamicFB",
+    "MC_MoveSuperImposedFB",
+    "MC_ReadActualForceFB",
+    "MC_ReadActualPositionCyclicFB",
+    "MC_ReadActualPositionFB",
+    "MC_ReadActualTCPVelocityFB",
+    "MC_ReadFrameDataFB",
+    "MC_ReadLoadDataFB",
+    "MC_ReadToolDataFB",
+    "MC_RedefineTrackingPosFB",
+    "MC_ReturnToPrimaryFB",
+    "MC_SearchHardStopFB",
+    "MC_ShiftPositionFB",
+    "MC_SyncToConveyorFB",
+    "MC_WriteFrameDataFB",
+    "MC_WriteLoadDataFB",
+    "MC_WriteToolDataFB",
 )
-E_PATCHES += tuple(
-    SourcePatch(
-        pou,
-        "CheckParameterValid",
-        r"\(\(\s*ParCmd\.([\w.\[\]]+)\s*<\s*0\s*\)\s*AND\s*\n\s*\(\s*ParCmd\.\1\s*<>\s*-1\s*\)\)\s*OR[ \t]*",
-        "(* ST-FIX F96: every value < 0 is the default *)",
-        _F96,
-        regex=True,
+E_PATCHES += (
+    tuple(
+        SourcePatch(
+            pou,
+            "CheckParameterValid",
+            r"\(\(\s*ParCmd\.([\w.\[\]]+)\s*<\s*0\s*\)\s*AND\s*\n\s*\(\s*ParCmd\.\1\s*<>\s*-1\s*\)\)\s*OR[ \t]*",
+            "(* ST-FIX F96: every value < 0 is the default *)",
+            _F96,
+            regex=True,
+        )
+        for pou in _F96_POUS
     )
-    for pou in _F96_POUS
-) + tuple(
-    SourcePatch(
-        pou,
-        "CheckParameterValid",
-        r"(// Check \w+ available on RC \? *\r?\n\s*)IF \( ParCmd\.((?:Tool|Frame|Load)No) > "
-        r"(AxesGroup\.State\.ConfigurationData\.Highest\w+Index) \)",
-        "\\1IF (( ParCmd.\\2 > \\3 ) AND ( ParCmd.\\2 <= 254 )) // ST-FIX F98: outside -1..254 is a range error",
-        _F98,
-        regex=True,
-        template=True,
+    + tuple(
+        SourcePatch(
+            pou,
+            "CheckParameterValid",
+            r"(// Check \w+ available on RC \? *\r?\n\s*)IF \( ParCmd\.((?:Tool|Frame|Load)No) > "
+            r"(AxesGroup\.State\.ConfigurationData\.Highest\w+Index) \)",
+            "\\1IF (( ParCmd.\\2 > \\3 ) AND ( ParCmd.\\2 <= 254 )) // ST-FIX F98: outside -1..254 is a range error",
+            _F98,
+            regex=True,
+            template=True,
+        )
+        for pou in _F98_POUS
     )
-    for pou in _F98_POUS
-) + tuple(
-    SourcePatch(
-        "MC_WriteRobotDefaultDynamicsFB",
-        "CheckParameterValid",
-        f"IF ( SysDepIsValidReal(ParCmd.DynamicValues.{rate}) = FALSE )",
-        f"IF (( SysDepIsValidReal(ParCmd.DynamicValues.{rate}) = FALSE ) OR\n"
-        f"    ( ParCmd.DynamicValues.{rate} > 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram",
-        _F97,
+    + tuple(
+        SourcePatch(
+            "MC_WriteRobotDefaultDynamicsFB",
+            "CheckParameterValid",
+            f"IF ( SysDepIsValidReal(ParCmd.DynamicValues.{rate}) = FALSE )",
+            f"IF (( SysDepIsValidReal(ParCmd.DynamicValues.{rate}) = FALSE ) OR\n"
+            f"    ( ParCmd.DynamicValues.{rate} > 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram",
+            _F97,
+        )
+        for rate in ("VelocityRate", "AccelerationRate", "DecelerationRate", "JerkRate")
     )
-    for rate in ("VelocityRate", "AccelerationRate", "DecelerationRate", "JerkRate")
-) + (
+    + (
+        SourcePatch(
+            "MC_ReturnToPrimaryFB",
+            "CheckParameterValid",
+            r"\( ParCmd\.TrajectoryMode <> TrajectoryMode\.INVALID +\) AND\s*\n\s*",
+            "(* ST-FIX F99: INVALID (0) is not allowed *) ",
+            _F99,
+            regex=True,
+        ),
+    )
+)
+
+# F100 ... F102: found by the TcUnit tests SDK-SYNC on the PLC (RobotTask reused across the tests)
+_F100 = (
+    "F100: the response of a command was parsed into _response without clearing it - the RC leaves out "
+    "trailing zero bytes of the payload, so a shortened response kept the values of the previous command "
+    "(e.g. WriteRobotReferenceDynamics with 0 after 777: the write blocks copied 777 back into the user data)"
+)
+_F101 = (
+    "F101: the start-up check of the load count compared HighestToolIndex instead of HighestLoadIndex "
+    "with the length of the load array"
+)
+_F102 = (
+    "F102: the count check (RC has more tools / frames / loads / work areas than the PLC array) ran in "
+    "step 0 before the initialization - with the HighestXIndex of the previous connection and the "
+    "configuration of the previous enable; now after Initialized"
+)
+_F100_POUS = (
+    "MC_AbortMeasuringInputFB",
+    "MC_ActivateNextCommandFB",
+    "MC_AvoidSingularityFB",
+    "MC_BrakeTestFB",
+    "MC_CallSubprogramFB",
+    "MC_CollisionDetectionFB",
+    "MC_ExchangeConfigurationFB",
+    "MC_FreeDriveFB",
+    "MC_MeasuringInputFB",
+    "MC_OpenBrakeFB",
+    "MC_PathAccuracyModeFB",
+    "MC_ShiftPositionFB",
+    "MC_SoftSwitchTcpFB",
+    "MC_StopSubprogramFB",
+    "MC_UnitMeasurementFB",
+    "MC_MoveApproachDirectFB",
+    "MC_MoveApproachLinearFB",
+    "MC_MoveAxesRelativeFB",
+    "MC_MoveCircularAbsoluteFB",
+    "MC_MoveCircularCamFB",
+    "MC_MoveCircularRelativeFB",
+    "MC_MoveDepartDirectFB",
+    "MC_MoveDepartLinearFB",
+    "MC_MoveDirectOffsetFB",
+    "MC_MoveDirectRelativeFB",
+    "MC_MoveLinearAbsoluteJFB",
+    "MC_MoveLinearCamFB",
+    "MC_MoveLinearOffsetFB",
+    "MC_MoveLinearRelativeFB",
+    "MC_MovePickPlaceDirectFB",
+    "MC_MovePickPlaceLinearFB",
+    "MC_ChangeSpeedOverrideFB",
+    "MC_GroupContinueFB",
+    "MC_GroupInterruptFB",
+    "MC_GroupJogFB",
+    "MC_GroupStopFB",
+    "MC_MoveAxesAbsoluteFB",
+    "MC_MoveDirectAbsoluteFB",
+    "MC_MoveLinearAbsoluteFB",
+    "MC_ReturnToPrimaryFB",
+    "MC_CalculateCartesianPositionFB",
+    "MC_CalculateForwardKinematicFB",
+    "MC_CalculateFrameFB",
+    "MC_CalculateInverseKinematicFB",
+    "MC_CalculateToolFB",
+    "MC_LoadMeasurementAutomaticFB",
+    "MC_LoadMeasurementSequentialFB",
+    "MC_ActivateConveyorTrackingFB",
+    "MC_ConfigureConveyorFB",
+    "MC_RedefineTrackingPosFB",
+    "MC_SyncToConveyorFB",
+    "MC_ForceControlFB",
+    "MC_ForceLimitFB",
+    "MC_ReadActualForceFB",
+    "MC_EnableRobotFB",
+    "MC_GroupResetFB",
+    "MC_RestartControllerFB",
+    "MC_SetOperationModeFB",
+    "MC_SetSequenceFB",
+    "MC_SwitchLanguageFB",
+    "MC_UserLoginFB",
+    "MC_ReadActualPositionFB",
+    "MC_ReadActualTCPVelocityFB",
+    "MC_ReadAnalogInputFB",
+    "MC_ReadDHParameterFB",
+    "MC_ReadDigitalInputsFB",
+    "MC_ReadDigitalOutputsFB",
+    "MC_ReadFrameDataFB",
+    "MC_ReadIntegersFB",
+    "MC_ReadLoadDataFB",
+    "MC_ReadMessagesFB",
+    "MC_ReadRealsFB",
+    "MC_ReadRobotDataFB",
+    "MC_ReadRobotDefaultDynamicsFB",
+    "MC_ReadRobotReferenceDynamicsFB",
+    "MC_ReadRobotSWLimitsFB",
+    "MC_ReadSystemVariableFB",
+    "MC_ReadToolDataFB",
+    "MC_SearchHardStopFB",
+    "MC_SearchHardStopJFB",
+    "MC_CreateSplineFB",
+    "MC_DeleteSplineFB",
+    "MC_DynamicSplineFB",
+    "MC_MoveSplineFB",
+    "MC_MoveSuperImposedFB",
+    "MC_MoveSuperImposedDynamicFB",
+    "MC_ReactAtTriggerFB",
+    "MC_SetTriggerErrorFB",
+    "MC_SetTriggerLimitFB",
+    "MC_SetTriggerMotionFB",
+    "MC_SetTriggerRegisterFB",
+    "MC_SetTriggerUserFB",
+    "MC_WaitForTriggerFB",
+    "MC_WaitTimeFB",
+    "MC_ActivateWorkAreaFB",
+    "MC_MonitorWorkAreaFB",
+    "MC_ReadWorkAreaFB",
+    "MC_WriteWorkAreaFB",
+    "MC_WriteAnalogOutputFB",
+    "MC_WriteDigitalOutputsFB",
+    "MC_WriteFrameDataFB",
+    "MC_WriteIntegersFB",
+    "MC_WriteLoadDataFB",
+    "MC_WriteRealsFB",
+    "MC_WriteRobotDefaultDynamicsFB",
+    "MC_WriteRobotReferenceDynamicsFB",
+    "MC_WriteRobotSWLimitsFB",
+    "MC_WriteSystemVariableFB",
+    "MC_WriteToolDataFB",
+)
+E_PATCHES += (
+    *(
+        SourcePatch(
+            pou,
+            "ParseResponsePayload",
+            r"(ResponseData\.PayloadPtr\s*:=\s*SUPER\^\.ParseResponsePayload\([^;]*\);)",
+            "\\1\n\n// ST-FIX F100: missing (trailing zero) bytes of the payload are 0, no values of the previous response\n"
+            "SysDepMemSet( pDest := ADR(_response), Value := 0, DataLen := SIZEOF(_response));",
+            _F100,
+            regex=True,
+            template=True,
+        )
+        for pou in _F100_POUS
+    ),
     SourcePatch(
-        "MC_ReturnToPrimaryFB",
-        "CheckParameterValid",
-        r"\( ParCmd\.TrajectoryMode <> TrajectoryMode\.INVALID +\) AND\s*\n\s*",
-        "(* ST-FIX F99: INVALID (0) is not allowed *) ",
-        _F99,
-        regex=True,
+        "MC_RobotTaskFB",
+        "HandleSyncLoadData",
+        "IF (AxesGroup.State.ConfigurationData.HighestToolIndex > AxesGroup.SystemData.LoadDataCount)",
+        "IF (AxesGroup.State.ConfigurationData.HighestLoadIndex > AxesGroup.SystemData.LoadDataCount) // ST-FIX F101",
+        _F101,
+    ),
+    *(
+        SourcePatch(
+            "MC_RobotTaskFB",
+            method,
+            r"(?s)\n([ \t]*// Check More Data on RC than on PLC -> Synchronization not possible.*?END_IF)"
+            r"(\s*// wait for initialisation done\s*IF .*?\)\)\s*THEN)",
+            "\\2\n       // ST-FIX F102: count check after the initialization (HighestXIndex of this connection)\n\\1",
+            _F102,
+            regex=True,
+            template=True,
+        )
+        for method in (
+            "HandleSyncToolData",
+            "HandleSyncFrameData",
+            "HandleSyncLoadData",
+            "HandleSyncWorkArea",
+        )
+    ),
+)
+
+_F103 = (
+    "F103: re-enable of the RobotTask after two telegram sequences: SequenceCountSend kept 1 from the "
+    "configuration of the previous enable (HandleSeqAck runs before the new configuration is taken) - the "
+    "header of a 2nd sequence was written behind the end of the telegram (PLC: memory overwritten)"
+)
+E_PATCHES += (
+    SourcePatch(
+        "MC_RobotTaskFB",
+        "OnExecRun",
+        "          _initErrorState := TelegramState.UNDEFINED;\n",
+        "          _initErrorState := TelegramState.UNDEFINED;\n"
+        "          // ST-FIX F103: number of telegram sequences of this configuration (not of the previous enable)\n"
+        "          IF ( _parCfg.Com.TwoSequences )\n"
+        "          THEN\n"
+        "            AxesGroup.State.SequenceCountSend := 1;\n"
+        "          ELSE\n"
+        "            AxesGroup.State.SequenceCountSend := 0;\n"
+        "          END_IF\n",
+        _F103,
     ),
 )
 

@@ -213,6 +213,31 @@ def test_f63_two_sequences_only_in_one_direction_is_an_error() -> None:
         assert not h.ag.State.CMDsEnabled
 
 
+def test_f103_one_sequence_after_two_sequences() -> None:
+    """F103: the RobotTask enabled again with one telegram sequence after two: the header of a 2nd
+    sequence must not be written (it lay behind the end of the telegram - on the PLC memory was
+    overwritten). Found by the TcUnit suite SDK-LOOP (RobotTask reused)."""
+    clock = FakeClock()
+    with SdkSimulator(10) as sim, use_clock(clock):
+        h = RobotTaskHarness(sdk_transport(sim, SIZE, SIZE), advance=clock.advance)
+        h.cfg.Com.TwoSequences = True
+        h.cfg.Plc.OptionalCyclic.UseTwoSequences = True
+        h.cfg.Rob.OptionalCyclic.UseTwoSequences = True
+        h.run(100, until=lambda: bool(h.ag.State.CMDsEnabled or h.rt.Error))
+        assert h.ag.State.CMDsEnabled and not h.rt.Error, hex(h.rt.ErrorID)
+        h.enable = False
+        h.run(20)
+    with SdkSimulator(10) as sim, use_clock(clock):  # restart of the RC
+        h.transport = sdk_transport(sim, SIZE, SIZE)
+        h.cfg.Com.TwoSequences = False
+        h.cfg.Plc.OptionalCyclic.UseTwoSequences = False
+        h.cfg.Rob.OptionalCyclic.UseTwoSequences = False
+        h.enable = True
+        h.run(100, until=lambda: bool(h.ag.State.CMDsEnabled or h.rt.Error))
+        assert h.ag.State.CMDsEnabled and not h.rt.Error, hex(h.rt.ErrorID)
+        assert h.ag.State.SequenceCountSend == 0
+
+
 # ------------------------------------------------------------------ F64: Done of MoveSpline/MoveSuperImposed
 
 

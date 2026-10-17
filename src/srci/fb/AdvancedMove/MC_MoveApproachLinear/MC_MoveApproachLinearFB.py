@@ -1494,6 +1494,9 @@ class MC_MoveApproachLinearFB(RobotLibraryBaseExecuteFB):
         # call base implementation to parse the header from payload buffer
         ResponseData.PayloadPtr = super().ParseResponsePayload(ResponseData=ResponseData, Timestamp=Timestamp)
 
+        # ST-FIX F100: missing (trailing zero) bytes of the payload are 0, no values of the previous response
+        SysDepMemSet(pDest=ADR(self, '_response', _iec.StructType(MoveApproachLinearRecvData)), Value=0, DataLen=15)
+
         # copy parsed header to response
         self._response.ParSeq = self._rspHeader.ParSeq
         self._response.State = self._rspHeader.State

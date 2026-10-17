@@ -141,6 +141,10 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 | [F97](#f97) | `MC_WriteRobotDefaultDynamicsFB.CheckParameterValid` - rates above 655.35 % sent: they do not fit into the UINT of the telegram and wrapped (655.36 % → 0 %) | 4 | `MC_WriteRobotDefaultDynamicsFB` |
 | [F98](#f98) | `CheckParameterValid` of 44 blocks with `ToolNo` / `FrameNo` / `LoadNo` - a number outside -1..254 (e.g. 255) reported as not available on the RC (16#8413 / 16#8415 / `ERR_LOADNO_UNAVAILABLE`) | 44 | `MC_CalculateCartesianPositionFB`, `MC_CalculateForwardKinematicFB`, `MC_CalculateFrameFB`, `MC_CalculateInverseKinematicFB` (+40) |
 | [F99](#f99) | `MC_ReturnToPrimaryFB.CheckParameterValid` - `TrajectoryMode` 0 (Invalid, the default) accepted and sent as linear movement | 1 | `MC_ReturnToPrimaryFB` |
+| [F100](#f100) | `ParseResponsePayload` of 109 blocks - `_response` was not cleared before parsing a response: the RC leaves out trailing zero bytes of the payload, so a shortened response kept the values of the previous command; the write blocks copy the response into the user data (`UpdateReferenceDynamics` ...) - after a write of 0 the PLC value jumped back to the previous value; hidden in Python because every test used new blocks, found by the TcUnit suite SDK-SYNC (RobotTask reused) | 109 | `MC_AbortMeasuringInputFB`, `MC_ActivateConveyorTrackingFB`, `MC_ActivateNextCommandFB`, `MC_ActivateWorkAreaFB` (+105) |
+| [F101](#f101) | `MC_RobotTaskFB.HandleSyncLoadData` step 0 - load count check compared `HighestToolIndex` with the load array | 1 | `MC_RobotTaskFB` |
+| [F102](#f102) | `MC_RobotTaskFB.HandleSync{Tool,Frame,Load}Data`, `HandleSyncWorkArea` step 0 - count check ran before the initialization with the `HighestXIndex` of the previous connection and the configuration of the previous enable (wrong error after a re-enable with other modes) | 4 | `MC_RobotTaskFB` |
+| [F103](#f103) | `MC_RobotTaskFB.OnExecRun` step 0, `HandleSeqAck`, `CreateSendPayloadSequence` - RobotTask enabled again with one telegram sequence after an enable with two: `HandleSeqAck` runs before the new configuration is taken and kept `SequenceCountSend` = 1, `CreateSendPayloadSequence` wrote the header of a 2nd sequence behind the end of the telegram - on the PLC memory behind the send buffer was overwritten (constants of the test project, all later tests 16#80A3); found by the TcUnit suite SDK-LOOP | 1 | `MC_RobotTaskFB` |
 
 ## Generated ST changes
 
@@ -1114,7 +1118,7 @@ _`RobotLibraryBaseEnableFB` / `MC_RobotTaskFB.Reset` - disabling the RobotTask s
 ```diff
 --- a/MC_RobotTaskFB.OnExecRun
 +++ b/MC_RobotTaskFB.OnExecRun
-@@ -51,7 +51,15 @@
+@@ -58,7 +58,15 @@
           END_IF
         END_IF
       
@@ -1131,7 +1135,7 @@ _`RobotLibraryBaseEnableFB` / `MC_RobotTaskFB.Reset` - disabling the RobotTask s
  
           TelegramState.UNDEFINED : ;
           
-@@ -109,6 +117,7 @@
+@@ -116,6 +124,7 @@
                                     Para1       := TELEGRAM_STATE_TO_STRING(AxesGroup.Cyclic.RobToPlc.TelegramState));
           ErrorAddTxt := CONCAT('_stepCmd = ' , DINT_TO_STRING(_stepCmd));
         END_CASE
@@ -1420,7 +1424,7 @@ _`MC_ReadToolDataFB`, `MC_ReadFrameDataFB` `.ParseResponsePayload` - `DataChange
 ```diff
 --- a/MC_ReadToolDataFB.ParseResponsePayload
 +++ b/MC_ReadToolDataFB.ParseResponsePayload
-@@ -142,8 +142,8 @@
+@@ -145,8 +145,8 @@
  // Check payload remaining ? 
  IF ( ResponseData.IsPayloadRemaining)
  THEN  
@@ -1438,7 +1442,7 @@ _`MC_ReadToolDataFB`, `MC_ReadFrameDataFB` `.ParseResponsePayload` - `DataChange
 ```diff
 --- a/MC_ReadToolDataFB.ParseResponsePayload
 +++ b/MC_ReadToolDataFB.ParseResponsePayload
-@@ -132,8 +132,8 @@
+@@ -135,8 +135,8 @@
  // Check payload remaining ? 
  IF ( ResponseData.IsPayloadRemaining)
  THEN  
@@ -1456,7 +1460,7 @@ _`MC_ReadToolDataFB`, `MC_ReadFrameDataFB` `.ParseResponsePayload` - `DataChange
 ```diff
 --- a/MC_ReadFrameDataFB.ParseResponsePayload
 +++ b/MC_ReadFrameDataFB.ParseResponsePayload
-@@ -123,8 +123,8 @@
+@@ -126,8 +126,8 @@
  // Check payload remaining ? 
  IF ( ResponseData.IsPayloadRemaining)
  THEN  
@@ -1474,7 +1478,7 @@ _`MC_ReadToolDataFB`, `MC_ReadFrameDataFB` `.ParseResponsePayload` - `DataChange
 ```diff
 --- a/MC_ReadFrameDataFB.ParseResponsePayload
 +++ b/MC_ReadFrameDataFB.ParseResponsePayload
-@@ -113,8 +113,8 @@
+@@ -116,8 +116,8 @@
  // Check payload remaining ? 
  IF ( ResponseData.IsPayloadRemaining)
  THEN  
@@ -10313,6 +10317,256 @@ _`MC_ReturnToPrimaryFB.CheckParameterValid` - `TrajectoryMode` 0 (Invalid, the d
      ( ParCmd.TrajectoryMode <> TrajectoryMode.PTP_MOVEMENT    ))
  THEN
    // Parameter not valid
+```
+
+### F100
+
+_`ParseResponsePayload` of 109 blocks - `_response` was not cleared before parsing a response: the RC leaves out trailing zero bytes of the payload, so a shortened response kept the values of the previous command; the write blocks copy the response into the user data (`UpdateReferenceDynamics` ...) - after a write of 0 the PLC value jumped back to the previous value; hidden in Python because every test used new blocks, found by the TcUnit suite SDK-SYNC (RobotTask reused)_
+
+- F100: the response of a command was parsed into _response without clearing it - the RC leaves out trailing zero bytes of the payload, so a shortened response kept the values of the previous command (e.g. WriteRobotReferenceDynamics with 0 after 777: the write blocks copied 777 back into the user data)
+
+**MC_AbortMeasuringInputFB** · `ParseResponsePayload` · patch
+
+```diff
+--- a/MC_AbortMeasuringInputFB.ParseResponsePayload
++++ b/MC_AbortMeasuringInputFB.ParseResponsePayload
+@@ -1,5 +1,8 @@
+                   // call base implementation to parse the header from payload buffer
+ ResponseData.PayloadPtr := SUPER^.ParseResponsePayload(ResponseData := ResponseData, Timestamp := Timestamp);
++
++// ST-FIX F100: missing (trailing zero) bytes of the payload are 0, no values of the previous response
++SysDepMemSet( pDest := ADR(_response), Value := 0, DataLen := SIZEOF(_response));
+ 
+ // copy parsed header to response
+ _response.ParSeq               := _rspHeader.ParSeq;
+```
+
+**MC_ActivateNextCommandFB** · `ParseResponsePayload` · patch
+
+```diff
+--- a/MC_ActivateNextCommandFB.ParseResponsePayload
++++ b/MC_ActivateNextCommandFB.ParseResponsePayload
+@@ -1,5 +1,8 @@
+                   // call base implementation to parse the header from payload buffer
+ ResponseData.PayloadPtr := SUPER^.ParseResponsePayload(ResponseData := ResponseData, Timestamp := Timestamp);
++
++// ST-FIX F100: missing (trailing zero) bytes of the payload are 0, no values of the previous response
++SysDepMemSet( pDest := ADR(_response), Value := 0, DataLen := SIZEOF(_response));
+ 
+ // copy parsed header to response
+ _response.ParSeq               := _rspHeader.ParSeq;
+```
+
+**MC_AvoidSingularityFB** · `ParseResponsePayload` · patch
+
+```diff
+--- a/MC_AvoidSingularityFB.ParseResponsePayload
++++ b/MC_AvoidSingularityFB.ParseResponsePayload
+@@ -1,5 +1,8 @@
+                   // call base implementation to parse the header from payload buffer
+ ResponseData.PayloadPtr := SUPER^.ParseResponsePayload(ResponseData := ResponseData, Timestamp := Timestamp);
++
++// ST-FIX F100: missing (trailing zero) bytes of the payload are 0, no values of the previous response
++SysDepMemSet( pDest := ADR(_response), Value := 0, DataLen := SIZEOF(_response));
+ 
+ // copy parsed header to response
+ _response.ParSeq               := _rspHeader.ParSeq;
+```
+
+Same change (same `-`/`+` lines) in: `MC_BrakeTestFB`, `MC_CallSubprogramFB`, `MC_CollisionDetectionFB`, `MC_ExchangeConfigurationFB`, `MC_FreeDriveFB`, `MC_MeasuringInputFB`, `MC_OpenBrakeFB`, `MC_PathAccuracyModeFB`, `MC_ShiftPositionFB`, `MC_SoftSwitchTcpFB`, `MC_StopSubprogramFB`, `MC_UnitMeasurementFB`, `MC_MoveApproachDirectFB`, `MC_MoveApproachLinearFB`, `MC_MoveAxesRelativeFB`, `MC_MoveCircularAbsoluteFB`, `MC_MoveCircularCamFB`, `MC_MoveCircularRelativeFB`, `MC_MoveDepartDirectFB`, `MC_MoveDepartLinearFB`, `MC_MoveDirectOffsetFB`, `MC_MoveDirectRelativeFB`, `MC_MoveLinearAbsoluteJFB`, `MC_MoveLinearCamFB`, `MC_MoveLinearOffsetFB`, `MC_MoveLinearRelativeFB`, `MC_MovePickPlaceDirectFB`, `MC_MovePickPlaceLinearFB`, `MC_ChangeSpeedOverrideFB`, `MC_GroupContinueFB`, `MC_GroupInterruptFB`, `MC_GroupJogFB`, `MC_GroupStopFB`, `MC_MoveAxesAbsoluteFB`, `MC_MoveDirectAbsoluteFB`, `MC_MoveLinearAbsoluteFB`, `MC_ReturnToPrimaryFB`, `MC_CalculateCartesianPositionFB`, `MC_CalculateForwardKinematicFB`, `MC_CalculateFrameFB`, `MC_CalculateInverseKinematicFB`, `MC_CalculateToolFB`, `MC_LoadMeasurementAutomaticFB`, `MC_LoadMeasurementSequentialFB`, `MC_ActivateConveyorTrackingFB`, `MC_ConfigureConveyorFB`, `MC_RedefineTrackingPosFB`, `MC_SyncToConveyorFB`, `MC_ForceControlFB`, `MC_ForceLimitFB`, `MC_ReadActualForceFB`, `MC_EnableRobotFB`, `MC_GroupResetFB`, `MC_RestartControllerFB`, `MC_SetOperationModeFB`, `MC_SetSequenceFB`, `MC_SwitchLanguageFB`, `MC_UserLoginFB`, `MC_ReadActualPositionFB`, `MC_ReadActualTCPVelocityFB`, `MC_ReadAnalogInputFB`, `MC_ReadDHParameterFB`, `MC_ReadDigitalInputsFB`, `MC_ReadDigitalOutputsFB`, `MC_ReadFrameDataFB`, `MC_ReadIntegersFB`, `MC_ReadLoadDataFB`, `MC_ReadMessagesFB`, `MC_ReadRealsFB`, `MC_ReadRobotDataFB`, `MC_ReadRobotDefaultDynamicsFB`, `MC_ReadRobotReferenceDynamicsFB`, `MC_ReadRobotSWLimitsFB`, `MC_ReadSystemVariableFB`, `MC_ReadToolDataFB`, `MC_SearchHardStopFB`, `MC_SearchHardStopJFB`, `MC_CreateSplineFB`, `MC_DeleteSplineFB`, `MC_DynamicSplineFB`, `MC_MoveSplineFB`, `MC_MoveSuperImposedFB`, `MC_MoveSuperImposedDynamicFB`, `MC_ReactAtTriggerFB`, `MC_SetTriggerErrorFB`, `MC_SetTriggerLimitFB`, `MC_SetTriggerMotionFB`, `MC_SetTriggerRegisterFB`, `MC_SetTriggerUserFB`, `MC_WaitForTriggerFB`, `MC_WaitTimeFB`, `MC_ActivateWorkAreaFB`, `MC_MonitorWorkAreaFB`, `MC_ReadWorkAreaFB`, `MC_WriteWorkAreaFB`, `MC_WriteAnalogOutputFB`, `MC_WriteDigitalOutputsFB`, `MC_WriteFrameDataFB`, `MC_WriteIntegersFB`, `MC_WriteLoadDataFB`, `MC_WriteRealsFB`, `MC_WriteRobotDefaultDynamicsFB`, `MC_WriteRobotReferenceDynamicsFB`, `MC_WriteRobotSWLimitsFB`, `MC_WriteSystemVariableFB`, `MC_WriteToolDataFB`
+
+### F101
+
+_`MC_RobotTaskFB.HandleSyncLoadData` step 0 - load count check compared `HighestToolIndex` with the load array_
+
+- F101: the start-up check of the load count compared HighestToolIndex instead of HighestLoadIndex with the length of the load array
+
+**MC_RobotTaskFB** · `HandleSyncLoadData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncLoadData
++++ b/MC_RobotTaskFB.HandleSyncLoadData
+@@ -15,7 +15,7 @@
+      END_IF
+      
+      // Check More Data on RC than on PLC -> Synchronization not possible
+-     IF (AxesGroup.State.ConfigurationData.HighestToolIndex > AxesGroup.SystemData.LoadDataCount)
++     IF (AxesGroup.State.ConfigurationData.HighestLoadIndex > AxesGroup.SystemData.LoadDataCount) // ST-FIX F101
+      THEN
+        SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_LOAD_COUNT_RC_HIGHER_THAN_PLC, Overwrite := FALSE);
+        RETURN;
+```
+
+### F102
+
+_`MC_RobotTaskFB.HandleSync{Tool,Frame,Load}Data`, `HandleSyncWorkArea` step 0 - count check ran before the initialization with the `HighestXIndex` of the previous connection and the configuration of the previous enable (wrong error after a re-enable with other modes)_
+
+- F102: the count check (RC has more tools / frames / loads / work areas than the PLC array) ran in step 0 before the initialization - with the HighestXIndex of the previous connection and the configuration of the previous enable; now after Initialized
+
+**MC_RobotTaskFB** · `HandleSyncToolData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncToolData
++++ b/MC_RobotTaskFB.HandleSyncToolData
+@@ -15,19 +15,20 @@
+        RETURN;
+      END_IF
+      
++
++     // wait for initialisation done
++     IF  ((     AxesGroup.State.RobotData.RCSupportedFunctions. ReadToolData ) AND
++          (     AxesGroup.State.RobotData.RCSupportedFunctions.WriteToolData ) AND
++          (     AxesGroup.State.Initialized                                  ) AND 
++          ( NOT Error                                                        ))  
++     THEN
++       // ST-FIX F102: count check after the initialization (HighestXIndex of this connection)
+      // Check More Data on RC than on PLC -> Synchronization not possible
+      IF (AxesGroup.State.ConfigurationData.HighestToolIndex > AxesGroup.SystemData.ToolDataCount)
+      THEN
+        SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_TOOL_COUNT_RC_HIGHER_THAN_PLC, Overwrite := FALSE);
+        RETURN;
+ 		 END_IF
+-
+-     // wait for initialisation done
+-     IF  ((     AxesGroup.State.RobotData.RCSupportedFunctions. ReadToolData ) AND
+-          (     AxesGroup.State.RobotData.RCSupportedFunctions.WriteToolData ) AND
+-          (     AxesGroup.State.Initialized                                  ) AND 
+-          ( NOT Error                                                        ))  
+-     THEN
+        // Check PLC tools < RC tools and SyncTool enabled ?    
+        IF (( AxesGroup.State.DataEnableSync.EnableSyncTool      = TRUE                             )  AND
+            ( AxesGroup.Parameter.Rob.Parameter.HighestToolIndex > AxesGroup.SystemData.ToolDataMax ))        
+```
+
+**MC_RobotTaskFB** · `HandleSyncFrameData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncFrameData
++++ b/MC_RobotTaskFB.HandleSyncFrameData
+@@ -15,12 +15,6 @@
+        RETURN;
+      END_IF
+ 
+-     // Check More Data on RC than on PLC -> Synchronization not possible
+-     IF (AxesGroup.State.ConfigurationData.HighestFrameIndex > AxesGroup.SystemData.FrameDataCount)
+-     THEN
+-       SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_FRAME_COUNT_RC_HIGHER_THAN_PLC, Overwrite := FALSE);
+-       RETURN;
+-		 END_IF
+      
+      // wait for initialisation done
+      IF  ((     AxesGroup.State.RobotData.RCSupportedFunctions. ReadFrameData ) AND
+@@ -28,6 +22,13 @@
+           (     AxesGroup.State.Initialized                                   ) AND 
+           ( NOT Error                                                         ))  
+      THEN
++       // ST-FIX F102: count check after the initialization (HighestXIndex of this connection)
++     // Check More Data on RC than on PLC -> Synchronization not possible
++     IF (AxesGroup.State.ConfigurationData.HighestFrameIndex > AxesGroup.SystemData.FrameDataCount)
++     THEN
++       SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_FRAME_COUNT_RC_HIGHER_THAN_PLC, Overwrite := FALSE);
++       RETURN;
++		 END_IF
+        // Check PLC frames < RC frames and SyncFrame enabled ?    
+        IF (( AxesGroup.State.DataEnableSync.EnableSyncFrame      = TRUE                              )  AND
+            ( AxesGroup.Parameter.Rob.Parameter.HighestFrameIndex > AxesGroup.SystemData.FrameDataMax ))        
+```
+
+**MC_RobotTaskFB** · `HandleSyncLoadData` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncLoadData
++++ b/MC_RobotTaskFB.HandleSyncLoadData
+@@ -14,19 +14,20 @@
+        RETURN;
+      END_IF
+      
++
++     // wait for initialisation done
++     IF  ((     AxesGroup.State.RobotData.RCSupportedFunctions. ReadLoadData ) AND
++          (     AxesGroup.State.RobotData.RCSupportedFunctions.WriteLoadData ) AND
++          (     AxesGroup.State.Initialized                                  ) AND 
++          ( NOT Error                                                        ))  
++     THEN
++       // ST-FIX F102: count check after the initialization (HighestXIndex of this connection)
+      // Check More Data on RC than on PLC -> Synchronization not possible
+      IF (AxesGroup.State.ConfigurationData.HighestLoadIndex > AxesGroup.SystemData.LoadDataCount) // ST-FIX F101
+      THEN
+        SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_LOAD_COUNT_RC_HIGHER_THAN_PLC, Overwrite := FALSE);
+        RETURN;
+ 		 END_IF
+-
+-     // wait for initialisation done
+-     IF  ((     AxesGroup.State.RobotData.RCSupportedFunctions. ReadLoadData ) AND
+-          (     AxesGroup.State.RobotData.RCSupportedFunctions.WriteLoadData ) AND
+-          (     AxesGroup.State.Initialized                                  ) AND 
+-          ( NOT Error                                                        ))  
+-     THEN
+        // Check PLC loads < RC Loads and SyncLoad enabled ?    
+        IF (( AxesGroup.State.DataEnableSync.EnableSyncLoad      = TRUE                             )  AND
+            ( AxesGroup.Parameter.Rob.Parameter.HighestLoadIndex > AxesGroup.SystemData.LoadDataMax ))        
+```
+
+**MC_RobotTaskFB** · `HandleSyncWorkArea` · patch
+
+```diff
+--- a/MC_RobotTaskFB.HandleSyncWorkArea
++++ b/MC_RobotTaskFB.HandleSyncWorkArea
+@@ -14,19 +14,20 @@
+        RETURN;
+      END_IF
+      
++     
++     // wait for initialisation done
++     IF  ((     AxesGroup.State.RobotData.RCSupportedFunctions. ReadWorkArea ) AND
++          (     AxesGroup.State.RobotData.RCSupportedFunctions.WriteWorkArea ) AND
++          (     AxesGroup.State.Initialized                                  ) AND 
++          ( NOT Error                                                        ))  
++     THEN
++       // ST-FIX F102: count check after the initialization (HighestXIndex of this connection)
+      // Check More Data on RC than on PLC -> Synchronization not possible
+      IF (AxesGroup.State.ConfigurationData.HighestWorkAreaIndex > AxesGroup.SystemData.WorkAreasCount)
+      THEN
+        SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_SYNC_WORKAREA_COUNT_RC_HIGHER_THAN_PLC, Overwrite := FALSE);
+        RETURN;
+ 		 END_IF
+-     
+-     // wait for initialisation done
+-     IF  ((     AxesGroup.State.RobotData.RCSupportedFunctions. ReadWorkArea ) AND
+-          (     AxesGroup.State.RobotData.RCSupportedFunctions.WriteWorkArea ) AND
+-          (     AxesGroup.State.Initialized                                  ) AND 
+-          ( NOT Error                                                        ))  
+-     THEN
+        // Check PLC WorkAreas < RC WorkAreas and SyncWorkArea enabled ?    
+        IF (( AxesGroup.State.DataEnableSync.EnableSyncWorkArea      = TRUE                              )  AND
+            ( AxesGroup.Parameter.Rob.Parameter.HighestWorkAreaIndex > AxesGroup.SystemData.WorkAreasMax ))        
+```
+
+### F103
+
+_`MC_RobotTaskFB.OnExecRun` step 0, `HandleSeqAck`, `CreateSendPayloadSequence` - RobotTask enabled again with one telegram sequence after an enable with two: `HandleSeqAck` runs before the new configuration is taken and kept `SequenceCountSend` = 1, `CreateSendPayloadSequence` wrote the header of a 2nd sequence behind the end of the telegram - on the PLC memory behind the send buffer was overwritten (constants of the test project, all later tests 16#80A3); found by the TcUnit suite SDK-LOOP_
+
+- F103: re-enable of the RobotTask after two telegram sequences: SequenceCountSend kept 1 from the configuration of the previous enable (HandleSeqAck runs before the new configuration is taken) - the header of a 2nd sequence was written behind the end of the telegram (PLC: memory overwritten)
+
+**MC_RobotTaskFB** · `OnExecRun` · patch
+
+```diff
+--- a/MC_RobotTaskFB.OnExecRun
++++ b/MC_RobotTaskFB.OnExecRun
+@@ -39,6 +39,13 @@
+           _parCfg := ParCfg;
+           // ST-FIX F79: no error state of the RC seen yet in this initialization
+           _initErrorState := TelegramState.UNDEFINED;
++          // ST-FIX F103: number of telegram sequences of this configuration (not of the previous enable)
++          IF ( _parCfg.Com.TwoSequences )
++          THEN
++            AxesGroup.State.SequenceCountSend := 1;
++          ELSE
++            AxesGroup.State.SequenceCountSend := 0;
++          END_IF
+            // inc step counter
+           _stepCmd := _stepCmd + 1; 
+          END_IF
 ```
 
 ## Data types

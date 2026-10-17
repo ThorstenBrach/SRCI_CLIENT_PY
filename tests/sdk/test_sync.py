@@ -627,3 +627,82 @@ def test_start_up_conflict_with_user_interaction(
         assert data.value(h) == data.changed
     else:
         assert data.value(h) != data.changed
+
+
+# ---------------------------------------------------------------- findings of the PLC tests (RobotTask reused)
+
+
+# DefaultDynamics: the RC answers rate 0 with its minimum (1 %), SWLimits: 0 is below the lower limit
+ZERO: dict[str, Callable[[RobotTaskHarness], None]] = {
+    "Tool": lambda h: setattr(h.tools[1].Data, "X", 0.0),
+    "Frame": lambda h: setattr(h.frames[1].Data, "X", 0.0),
+    "Load": lambda h: setattr(h.loads[1].Data, "Mass", 0.0),
+    "ReferenceDynamics": lambda h: setattr(h.reference_dynamics, "VelocityReference", 0.0),
+}
+
+
+@pytest.mark.parametrize("data", [d for d in DATA_SETS if d.name in ZERO], ids=lambda d: d.name)
+def test_value_zero_after_a_change(sdk: SdkSimulator, clock: FakeClock, data: DataSet) -> None:
+    """A value changed back to 0 stays 0: the RC leaves out trailing zero bytes of the response, the
+    write block must not take the values of its previous response (ST-FIX F100)."""
+    h = harness(sdk, clock, data, SyncMode.CLIENT_TO_SERVER, SyncMode.CLIENT_TO_SERVER)
+    start_up(h)
+    data.change(h)
+    h.run(400)
+    assert data.value(h) == data.changed
+    ZERO[data.name](h)
+    h.run(400)
+    assert data.value(h) == 0.0, "the PLC value is replaced by the value of the previous response"
+    assert h.rt.Synchronized and not h.rt.Error, h.history
+
+
+def test_write_block_takes_no_values_of_the_previous_response(sdk: SdkSimulator, clock: FakeClock) -> None:
+    """A write block used twice: the second (shortened) response does not keep the values of the first
+    one (ST-FIX F100)."""
+    h = RobotTaskHarness(sdk_transport(sdk, SIZE, SIZE), advance=clock.advance)
+    h.run(200, until=lambda: bool(h.ag.State.CMDsEnabled or h.rt.Error))
+    assert h.ag.State.CMDsEnabled, h.history
+    fb = h.add(new_instance("MC_WriteRobotReferenceDynamicsFB"))
+    for value in (777.0, 0.0):
+        fb.ParCmd.DynamicValues.VelocityReference = value
+        fb.Execute = True
+        h.run(200, until=lambda: bool(fb.Done or fb.Error))
+        assert fb.Done and not fb.Error, hex(fb.ErrorID)
+        assert fb.OutCmd.ReferenceDynamicValues.VelocityReference == value
+        fb.Execute = False
+        h.run(2)
+
+
+def test_count_check_uses_the_current_configuration(sdk: SdkSimulator, clock: FakeClock) -> None:
+    """The count check (RC has more elements than the PLC array) runs after the initialization with the
+    configuration of this enable - not with the modes and RC data of the previous one (ST-FIX F102)."""
+    h = RobotTaskHarness(sdk_transport(sdk, SIZE, SIZE), advance=clock.advance, count=10)
+    modes = h.cfg.Plc.Parameter.SynchronizationModes
+    modes.Frame[SyncTime.DURING_START_UP] = modes.Frame[SyncTime.AFTER_START_UP] = SyncMode.CLIENT_TO_SERVER
+    h.run(600, until=lambda: bool(h.rt.Error))
+    assert h.rt.ErrorID == E.ERR_SYNC_FRAME_COUNT_RC_HIGHER_THAN_PLC, h.history
+    h.enable = False
+    h.run(50)
+    modes.Frame[SyncTime.DURING_START_UP] = modes.Frame[SyncTime.AFTER_START_UP] = SyncMode.NO_SYNCHRONIZATION
+    modes.Load[SyncTime.DURING_START_UP] = modes.Load[SyncTime.AFTER_START_UP] = SyncMode.CLIENT_TO_SERVER
+    h.enable = True
+    h.run(600, until=lambda: bool(h.rt.Error))
+    assert h.rt.ErrorID == E.ERR_SYNC_LOAD_COUNT_RC_HIGHER_THAN_PLC, h.history
+
+
+def test_load_count_uses_the_highest_load_index(sdk: SdkSimulator, clock: FakeClock) -> None:
+    """The load count of the RC is HighestLoadIndex, not HighestToolIndex (ST-FIX F101): an RC with 6 tools
+    and 20 loads does not fit into a load array of 10."""
+    h = RobotTaskHarness(sdk_transport(sdk, SIZE, SIZE), advance=clock.advance, count=10)
+    modes = h.cfg.Plc.Parameter.SynchronizationModes
+    modes.Load[SyncTime.DURING_START_UP] = modes.Load[SyncTime.AFTER_START_UP] = SyncMode.CLIENT_TO_SERVER
+    exchange = h.rt._exchangeConfiguration
+    apply = exchange.OnApplyOutCmd
+
+    def fewer_tools(**kwargs: Any) -> None:
+        apply(**kwargs)
+        exchange.OutCmd.HighestToolIndex = 5
+
+    exchange.OnApplyOutCmd = fewer_tools  # type: ignore[method-assign]
+    h.run(1500, until=lambda: bool(h.rt.Error or h.rt.Synchronized))
+    assert h.rt.Error and h.rt.ErrorID == E.ERR_SYNC_LOAD_COUNT_RC_HIGHER_THAN_PLC, h.history

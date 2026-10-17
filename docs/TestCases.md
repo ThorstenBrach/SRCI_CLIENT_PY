@@ -26,9 +26,9 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 32 | 33 |
 | [SDK-RANGE](#sdk-range) | Ranges of the command parameters against the SDK | 15 | 47 |
-| [SDK-SYNC](#sdk-sync) | Synchronization of the user data against the SDK | 17 | 103 |
+| [SDK-SYNC](#sdk-sync) | Synchronization of the user data against the SDK | 21 | 110 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 14 | 17 |
-| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 42 | 70 |
+| [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 43 | 71 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
@@ -40,7 +40,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **421** | **3862** |
+| | **Total** | **426** | **3870** |
 
 ## Test methodology
 
@@ -197,6 +197,10 @@ Synchronization of the user data against the SDK
 | SDK-SYNC-015 | The RC has more tools / frames / loads (20) than the PLC array (10): error, no synchronization (5.6.7.5.1). | 3 | `test_more_elements_on_the_rc_than_on_the_plc` |
 | SDK-SYNC-016 | The PLC array (30) is longer than on the RC (20): only the elements of the RC are read (5.6.7.5.2). | 3 | `test_more_elements_on_the_plc_than_on_the_rc` |
 | SDK-SYNC-017 | An undefined SyncReaction (table 5-108) is rejected by the client: error, the configuration is not sent. | 3 | `test_undefined_sync_reaction_is_rejected` |
+| SDK-SYNC-018 | A value changed back to 0 stays 0: the RC leaves out trailing zero bytes of the response, the write block must not take the values of its previous response (ST-FIX F100). | 4 | `test_value_zero_after_a_change` |
+| SDK-SYNC-019 | A write block used twice: the second (shortened) response does not keep the values of the first one (ST-FIX F100). | 1 | `test_write_block_takes_no_values_of_the_previous_response` |
+| SDK-SYNC-020 | The count check (RC has more elements than the PLC array) runs after the initialization with the configuration of this enable - not with the modes and RC data of the previous one (ST-FIX F102). | 1 | `test_count_check_uses_the_current_configuration` |
+| SDK-SYNC-021 | The load count of the RC is HighestLoadIndex, not HighestToolIndex (ST-FIX F101): an RC with 6 tools and 20 loads does not fit into a load array of 10. | 1 | `test_load_count_uses_the_highest_load_index` |
 
 ## SDK-RT
 
@@ -267,6 +271,7 @@ SDK in the loop (simulator binding)
 | SDK-LOOP-045 | Minicobo rejects an invalid srci version | 4 | `test_minicobo_rejects_an_invalid_srci_version` |
 | SDK-LOOP-046 | Initialization with the listed ParCfg, GroupReset, EnableRobot, override, joint move into the elbow-bent pose, rectangle with 4 linear moves, back to the start position, disable (the script runs from top to bottom, so it is started as a process). | 1 | `test_quickstart_initializes_enables_moves_and_returns` |
 | SDK-LOOP-047 | Blending: every TurnMode of MoveLinearAbsolute, then every BlendingMode with MoveLinearAbsolute and MoveAxesAbsolute; the simulator (harness) supports all TurnModes and CORNER_DISTANCE / MAX_CORNER_DEVIATION / RAMP_OVERLAP, the other blending modes are rejected with 16#8E05 and the probe goes on. | 1 | `test_minicobo_probes_the_blending_modes` |
+| SDK-LOOP-049 | F103: the RobotTask enabled again with one telegram sequence after two: the header of a 2nd sequence must not be written (it lay behind the end of the telegram - on the PLC memory was overwritten). | 1 | `test_f103_one_sequence_after_two_sequences` |
 
 ## TCP
 

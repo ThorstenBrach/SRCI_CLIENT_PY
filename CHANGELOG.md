@@ -97,6 +97,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - ST-FIX F98: `ToolNo` / `FrameNo` / `LoadNo` outside -1..254 is a range error (16#8412 / 16#8414 / 16#8418)
  - ST-FIX F99: `MC_ReturnToPrimaryFB` rejects `TrajectoryMode` 0 (Invalid) with 16#8409 - set
    `TrajectoryMode` to `LINEAR_MOVEMENT` or `PTP_MOVEMENT`
+ - ST-FIX F100: the response of a command is parsed into a cleared `_response` (109 blocks) - the RC
+   leaves out trailing zero bytes, a shortened response kept the values of the previous command (e.g.
+   `MC_WriteRobotReferenceDynamicsFB` wrote 777 back into the user data after a write of 0)
+ - ST-FIX F101: the load count check uses `HighestLoadIndex` (was `HighestToolIndex`)
+ - ST-FIX F102: the count check of tools / frames / loads / work areas runs after the initialization
+   (was: before, with the RC data and configuration of the previous enable)
+ - ST-FIX F103: `MC_RobotTaskFB` enabled again with one telegram sequence after two no longer writes the
+   header of a 2nd sequence behind the end of the telegram (`SequenceCountSend` of the previous enable)
  - Tests `tests/sdk/test_parameter_ranges.py` (area SDK-RANGE): parameter ranges against the SDK
  - Tests `tests/sdk/test_sync.py` (area SDK-SYNC): synchronization of the user data against the SDK
  - `tools.sdk_custom_report` accepts a CUSTOM block that keeps the original SDK code as a comment

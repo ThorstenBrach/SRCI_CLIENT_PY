@@ -619,6 +619,34 @@
   "status": "active"
  },
  {
+  "id": "SDK-SYNC-018",
+  "test": "tests/sdk/test_sync.py::test_value_zero_after_a_change",
+  "title": "A value changed back to 0 stays 0: the RC leaves out trailing zero bytes of the response, the write block must not take the values of its previous response (ST-FIX F100).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-019",
+  "test": "tests/sdk/test_sync.py::test_write_block_takes_no_values_of_the_previous_response",
+  "title": "A write block used twice: the second (shortened) response does not keep the values of the first one (ST-FIX F100).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-020",
+  "test": "tests/sdk/test_sync.py::test_count_check_uses_the_current_configuration",
+  "title": "The count check (RC has more elements than the PLC array) runs after the initialization with the configuration of this enable - not with the modes and RC data of the previous one (ST-FIX F102).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-021",
+  "test": "tests/sdk/test_sync.py::test_load_count_uses_the_highest_load_index",
+  "title": "The load count of the RC is HighestLoadIndex, not HighestToolIndex (ST-FIX F101): an RC with 6 tools and 20 loads does not fit into a load array of 10.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-RT-001",
   "test": "tests/sdk/test_robot_task.py::test_initialized_without_synchronization",
   "title": "RobotTask reaches Initialized without data synchronization",
@@ -1051,6 +1079,13 @@
   "title": "Control channel for PLC tests: the simulator of the connection is set up and read over the second port; RESET restarts the RC (a new initialization follows).",
   "refs": [],
   "status": "retired"
+ },
+ {
+  "id": "SDK-LOOP-049",
+  "test": "tests/sdk/test_spec_audit.py::test_f103_one_sequence_after_two_sequences",
+  "title": "F103: the RobotTask enabled again with one telegram sequence after two: the header of a 2nd sequence must not be written (it lay behind the end of the telegram - on the PLC memory was overwritten).",
+  "refs": [],
+  "status": "active"
  },
  {
   "id": "TCP-001",
