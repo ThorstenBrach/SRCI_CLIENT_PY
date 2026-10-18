@@ -126,7 +126,7 @@ jobs:
             echo "::error::SDK build failed (log not shown - it may contain SDK sources; build locally)"; exit 1
           fi
       - run: |
-          pip install -e ".[dev]" > "$RUNNER_TEMP/pip.log" 2>&1
+          pip install -e ".[dev,opcua]" > "$RUNNER_TEMP/pip.log" 2>&1
           pip install -e _sdk/srci_py_harness/python --no-deps >> "$RUNNER_TEMP/pip.log" 2>&1
         if: steps.key.outputs.ok == 'true'
       - name: docs/TestCases.md is up to date (instance counts with the SDK tests)
