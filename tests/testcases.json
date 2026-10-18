@@ -1207,6 +1207,132 @@
   "status": "active"
  },
  {
+  "id": "OPCUA-001",
+  "test": "tests/opcua/test_opcua_transport.py::test_write_and_read",
+  "title": "The telegram is written to out_node and the telegram of in_node is read (ByteString, Byte[], Double[]).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-002",
+  "test": "tests/opcua/test_opcua_transport.py::test_close_is_idempotent_and_final",
+  "title": "Close twice; an exchange after close raises TransportClosedError.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-003",
+  "test": "tests/opcua/test_opcua_transport.py::test_connects_on_first_exchange",
+  "title": "Without connect() the first exchange opens the connection.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-004",
+  "test": "tests/opcua/test_opcua_transport.py::test_connect_checks_nodes",
+  "title": "Unknown NodeId, wrong data type and wrong length are reported on connect.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-005",
+  "test": "tests/opcua/test_opcua_transport.py::test_length_check_can_be_disabled",
+  "title": "Check_lengths=False accepts a node with another length; a wrong answer is a protocol error.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-006",
+  "test": "tests/opcua/test_opcua_transport.py::test_wrong_answer_length_is_protocol_error",
+  "title": "The RC writes an answer of the wrong length: TransportProtocolError, the connection stays.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-007",
+  "test": "tests/opcua/test_opcua_transport.py::test_no_server",
+  "title": "No server at the endpoint: TransportConnectError, reconnect backoff starts.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-008",
+  "test": "tests/opcua/test_opcua_transport.py::test_silent_server_times_out",
+  "title": "A server that accepts but never answers: connect fails within the timeout.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-009",
+  "test": "tests/opcua/test_opcua_transport.py::test_server_restart_and_reconnect",
+  "title": "The server goes down: TransportClosedError; after the restart the transport reconnects.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-010",
+  "test": "tests/opcua/test_opcua_transport.py::test_reconnect_disabled",
+  "title": "With reconnect disabled a lost connection stays lost.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-011",
+  "test": "tests/opcua/test_opcua_transport.py::test_timeout_and_errors_of_a_request_drop_the_connection",
+  "title": "A timeout of a request is a TransportTimeoutError, any other error a TransportClosedError.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-012",
+  "test": "tests/opcua/test_opcua_transport.py::test_username_password_are_passed",
+  "title": "User and password are given to the client (anonymous server: the login is rejected or ignored).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-013",
+  "test": "tests/opcua/test_opcua_transport.py::test_missing_asyncua",
+  "title": "Without asyncua the connect explains how to install it.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-014",
+  "test": "tests/opcua/test_opcua_transport.py::test_browse_lists_telegram_candidates",
+  "title": "Browse lists the variables with data type, length and write access.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-015",
+  "test": "tests/opcua/test_opcua_transport.py::test_browse_no_server",
+  "title": "Browse of an unreachable endpoint raises TransportConnectError.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-016",
+  "test": "tests/opcua/test_opcua_transport.py::test_parallel_transports",
+  "title": "Two transports (two robots) on one server in two threads.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-017",
+  "test": "tests/opcua/test_opcua_sim.py::test_simulator_answers_in_its_own_cycle",
+  "title": "The simulator answers every cycle; the client sees the answer to its request a few cycles later.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "OPCUA-018",
+  "test": "tests/opcua/test_opcua_sim.py::test_srci_client_over_opcua_against_sdk",
+  "title": "SDK in the loop over OPC UA: the RobotTask initializes and reads the robot data.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "GEN-01",
   "test": "tests/unit/fb/test_interface_spec.py::test_interface_matches_the_specification",
   "title": "Every input/output of the specification exists in the function block.",

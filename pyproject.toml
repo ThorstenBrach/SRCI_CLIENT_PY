@@ -29,6 +29,9 @@ dev = [
     "ruff==0.15.11",  # fixed versions: CI and local checks see the same rules
     "mypy==1.20.2",
 ]
+opcua = [
+    "asyncua>=1.1",  # OPC UA transport (LGPL-3.0, imported only on connect)
+]
 
 [project.urls]
 Source = "https://github.com/ThorstenBrach/SRCI_CLIENT_PY"
@@ -79,6 +82,10 @@ module = ["srci_sdk_sim", "srci_sdk_sim.*"]  # private SDK package (SDK reposito
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
+module = ["asyncua", "asyncua.*"]  # optional extra opcua
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
 module = ["tests.*"]
 warn_unreachable = false  # attribute narrowing across calls of stateful FBs
 strict_equality = false
@@ -93,6 +100,7 @@ addopts = "-ra --strict-markers -p tools.test_report.plugin"
 markers = [
     "sdk: tests that need the compiled SRCI SDK simulator (skipped if not built)",
     "tcp: tests that open local TCP sockets",
+    "opcua: tests with a local OPC UA server (skipped without asyncua)",
     "slow: long running tests",
 ]
 

@@ -30,6 +30,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 14 | 17 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 43 | 71 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
+| [OPCUA](#opcua) | OPC UA transport | 18 | 28 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
 | [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 68 | 154 |
@@ -40,7 +41,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **428** | **3878** |
+| | **Total** | **446** | **3906** |
 
 ## Test methodology
 
@@ -296,6 +297,31 @@ TCP transport
 | TCP-015 | Exchange after close raises an error | 1 | `test_exchange_after_close_raises` |
 | TCP-016 | Soak test: random delays/chunks/drops - every successful answer must match its request. | 1 | `test_many_cycles_with_random_faults` |
 | TCP-017 | The PLC gateway simulator serves one client after another | 1 | `test_simulator_serves_one_client_after_another` |
+
+## OPCUA
+
+OPC UA transport
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| OPCUA-001 | The telegram is written to out_node and the telegram of in_node is read (ByteString, Byte[], Double[]). | 3 | `test_write_and_read` |
+| OPCUA-002 | Close twice; an exchange after close raises TransportClosedError. | 1 | `test_close_is_idempotent_and_final` |
+| OPCUA-003 | Without connect() the first exchange opens the connection. | 1 | `test_connects_on_first_exchange` |
+| OPCUA-004 | Unknown NodeId, wrong data type and wrong length are reported on connect. | 7 | `test_connect_checks_nodes` |
+| OPCUA-005 | Check_lengths=False accepts a node with another length; a wrong answer is a protocol error. | 1 | `test_length_check_can_be_disabled` |
+| OPCUA-006 | The RC writes an answer of the wrong length: TransportProtocolError, the connection stays. | 1 | `test_wrong_answer_length_is_protocol_error` |
+| OPCUA-007 | No server at the endpoint: TransportConnectError, reconnect backoff starts. | 1 | `test_no_server` |
+| OPCUA-008 | A server that accepts but never answers: connect fails within the timeout. | 1 | `test_silent_server_times_out` |
+| OPCUA-009 | The server goes down: TransportClosedError; after the restart the transport reconnects. | 1 | `test_server_restart_and_reconnect` |
+| OPCUA-010 | With reconnect disabled a lost connection stays lost. | 1 | `test_reconnect_disabled` |
+| OPCUA-011 | A timeout of a request is a TransportTimeoutError, any other error a TransportClosedError. | 1 | `test_timeout_and_errors_of_a_request_drop_the_connection` |
+| OPCUA-012 | User and password are given to the client (anonymous server: the login is rejected or ignored). | 1 | `test_username_password_are_passed` |
+| OPCUA-013 | Without asyncua the connect explains how to install it. | 1 | `test_missing_asyncua` |
+| OPCUA-014 | Browse lists the variables with data type, length and write access. | 1 | `test_browse_lists_telegram_candidates` |
+| OPCUA-015 | Browse of an unreachable endpoint raises TransportConnectError. | 1 | `test_browse_no_server` |
+| OPCUA-016 | Two transports (two robots) on one server in two threads. | 1 | `test_parallel_transports` |
+| OPCUA-017 | The simulator answers every cycle; the client sees the answer to its request a few cycles later. | 3 | `test_simulator_answers_in_its_own_cycle` |
+| OPCUA-018 | SDK in the loop over OPC UA: the RobotTask initializes and reads the robot data. | 1 | `test_srci_client_over_opcua_against_sdk` |
 
 ## SPEC-IF
 

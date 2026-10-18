@@ -23,6 +23,8 @@
 """Transports: exchange one telegram per cycle with the robot side.
 
 * :class:`TcpTransport` - PLC gateway via TCP (raw telegrams, lockstep)
+* :class:`OpcUaTransport` - telegrams as byte arrays on two nodes of an OPC UA server
+  (needs ``pip install srci-client[opcua]``, imported on connect)
 * :class:`LoopbackTransport` - in-process handler (tests, SDK simulator)
 * :class:`FaultInjectingTransport` - deterministic fault injection for tests
 """
@@ -40,6 +42,7 @@ from srci.transport.base import (
 )
 from srci.transport.fault import Fault, FaultInjectingTransport, FaultPlan
 from srci.transport.loopback import LoopbackTransport
+from srci.transport.opcua import OpcUaTransport
 from srci.transport.tcp import TcpTransport
 
 __all__ = [
@@ -47,6 +50,7 @@ __all__ = [
     "FaultInjectingTransport",
     "FaultPlan",
     "LoopbackTransport",
+    "OpcUaTransport",
     "ReconnectPolicy",
     "TcpTransport",
     "Transport",

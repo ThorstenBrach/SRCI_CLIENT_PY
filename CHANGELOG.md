@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    (sequential scripts; the program runs cyclically in a background thread like a PLC task,
    `background=False` for deterministic tests), `srci.runtime.Runner` (fixed cycle in a thread)
  - Transports: TCP/IP to a PLC gateway (lockstep, reconnect), loopback, fault injection
+ - OPC UA transport `OpcUaTransport` (optional extra `srci-client[opcua]`, package asyncua):
+   PLC->RC telegram written to one node, RC->PLC telegram read from another, data type `ByteString`
+   or a number array (`Byte[]` ... `Double[]`) detected on connect, optional user / password,
+   reconnect like the TCP transport; `srci.transport.opcua.browse()` lists the variables of a
+   server for configuration tools. Tested against a local asyncua server, not yet on a robot
+ - `srci.sim.opcua.OpcUaRcSimulator`: OPC UA server with the telegram nodes that answers in its own
+   cycle like a robot controller (handler, e.g. the SDK simulator)
  - Example `examples/core_profile`: every function of the Core profile
  - Example `examples/jaka_minicobo`: first steps with a real robot behind the TwinCAT PLC gateway
    - `info`: robot data, supported Core functions (`RCSupportedFunctions`), configuration, SW

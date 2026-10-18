@@ -20,4 +20,4 @@
 #
 # -------------------------------------------------------------------------
 
-"""Simulators (PLC gateway, later SDK based robot controller)."""
+"""Simulators: PLC gateway (TCP), robot controller with OPC UA telegram nodes (``srci.sim.opcua``)."""

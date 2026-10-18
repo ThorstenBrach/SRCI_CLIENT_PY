@@ -1,4 +1,4 @@
-# Transport: Python ↔ PLC gateway
+# Transport: Python ↔ PLC gateway / OPC UA server
 
 ```
 Python (srci)  --TCP, raw telegram-->  PLC gateway  --PROFINET-->  Robot controller (RC)
@@ -41,6 +41,59 @@ Python (srci)  --TCP, raw telegram-->  PLC gateway  --PROFINET-->  Robot control
 4. Never send without a request.
 5. When the client disconnects: stop forwarding. The RC detects the missing LifeSign
    change and leaves the initialized state - no special handling needed.
+
+## OPC UA transport
+
+```
+Python (srci)  --OPC UA Write out_node, Read in_node-->  OPC UA server of the robot controller
+```
+
+For robot controllers that offer the SRCI telegrams on their own OPC UA server - no PLC in
+between. Status: tested against a local asyncua server (`tests/opcua`), **not yet on a robot**.
+
+```python
+from srci.transport import OpcUaTransport
+
+transport = OpcUaTransport(
+    "opc.tcp://192.168.0.254:4840",     # endpoint
+    "ns=2;s=SRCI.PlcToRob",             # out_node: PLC->RC telegram, written
+    "ns=2;s=SRCI.RobToPlc",             # in_node:  RC->PLC telegram, read
+    256, 256,                           # send_size, recv_size
+    timeout=1.0,                        # per request
+    username=None, password=None,       # optional; anonymous without
+)
+```
+
+Installation: `pip install srci-client[opcua]` (package [asyncua](https://github.com/FreeOpcUa/opcua-asyncio),
+LGPL-3.0). It is imported only when a connection is opened, `import srci.transport` works without it;
+a missing asyncua gives `TransportConnectError` with the install hint.
+
+| Item | Definition |
+|---|---|
+| Exchange | per cycle one **Write** of the PLC->RC telegram to `out_node`, then one **Read** of `in_node` |
+| Handshake | none on the OPC UA level: request and answer are matched by the SRCI protocol (sequence ACKs, LifeSign) like on PROFINET; the RC does not have to answer within the same cycle |
+| Data type | detected on connect from the current value (or the declared data type of an empty node): `ByteString` or a one dimensional array of `Byte`, `SByte`, `(U)Int16/32/64`, `Float`, `Double` - one telegram byte per element (0 ... 255). The write keeps the encoding of the node |
+| Length check | on connect the current value must have `send_size` / `recv_size` bytes (an empty node is accepted; `check_lengths=False` switches it off). Every read answer must have `recv_size` bytes, else `TransportProtocolError` (the connection stays) |
+| Timeout | `timeout` per request (connect, write, read); exceeded: `TransportTimeoutError`, the connection is closed |
+| Errors | connection lost, bad status code: `TransportClosedError`; the next `exchange` reconnects with the `ReconnectPolicy` backoff (like TCP) |
+| Security | first version without security; user / password optional, `security` takes the security string of asyncua (`"Basic256Sha256,Sign,cert.der,key.pem"`, prepared, not tested) |
+| Cycle time | one write + one read are two round trips (typically 1 ... 5 ms in a LAN, more with security). Keep the cycle well below the LifeSign timeout of the RC |
+
+`srci.transport.opcua.browse(endpoint)` lists the variables of a server (NodeId, path, data type,
+length, writable, `telegram_candidate`) - used by the connection configurator of the HMI.
+
+`srci.sim.opcua.OpcUaRcSimulator(handler, send, recv)` is the counterpart for tests and demos: an
+asyncua server with the nodes `SRCI.PlcToRob` / `SRCI.RobToPlc` that runs its own cycle (10 ms) like a
+robot controller and answers with `handler` - e.g. the SDK simulator
+(`tests/opcua/test_opcua_sim.py`: SrciClient over OPC UA against the SDK, RobotTask initialized).
+
+Notes for robot controllers:
+
+- Writing usually needs a logged-in user; anonymous sessions are often read only.
+- Controllers whose OPC UA server publishes only scalar `num`/`bool`/`string` variables cannot carry
+  a telegram; number **arrays** (`Double[]`) work since the data type is detected.
+- Some controllers offer SRCI also over a TCP socket of their own; whether that protocol matches
+  the raw telegram exchange of `TcpTransport` has to be checked per manufacturer.
 
 ## Other transports
 

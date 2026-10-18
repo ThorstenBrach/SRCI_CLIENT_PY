@@ -60,6 +60,7 @@ AREAS: list[tuple[str, str, str]] = [
     ("sdk/test_robot_task.py", "SDK-RT", "RobotTask (communication, synchronization) against the SDK"),
     ("sdk/", "SDK-LOOP", "SDK in the loop (simulator binding)"),
     ("tcp/", "TCP", "TCP transport"),
+    ("opcua/", "OPCUA", "OPC UA transport"),
     (
         "unit/fb/test_interface_spec.py",
         "SPEC-IF",
