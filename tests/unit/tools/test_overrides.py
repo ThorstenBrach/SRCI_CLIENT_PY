@@ -27,6 +27,7 @@ import pytest
 
 from srci.types import RobotLibraryConstants, VersionStruct
 from tools.plcopen_gen.__main__ import DEFAULT_XML
+from tools.plcopen_gen.model import StructValue
 from tools.plcopen_gen.overrides import OVERRIDES, ConstOverride, OverrideError, apply_overrides
 from tools.plcopen_gen.parser import parse_library
 
@@ -51,17 +52,16 @@ def test_overrides_apply_and_are_documented(lib_xml) -> None:
 
 
 # an override with the value the XML already has (SRCIVersion 1.5.0 since the export of 2026-10-17)
-_SAME = ConstOverride(
-    "RobotLibraryConstants",
-    "SRCIVersion",
-    next(
-        c.init
-        for g in parse_library(Path(DEFAULT_XML)).const_groups
-        for c in g.constants
-        if c.name == "SRCIVersion"
-    ),
-    "x",
-)
+def _srci_version() -> StructValue:
+    for g in parse_library(Path(DEFAULT_XML)).const_groups:
+        for c in g.constants:
+            if c.name == "SRCIVersion":
+                assert isinstance(c.init, StructValue)
+                return c.init
+    raise AssertionError("SRCIVersion not found")
+
+
+_SAME = ConstOverride("RobotLibraryConstants", "SRCIVersion", _srci_version(), "x")
 
 
 def test_obsolete_override_fails(lib_xml) -> None:

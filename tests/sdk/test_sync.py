@@ -556,7 +556,7 @@ def test_more_elements_on_the_plc_than_on_the_rc(sdk: SdkSimulator, clock: FakeC
 def test_undefined_sync_reaction_is_rejected(sdk: SdkSimulator, clock: FakeClock, reaction: int) -> None:
     """An undefined SyncReaction (table 5-108) is rejected by the client: error, the configuration is not sent."""
     h = harness(sdk, clock, DATA_SETS[0], SyncMode.CLIENT_TO_SERVER, SyncMode.CLIENT_TO_SERVER)
-    h.cfg.Rob.Parameter.SyncReaction = reaction
+    h.cfg.Rob.Parameter.SyncReaction = reaction  # type: ignore[assignment]  # undefined value on purpose
     h.run(300, until=lambda: bool(h.rt.Error))
     assert h.rt.Error and h.rt.ErrorID == RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, h.history
     assert not h.rt.Initialized and not h.rt.Synchronized
