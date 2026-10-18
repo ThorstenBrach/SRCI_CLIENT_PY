@@ -22,8 +22,8 @@
 
 """OPC UA transport: the telegrams as byte arrays on two nodes of an OPC UA server.
 
-For robot controllers that offer SRCI on an OPC UA server (direct connection from Python,
-no PLC in between). Only the medium changes; the SRCI telegrams are the same as over TCP:
+For a PLC bridge or a robot controller that offers the SRCI telegrams on an OPC UA server.
+Only the medium changes; the SRCI telegrams are the same as over TCP:
 
 * every cycle the PLC->RC telegram (``send_size`` bytes) is **written** to ``out_node`` and the
   RC->PLC telegram (``recv_size`` bytes) is **read** from ``in_node``;

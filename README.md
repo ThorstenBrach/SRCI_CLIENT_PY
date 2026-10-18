@@ -139,11 +139,11 @@ The PLC side is ready-made in [SRCI_TcpIp_Bridge](https://github.com/ThorstenBra
 * The transport is exchangeable (`srci.transport.Transport`); the library core can also be used
   without any transport (`program.step(in_bytes) -> out_bytes`).
 
-**OPC UA (no PLC):** a robot controller that offers the SRCI telegrams on its own OPC UA server is
-connected directly with `OpcUaTransport` (`pip install srci-client[opcua]`): every cycle the
-PLC→RC telegram is written to one node and the RC→PLC telegram is read from another
-(`ByteString` or a number array). Not yet tested on a real robot, see
-[docs/TRANSPORT.md](docs/TRANSPORT.md#opc-ua-transport).
+**OPC UA:** instead of TCP, the telegrams can be exchanged over OPC UA with `OpcUaTransport`
+(`pip install srci-client[opcua]`) - with the OPC UA server of a PLC bridge or of a robot controller:
+every cycle the PLC→RC telegram is written to one node and the RC→PLC telegram is read from another
+(`ByteString` or a number array). Tested with a JAKA MiniCobo behind a TwinCAT PLC bridge with OPC UA
+server, see [docs/TRANSPORT.md](docs/TRANSPORT.md#opc-ua-transport).
 
 ```python
 from srci.transport import OpcUaTransport

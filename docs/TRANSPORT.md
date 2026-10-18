@@ -45,11 +45,19 @@ Python (srci)  --TCP, raw telegram-->  PLC gateway  --PROFINET-->  Robot control
 ## OPC UA transport
 
 ```
-Python (srci)  --OPC UA Write out_node, Read in_node-->  OPC UA server of the robot controller
+Python (srci)  --OPC UA Write out_node, Read in_node-->  OPC UA server (PLC bridge or robot controller)
 ```
 
-For robot controllers that offer the SRCI telegrams on their own OPC UA server - no PLC in
-between. Status: tested against a local asyncua server (`tests/opcua`), **not yet on a robot**.
+For a PLC bridge that offers the PROFINET process data of the robot on its OPC UA server, or for robot
+controllers that offer the SRCI telegrams on their own OPC UA server.
+
+Status:
+
+- tested against a local asyncua server (`tests/opcua`);
+- **tested on 2026-10-18 with a JAKA MiniCobo**: TwinCAT PLC as OPC UA bridge
+  (`ns=4;s=GVL_Bridge.RobotOutData` written, `ns=4;s=GVL_Bridge.RobotInData` read, both `Byte[256]`)
+  -> PROFINET -> robot; connected and moved with SRCI_PY_HMI, LifeSign timeout 500 ms, no timeouts;
+- not yet tested with a robot controller that has its own OPC UA server.
 
 ```python
 from srci.transport import OpcUaTransport

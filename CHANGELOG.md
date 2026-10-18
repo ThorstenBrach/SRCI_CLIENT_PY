@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    PLC->RC telegram written to one node, RC->PLC telegram read from another, data type `ByteString`
    or a number array (`Byte[]` ... `Double[]`) detected on connect, optional user / password,
    reconnect like the TCP transport; `srci.transport.opcua.browse()` lists the variables of a
-   server for configuration tools. Tested against a local asyncua server, not yet on a robot
+   server for configuration tools. Tested against a local asyncua server and with a JAKA MiniCobo
+   behind a TwinCAT PLC bridge with OPC UA server (Byte[256], LifeSign timeout 500 ms)
  - `srci.sim.opcua.OpcUaRcSimulator`: OPC UA server with the telegram nodes that answers in its own
    cycle like a robot controller (handler, e.g. the SDK simulator)
  - Example `examples/core_profile`: every function of the Core profile
