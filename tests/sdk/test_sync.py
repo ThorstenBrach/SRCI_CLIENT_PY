@@ -134,6 +134,9 @@ def take_over_rc_data(sdk: SdkSimulator, clock: FakeClock, data: DataSet, h: Rob
     start_up(first)
     first.enable = False
     first.run(50)
+    # the SDK notices the stopped client only by its lifesign timeout (real time, not the fake clock):
+    # reset it so the second RobotTask starts up independent of the speed of the machine
+    sdk.reset()
     for name in ("sw_limits", "default_dynamics", "reference_dynamics"):
         copy_into(getattr(h, name), getattr(first, name))
     for name in ("tools", "frames", "loads"):
