@@ -41,6 +41,7 @@ from srci.sim.gateway import PlcGatewaySimulator
 from srci.transport import TcpTransport
 from srci.types import RobotLibraryConstants, RobotLibraryErrorIdEnum, SyncMode, TelegramState, VersionStruct
 from tests.robot_task_harness import SIZE, RobotTaskHarness
+from tests.sdk.test_core_fbs import enable, execute, move_axes, state
 
 RI_STATE_INITIALIZED, RI_STATE_SYNCHRONIZED = 71, 72
 DATA_SETS = ("SWLimits", "DefaultDynamics", "ReferenceDynamics")
@@ -218,6 +219,52 @@ def test_quick_restart(sdk: SdkSimulator, clock: FakeClock) -> None:
     h.enable = True
     h.run(300, until=lambda: bool(h.rt.Initialized))
     assert h.rt.Initialized, h.history
+
+
+def test_rc_rejects_configuration_value(sdk: SdkSimulator, clock: FakeClock) -> None:
+    """A configuration value the RC refuses (WaitForNrOfCmd above its ACR size): the RobotTask
+    ends with the error of the RC (16#8D39), commands stay disabled; with a valid value a
+    restart initializes again."""
+    h = harness(sdk, clock)
+    h.cfg.Rob.Parameter.WaitForNrOfCmd = 48
+    h.run(200, until=lambda: bool(h.rt.Error or h.ag.State.CMDsEnabled))
+    assert h.rt.Error and h.rt.ErrorID == 0x8D39, h.history
+    assert not h.ag.State.CMDsEnabled and not h.rt.Initialized
+    texts = [m.MessageText for m in h.ag.MessageLog.Messages if m.MessageText]
+    assert any("WaitForNrOfCmd" in t for t in texts), texts
+    h.enable = False
+    h.run(CANCEL_TIMEOUT_CYCLES)
+    h.cfg.Rob.Parameter.WaitForNrOfCmd = 0
+    h.enable = True
+    h.run(300, until=lambda: bool(h.ag.State.CMDsEnabled))
+    assert h.ag.State.CMDsEnabled and not h.rt.Error, h.history
+
+
+def test_restart_during_motion(sdk: SdkSimulator, clock: FakeClock) -> None:
+    """RobotTask restarted while a motion runs: the motion block ends (Error or CommandAborted,
+    not Done); after the new initialization GroupReset, EnableRobot and a new motion end with Done."""
+    sdk.set_move_cycles(300)
+    h = harness(sdk, clock)
+    h.run(100, until=lambda: bool(h.ag.State.CMDsEnabled))
+    enable(h, sdk)
+    mv = move_axes(h, 50.0)
+    mv.Execute = True
+    h.run(100, until=lambda: sdk.joints[0] > 2.0)
+    assert mv.Busy, state(mv)
+    h.enable = False
+    h.run(CANCEL_TIMEOUT_CYCLES)
+    h.enable = True
+    h.run(300, until=lambda: bool(mv.Error or mv.CommandAborted or mv.Done))
+    assert (mv.Error or mv.CommandAborted) and not mv.Done and not mv.Busy, state(mv)
+    h.run(300, until=lambda: bool(h.ag.State.CMDsEnabled))
+    assert h.ag.State.CMDsEnabled and not h.rt.Error, h.history
+    mv.Execute = False
+    h.run(3)
+    sdk.set_move_cycles(20)
+    enable(h, sdk)
+    again = move_axes(h, 10.0)
+    execute(h, again)
+    assert sdk.joints[0] == 10.0
 
 
 # ---------------------------------------------------------------- long run, TCP

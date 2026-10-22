@@ -642,7 +642,49 @@
  {
   "id": "SDK-SYNC-021",
   "test": "tests/sdk/test_sync.py::test_load_count_uses_the_highest_load_index",
-  "title": "The load count of the RC is HighestLoadIndex, not HighestToolIndex (ST-FIX F101): an RC with 6 tools and 20 loads does not fit into a load array of 10.",
+  "title": "The load count of the RC is HighestLoadIndex, not HighestToolIndex (ST-FIX F101): an RC with 6 tools and 20 loads does not fit into a load array of 10 (harness C-008: the RC reports HighestToolIndex 5).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-022",
+  "test": "tests/sdk/test_sync.py::test_rc_change_server_to_client",
+  "title": "SERVER_TO_CLIENT after the start-up: a change on the RC side is read into the PLC data; Synchronized drops and comes back, no warning.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-023",
+  "test": "tests/sdk/test_sync.py::test_rc_change_automatic",
+  "title": "AUTOMATIC after the start-up: the change on the RC side (the most recent change) is read into the PLC data (and written back unchanged, ST-FIX F20, which resets DataChanged on the RC).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-024",
+  "test": "tests/sdk/test_sync.py::test_rc_change_client_to_server",
+  "title": "CLIENT_TO_SERVER after the start-up: a change on the RC side is overwritten with the PLC data (one write command), the PLC keeps its data.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-025",
+  "test": "tests/sdk/test_sync.py::test_rc_change_without_synchronization",
+  "title": "NO_SYNCHRONIZATION after the start-up: a change on the RC side is neither read nor written, but detected (Synchronized FALSE, spec 5.6.7.3).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-026",
+  "test": "tests/sdk/test_sync.py::test_both_sides_changed_automatic",
+  "title": "AUTOMATIC: changed on the RC and on the PLC so that the client sees both changes at once - it cannot decide and reports the warning \"both sides changed\" (16#7013 ..., ST-FIX F58: only with AUTOMATIC); nothing is transferred until the user resolves it.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-027",
+  "test": "tests/sdk/test_sync.py::test_plc_change_while_rc_data_are_read_automatic",
+  "title": "AUTOMATIC: the PLC data are changed while the client reads the data changed on the RC - the PLC change is the most recent one (spec 5.6.7.2 \"Automatic\") and must not be lost (F107).",
   "refs": [],
   "status": "active"
  },
@@ -741,6 +783,419 @@
   "id": "SDK-RT-014",
   "test": "tests/sdk/test_robot_task.py::test_incompatible_srci_major_version_at_any_cycle_time",
   "title": "ST-FIX F79: the reason of the failed initialization does not depend on the moment of the timeout.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-015",
+  "test": "tests/sdk/test_robot_task.py::test_rc_rejects_configuration_value",
+  "title": "A configuration value the RC refuses (WaitForNrOfCmd above its ACR size): the RobotTask ends with the error of the RC (16#8D39), commands stay disabled; with a valid value a restart initializes again.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RT-016",
+  "test": "tests/sdk/test_robot_task.py::test_restart_during_motion",
+  "title": "RobotTask restarted while a motion runs: the motion block ends (Error or CommandAborted, not Done); after the new initialization GroupReset, EnableRobot and a new motion end with Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-001",
+  "test": "tests/sdk/test_sequences.py::test_secondary_data_command_while_primary",
+  "title": "A data command for the secondary sequence while the primary one is active: the RC rejects it, the block reports the error of the RC.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-002",
+  "test": "tests/sdk/test_sequences.py::test_secondary_data_command",
+  "title": "After SetSequence(SECONDARY) a buffered data command of the secondary sequence is executed; the value can be read back after the return to the primary sequence.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-003",
+  "test": "tests/sdk/test_sequences.py::test_primary_data_command",
+  "title": "A buffered data command of the primary sequence (not parallel) is executed.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-004",
+  "test": "tests/sdk/test_sequences.py::test_sequence_flag_invalid_for_parallel",
+  "title": "A parallel command must not name a sequence (and a buffered one must name one): the block rejects the combination before sending.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-005",
+  "test": "tests/sdk/test_sequences.py::test_second_edge_while_busy",
+  "title": "A second rising edge on Execute while the motion runs: no second command, the block stays Busy and finishes the first motion.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-006",
+  "test": "tests/sdk/test_sequences.py::test_several_commands_in_one_cycle",
+  "title": "Commands started in the same PLC cycle: all finish (they share the telegram).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-007",
+  "test": "tests/sdk/test_sequences.py::test_interrupt_and_override_in_one_cycle",
+  "title": "GroupInterrupt and ChangeSpeedOverride in the same cycle while a motion runs; GroupContinue afterwards finishes the motion.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-008",
+  "test": "tests/sdk/test_sequences.py::test_override_during_motion",
+  "title": "ChangeSpeedOverride is a parallel command: accepted while a motion runs, the motion continues (regression of the HMI: the override was blocked by the running program).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-009",
+  "test": "tests/sdk/test_sequences.py::test_override_zero_holds_motion",
+  "title": "Override 0 %: the motion stands still and the block stays Busy (no Done, no error, not aborted); 100 % lets it finish.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-010",
+  "test": "tests/sdk/test_sequences.py::test_override_half_speed",
+  "title": "Override 50 %: the same motion takes about twice as many cycles.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SEQ-011",
+  "test": "tests/sdk/test_sequences.py::test_override_out_of_range",
+  "title": "Override above 100 %: rejected (block or RC), the override stays unchanged.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-001",
+  "test": "tests/sdk/test_status.py::test_read_position_continuous_follows_motion",
+  "title": "CONTINUOUS: Valid TRUE, Done FALSE, the values follow the motion.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-002",
+  "test": "tests/sdk/test_status.py::test_read_position_continuous_after_execute_false",
+  "title": "A falling edge of Execute does not end a continuous read (it runs until DEACTIVATE).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-003",
+  "test": "tests/sdk/test_status.py::test_read_position_continuous_deactivate",
+  "title": "ST-FIX F104: DEACTIVATE + new rising edge ends the continuous read: Done, Busy FALSE; after Execute FALSE also Valid FALSE; the values are no longer updated.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-004",
+  "test": "tests/sdk/test_status.py::test_read_position_continuous_restart_after_deactivate",
+  "title": "After DEACTIVATE the same instance starts a new continuous read.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-005",
+  "test": "tests/sdk/test_status.py::test_read_position_deactivate_without_running_command",
+  "title": "DEACTIVATE as a new command (nothing running): the RC answers Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-006",
+  "test": "tests/sdk/test_status.py::test_deactivate_parallel_read_inputs",
+  "title": "ST-FIX F104 on another block: continuous ReadDigitalInputs ended by DEACTIVATE.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-007",
+  "test": "tests/sdk/test_status.py::test_read_position_sequence_flag",
+  "title": "The client rejects a sequence flag that does not fit the ProcessingMode (nothing sent).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-008",
+  "test": "tests/sdk/test_status.py::test_read_position_secondary_while_primary",
+  "title": "SequenceFlag SECONDARY while the primary sequence is active: rejected by the RC.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-009",
+  "test": "tests/sdk/test_status.py::test_read_position_in_secondary_sequence",
+  "title": "SequenceFlag SECONDARY inside the active secondary sequence: Done with valid values.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-010",
+  "test": "tests/sdk/test_status.py::test_read_position_trigger_without_listener",
+  "title": "A trigger ProcessingMode needs a ListenerID > 0.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-011",
+  "test": "tests/sdk/test_status.py::test_read_position_number_out_of_range",
+  "title": "Tool / frame number 255 is outside the range (-1..254 resp.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-012",
+  "test": "tests/sdk/test_status.py::test_set_operation_mode_follows",
+  "title": "External modes: Done, the operation mode of the cyclic status (and the user data) follows.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-013",
+  "test": "tests/sdk/test_status.py::test_set_operation_mode_transitions",
+  "title": "T1 extern -> T2 extern -> T1 extern -> auto extern.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-014",
+  "test": "tests/sdk/test_status.py::test_set_operation_mode_unchanged",
+  "title": "The active mode again: Done, the mode and the power stay unchanged.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-015",
+  "test": "tests/sdk/test_status.py::test_set_operation_mode_switches_power_off",
+  "title": "Auto extern -> T1 extern while enabled: Done, the RC switches the power off and EnableRobot reports Enabled FALSE.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-016",
+  "test": "tests/sdk/test_status.py::test_set_operation_mode_done_while_execute",
+  "title": "Done stays TRUE while Execute is TRUE and is reset with the falling edge.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-017",
+  "test": "tests/sdk/test_status.py::test_set_operation_mode_execute_reset_while_busy",
+  "title": "Execute FALSE right after the start: the command still ends with Done for one cycle.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-018",
+  "test": "tests/sdk/test_status.py::test_set_operation_mode_local_rejected",
+  "title": "Local modes cannot be selected by the PLC: Error, the mode stays.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-019",
+  "test": "tests/sdk/test_status.py::test_set_operation_mode_in_secondary_sequence",
+  "title": "SetOperationMode while the secondary sequence is active (parallel command): Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-020",
+  "test": "tests/sdk/test_status.py::test_unlinked_axes_group",
+  "title": "A block on an axes group that no RobotTask serves: Error 16#8612, nothing else happens.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-021",
+  "test": "tests/sdk/test_status.py::test_command_name_in_message",
+  "title": "ST-FIX F105: the user defined command name is part of the message in the message buffer (spec 5.5.11, table 5-47).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-022",
+  "test": "tests/sdk/test_status.py::test_command_name_in_rc_error_message",
+  "title": "The name is also in the message of an error reported by the RC.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-023",
+  "test": "tests/sdk/test_status.py::test_without_command_name",
+  "title": "Without a name the message keeps the block type only.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-001",
+  "test": "tests/sdk/test_subprogram.py::test_runs_with_progress",
+  "title": "InProgress while it runs, Progress rises, then Done with InProgress FALSE and Progress 100.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-002",
+  "test": "tests/sdk/test_subprogram.py::test_parallel_without_power",
+  "title": "PARALLEL with the robot disabled: runs to Done (no motion).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-003",
+  "test": "tests/sdk/test_subprogram.py::test_return_data",
+  "title": "The ReturnData of the RC arrive in OutCmd.ReturnData.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-004",
+  "test": "tests/sdk/test_subprogram.py::test_rc_error_while_running",
+  "title": "An error of the RC while it runs: Error with the ErrorID of the RC, InProgress FALSE.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-005",
+  "test": "tests/sdk/test_subprogram.py::test_buffered_behind_motion",
+  "title": "BUFFERED in the primary sequence behind a motion: starts after the motion is Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-006",
+  "test": "tests/sdk/test_subprogram.py::test_interrupt_and_continue",
+  "title": "GroupInterrupt while it runs in the sequence: CommandInterrupted, InProgress FALSE, Progress kept; GroupContinue: Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-007",
+  "test": "tests/sdk/test_subprogram.py::test_group_stop_aborts",
+  "title": "GroupStop while it runs in the sequence: CommandAborted.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-008",
+  "test": "tests/sdk/test_subprogram.py::test_aborting_mode_aborts_motion",
+  "title": "ProcessingMode ABORTING: the running motion ends with CommandAborted, the subprogram runs to Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-009",
+  "test": "tests/sdk/test_subprogram.py::test_secondary_while_primary_interrupted",
+  "title": "SequenceFlag SECONDARY after SetSequence(SECONDARY): runs to Done while the primary motion stays interrupted; back in the primary sequence the motion finishes.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-010",
+  "test": "tests/sdk/test_subprogram.py::test_continuous_and_deactivate",
+  "title": "CONTINUOUS: stays InProgress and Busy, the subprogram starts again after every run (Progress falls back); DEACTIVATE + new edge (ST-FIX F104) ends it with Done and the number of runs in InvocationCounter.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-011",
+  "test": "tests/sdk/test_subprogram.py::test_stop_subprogram_by_job_id",
+  "title": "StopSubprogram with the JobID of a running call: CommandAborted of that call.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-012",
+  "test": "tests/sdk/test_subprogram.py::test_stop_subprogram_only_matching_job",
+  "title": "StopSubprogram aborts only the call with the matching JobID; the other runs to Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-013",
+  "test": "tests/sdk/test_subprogram.py::test_stop_continuous_subprogram",
+  "title": "StopSubprogram ends a CONTINUOUS call (CommandAborted).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SUB-014",
+  "test": "tests/sdk/test_subprogram.py::test_restart_with_new_job",
+  "title": "After Done the same instance starts a call with another JobID.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RTP-001",
+  "test": "tests/sdk/test_return_to_primary.py::test_progress_and_done",
+  "title": "Active with rising Progress and falling RemainingDistance, then Done at the interrupt position; the interrupted motion finishes after GroupContinue.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RTP-002",
+  "test": "tests/sdk/test_return_to_primary.py::test_parameters_sent",
+  "title": "ReturnMode, TrajectoryMode, DistanceLimit, MoveTime and AllowDifferences arrive at the RC.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RTP-003",
+  "test": "tests/sdk/test_return_to_primary.py::test_trajectory_mode_ptp_sent",
+  "title": "TrajectoryMode PTP is sent as bit 1 = 1 (spec 6.3.11.3) and ends Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RTP-004",
+  "test": "tests/sdk/test_return_to_primary.py::test_interrupt_and_continue",
+  "title": "GroupInterrupt while it returns: CommandInterrupted, Active FALSE, the robot stands still; GroupContinue: Done at the interrupt position.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RTP-005",
+  "test": "tests/sdk/test_return_to_primary.py::test_group_stop",
+  "title": "GroupStop while it returns: CommandAborted, not Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RTP-006",
+  "test": "tests/sdk/test_return_to_primary.py::test_disable_while_active",
+  "title": "Enable FALSE while it returns: the outputs are reset (Active, Busy FALSE), no error.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RTP-007",
+  "test": "tests/sdk/test_return_to_primary.py::test_parameter_change_while_active",
+  "title": "Inputs changed while it returns: the return ends with Done at the interrupt position.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RTP-008",
+  "test": "tests/sdk/test_return_to_primary.py::test_trajectory_mode_invalid",
+  "title": "TrajectoryMode 0 (default, invalid): Error 16#8409 from the client (ST-FIX F99).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-RTP-009",
+  "test": "tests/sdk/test_return_to_primary.py::test_rate_out_of_range",
+  "title": "A rate above the range: Error from the client, nothing sent.",
   "refs": [],
   "status": "active"
  },

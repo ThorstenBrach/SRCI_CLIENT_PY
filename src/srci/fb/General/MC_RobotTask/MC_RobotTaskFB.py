@@ -2259,6 +2259,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if (not self._readFrameData.Busy and (not self._readFrameData.Error)) and self._readFrameData.Done:
                     # reset execution
                     self._readFrameData.Execute = False
+                    # ST-FIX F107: AUTOMATIC - the PLC data were changed while the RC data were read: the PLC
+                    # change is the most recent one and is written to the RC instead of being overwritten
+                    if (AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP] == SyncMode.AUTOMATIC) & (not IsFrameDataEqual(Data1=FrameData[self._syncIdxFrameData].Data, Data2=self._frameData[self._syncIdxFrameData].Data, IgnoreTimestamp=True)):
+                        # set timeout
+                        SetTimeout(PT=self._timeoutSyncFrameData, rTimer=self._timerSyncFrameData)
+                        # -> write PLC data to RC
+                        self._stepSyncFrameData = 30
+                        return
                     # update internal frame data
                     copy_into(FrameData[self._syncIdxFrameData].Data, self._readFrameData.OutCmd.FrameData)
                     copy_into(self._frameData[self._syncIdxFrameData].Data, self._readFrameData.OutCmd.FrameData)
@@ -2837,6 +2845,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if (not self._readLoadData.Busy and (not self._readLoadData.Error)) and self._readLoadData.Done:
                     # reset execution
                     self._readLoadData.Execute = False
+                    # ST-FIX F107: AUTOMATIC - the PLC data were changed while the RC data were read: the PLC
+                    # change is the most recent one and is written to the RC instead of being overwritten
+                    if (AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP] == SyncMode.AUTOMATIC) & (not IsLoadDataEqual(Data1=LoadData[self._syncIdxLoadData].Data, Data2=self._loadData[self._syncIdxLoadData].Data, IgnoreTimestamp=True)):
+                        # set timeout
+                        SetTimeout(PT=self._timeoutSyncLoadData, rTimer=self._timerSyncLoadData)
+                        # -> write PLC data to RC
+                        self._stepSyncLoadData = 30
+                        return
                     # update internal Load data
                     copy_into(LoadData[self._syncIdxLoadData].Data, self._readLoadData.OutCmd.LoadData)
                     copy_into(self._loadData[self._syncIdxLoadData].Data, self._readLoadData.OutCmd.LoadData)
@@ -3306,6 +3322,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if (not self._readRobotDefaultDynamics.Busy and (not self._readRobotDefaultDynamics.Error)) and self._readRobotDefaultDynamics.Done:
                     # reset execution
                     self._readRobotDefaultDynamics.Execute = False
+                    # ST-FIX F107: AUTOMATIC - the PLC data were changed while the RC data were read: the PLC
+                    # change is the most recent one and is written to the RC instead of being overwritten
+                    if (AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP] == SyncMode.AUTOMATIC) & (not IsDefaultDynamicsEqual(Data1=DefaultDynamics, Data2=self._defaultDynamics, IgnoreTimestamp=True)):
+                        # set timeout
+                        SetTimeout(PT=self._timeoutSyncDefaultDynamics, rTimer=self._timerSyncDefaultDynamics)
+                        # -> write PLC data to RC
+                        self._stepSyncDefaultDynamics = 30
+                        return
                     # update internal DefaultDynamics data
                     copy_into(DefaultDynamics, self._readRobotDefaultDynamics.OutCmd.DynamicValues)
                     copy_into(self._defaultDynamics, self._readRobotDefaultDynamics.OutCmd.DynamicValues)
@@ -3762,6 +3786,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if (not self._readRobotReferenceDynamics.Busy and (not self._readRobotReferenceDynamics.Error)) and self._readRobotReferenceDynamics.Done:
                     # reset execution
                     self._readRobotReferenceDynamics.Execute = False
+                    # ST-FIX F107: AUTOMATIC - the PLC data were changed while the RC data were read: the PLC
+                    # change is the most recent one and is written to the RC instead of being overwritten
+                    if (AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP] == SyncMode.AUTOMATIC) & (not IsReferenceDynamicsEqual(Data1=ReferenceDynamics, Data2=self._referenceDynamics, IgnoreTimestamp=True)):
+                        # set timeout
+                        SetTimeout(PT=self._timeoutSyncReferenceDynamics, rTimer=self._timerSyncReferenceDynamics)
+                        # -> write PLC data to RC
+                        self._stepSyncReferenceDynamics = 30
+                        return
                     # update internal ReferenceDynamics data
                     copy_into(ReferenceDynamics, self._readRobotReferenceDynamics.OutCmd.DynamicValues)
                     copy_into(self._referenceDynamics, self._readRobotReferenceDynamics.OutCmd.DynamicValues)
@@ -4224,6 +4256,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if (not self._readRobotSWLimits.Busy and (not self._readRobotSWLimits.Error)) and self._readRobotSWLimits.Done:
                     # reset execution
                     self._readRobotSWLimits.Execute = False
+                    # ST-FIX F107: AUTOMATIC - the PLC data were changed while the RC data were read: the PLC
+                    # change is the most recent one and is written to the RC instead of being overwritten
+                    if (AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP] == SyncMode.AUTOMATIC) & (not IsSwLimitsEqual(Data1=SWLimits, Data2=self._swLimits, IgnoreTimestamp=True)):
+                        # set timeout
+                        SetTimeout(PT=self._timeoutSyncSWLimits, rTimer=self._timerSyncSWLimits)
+                        # -> write PLC data to RC
+                        self._stepSyncSWLimits = 30
+                        return
                     # update internal SwLimits data
                     copy_into(SWLimits, self._readRobotSWLimits.OutCmd.LimitValues)
                     copy_into(self._swLimits, self._readRobotSWLimits.OutCmd.LimitValues)
@@ -4773,6 +4813,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if (not self._readToolData.Busy and (not self._readToolData.Error)) and self._readToolData.Done:
                     # reset execution
                     self._readToolData.Execute = False
+                    # ST-FIX F107: AUTOMATIC - the PLC data were changed while the RC data were read: the PLC
+                    # change is the most recent one and is written to the RC instead of being overwritten
+                    if (AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP] == SyncMode.AUTOMATIC) & (not IsToolDataEqual(Data1=ToolData[self._syncIdxToolData].Data, Data2=self._toolData[self._syncIdxToolData].Data, IgnoreTimestamp=True)):
+                        # set timeout
+                        SetTimeout(PT=self._timeoutSyncToolData, rTimer=self._timerSyncToolData)
+                        # -> write PLC data to RC
+                        self._stepSyncToolData = 30
+                        return
                     # update internal tool data
                     copy_into(ToolData[self._syncIdxToolData].Data, self._readToolData.OutCmd.ToolData)
                     copy_into(self._toolData[self._syncIdxToolData].Data, self._readToolData.OutCmd.ToolData)
@@ -5328,6 +5376,14 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 if (not self._readWorkArea.Busy and (not self._readWorkArea.Error)) and self._readWorkArea.Done:
                     # reset execution
                     self._readWorkArea.Execute = False
+                    # ST-FIX F107: AUTOMATIC - the PLC data were changed while the RC data were read: the PLC
+                    # change is the most recent one and is written to the RC instead of being overwritten
+                    if (AxesGroup.Parameter.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP] == SyncMode.AUTOMATIC) & (not IsWorkAreaEqual(Data1=WorkAreas[self._syncIdxWorkArea].Data, Data2=self._workAreas[self._syncIdxWorkArea].Data, IgnoreTimestamp=True)):
+                        # set timeout
+                        SetTimeout(PT=self._timeoutSyncWorkArea, rTimer=self._timerSyncWorkArea)
+                        # -> write PLC data to RC
+                        self._stepSyncWorkArea = 30
+                        return
                     # update internal WorkArea data
                     copy_into(WorkAreas[self._syncIdxWorkArea].Data, self._readWorkArea.OutCmd.WorkAreaData)
                     copy_into(self._workAreas[self._syncIdxWorkArea].Data, self._readWorkArea.OutCmd.WorkAreaData)

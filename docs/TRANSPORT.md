@@ -130,11 +130,15 @@ one request line, one answer line, ASCII with LF.
 
 | Request | Answer / effect |
 |---|---|
-| `PING` | `OK SRCI-SDK-CONTROL 1` |
+| `PING` | `OK SRCI-SDK-CONTROL 2` (protocol 2 since 2026-10-22) |
 | `RESET` | new simulator (restart of the RC), no tampering, log window from the start |
 | `MOVE_CYCLES <n>`, `FAIL_ENABLE <0/1>`, `MOTION_ERROR <code>` | like `SdkSimulator.set_*` |
 | `COMMAND_ERROR <type> <code>`, `RESPONSE <type> <field> <value>`, `CLEAR_RESPONSES` | answers of commands the SDK does not implement |
 | `ALL_FUNCTIONS <0/1>`, `JOINTS <j1> ...` | supported functions, joint position |
+| `OVERRIDE_MOTION <0/1>` | the speed override scales the motion, 0 % holds it (SDK-SEQ) |
+| `SUBPROGRAM_CYCLES <n>` | CallSubprogram runs `n` cycles, can be interrupted / stopped (C-007, SDK-SUB) |
+| `RC_CHANGE <kind> <no> <values>` | data changed on the RC side like a teach pendant: kind 1 frame, 2 tool, 3 load, 4 default / 5 reference dynamics, 6 SW limits (SDK-SYNC) |
+| `HIGHEST_INDEX <tool> <frame> <load>` | highest indexes of ExchangeConfiguration, `-1`: SDK value (C-008, SDK-SYNC-021) |
 | `GET ENABLED`, `GET OVERRIDE`, `GET JOINT <n>`, `GET JOINTS`, `GET RI_STATE`, ... | state of the simulator |
 | `LAST <type> <field>` | field of the last command as the SDK decoded it |
 | `MARK`, `COUNT_COMMANDS <type>`, `LOG_CONTAINS <text>`, `MAX_SEVERITY` | log window of the SDK |

@@ -125,6 +125,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
  - Tests `tests/sdk/test_sync.py` (area SDK-SYNC): synchronization of the user data against the SDK
  - `tools.sdk_custom_report` accepts a CUSTOM block that keeps the original SDK code as a comment
    (BEGIN opens the comment, END closes it)
+ - ST-FIX F104: a CONTINUOUS / triggered command (32 blocks with `ProcessingMode` DEACTIVATE) can be
+   ended again: DEACTIVATE + new rising edge of `Execute` while `Busy` sends the command with execution
+   mode Stop (before: the F50 hold of `Execute` swallowed the edge, the block stayed `Busy` forever)
+ - ST-FIX F105: the user defined command name (`Name`) is part of the message in the message buffer
+   (`MC_MoveLinearAbsoluteFB [MoveToP1] : ...`, spec table 5-47)
+ - ST-FIX F106: `Enabled` of `MC_EnableRobotFB`, `MC_GroupJogFB` and 8 more enable blocks is FALSE
+   after an error response (kept the value of the last response, e.g. `Error` and `Enabled` TRUE
+   after the RC switched the power off)
+ - ST-FIX F107: AUTOMATIC synchronization - a PLC change made while the client read the data changed on
+   the RC is written to the RC instead of being overwritten with the older RC data
+ - Tests against the SDK (gap analysis against the Siemens unit test suite, own test cases):
+   `test_sequences.py` (SDK-SEQ: sequences, second edge while Busy, several commands in one cycle,
+   override 0 % / during a motion), `test_status.py` (SDK-STAT: continuous position read and
+   DEACTIVATE, SetOperationMode, unlinked axes group 16#8612, command name in the messages),
+   `test_subprogram.py` (SDK-SUB: CallSubprogram / StopSubprogram as long running commands),
+   `test_return_to_primary.py` (SDK-RTP: progress, interrupt, stop, disable), RobotTask: RC rejects a
+   configuration value, restart during a motion; SDK-SYNC: data changed on the RC side (all modes,
+   both sides changed); SDK-SYNC-021 uses the harness hook C-008 instead of patching the client
+ - Needs the SDK harness with C API 5 (override motion, CallSubprogram simulation C-007, RC-side data
+   changes, highest indexes C-008, secondary sequence fix C-009) and control channel protocol 2
 
 ### Tested with
  - JAKA MiniCobo (controller 1.7.1, SRCI 1.1, profile Core) behind the TwinCAT PLC gateway.

@@ -137,6 +137,8 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
         self._parameterValid: bool = False
         # ST-FIX F74: message of the command for the message buffer
         self._alarmMessage: AlarmMessage = AlarmMessage()
+        # ST-FIX F105: block type and command name for the messages
+        self._messageSource: str = ''
 
     def __call__(self, *, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if Name is not None:
@@ -269,6 +271,12 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
         self._warning_R(CLK=self.WarningID != RobotLibraryConstants.OK)
         self._info_R(CLK=self.InfoID != RobotLibraryConstants.OK)
 
+        # ST-FIX F105: the user defined command name belongs into the message text (spec 5.5.11,
+        # table 5-47 "[Robot] [Client] [MoveLinAbs] [MoveToP1] [text]")
+        self._messageSource = self.MyType
+        if self.Name != '':
+            self._messageSource = trunc_str(CONCAT(self.MyType, CONCAT(' [', CONCAT(self.Name, ']'))), 80)
+
         # ST-FIX F74: every message of the command - also the client-side ones (e.g. parameter errors,
         # before: only with the severity of the last response of the RC) - goes into the message
         # buffer, with ACR entry and command type
@@ -281,7 +289,7 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
             self._alarmMessage.MessageCode = self.ErrorID
             self._alarmMessage.AcrID = UDINT_TO_UINT(self._uniqueID)
             self._alarmMessage.CmdType = self._cmdHeader.CmdTyp
-            self._alarmMessage.MessageText = CONCAT(self.MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.ErrorID)))
+            self._alarmMessage.MessageText = CONCAT(self._messageSource, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.ErrorID)))  # ST-FIX F105
             AxesGroup.MessageLog.AddMessageLog(MessageLog=self._alarmMessage)
         if self._warning_R.Q and self.LogLevel < Severity.WARNING:
             self._alarmMessage.Severity = Severity.WARNING
@@ -292,7 +300,7 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
             self._alarmMessage.MessageCode = self.WarningID
             self._alarmMessage.AcrID = UDINT_TO_UINT(self._uniqueID)
             self._alarmMessage.CmdType = self._cmdHeader.CmdTyp
-            self._alarmMessage.MessageText = CONCAT(self.MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.WarningID)))
+            self._alarmMessage.MessageText = CONCAT(self._messageSource, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.WarningID)))  # ST-FIX F105
             AxesGroup.MessageLog.AddMessageLog(MessageLog=self._alarmMessage)
         if self._info_R.Q and self.LogLevel < Severity.INFO:
             self._alarmMessage.Severity = Severity.INFO
@@ -303,7 +311,7 @@ class RobotLibraryBaseFB(RobotLibraryLogFB):
             self._alarmMessage.MessageCode = self.InfoID
             self._alarmMessage.AcrID = UDINT_TO_UINT(self._uniqueID)
             self._alarmMessage.CmdType = self._cmdHeader.CmdTyp
-            self._alarmMessage.MessageText = CONCAT(self.MyType, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.InfoID)))
+            self._alarmMessage.MessageText = CONCAT(self._messageSource, CONCAT(' : ', MESSAGE_CODE_TO_STRING(MessageCode=self.InfoID)))  # ST-FIX F105
             AxesGroup.MessageLog.AddMessageLog(MessageLog=self._alarmMessage)
 
         if self._error_R.Q:

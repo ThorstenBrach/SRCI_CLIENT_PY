@@ -28,6 +28,8 @@ Every data set of table 5-106 that the simulator stores (tools, frames, loads, s
 default and reference dynamics) is changed on the PLC after the start-up and the RobotTask has to
 react according to the synchronization mode after the start-up (table 5-109); start-up conflicts
 with user interaction, invalid modes and a mode changed while running complete the cases.
+The same data are also changed on the RC side like with a teach pendant (harness
+``SdkSimulator.rc_change``, the SDK reports them as changed, spec 5.6.7.2).
 """
 
 from __future__ import annotations
@@ -695,17 +697,155 @@ def test_count_check_uses_the_current_configuration(sdk: SdkSimulator, clock: Fa
 
 def test_load_count_uses_the_highest_load_index(sdk: SdkSimulator, clock: FakeClock) -> None:
     """The load count of the RC is HighestLoadIndex, not HighestToolIndex (ST-FIX F101): an RC with 6 tools
-    and 20 loads does not fit into a load array of 10."""
+    and 20 loads does not fit into a load array of 10 (harness C-008: the RC reports HighestToolIndex 5)."""
+    sdk.set_highest_index(tool=5)
     h = RobotTaskHarness(sdk_transport(sdk, SIZE, SIZE), advance=clock.advance, count=10)
     modes = h.cfg.Plc.Parameter.SynchronizationModes
     modes.Load[SyncTime.DURING_START_UP] = modes.Load[SyncTime.AFTER_START_UP] = SyncMode.CLIENT_TO_SERVER
-    exchange = h.rt._exchangeConfiguration
-    apply = exchange.OnApplyOutCmd
-
-    def fewer_tools(**kwargs: Any) -> None:
-        apply(**kwargs)
-        exchange.OutCmd.HighestToolIndex = 5
-
-    exchange.OnApplyOutCmd = fewer_tools  # type: ignore[method-assign]
     h.run(1500, until=lambda: bool(h.rt.Error or h.rt.Synchronized))
+    assert h.ag.State.ConfigurationData.HighestToolIndex == 5
     assert h.rt.Error and h.rt.ErrorID == E.ERR_SYNC_LOAD_COUNT_RC_HIGHER_THAN_PLC, h.history
+
+
+# ---------------------------------------------------------------- changed on the RC side
+
+
+@dataclass(frozen=True)
+class RcChange:
+    """A change of a data set on the RC side (teach pendant) and the value the PLC sees then."""
+
+    kind: int
+    no: int
+    values: tuple[float, ...]
+    expected: float
+
+
+RC_CHANGES: dict[str, RcChange] = {
+    "SWLimits": RcChange(SdkSimulator.RC_SW_LIMITS, 0, (-160.0, 160.0) * 6, 160.0),
+    "DefaultDynamics": RcChange(SdkSimulator.RC_DEFAULT_DYNAMICS, 0, (55.0, 60.0, 65.0, 70.0), 55.0),
+    "ReferenceDynamics": RcChange(SdkSimulator.RC_REFERENCE_DYNAMICS, 0, (500.0, 600.0, 700.0, 800.0), 500.0),
+    "Tool": RcChange(SdkSimulator.RC_TOOL, 1, (7.5, 0.0, 0.0, 0.0, 0.0, 0.0), 7.5),
+    "Frame": RcChange(SdkSimulator.RC_FRAME, 1, (7.5, 0.0, 0.0, 0.0, 0.0, 0.0), 7.5),
+    "Load": RcChange(SdkSimulator.RC_LOAD, 1, (4.5, 0.0, 0.0, 0.0), 4.5),
+}
+
+
+def rc_change_and_watch(
+    sdk: SdkSimulator, h: RobotTaskHarness, data: DataSet, cycles: int = 400
+) -> list[bool]:
+    rc = RC_CHANGES[data.name]
+    sdk.rc_change(rc.kind, rc.no, list(rc.values))
+    seen = []
+    for _ in range(cycles):
+        h.cycle()
+        seen.append(bool(h.rt.Synchronized))
+    return seen
+
+
+@pytest.mark.parametrize("data", DATA_SETS, ids=IDS)
+def test_rc_change_server_to_client(sdk: SdkSimulator, clock: FakeClock, data: DataSet) -> None:
+    """SERVER_TO_CLIENT after the start-up: a change on the RC side is read into the PLC data;
+    Synchronized drops and comes back, no warning."""
+    h = harness(sdk, clock, data, SyncMode.CLIENT_TO_SERVER, SyncMode.SERVER_TO_CLIENT)
+    start_up(h)
+    since = len(sdk.logs)
+    seen = rc_change_and_watch(sdk, h, data)
+    assert not all(seen), "Synchronized must drop while the data are not in sync"
+    assert seen[-1] and not h.rt.Error and not h.rt.WarningID, h.history
+    assert commands(sdk, data.read, since) >= 1
+    assert data.value(h) == RC_CHANGES[data.name].expected
+
+
+@pytest.mark.parametrize("data", DATA_SETS, ids=IDS)
+def test_rc_change_automatic(sdk: SdkSimulator, clock: FakeClock, data: DataSet) -> None:
+    """AUTOMATIC after the start-up: the change on the RC side (the most recent change) is read
+    into the PLC data (and written back unchanged, ST-FIX F20, which resets DataChanged on the RC)."""
+    h = harness(sdk, clock, data, SyncMode.CLIENT_TO_SERVER, SyncMode.AUTOMATIC)
+    start_up(h)
+    since = len(sdk.logs)
+    seen = rc_change_and_watch(sdk, h, data)
+    assert seen[-1] and not h.rt.Error and not h.rt.WarningID, h.history
+    assert commands(sdk, data.read, since) >= 1
+    assert data.value(h) == RC_CHANGES[data.name].expected
+
+
+@pytest.mark.parametrize("data", DATA_SETS, ids=IDS)
+def test_rc_change_client_to_server(sdk: SdkSimulator, clock: FakeClock, data: DataSet) -> None:
+    """CLIENT_TO_SERVER after the start-up: a change on the RC side is overwritten with the PLC
+    data (one write command), the PLC keeps its data."""
+    h = harness(sdk, clock, data, SyncMode.CLIENT_TO_SERVER, SyncMode.CLIENT_TO_SERVER)
+    start_up(h)
+    before = data.value(h)
+    since = len(sdk.logs)
+    seen = rc_change_and_watch(sdk, h, data)
+    assert seen[-1] and not h.rt.Error and not h.rt.WarningID, h.history
+    assert commands(sdk, data.write, since) == 1, "the PLC data are written back"
+    assert data.value(h) == before
+
+
+@pytest.mark.parametrize("data", DATA_SETS, ids=IDS)
+def test_rc_change_without_synchronization(sdk: SdkSimulator, clock: FakeClock, data: DataSet) -> None:
+    """NO_SYNCHRONIZATION after the start-up: a change on the RC side is neither read nor written,
+    but detected (Synchronized FALSE, spec 5.6.7.3)."""
+    h = harness(sdk, clock, data, SyncMode.CLIENT_TO_SERVER, SyncMode.NO_SYNCHRONIZATION)
+    if data.name in ("Tool", "Frame", "Load"):
+        # see test_change_after_start_up_without_synchronization: not synchronized from the start
+        h.run(
+            1500,
+            until=lambda: bool(
+                (h.rt.Initialized or h.rt.Synchronized)
+                and getattr(h.ag.State.SyncStatePlc.InSync, data.in_sync)
+            ),
+        )
+        h.run(50)
+        assert (h.rt.Initialized or h.rt.Synchronized) and not h.rt.Error, h.history
+    else:
+        start_up(h)
+    before = data.value(h)
+    since = len(sdk.logs)
+    seen = rc_change_and_watch(sdk, h, data)
+    assert not h.rt.Error, h.history
+    assert commands(sdk, data.write, since) == 0 and commands(sdk, data.read, since) == 0
+    assert data.value(h) == before
+    assert not seen[-1], "the client is not synchronized"
+
+
+# cycles until a change on the RC side reaches the synchronization of the client (SDK cycle + telegram)
+RC_FLAG_DELAY = 3
+
+
+@pytest.mark.parametrize("data", DATA_SETS, ids=IDS)
+def test_both_sides_changed_automatic(sdk: SdkSimulator, clock: FakeClock, data: DataSet) -> None:
+    """AUTOMATIC: changed on the RC and on the PLC so that the client sees both changes at once -
+    it cannot decide and reports the warning "both sides changed" (16#7013 ..., ST-FIX F58: only
+    with AUTOMATIC); nothing is transferred until the user resolves it."""
+    h = harness(sdk, clock, data, SyncMode.CLIENT_TO_SERVER, SyncMode.AUTOMATIC)
+    start_up(h)
+    since = len(sdk.logs)
+    rc = RC_CHANGES[data.name]
+    sdk.rc_change(rc.kind, rc.no, list(rc.values))
+    h.run(RC_FLAG_DELAY)
+    data.change(h)
+    h.run(400, until=lambda: bool(h.rt.WarningID or h.rt.Error))
+    assert h.rt.WarningID and not h.rt.Error, (hex(h.rt.WarningID), h.history)
+    assert "BOTH_SIDES" in W(h.rt.WarningID).name, W(h.rt.WarningID).name
+    h.run(100)
+    assert commands(sdk, data.write, since) == 0 and commands(sdk, data.read, since) == 0
+    assert not h.rt.Synchronized
+
+
+@pytest.mark.parametrize("data", DATA_SETS, ids=IDS)
+def test_plc_change_while_rc_data_are_read_automatic(
+    sdk: SdkSimulator, clock: FakeClock, data: DataSet
+) -> None:
+    """AUTOMATIC: the PLC data are changed while the client reads the data changed on the RC - the
+    PLC change is the most recent one (spec 5.6.7.2 "Automatic") and must not be lost (F107)."""
+    h = harness(sdk, clock, data, SyncMode.CLIENT_TO_SERVER, SyncMode.AUTOMATIC)
+    start_up(h)
+    rc = RC_CHANGES[data.name]
+    sdk.rc_change(rc.kind, rc.no, list(rc.values))
+    h.run(RC_FLAG_DELAY + 1)  # the read of the RC data is running
+    data.change(h)
+    h.run(400)
+    assert not h.rt.Error, h.history
+    assert data.value(h) == data.changed, "the newer PLC change was overwritten with the older RC data"

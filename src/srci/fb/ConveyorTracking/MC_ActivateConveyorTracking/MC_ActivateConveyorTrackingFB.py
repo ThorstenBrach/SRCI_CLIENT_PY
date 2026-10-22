@@ -485,6 +485,8 @@ class MC_ActivateConveyorTrackingFB(RobotLibraryBaseEnableFB):
             case CmdMessageState.ERROR:
                 self.Error = True
                 self.Busy = False
+                # ST-FIX F106: error response without payload
+                self.Enabled = False
 
         # ST-FIX F25: output data are valid while the command is active (continuous) or done
         self.Valid = State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE

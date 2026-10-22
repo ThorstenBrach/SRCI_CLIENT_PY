@@ -66,6 +66,8 @@ class RobotLibraryBaseExecuteFB(RobotLibraryBaseFB):
         self._execute_F: F_TRIG = F_TRIG()
         self._executeIn: bool = False
         self._executeHold: bool = False
+        # ST-FIX F104: rising edge of the Execute input (also while Busy)
+        self._executeRestart_R: R_TRIG = R_TRIG()
 
     def __call__(self, *, Execute: bool | None = None, Name: str | None = None, ExecMode: ExecutionMode | None = None, Priority: PriorityLevel | None = None, AxesGroup: AxesGroup | None = None, InternalLogger: IMessageLogger | None = None, ExternalLogger: IMessageLogger | None = None, LogLevel: Severity | None = None) -> None:
         if Execute is not None:
@@ -91,6 +93,8 @@ class RobotLibraryBaseExecuteFB(RobotLibraryBaseFB):
         # status"): Execute is held internally while Busy; Done/Error/CommandAborted of a command
         # whose Execute is already FALSE are shown for one cycle, then the block resets
         self._executeIn = self.Execute
+        # ST-FIX F104: rising edge of the Execute input also while Busy (Execute is held, F50)
+        self._executeRestart_R(CLK=self.Execute)
         self.Execute = self.Execute or self._executeHold
         super().__call__(AxesGroup=self.AxesGroup)
         self._executeHold = self.Busy

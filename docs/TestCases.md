@@ -26,8 +26,12 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 32 | 33 |
 | [SDK-RANGE](#sdk-range) | Ranges of the command parameters against the SDK | 15 | 47 |
-| [SDK-SYNC](#sdk-sync) | Synchronization of the user data against the SDK | 21 | 110 |
-| [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 14 | 17 |
+| [SDK-SYNC](#sdk-sync) | Synchronization of the user data against the SDK | 27 | 146 |
+| [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 16 | 19 |
+| [SDK-SEQ](#sdk-seq) | Sequences, edges and the speed override against the SDK | 11 | 11 |
+| [SDK-STAT](#sdk-stat) | Continuous read, operation mode, unlinked axes group, command name | 23 | 36 |
+| [SDK-SUB](#sdk-sub) | CallSubprogram / StopSubprogram as long running commands | 14 | 14 |
+| [SDK-RTP](#sdk-rtp) | ReturnToPrimary: progress, interruption, stop, disable | 9 | 10 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 43 | 71 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [OPCUA](#opcua) | OPC UA transport | 18 | 28 |
@@ -41,7 +45,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **446** | **3906** |
+| | **Total** | **511** | **4015** |
 
 ## Test methodology
 
@@ -201,7 +205,13 @@ Synchronization of the user data against the SDK
 | SDK-SYNC-018 | A value changed back to 0 stays 0: the RC leaves out trailing zero bytes of the response, the write block must not take the values of its previous response (ST-FIX F100). | 4 | `test_value_zero_after_a_change` |
 | SDK-SYNC-019 | A write block used twice: the second (shortened) response does not keep the values of the first one (ST-FIX F100). | 1 | `test_write_block_takes_no_values_of_the_previous_response` |
 | SDK-SYNC-020 | The count check (RC has more elements than the PLC array) runs after the initialization with the configuration of this enable - not with the modes and RC data of the previous one (ST-FIX F102). | 1 | `test_count_check_uses_the_current_configuration` |
-| SDK-SYNC-021 | The load count of the RC is HighestLoadIndex, not HighestToolIndex (ST-FIX F101): an RC with 6 tools and 20 loads does not fit into a load array of 10. | 1 | `test_load_count_uses_the_highest_load_index` |
+| SDK-SYNC-021 | The load count of the RC is HighestLoadIndex, not HighestToolIndex (ST-FIX F101): an RC with 6 tools and 20 loads does not fit into a load array of 10 (harness C-008: the RC reports HighestToolIndex 5). | 1 | `test_load_count_uses_the_highest_load_index` |
+| SDK-SYNC-022 | SERVER_TO_CLIENT after the start-up: a change on the RC side is read into the PLC data; Synchronized drops and comes back, no warning. | 6 | `test_rc_change_server_to_client` |
+| SDK-SYNC-023 | AUTOMATIC after the start-up: the change on the RC side (the most recent change) is read into the PLC data (and written back unchanged, ST-FIX F20, which resets DataChanged on the RC). | 6 | `test_rc_change_automatic` |
+| SDK-SYNC-024 | CLIENT_TO_SERVER after the start-up: a change on the RC side is overwritten with the PLC data (one write command), the PLC keeps its data. | 6 | `test_rc_change_client_to_server` |
+| SDK-SYNC-025 | NO_SYNCHRONIZATION after the start-up: a change on the RC side is neither read nor written, but detected (Synchronized FALSE, spec 5.6.7.3). | 6 | `test_rc_change_without_synchronization` |
+| SDK-SYNC-026 | AUTOMATIC: changed on the RC and on the PLC so that the client sees both changes at once - it cannot decide and reports the warning "both sides changed" (16#7013 ..., ST-FIX F58: only with AUTOMATIC); nothing is transferred until the user resolves it. | 6 | `test_both_sides_changed_automatic` |
+| SDK-SYNC-027 | AUTOMATIC: the PLC data are changed while the client reads the data changed on the RC - the PLC change is the most recent one (spec 5.6.7.2 "Automatic") and must not be lost (F107). | 6 | `test_plc_change_while_rc_data_are_read_automatic` |
 
 ## SDK-RT
 
@@ -223,6 +233,93 @@ RobotTask (communication, synchronization) against the SDK
 | SDK-RT-012 | Log messages of the library arrive in Python logging and in the system log | 1 | `test_logging_to_python` |
 | SDK-RT-013 | F16: the internal start-up read must not overwrite the user data with the RC data. | 1 | `test_client_to_server_keeps_the_plc_data` |
 | SDK-RT-014 | ST-FIX F79: the reason of the failed initialization does not depend on the moment of the timeout. | 4 | `test_incompatible_srci_major_version_at_any_cycle_time` |
+| SDK-RT-015 | A configuration value the RC refuses (WaitForNrOfCmd above its ACR size): the RobotTask ends with the error of the RC (16#8D39), commands stay disabled; with a valid value a restart initializes again. | 1 | `test_rc_rejects_configuration_value` |
+| SDK-RT-016 | RobotTask restarted while a motion runs: the motion block ends (Error or CommandAborted, not Done); after the new initialization GroupReset, EnableRobot and a new motion end with Done. | 1 | `test_restart_during_motion` |
+
+## SDK-SEQ
+
+Sequences, edges and the speed override against the SDK
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| SDK-SEQ-001 | A data command for the secondary sequence while the primary one is active: the RC rejects it, the block reports the error of the RC. | 1 | `test_secondary_data_command_while_primary` |
+| SDK-SEQ-002 | After SetSequence(SECONDARY) a buffered data command of the secondary sequence is executed; the value can be read back after the return to the primary sequence. | 1 | `test_secondary_data_command` |
+| SDK-SEQ-003 | A buffered data command of the primary sequence (not parallel) is executed. | 1 | `test_primary_data_command` |
+| SDK-SEQ-004 | A parallel command must not name a sequence (and a buffered one must name one): the block rejects the combination before sending. | 1 | `test_sequence_flag_invalid_for_parallel` |
+| SDK-SEQ-005 | A second rising edge on Execute while the motion runs: no second command, the block stays Busy and finishes the first motion. | 1 | `test_second_edge_while_busy` |
+| SDK-SEQ-006 | Commands started in the same PLC cycle: all finish (they share the telegram). | 1 | `test_several_commands_in_one_cycle` |
+| SDK-SEQ-007 | GroupInterrupt and ChangeSpeedOverride in the same cycle while a motion runs; GroupContinue afterwards finishes the motion. | 1 | `test_interrupt_and_override_in_one_cycle` |
+| SDK-SEQ-008 | ChangeSpeedOverride is a parallel command: accepted while a motion runs, the motion continues (regression of the HMI: the override was blocked by the running program). | 1 | `test_override_during_motion` |
+| SDK-SEQ-009 | Override 0 %: the motion stands still and the block stays Busy (no Done, no error, not aborted); 100 % lets it finish. | 1 | `test_override_zero_holds_motion` |
+| SDK-SEQ-010 | Override 50 %: the same motion takes about twice as many cycles. | 1 | `test_override_half_speed` |
+| SDK-SEQ-011 | Override above 100 %: rejected (block or RC), the override stays unchanged. | 1 | `test_override_out_of_range` |
+
+## SDK-STAT
+
+Continuous read, operation mode, unlinked axes group, command name
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| SDK-STAT-001 | CONTINUOUS: Valid TRUE, Done FALSE, the values follow the motion. | 1 | `test_read_position_continuous_follows_motion` |
+| SDK-STAT-002 | A falling edge of Execute does not end a continuous read (it runs until DEACTIVATE). | 1 | `test_read_position_continuous_after_execute_false` |
+| SDK-STAT-003 | ST-FIX F104: DEACTIVATE + new rising edge ends the continuous read: Done, Busy FALSE; after Execute FALSE also Valid FALSE; the values are no longer updated. | 1 | `test_read_position_continuous_deactivate` |
+| SDK-STAT-004 | After DEACTIVATE the same instance starts a new continuous read. | 1 | `test_read_position_continuous_restart_after_deactivate` |
+| SDK-STAT-005 | DEACTIVATE as a new command (nothing running): the RC answers Done. | 1 | `test_read_position_deactivate_without_running_command` |
+| SDK-STAT-006 | ST-FIX F104 on another block: continuous ReadDigitalInputs ended by DEACTIVATE. | 1 | `test_deactivate_parallel_read_inputs` |
+| SDK-STAT-007 | The client rejects a sequence flag that does not fit the ProcessingMode (nothing sent). | 3 | `test_read_position_sequence_flag` |
+| SDK-STAT-008 | SequenceFlag SECONDARY while the primary sequence is active: rejected by the RC. | 1 | `test_read_position_secondary_while_primary` |
+| SDK-STAT-009 | SequenceFlag SECONDARY inside the active secondary sequence: Done with valid values. | 1 | `test_read_position_in_secondary_sequence` |
+| SDK-STAT-010 | A trigger ProcessingMode needs a ListenerID > 0. | 1 | `test_read_position_trigger_without_listener` |
+| SDK-STAT-011 | Tool / frame number 255 is outside the range (-1..254 resp. | 2 | `test_read_position_number_out_of_range` |
+| SDK-STAT-012 | External modes: Done, the operation mode of the cyclic status (and the user data) follows. | 3 | `test_set_operation_mode_follows` |
+| SDK-STAT-013 | T1 extern -> T2 extern -> T1 extern -> auto extern. | 1 | `test_set_operation_mode_transitions` |
+| SDK-STAT-014 | The active mode again: Done, the mode and the power stay unchanged. | 1 | `test_set_operation_mode_unchanged` |
+| SDK-STAT-015 | Auto extern -> T1 extern while enabled: Done, the RC switches the power off and EnableRobot reports Enabled FALSE. | 1 | `test_set_operation_mode_switches_power_off` |
+| SDK-STAT-016 | Done stays TRUE while Execute is TRUE and is reset with the falling edge. | 1 | `test_set_operation_mode_done_while_execute` |
+| SDK-STAT-017 | Execute FALSE right after the start: the command still ends with Done for one cycle. | 1 | `test_set_operation_mode_execute_reset_while_busy` |
+| SDK-STAT-018 | Local modes cannot be selected by the PLC: Error, the mode stays. | 3 | `test_set_operation_mode_local_rejected` |
+| SDK-STAT-019 | SetOperationMode while the secondary sequence is active (parallel command): Done. | 1 | `test_set_operation_mode_in_secondary_sequence` |
+| SDK-STAT-020 | A block on an axes group that no RobotTask serves: Error 16#8612, nothing else happens. | 7 | `test_unlinked_axes_group` |
+| SDK-STAT-021 | ST-FIX F105: the user defined command name is part of the message in the message buffer (spec 5.5.11, table 5-47). | 1 | `test_command_name_in_message` |
+| SDK-STAT-022 | The name is also in the message of an error reported by the RC. | 1 | `test_command_name_in_rc_error_message` |
+| SDK-STAT-023 | Without a name the message keeps the block type only. | 1 | `test_without_command_name` |
+
+## SDK-SUB
+
+CallSubprogram / StopSubprogram as long running commands
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| SDK-SUB-001 | InProgress while it runs, Progress rises, then Done with InProgress FALSE and Progress 100. | 1 | `test_runs_with_progress` |
+| SDK-SUB-002 | PARALLEL with the robot disabled: runs to Done (no motion). | 1 | `test_parallel_without_power` |
+| SDK-SUB-003 | The ReturnData of the RC arrive in OutCmd.ReturnData. | 1 | `test_return_data` |
+| SDK-SUB-004 | An error of the RC while it runs: Error with the ErrorID of the RC, InProgress FALSE. | 1 | `test_rc_error_while_running` |
+| SDK-SUB-005 | BUFFERED in the primary sequence behind a motion: starts after the motion is Done. | 1 | `test_buffered_behind_motion` |
+| SDK-SUB-006 | GroupInterrupt while it runs in the sequence: CommandInterrupted, InProgress FALSE, Progress kept; GroupContinue: Done. | 1 | `test_interrupt_and_continue` |
+| SDK-SUB-007 | GroupStop while it runs in the sequence: CommandAborted. | 1 | `test_group_stop_aborts` |
+| SDK-SUB-008 | ProcessingMode ABORTING: the running motion ends with CommandAborted, the subprogram runs to Done. | 1 | `test_aborting_mode_aborts_motion` |
+| SDK-SUB-009 | SequenceFlag SECONDARY after SetSequence(SECONDARY): runs to Done while the primary motion stays interrupted; back in the primary sequence the motion finishes. | 1 | `test_secondary_while_primary_interrupted` |
+| SDK-SUB-010 | CONTINUOUS: stays InProgress and Busy, the subprogram starts again after every run (Progress falls back); DEACTIVATE + new edge (ST-FIX F104) ends it with Done and the number of runs in InvocationCounter. | 1 | `test_continuous_and_deactivate` |
+| SDK-SUB-011 | StopSubprogram with the JobID of a running call: CommandAborted of that call. | 1 | `test_stop_subprogram_by_job_id` |
+| SDK-SUB-012 | StopSubprogram aborts only the call with the matching JobID; the other runs to Done. | 1 | `test_stop_subprogram_only_matching_job` |
+| SDK-SUB-013 | StopSubprogram ends a CONTINUOUS call (CommandAborted). | 1 | `test_stop_continuous_subprogram` |
+| SDK-SUB-014 | After Done the same instance starts a call with another JobID. | 1 | `test_restart_with_new_job` |
+
+## SDK-RTP
+
+ReturnToPrimary: progress, interruption, stop, disable
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| SDK-RTP-001 | Active with rising Progress and falling RemainingDistance, then Done at the interrupt position; the interrupted motion finishes after GroupContinue. | 1 | `test_progress_and_done` |
+| SDK-RTP-002 | ReturnMode, TrajectoryMode, DistanceLimit, MoveTime and AllowDifferences arrive at the RC. | 1 | `test_parameters_sent` |
+| SDK-RTP-003 | TrajectoryMode PTP is sent as bit 1 = 1 (spec 6.3.11.3) and ends Done. | 1 | `test_trajectory_mode_ptp_sent` |
+| SDK-RTP-004 | GroupInterrupt while it returns: CommandInterrupted, Active FALSE, the robot stands still; GroupContinue: Done at the interrupt position. | 1 | `test_interrupt_and_continue` |
+| SDK-RTP-005 | GroupStop while it returns: CommandAborted, not Done. | 1 | `test_group_stop` |
+| SDK-RTP-006 | Enable FALSE while it returns: the outputs are reset (Active, Busy FALSE), no error. | 1 | `test_disable_while_active` |
+| SDK-RTP-007 | Inputs changed while it returns: the return ends with Done at the interrupt position. | 1 | `test_parameter_change_while_active` |
+| SDK-RTP-008 | TrajectoryMode 0 (default, invalid): Error 16#8409 from the client (ST-FIX F99). | 1 | `test_trajectory_mode_invalid` |
+| SDK-RTP-009 | A rate above the range: Error from the client, nothing sent. | 2 | `test_rate_out_of_range` |
 
 ## SDK-LOOP
 

@@ -769,6 +769,8 @@ class MC_ForceLimitFB(RobotLibraryBaseEnableFB):
             case CmdMessageState.ERROR:
                 self.Error = True
                 self.Busy = False
+                # ST-FIX F106: error response without payload
+                self.Enabled = False
 
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:

@@ -626,6 +626,16 @@ class MC_WriteToolDataFB(RobotLibraryBaseExecuteFB):
                         self._stepCmd = self._stepCmd + 1
 
             case 1:
+                # ST-FIX F104: ProcessingMode DEACTIVATE + new rising edge of Execute while the command runs
+                # (continuous / triggered): the same command again with execution mode Stop, the RC ends it with DONE
+                if self._executeRestart_R.Q and self.ProcessingMode == ProcessingMode.DEACTIVATE:
+                    # inc parameter sequence
+                    self._command.ParSeq = wrap(self._command.ParSeq + 1, 'BYTE')
+                    # update command data (execution mode Stop)
+                    self.CommandData = self.CreateCommandPayload(AxesGroup=AxesGroup)
+                    # notify active command register
+                    AxesGroup.Acyclic.ActiveCommandRegister.NotifyParameterChanged = self._uniqueID
+                # Wait for responce received
                 if self._responseReceived:
                     # reset response received flag
                     self._responseReceived = False
