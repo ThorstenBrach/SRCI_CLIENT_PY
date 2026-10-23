@@ -37,8 +37,7 @@ from srci_sdk_sim.sdk import SdkSimulator, layout_pattern, sdk_layout
 from tools.payload_check import compare_sdk, fb_classes, recv_calls, sdk_fields, send_calls
 
 # known differences (docs/ST_FINDINGS.md)
-KNOWN = {  # F32 fixed
-    "MC_ExchangeConfigurationFB recv": "SDK: NumberOfServerLogs (spec bytes 28..29) not in the SDK structure",
+KNOWN = {  # F32 fixed; ExchangeConfiguration: NumberOfServerLogs in the SDK structure since SDK 1.1.2
     "MC_ReadActualPositionFB recv": "SDK: 2 reserved bytes before the extended axes (not in the spec)",
 }
 

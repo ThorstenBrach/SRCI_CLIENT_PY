@@ -44,7 +44,8 @@ from pathlib import Path
 
 BEGIN = re.compile(r"SRCI_PY CUSTOM BEGIN \[(?P<id>C-\d{3})\]\s*(?P<reason>.*?)\s*(?:\*/)?\s*$")
 END = re.compile(r"SRCI_PY CUSTOM END \[(?P<id>C-\d{3})\]")
-SOURCE_DIRS = ("src", "include", "lib")
+# SDK 1.1.2: layout of the delivery (SRCI-SDK/...); SDK 1.0.0-RC2: src/include/lib in the root
+SOURCE_DIRS = ("SRCI-SDK/src", "SRCI-SDK/include", "SRCI-SDK/lib", "src", "include", "lib")
 SUFFIXES = {".cpp", ".h", ".hpp", ".c"}
 
 
@@ -61,6 +62,8 @@ def scan(sdk: Path) -> tuple[list[Block], list[str]]:
     blocks: list[Block] = []
     problems: list[str] = []
     for folder in SOURCE_DIRS:
+        if not (sdk / folder).is_dir():
+            continue
         for path in sorted((sdk / folder).rglob("*")):
             if path.suffix not in SUFFIXES:
                 continue

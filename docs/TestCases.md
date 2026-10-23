@@ -24,12 +24,12 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [MET](#met) | Methodology tests of all function blocks against the SDK | 18 | 1391 |
 | [SDK-BIL](#sdk-bil) | Bilateral tests: client payload decoded by the SDK and back | 2 | 224 |
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
-| [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 32 | 33 |
+| [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 35 | 36 |
 | [SDK-RANGE](#sdk-range) | Ranges of the command parameters against the SDK | 15 | 47 |
 | [SDK-SYNC](#sdk-sync) | Synchronization of the user data against the SDK | 27 | 146 |
 | [SDK-RT](#sdk-rt) | RobotTask (communication, synchronization) against the SDK | 16 | 19 |
 | [SDK-SEQ](#sdk-seq) | Sequences, edges and the speed override against the SDK | 11 | 11 |
-| [SDK-STAT](#sdk-stat) | Continuous read, operation mode, unlinked axes group, command name | 23 | 36 |
+| [SDK-STAT](#sdk-stat) | Continuous read, operation mode, unlinked axes group, command name | 24 | 37 |
 | [SDK-SUB](#sdk-sub) | CallSubprogram / StopSubprogram as long running commands | 14 | 14 |
 | [SDK-RTP](#sdk-rtp) | ReturnToPrimary: progress, interruption, stop, disable | 9 | 10 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 43 | 71 |
@@ -45,7 +45,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **511** | **4015** |
+| | **Total** | **515** | **4019** |
 
 ## Test methodology
 
@@ -156,6 +156,9 @@ Core function blocks against the SDK
 | SDK-CORE-030 | ST-FIX F56: 600 commands one after the other (more than 255 telegram sequences): every command gets its response. | 1 | `test_sequence_number_overflow` |
 | SDK-CORE-031 | ST-FIX F59: the position is updated also when the motion uses another tool than the one of the requested coordinate system (the ST compared the *currently used* tool with the request). | 1 | `test_read_actual_position_cyclic_with_tool` |
 | SDK-CORE-032 | After GroupStop (and GroupReset) the next motion runs again. | 2 | `test_motion_after_group_stop` |
+| SDK-CORE-033 | A second EnableRobot while the first one is enabled: the RC allows one instance (16#8F12, SDK 1.1; 1.0.0-RC2 checked it without effect), the first one stays enabled. | 1 | `test_enable_robot_second_instance_rejected` |
+| SDK-CORE-034 | ManualStep in operation mode AUTO extern: the RC rejects it (16#8C20, SDK 1.1). | 1 | `test_enable_robot_manual_step_in_auto_rejected` |
+| SDK-CORE-035 | A position for an axis the robot does not have (E2, the simulation has J1..J6 and E1): the RC rejects the command (16#8C34, SDK 1.1), nothing moves. | 1 | `test_move_axes_value_of_missing_axis_rejected` |
 
 ## SDK-RANGE
 
@@ -283,6 +286,7 @@ Continuous read, operation mode, unlinked axes group, command name
 | SDK-STAT-021 | ST-FIX F105: the user defined command name is part of the message in the message buffer (spec 5.5.11, table 5-47). | 1 | `test_command_name_in_message` |
 | SDK-STAT-022 | The name is also in the message of an error reported by the RC. | 1 | `test_command_name_in_rc_error_message` |
 | SDK-STAT-023 | Without a name the message keeps the block type only. | 1 | `test_without_command_name` |
+| SDK-STAT-024 | AUTO extern -> T2 extern directly: the RC rejects it (16#8C08, SDK 1.1), the mode stays. | 1 | `test_set_operation_mode_auto_to_t2_rejected` |
 
 ## SDK-SUB
 

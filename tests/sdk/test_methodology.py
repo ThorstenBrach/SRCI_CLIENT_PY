@@ -120,8 +120,11 @@ def sdk_parameters() -> Iterator[None]:
 
 
 @contextmanager
-def robot(initialized: bool = True) -> Iterator[tuple[SdkSimulator, RobotTaskHarness]]:
-    """SDK + RobotTask; ``initialized``: commands enabled and the robot enabled."""
+def robot(initialized: bool = True, enable_robot: bool = True) -> Iterator[tuple[SdkSimulator, RobotTaskHarness]]:
+    """SDK + RobotTask; ``initialized``: commands enabled and (``enable_robot``) the robot enabled.
+
+    ``enable_robot`` False for EnableRobot under test: the RC allows one EnableRobot at a time
+    (16#8F12 for a second instance; SDK 1.0.0-RC2 accepted it by mistake)."""
     from tests.sdk.test_core_fbs import enable
 
     clock = FakeClock()
@@ -129,7 +132,8 @@ def robot(initialized: bool = True) -> Iterator[tuple[SdkSimulator, RobotTaskHar
         h = RobotTaskHarness(sdk_transport(sim, SIZE, SIZE), advance=clock.advance)
         if initialized:
             h.run(100, until=lambda: bool(h.ag.State.CMDsEnabled))
-            enable(h, sim)
+            if enable_robot:
+                enable(h, sim)
         else:
             h.enable = False
         yield sim, h
@@ -245,7 +249,7 @@ def test_gen05_default_values(name: str) -> None:
     without default reject the command."""
     if name in GEN05_KNOWN:
         pytest.xfail(GEN05_KNOWN[name])
-    with robot() as (_, h):
+    with robot(enable_robot=name != "MC_EnableRobotFB") as (_, h):
         fb = block(name, h, values=False)
         start(fb)
         h.run(200, until=lambda: finished(fb))
@@ -465,6 +469,11 @@ MOTION_KNOWN = {
 
 def _motion(name: str, h: RobotTaskHarness) -> Any:
     fb = block(name, h)
+    # positions only for the axes the simulated robot has (J1..J6, E1): SDK 1.1 rejects a value
+    # for an axis that does not exist (16#8C34, test_rejects_value_of_missing_axis)
+    for path, value, owner, key in list(leaves(fb.ParCmd)):
+        if isinstance(value, float) and re.search(r"\.e[2-6]$", path.lower()):
+            setattr(owner, key, 0.0)
     for rate in ("DecelerationRate", "JerkRate"):  # the SDK supports only "not set"
         if hasattr(fb.ParCmd, rate):
             setattr(fb.ParCmd, rate, -1.0)

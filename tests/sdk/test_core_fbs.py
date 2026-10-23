@@ -153,6 +153,26 @@ def test_enable_robot_fails(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
     assert not robot.rt.Initialized and not robot.ag.State.CMDsEnabled
 
 
+def test_enable_robot_second_instance_rejected(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
+    """A second EnableRobot while the first one is enabled: the RC allows one instance (16#8F12,
+    SDK 1.1; 1.0.0-RC2 checked it without effect), the first one stays enabled."""
+    first = enable(robot, sdk)
+    second = fb(robot, "MC_EnableRobotFB", Enable=True)
+    robot.run(100, until=lambda: bool(second.Enabled or second.Error))
+    assert second.Error and second.ErrorID == 0x8F12 and not second.Enabled, state(second)
+    assert first.Enabled and not first.Error and sdk.enabled, state(first)
+
+
+def test_enable_robot_manual_step_in_auto_rejected(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
+    """ManualStep in operation mode AUTO extern: the RC rejects it (16#8C20, SDK 1.1)."""
+    execute(robot, fb(robot, "MC_GroupResetFB"))
+    en = fb(robot, "MC_EnableRobotFB")
+    en.ParCmd.ManualStep = True
+    en.Enable = True
+    robot.run(100, until=lambda: bool(en.Error))
+    assert en.Error and en.ErrorID == 0x8C20, state(en)
+
+
 def test_sequence_number_overflow(robot: RobotTaskHarness) -> None:
     """ST-FIX F56: 600 commands one after the other (more than 255 telegram sequences): every
     command gets its response. Before the fix the Seq number wrapped from 254 to 0 and the
@@ -235,6 +255,18 @@ def test_move_axes_absolute(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
     n = execute(robot, mv)
     assert n >= MOVE_CYCLES
     assert sdk.joints[:3] == [10.0, -20.0, 0.0]
+
+
+def test_move_axes_value_of_missing_axis_rejected(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
+    """A position for an axis the robot does not have (E2, the simulation has J1..J6 and E1): the RC
+    rejects the command (16#8C34, SDK 1.1), nothing moves."""
+    enable(robot, sdk)
+    mv = move_axes(robot, 10.0)
+    mv.ParCmd.JointPosition.E2 = 5.0
+    mv.Execute = True
+    robot.run(100, until=lambda: bool(mv.Done or mv.Error))
+    assert mv.Error and mv.ErrorID == 0x8C34 and not mv.Done, state(mv)
+    assert sdk.joints[0] == 0.0
 
 
 def test_move_axes_absolute_before_enable(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:

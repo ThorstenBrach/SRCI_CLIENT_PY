@@ -395,6 +395,27 @@
   "status": "active"
  },
  {
+  "id": "SDK-CORE-033",
+  "test": "tests/sdk/test_core_fbs.py::test_enable_robot_second_instance_rejected",
+  "title": "A second EnableRobot while the first one is enabled: the RC allows one instance (16#8F12, SDK 1.1; 1.0.0-RC2 checked it without effect), the first one stays enabled.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-034",
+  "test": "tests/sdk/test_core_fbs.py::test_enable_robot_manual_step_in_auto_rejected",
+  "title": "ManualStep in operation mode AUTO extern: the RC rejects it (16#8C20, SDK 1.1).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-CORE-035",
+  "test": "tests/sdk/test_core_fbs.py::test_move_axes_value_of_missing_axis_rejected",
+  "title": "A position for an axis the robot does not have (E2, the simulation has J1..J6 and E1): the RC rejects the command (16#8C34, SDK 1.1), nothing moves.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-RANGE-001",
   "test": "tests/sdk/test_parameter_ranges.py::test_number_outside_the_range",
   "title": "A number outside -1..254 is a range error of the client (table 7-1), nothing is sent (ST-FIX F98).",
@@ -1035,6 +1056,13 @@
   "id": "SDK-STAT-023",
   "test": "tests/sdk/test_status.py::test_without_command_name",
   "title": "Without a name the message keeps the block type only.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-STAT-024",
+  "test": "tests/sdk/test_status.py::test_set_operation_mode_auto_to_t2_rejected",
+  "title": "AUTO extern -> T2 extern directly: the RC rejects it (16#8C08, SDK 1.1), the mode stays.",
   "refs": [],
   "status": "active"
  },

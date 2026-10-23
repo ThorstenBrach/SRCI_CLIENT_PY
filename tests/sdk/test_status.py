@@ -227,13 +227,24 @@ def mode_of(h: RobotTaskHarness) -> int:
 def test_set_operation_mode_follows(
     robot: RobotTaskHarness, sdk: SdkSimulator, target: OperationMode
 ) -> None:
-    """External modes: Done, the operation mode of the cyclic status (and the user data) follows."""
-    first = OperationMode.T1_EXT if target == OperationMode.AUTO_EXT else OperationMode.AUTO_EXT
+    """External modes: Done, the operation mode of the cyclic status (and the user data) follows.
+    T2 extern is reached from T1 extern (AUTO extern -> T2 extern: test_set_operation_mode_auto_to_t2_rejected)."""
+    first = OperationMode.AUTO_EXT if target == OperationMode.T1_EXT else OperationMode.T1_EXT
     set_mode(robot, first)
     assert mode_of(robot) == first
     set_mode(robot, target)
     assert mode_of(robot) == target and sdk.states.operation_mode == target
     assert int(robot.user_data.OperationMode) == target
+
+
+def test_set_operation_mode_auto_to_t2_rejected(robot: RobotTaskHarness) -> None:
+    """AUTO extern -> T2 extern directly: the RC rejects it (16#8C08, SDK 1.1), the mode stays."""
+    set_mode(robot, OperationMode.AUTO_EXT)
+    om = fb(robot, "MC_SetOperationModeFB", Execute=True)
+    om.ParCmd.OperationMode = OperationMode.T2_EXT
+    robot.run(50, until=lambda: bool(om.Done or om.Error))
+    assert om.Error and om.ErrorID == 0x8C08 and not om.Done, state(om)
+    assert mode_of(robot) == OperationMode.AUTO_EXT
 
 
 def test_set_operation_mode_transitions(robot: RobotTaskHarness) -> None:
@@ -273,7 +284,7 @@ def test_set_operation_mode_done_while_execute(robot: RobotTaskHarness) -> None:
 def test_set_operation_mode_execute_reset_while_busy(robot: RobotTaskHarness) -> None:
     """Execute FALSE right after the start: the command still ends with Done for one cycle."""
     om = fb(robot, "MC_SetOperationModeFB")
-    om.ParCmd.OperationMode = OperationMode.T2_EXT
+    om.ParCmd.OperationMode = OperationMode.T1_EXT
     om.Execute = True
     robot.run(1)
     assert om.Busy, state(om)
@@ -283,7 +294,7 @@ def test_set_operation_mode_execute_reset_while_busy(robot: RobotTaskHarness) ->
         robot.run(1)
         done.append(bool(om.Done))
     assert done.count(True) == 1 and not om.Error, done
-    assert mode_of(robot) == OperationMode.T2_EXT
+    assert mode_of(robot) == OperationMode.T1_EXT
 
 
 @pytest.mark.parametrize("target", [OperationMode.T1_LOCAL, OperationMode.T2_LOCAL, OperationMode.AUTO])

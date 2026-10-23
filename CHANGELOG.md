@@ -53,6 +53,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    formerly SRCI_TcpGateway)
 
 ### Changed
+ - SDK tests against SRCI SDK 1.1.2 (private SDK repository, branch `sdk-1.1.2`): the methodology
+   motions set positions only for the axes of the simulated robot (J1..J6, E1; the SDK rejects
+   other axes with 16#8C34), EnableRobot under test without a second EnableRobot (one instance,
+   16#8F12), SetOperationMode reaches T2 extern from T1 extern (AUTO -> T2 extern: 16#8C08),
+   ExchangeConfiguration response matches the SDK structure (NumberOfServerLogs). New tests
+   SDK-CORE-033 ... 035, SDK-STAT-024. `tools/sdk_custom_report.py` scans the SDK layout
+   `SRCI-SDK/...` of 1.1.2. Needs the SDK harness of 1.1.2 (the tests of the new checks fail
+   with SDK 1.0.0-RC2).
  - The SDK simulator (`srci.sim.sdk`), the SDK server for PLC tests (`srci.sim.server`) and its
    control channel (`srci.sim.control`) moved to the private SDK repository (package
    `srci_sdk_sim`, `srci_py_harness/python`): they only work with the licensed SDK and are not

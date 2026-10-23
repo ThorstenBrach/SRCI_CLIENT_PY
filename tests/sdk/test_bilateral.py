@@ -127,7 +127,8 @@ def run(name: str) -> Result:
     with SdkSimulator(10) as sim, use_clock(clock):
         h = RobotTaskHarness(sdk_transport(sim, SIZE, SIZE), advance=clock.advance)
         h.run(100, until=lambda: bool(h.ag.State.CMDsEnabled))
-        enable(h, sim)
+        if name != "MC_EnableRobotFB":  # one EnableRobot at a time (16#8F12 for a second one)
+            enable(h, sim)
         sim.set_response(cmd_type, rsp)
         fb = cls()
         for key, value in FB_INPUTS.get(name, {}).items():
