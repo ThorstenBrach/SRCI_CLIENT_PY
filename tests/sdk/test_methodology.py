@@ -120,7 +120,9 @@ def sdk_parameters() -> Iterator[None]:
 
 
 @contextmanager
-def robot(initialized: bool = True, enable_robot: bool = True) -> Iterator[tuple[SdkSimulator, RobotTaskHarness]]:
+def robot(
+    initialized: bool = True, enable_robot: bool = True
+) -> Iterator[tuple[SdkSimulator, RobotTaskHarness]]:
     """SDK + RobotTask; ``initialized``: commands enabled and (``enable_robot``) the robot enabled.
 
     ``enable_robot`` False for EnableRobot under test: the RC allows one EnableRobot at a time
