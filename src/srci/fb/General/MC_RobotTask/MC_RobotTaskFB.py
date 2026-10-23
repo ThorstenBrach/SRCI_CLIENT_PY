@@ -1718,7 +1718,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_TELEGRAM_SEQ_TIMEOUT_0x80A8_0x80A8, Overwrite=True)
             self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.FATAL_ERROR, MessageCode=0, MessageText='Telegram sequence timeout -> Reinitialization required !')
 
-    def HandleSync(self, *, AxesGroup: _T.AxesGroup, ToolData: list[Tool], FrameData: list[Frame], LoadData: list[Load], WorkAreas: list[RobotWorkArea], SWLimits: _T.SWLimits, DefaultDynamics: _T.DefaultDynamics, ReferenceDynamics: _T.ReferenceDynamics) -> None:  # PRIVATE
+    def HandleSync(self, *, AxesGroup: _T.AxesGroup, ToolData: list[Tool], FrameData: list[Frame], LoadData: list[Load], WorkAreas: list[RobotWorkArea], SWLimits: _T.SWLimits, DefaultDynamics: _T.DefaultDynamics, ReferenceDynamics: _T.ReferenceDynamics) -> None:  # PROTECTED
         # flag that indicates at least any iten has enabled synchronisation
         _dataEnableSyncAny: bool = False
         # flag that indicates that the frame datas are synchronized or deactivated

@@ -94,14 +94,19 @@ SDK_NATIVE = {
     9000,
     9001,
     9002,
+    9003,  # CreateServerLog (SDK 1.1, server logs as files)
+    9004,  # ReadServerLog
 }
-FB_INPUTS: dict[str, dict[str, Any]] = {}  # ST-FIX F69: the defaults are valid (e.g. CollisionDetection)
+# ST-FIX F69: the defaults are valid (e.g. CollisionDetection); ReadServerLog needs the in-out LogFile
+FB_INPUTS: dict[str, dict[str, Any]] = {"MC_ReadServerLogFB": {"LogFile": [""] * 20}}
 # ParCmd values needed for a valid command: "Action" functions that can only be started by a
 # trigger (ListenerID 0 = invalid, spec tables 6-622/6-628, ST-FIX F69)
 PARCMD_INPUTS: dict[str, dict[str, Any]] = {
     name: {"ListenerID": 1}
     for name in ("MC_ReactAtTriggerFB", "MC_WaitForTriggerFB", "MC_RedefineTrackingPosFB")
 }
+# ReadServerLog: only ExportMode 0 (output LogFile), the export to a file is optional (16#8419)
+PARCMD_INPUTS["MC_ReadServerLogFB"] = {"ExportMode": 0}
 CLASSES = {n: c for n, c in fb_classes() if hasattr(c, "CreateCommandPayload") and n not in SKIP}
 NAMES = sorted(CLASSES)
 EXECUTE = sorted(n for n in NAMES if hasattr(CLASSES[n](), "Execute"))
@@ -144,7 +149,7 @@ def robot(
 def block(name: str, h: RobotTaskHarness, values: bool = True) -> Any:
     fb = CLASSES[name]()
     for key, value in FB_INPUTS.get(name, {}).items():
-        setattr(fb, key, value)
+        setattr(fb, key, list(value) if isinstance(value, list) else value)
     if values:
         distinct_values(fb.ParCmd)
     for key, value in PARCMD_INPUTS.get(name, {}).items():
@@ -241,6 +246,7 @@ GEN05_KNOWN = {
     "MC_ActivateConveyorTrackingFB": "precondition: the RC reports ConveyorTrackingEnabled",
     "MC_MoveSuperImposedFB": "precondition: needs a motion to superimpose",
     "MC_MoveSplineFB": "precondition: needs a spline created with CreateSpline",
+    "MC_ReadServerLogFB": "precondition: needs a server log created with CreateServerLog (16#8D95)",
 }
 
 

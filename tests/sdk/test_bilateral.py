@@ -82,6 +82,8 @@ SDK_NATIVE = {
     9000,
     9001,
     9002,
+    9003,  # CreateServerLog (SDK 1.1, server logs as files)
+    9004,  # ReadServerLog
 }
 
 # not testable this way: cyclic functions (no command), payload > 255 bytes (F33)
@@ -94,7 +96,8 @@ SKIP = {
 ONE_POINT = {"MC_CreateSplineFB", "MC_DynamicSplineFB"}
 
 # inputs of the function block itself (not ParCmd) needed for a valid command
-FB_INPUTS: dict[str, dict[str, Any]] = {}  # ST-FIX F69: the defaults are valid (e.g. CollisionDetection)
+# ST-FIX F69: the defaults are valid (e.g. CollisionDetection); ReadServerLog needs the in-out LogFile
+FB_INPUTS: dict[str, dict[str, Any]] = {"MC_ReadServerLogFB": {"LogFile": [""] * 20}}
 
 
 @dataclass
@@ -132,7 +135,7 @@ def run(name: str) -> Result:
         sim.set_response(cmd_type, rsp)
         fb = cls()
         for key, value in FB_INPUTS.get(name, {}).items():
-            setattr(fb, key, value)
+            setattr(fb, key, list(value) if isinstance(value, list) else value)
         if name in ONE_POINT:  # one spline point: the points 2.. stay empty
             points = fb.ParCmd.SplineData
             sent = distinct_values(fb.ParCmd)
@@ -242,6 +245,8 @@ def test_recv(sdk_available: None, name: str) -> None:
 KNOWN_SEND: dict[str, str] = {
     "MC_ReturnToPrimaryFB": "spec: TrajectoryMode is USINT 0/1/2 (6.3.11.3) but one bit in table 6-332",
     "MC_MoveSuperImposedDynamicFB": "spec: table 6-492 lacks Offset.RZ, byte numbers inconsistent",
+    "MC_ReadServerLogFB": "spec: table 6-123 has no Offset (SDK 1.1: request counter in bytes 12-15, "
+    "ContextFilter from byte 16)",
 }  # F33/F34 fixed
 
 KNOWN_RECV: dict[str, str] = {}  # F33/F40 fixed

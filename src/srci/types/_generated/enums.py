@@ -22,7 +22,7 @@
 
 """SRCI enumerations - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 321833d31319a117)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 91dd909c0ed9802d)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa
@@ -3418,6 +3418,10 @@ class CmdType(_iec.IecIntEnum):
     """
     MoveLinearAbsoluteJ = 2109
     """ST-FIX F35: spec 6.3.12 Type 2109 (missing in the library)"""
+    CreateServerLog = 9003
+    """ST-FIX F108: create a server log on the RC (spec 6.2.5)"""
+    ReadServerLog = 9004
+    """ST-FIX F108: read a server log from the RC (spec 6.2.6)"""
 
 
 _iec.register_enum(CmdType, _iec.UINT)

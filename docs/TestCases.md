@@ -21,8 +21,8 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 
 | Area | Description | Test cases | Instances |
 |---|---|---:|---:|
-| [MET](#met) | Methodology tests of all function blocks against the SDK | 18 | 1391 |
-| [SDK-BIL](#sdk-bil) | Bilateral tests: client payload decoded by the SDK and back | 2 | 224 |
+| [MET](#met) | Methodology tests of all function blocks against the SDK | 18 | 1410 |
+| [SDK-BIL](#sdk-bil) | Bilateral tests: client payload decoded by the SDK and back | 2 | 228 |
 | [SDK-PAY](#sdk-pay) | Payload layout against the command structures of the SDK | 3 | 3 |
 | [SDK-CORE](#sdk-core) | Core function blocks against the SDK | 35 | 36 |
 | [SDK-RANGE](#sdk-range) | Ranges of the command parameters against the SDK | 15 | 47 |
@@ -32,20 +32,21 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-STAT](#sdk-stat) | Continuous read, operation mode, unlinked axes group, command name | 24 | 37 |
 | [SDK-SUB](#sdk-sub) | CallSubprogram / StopSubprogram as long running commands | 14 | 14 |
 | [SDK-RTP](#sdk-rtp) | ReturnToPrimary: progress, interruption, stop, disable | 9 | 10 |
+| [SDK-LOG](#sdk-log) | Server and client logs: CreateServerLog / ReadServerLog against the SDK | 14 | 14 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 43 | 71 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [OPCUA](#opcua) | OPC UA transport | 18 | 28 |
-| [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 115 |
+| [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 117 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
 | [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 68 | 154 |
 | [UT-FN](#ut-fn) | Functions of the library | 18 | 28 |
 | [UT-IEC](#ut-iec) | IEC 61131-3 runtime (data types, timers, conversions) | 42 | 96 |
 | [UT-RUN](#ut-run) | Cyclic runner | 11 | 11 |
 | [UT-TR](#ut-tr) | Transports | 7 | 10 |
-| [UT-TYP](#ut-typ) | Generated data types | 20 | 1288 |
-| [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 217 |
+| [UT-TYP](#ut-typ) | Generated data types | 20 | 1304 |
+| [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 219 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **515** | **4019** |
+| | **Total** | **529** | **4076** |
 
 ## Test methodology
 
@@ -54,22 +55,22 @@ buffering, ...) are applied as patterns to **all** function blocks of the librar
 
 | ID | Test | Instances | Reference |
 |---|---|---:|---|
-| GEN-01 | Every input/output of the specification exists in the function block. | 113 |  |
+| GEN-01 | Every input/output of the specification exists in the function block. | 115 |  |
 | GEN-03 | Every field of ParCmd/OutCmd has a comment (taken from the PLC library into the generated types). | 1 |  |
-| GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 109 |  |
-| GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command. | 109 |  |
-| GEN-06 | Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge. | 92 |  |
-| GEN-07 | RobotTask not running -> Error (blocks of the start-up: after the command timeout). | 109 |  |
-| GEN-08 | Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle. | 92 | spec 5.5.x "Output status" |
-| GEN-09 | Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent. | 109 | ST-FIX F48 |
+| GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 111 |  |
+| GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command. | 111 |  |
+| GEN-06 | Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge. | 94 |  |
+| GEN-07 | RobotTask not running -> Error (blocks of the start-up: after the command timeout). | 111 |  |
+| GEN-08 | Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle. | 94 | spec 5.5.x "Output status" |
+| GEN-09 | Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent. | 111 | ST-FIX F48 |
 | ERR-01 | Undefined value of an enum parameter -> Error. | 309 |  |
-| ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 109 |  |
+| ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 111 |  |
 | ERR-03 | The RC answered with an error, Enable FALSE and TRUE again after a few cycles (the same instance) -> the new command is sent. ST-FIX F78: the falling edge starts the error clear (waits up to 5 s for a response); a new enable in this time was consumed while Error was still TRUE -> nothing sent, no Busy, no Error. Found by the TcUnit tests (PM-03 reuses instances). | 12 |  |
 | PM-01 | Two commands of the same kind -> the second one is buffered until the first one is done, both are Done in this order. | 20 |  |
 | PM-02 | A second command with AbortingMode ABORT aborts the active one -> first CommandAborted, second Done. | 20 |  |
-| PM-03 | The ExecutionMode in the telegram follows the inputs AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary, Parallel, Continuous, Trigger Once / Multiple). | 59 | ST-FIX F51, spec table 5-77 |
+| PM-03 | The ExecutionMode in the telegram follows the inputs AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary, Parallel, Continuous, Trigger Once / Multiple). | 60 | ST-FIX F51, spec table 5-77 |
 | SEQ-01 | The primary sequence is interrupted, SetSequence(secondary), a command with SequenceFlag SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted. | 20 | spec 5.6.4.5 |
-| REP-01 | The same instance is executed 5 times in a row (new rising edge after Done) -> every execution sends one command and ends with Done. | 92 |  |
+| REP-01 | The same instance is executed 5 times in a row (new rising edge after Done) -> every execution sends one command and ends with Done. | 94 |  |
 | BUF-01 | More motion commands started in one cycle than the active command register has entries -> the commands that fit are buffered and executed, the others end with Error ERR_NO_FREE_ACR_ENTRY; no command stays Busy. | 17 |  |
 | BUF-02 | 16 instances started in the same cycle -> all commands are sent and every instance ends with Done or with the error of the RC (a limit of the RC is not a limit of the client). | 3 |  |
 | TMO-01 | The RC never answers the command -> Error ERR_TIMEOUT_CMD after the command timeout (5 s), Busy FALSE; before the fix the block stayed Busy forever. | 4 | ST-FIX F53 |
@@ -83,19 +84,19 @@ Methodology tests of all function blocks against the SDK
 | BUF-01 | More motion commands started in one cycle than the active command register has entries -> the commands that fit are buffered and executed, the others end with Error ERR_NO_FREE_ACR_ENTRY; no command stays Busy. | 17 | `test_buf01_more_commands_than_register_entries` |
 | BUF-02 | 16 instances started in the same cycle -> all commands are sent and every instance ends with Done or with the error of the RC (a limit of the RC is not a limit of the client). | 3 | `test_buf02_more_than_15_commands_in_one_cycle` |
 | ERR-01 | Undefined value of an enum parameter -> Error. | 309 | `test_err01_undefined_enum_value` |
-| ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 109 | `test_err02_error_of_the_rc` |
+| ERR-02 | The RC answers with an error -> Error, ErrorID of the RC. | 111 | `test_err02_error_of_the_rc` |
 | ERR-03 | The RC answered with an error, Enable FALSE and TRUE again after a few cycles (the same instance) -> the new command is sent. | 12 | `test_err03_new_enable_after_an_error_of_the_rc` |
-| GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 109 | `test_gen04_not_executed` |
-| GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command. | 109 | `test_gen05_default_values` |
-| GEN-06 | Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge. | 92 | `test_gen06_continuous_execute` |
-| GEN-07 | RobotTask not running -> Error (blocks of the start-up: after the command timeout). | 109 | `test_gen07_axes_group_not_initialized` |
-| GEN-08 | Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle. | 92 | `test_gen08_execute_for_one_cycle` |
-| GEN-09 | Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent. | 109 | `test_gen09_undefined_exec_mode` |
-| MET-001 | Axes group with data, RobotTask disabled (variant of GEN-07): the RobotTask was initialized (tools, frames, ... | 106 | `test_gen07_robot_task_disabled_after_initialization` |
+| GEN-04 | Valid command, not executed -> all outputs FALSE / 0, nothing sent. | 111 | `test_gen04_not_executed` |
+| GEN-05 | Valid command with the default values, positive edge -> Done / Enabled / Valid without error (ST-FIX F41, F43, F44); blocks with mandatory parameters without default reject the command. | 111 | `test_gen05_default_values` |
+| GEN-06 | Execute stays TRUE -> the command is executed once, Done stays TRUE as long as Execute is TRUE and is reset with its falling edge. | 94 | `test_gen06_continuous_execute` |
+| GEN-07 | RobotTask not running -> Error (blocks of the start-up: after the command timeout). | 111 | `test_gen07_axes_group_not_initialized` |
+| GEN-08 | Execute TRUE for one cycle -> the command is executed anyway and Done / Error / CommandAborted is set for at least one cycle. | 94 | `test_gen08_execute_for_one_cycle` |
+| GEN-09 | Undefined AbortingMode (18), ProcessingMode (18) or ExecMode (18) for blocks without these inputs -> Error, nothing sent. | 111 | `test_gen09_undefined_exec_mode` |
+| MET-001 | Axes group with data, RobotTask disabled (variant of GEN-07): the RobotTask was initialized (tools, frames, ... | 108 | `test_gen07_robot_task_disabled_after_initialization` |
 | PM-01 | Two commands of the same kind -> the second one is buffered until the first one is done, both are Done in this order. | 20 | `test_pm01_buffered` |
 | PM-02 | A second command with AbortingMode ABORT aborts the active one -> first CommandAborted, second Done. | 20 | `test_pm02_aborting` |
-| PM-03 | The ExecutionMode in the telegram follows the inputs AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary, Parallel, Continuous, Trigger Once / Multiple). | 59 | `test_pm03_execution_mode` |
-| REP-01 | The same instance is executed 5 times in a row (new rising edge after Done) -> every execution sends one command and ends with Done. | 92 | `test_rep01_repeated_execution` |
+| PM-03 | The ExecutionMode in the telegram follows the inputs AbortingMode / ProcessingMode and SequenceFlag (Buffered/Aborting x primary/secondary, Parallel, Continuous, Trigger Once / Multiple). | 60 | `test_pm03_execution_mode` |
+| REP-01 | The same instance is executed 5 times in a row (new rising edge after Done) -> every execution sends one command and ends with Done. | 94 | `test_rep01_repeated_execution` |
 | SEQ-01 | The primary sequence is interrupted, SetSequence(secondary), a command with SequenceFlag SECONDARY + GroupContinue is executed while the primary command stays interrupted, SetSequence(primary) is accepted. | 20 | `test_seq01_secondary_sequence` |
 | TMO-01 | The RC never answers the command -> Error ERR_TIMEOUT_CMD after the command timeout (5 s), Busy FALSE; before the fix the block stayed Busy forever. | 4 | `test_tmo01_no_response` |
 
@@ -105,8 +106,8 @@ Bilateral tests: client payload decoded by the SDK and back
 
 | ID | Test case | Instances | Test |
 |---|---|---:|---|
-| SDK-BIL-001 | Every ParCmd value arrives in the SDK with the value and at the place of the specification. | 112 | `test_send` |
-| SDK-BIL-002 | Every value of the response of the SDK appears in OutCmd. | 112 | `test_recv` |
+| SDK-BIL-001 | Every ParCmd value arrives in the SDK with the value and at the place of the specification. | 114 | `test_send` |
+| SDK-BIL-002 | Every value of the response of the SDK appears in OutCmd. | 114 | `test_recv` |
 
 ## SDK-PAY
 
@@ -325,6 +326,27 @@ ReturnToPrimary: progress, interruption, stop, disable
 | SDK-RTP-008 | TrajectoryMode 0 (default, invalid): Error 16#8409 from the client (ST-FIX F99). | 1 | `test_trajectory_mode_invalid` |
 | SDK-RTP-009 | A rate above the range: Error from the client, nothing sent. | 2 | `test_rate_out_of_range` |
 
+## SDK-LOG
+
+Server and client logs: CreateServerLog / ReadServerLog against the SDK
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| SDK-LOG-001 | CreateServerLog: Done, OutCmd.ServerLogID 1, then 2. | 1 | `test_create_server_log_returns_id` |
+| SDK-LOG-002 | ReadServerLog of the latest log: Done with EndOfLogReached, every line in LogFile, header first. | 1 | `test_read_server_log_complete` |
+| SDK-LOG-003 | ContextFilter 1 (LogHeader): only the header line; 50 (SysData.Info): its child contexts. | 1 | `test_read_server_log_context_filter` |
+| SDK-LOG-004 | LogFile with 3 elements: Done after 3 lines, EndOfLogReached FALSE (spec figure 6-44). | 1 | `test_read_server_log_log_file_full` |
+| SDK-LOG-005 | StartLine 3: the first element of LogFile is line 3 of the log (spec figure 6-45). | 1 | `test_read_server_log_start_line` |
+| SDK-LOG-006 | ServerLogID -1: latest log, 0: oldest log, n: the log with this ID (header eventlogID). | 1 | `test_read_server_log_oldest_and_latest` |
+| SDK-LOG-007 | More logs than the RC can store (3): InfoID 16#6C70, the IDs start again at 1. | 1 | `test_create_server_log_overwrites_oldest` |
+| SDK-LOG-008 | A log that does not exist: Error 16#8D95 of the RC. | 1 | `test_read_server_log_unknown_id` |
+| SDK-LOG-009 | StartLine behind the last line: Error 16#8D96 of the RC. | 1 | `test_read_server_log_start_line_behind_the_log` |
+| SDK-LOG-010 | A ContextFilter value of no context: Error 16#8D97 of the RC. | 1 | `test_read_server_log_unknown_context_filter` |
+| SDK-LOG-011 | ExportMode 1 (export to a file, optional): client error 16#8419, nothing sent. | 1 | `test_read_server_log_export_mode_rejected` |
+| SDK-LOG-012 | Execute FALSE during the transfer: it goes on to the end (spec figure 6-44), Done for one cycle. | 1 | `test_read_server_log_execute_reset_during_transfer` |
+| SDK-LOG-013 | New rising edge of Execute during the transfer: the transfer starts again, LogFile from the start. | 1 | `test_read_server_log_restart` |
+| SDK-LOG-014 | ProcessingMode CONTINUOUS is not allowed for CreateServerLog: client error, nothing sent. | 1 | `test_create_server_log_continuous_rejected` |
+
 ## SDK-LOOP
 
 SDK in the loop (simulator binding)
@@ -430,7 +452,7 @@ Interfaces of the function blocks against the specification
 
 | ID | Test case | Instances | Test |
 |---|---|---:|---|
-| GEN-01 | Every input/output of the specification exists in the function block. | 113 | `test_interface_matches_the_specification` |
+| GEN-01 | Every input/output of the specification exists in the function block. | 115 | `test_interface_matches_the_specification` |
 | GEN-03 | Every field of ParCmd/OutCmd has a comment (taken from the PLC library into the generated types). | 1 | `test_parameters_are_documented` |
 | SPEC-IF-001 | Every function block has an interface table in the specification (except the listed ones) | 1 | `test_all_function_blocks_have_a_table` |
 
@@ -641,8 +663,8 @@ Generated data types
 | UT-TYP-004 | Every xml type is generated | 1 | `test_every_xml_type_is_generated` |
 | UT-TYP-005 | Enum values match xml and fit base | 87 | `test_enum_values_match_xml_and_fit_base` |
 | UT-TYP-006 | Enum spot checks | 1 | `test_enum_spot_checks` |
-| UT-TYP-007 | Struct layout matches dataclass | 591 | `test_struct_layout_matches_dataclass` |
-| UT-TYP-008 | Defaults match iec types | 591 | `test_defaults_match_iec_types` |
+| UT-TYP-007 | Struct layout matches dataclass | 599 | `test_struct_layout_matches_dataclass` |
+| UT-TYP-008 | Defaults match iec types | 599 | `test_defaults_match_iec_types` |
 | UT-TYP-009 | Defaults are independent | 1 | `test_defaults_are_independent` |
 | UT-TYP-010 | Type hints resolve | 1 | `test_type_hints_resolve` |
 | UT-TYP-011 | Struct spot checks | 1 | `test_struct_spot_checks` |
@@ -700,7 +722,7 @@ Code generators and tools
 | UT-TOOL-036 | All patches applied | 1 | `test_all_patches_applied` |
 | UT-TOOL-037 | Mixin methods exist | 1 | `test_mixin_methods_exist` |
 | UT-TOOL-038 | Generated files are up to date | 1 | `test_generated_files_are_up_to_date` |
-| UT-TOOL-039 | Smoke test: create each FB and call it with a fresh AxesGroup (nothing executed). | 122 | `test_every_function_block_can_be_called` |
+| UT-TOOL-039 | Smoke test: create each FB and call it with a fresh AxesGroup (nothing executed). | 124 | `test_every_function_block_can_be_called` |
 | UT-TOOL-040 | F28 list matches the generated code | 1 | `test_f28_list_matches_the_generated_code` |
 | UT-TOOL-041 | ToolNo is the last payload parameter but the first element of _command. | 1 | `test_write_tool_data_sends_tool_no` |
 | UT-TOOL-042 | Units and hash ignore line endings | 1 | `test_units_and_hash_ignore_line_endings` |

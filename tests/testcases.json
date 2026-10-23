@@ -1228,6 +1228,104 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOG-001",
+  "test": "tests/sdk/test_logs.py::test_create_server_log_returns_id",
+  "title": "CreateServerLog: Done, OutCmd.ServerLogID 1, then 2.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-002",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_complete",
+  "title": "ReadServerLog of the latest log: Done with EndOfLogReached, every line in LogFile, header first.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-003",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_context_filter",
+  "title": "ContextFilter 1 (LogHeader): only the header line; 50 (SysData.Info): its child contexts.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-004",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_log_file_full",
+  "title": "LogFile with 3 elements: Done after 3 lines, EndOfLogReached FALSE (spec figure 6-44).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-005",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_start_line",
+  "title": "StartLine 3: the first element of LogFile is line 3 of the log (spec figure 6-45).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-006",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_oldest_and_latest",
+  "title": "ServerLogID -1: latest log, 0: oldest log, n: the log with this ID (header eventlogID).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-007",
+  "test": "tests/sdk/test_logs.py::test_create_server_log_overwrites_oldest",
+  "title": "More logs than the RC can store (3): InfoID 16#6C70, the IDs start again at 1.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-008",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_unknown_id",
+  "title": "A log that does not exist: Error 16#8D95 of the RC.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-009",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_start_line_behind_the_log",
+  "title": "StartLine behind the last line: Error 16#8D96 of the RC.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-010",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_unknown_context_filter",
+  "title": "A ContextFilter value of no context: Error 16#8D97 of the RC.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-011",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_export_mode_rejected",
+  "title": "ExportMode 1 (export to a file, optional): client error 16#8419, nothing sent.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-012",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_execute_reset_during_transfer",
+  "title": "Execute FALSE during the transfer: it goes on to the end (spec figure 6-44), Done for one cycle.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-013",
+  "test": "tests/sdk/test_logs.py::test_read_server_log_restart",
+  "title": "New rising edge of Execute during the transfer: the transfer starts again, LogFile from the start.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOG-014",
+  "test": "tests/sdk/test_logs.py::test_create_server_log_continuous_rejected",
+  "title": "ProcessingMode CONTINUOUS is not allowed for CreateServerLog: client error, nothing sent.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-LOOP-001",
   "test": "tests/sdk/test_sdk_in_the_loop.py::test_sdk_library",
   "title": "The SDK simulator library is found and has the expected C API version",

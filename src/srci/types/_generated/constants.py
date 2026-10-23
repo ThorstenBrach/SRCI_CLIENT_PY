@@ -22,7 +22,7 @@
 
 """SRCI constants and library parameters - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 321833d31319a117)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 91dd909c0ed9802d)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa
@@ -49,7 +49,7 @@ class RobotLibraryConstants:
     Version of SRCI specification Bit 0-4 : Minor version = Features (0..31) Bit 5-7 : Major version
     = Breaking change (0..07)
     """
-    PLCLibraryVersion: Final[VersionStruct] = VersionStruct(MajorVersion=0, MinorVersion=0, PatchVersion=49)
+    PLCLibraryVersion: Final[VersionStruct] = VersionStruct(MajorVersion=1, MinorVersion=5, PatchVersion=2)
     """Version of the PLC library"""
     AXES_GROUP_ID_MIN: Final[int] = 0
     """Minimal axes group ID"""
@@ -73,6 +73,11 @@ class RobotLibraryConstants:
     """Buffered command"""
     MAX_ADD_TEXT_LENGTH: Final[int] = 40
     """Maximal length of additional text"""
+    SERVER_LOG_CONTENT_MAX: Final[int] = 179
+    """
+    ST-FIX F108: characters of a log line per ReadServerLog response (SRCI SDK 1.1: 179; spec table
+    6-124: 187)
+    """
 
 
 class RobotLibraryDefines:
@@ -128,6 +133,8 @@ class RobotLibraryParameter:
     """Timeout for checking for invalid frames"""
     ACR_USAGE_WARNING_LIMIT: ClassVar[float] = 80.0
     """Warning limit for ACR registers running low"""
+    LOG_LINE_LEN: ClassVar[int] = 1023
+    """ST-FIX F108: maximal length of a log line of ReadServerLog / ReadClientLog (element of LogFile)"""
 
 
 _ = _iec  # keep import for type descriptors

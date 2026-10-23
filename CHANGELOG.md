@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+ - CreateServerLog / ReadServerLog (ST-FIX F108, new in the PLC library): `MC_CreateServerLogFB`,
+   `MC_ReadServerLogFB` (log lines into the in-out array `LogFile`, parts of a line joined); telegram
+   layout of SRCI SDK 1.1 (differs from spec tables 6-123/6-124). Tests SDK-LOG-001 ... 014 against
+   the SDK (the harness answers 9003/9004 with the SDK, server logs as files). RobotLibrary.xml:
+   export of 2026-10-23 with F104 ... F107 in the library, the source patches of `tools/st2py/config.py`
+   are removed
  - Python client of the SRCI interface (specification V1.5.9): all function blocks, data types and
    functions of the SRCI PLC library, generated from the PLC library and kept identical to it
  - `srci.api.RobotProgram` (RobotTask + user data + function blocks) and `srci.api.SrciClient`

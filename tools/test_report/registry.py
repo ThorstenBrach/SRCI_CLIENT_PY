@@ -62,6 +62,11 @@ AREAS: list[tuple[str, str, str]] = [
     ("sdk/test_status.py", "SDK-STAT", "Continuous read, operation mode, unlinked axes group, command name"),
     ("sdk/test_subprogram.py", "SDK-SUB", "CallSubprogram / StopSubprogram as long running commands"),
     ("sdk/test_return_to_primary.py", "SDK-RTP", "ReturnToPrimary: progress, interruption, stop, disable"),
+    (
+        "sdk/test_logs.py",
+        "SDK-LOG",
+        "Server and client logs: CreateServerLog / ReadServerLog against the SDK",
+    ),
     ("sdk/", "SDK-LOOP", "SDK in the loop (simulator binding)"),
     ("tcp/", "TCP", "TCP transport"),
     ("opcua/", "OPCUA", "OPC UA transport"),

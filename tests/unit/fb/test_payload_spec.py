@@ -43,6 +43,10 @@ KNOWN: dict[str, str] = {
     "MC_SyncToConveyorFB send": "spec: EmitterID as USINT in table 6-474 (SINT in all other tables)",
     "MC_MoveSuperImposedDynamicFB send": "spec: table 6-492 lacks Offset.RZ (byte numbers inconsistent)",
     "MC_WaitForTriggerFB send": "spec: ConditionalWait is BOOL in the interface, SINT in the table - same values",
+    "MC_CreateServerLogFB send": "spec: table 6-116 ends at byte 7, ListenerID/Reserved of the trigger header (table 5-73, 6-114) missing",
+    # F108: layout of SRCI SDK 1.1 (Offset as request counter, line flags / LogLine / Offset in the response)
+    "MC_ReadServerLogFB send": "spec: table 6-123 has no Offset (SDK 1.1: bytes 12-15)",
+    "MC_ReadServerLogFB recv": "spec: table 6-124 has no line flags / LogLine / Offset (SDK 1.1), LogContent of variable length",
     # no table
     "MC_ReadActualPositionCyclicFB send": NO_TABLE,
     "MC_ReadActualPositionCyclicFB recv": NO_TABLE,

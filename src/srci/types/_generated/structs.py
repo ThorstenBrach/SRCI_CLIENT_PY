@@ -22,7 +22,7 @@
 
 """SRCI structures - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 321833d31319a117)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 91dd909c0ed9802d)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa
@@ -151,6 +151,10 @@ __all__ = [
     'ConfigureConveyorRecvData',
     'ConfigureConveyorSendData',
     'CoordinateSystem',
+    'CreateServerLogOutCmd',
+    'CreateServerLogParCmd',
+    'CreateServerLogRecvData',
+    'CreateServerLogSendData',
     'CreateSplineOutCmd',
     'CreateSplineParCmd',
     'CreateSplineRecvData',
@@ -407,6 +411,10 @@ __all__ = [
     'ReadRobotSWLimitsParCmd',
     'ReadRobotSWLimitsRecvData',
     'ReadRobotSWLimitsSendData',
+    'ReadServerLogOutCmd',
+    'ReadServerLogParCmd',
+    'ReadServerLogRecvData',
+    'ReadServerLogSendData',
     'ReadSystemVariableOutCmd',
     'ReadSystemVariableParCmd',
     'ReadSystemVariableRecvData',
@@ -7906,6 +7914,80 @@ class ReadActualForceSendData(CmdHeader):
 
 
 @_dataclass(kw_only=True, slots=True)
+class CreateServerLogOutCmd:
+    """CreateServerLogOutCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    InvocationCounter: int = 0
+    """
+    Relates to ListenerID >0 Number of successful trigger-based command invocations For more
+    information refer to chapter 5.5.12.4.
+    """
+    OriginID: int = 0
+    """
+    Unique system-generated ID of the "Action" when the function is triggered. • >0: The "Action" is
+    started by the trigger function with identical FollowID. • <0: The "Action" is stopped by the
+    trigger function with identical FollowID. For more information see chapter 5.5.12.4 EmitterID,
+    ListenerID, FollowID and OriginID
+    """
+    ServerLogID: int = 0
+    """ID of the newly created server log (input ServerLogID of ReadServerLog)"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class CreateServerLogParCmd:
+    """CreateServerLogParCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    ListenerID: int = 0
+    """
+    ID of associated trigger function: • 0: No Trigger (default) No trigger related behavior • >0:
+    Trigger - Start executing when the trigger function with the identical EmitterID is triggered.
+    Always positive. For more information, see chapter 5.5.12 Triggers
+    """
+
+
+@_dataclass(kw_only=True, slots=True)
+class CreateServerLogRecvData(RspHeader):
+    """CreateServerLogRecvData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    InvocationCounter: int = 0
+    """
+    Relates to ListenerID >0 Number of successful trigger-based command invocations - For more
+    information refer to chapter 5.5.12.4
+    """
+    Reserve: int = 0
+    """Reserve"""
+    OriginID: int = 0
+    """
+    Unique system-generated ID of the "Action" when the function is triggered. • >0: The "Action" is
+    started by the trigger function with identical FollowID. • <0: The "Action" is stopped by the
+    trigger function with identical FollowID. For more information see chapter 5.5.12.4 EmitterID,
+    ListenerID, FollowID and OriginID
+    """
+    ServerLogID: int = 0
+    """ID of the newly created server log"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class CreateServerLogSendData(CmdHeader):
+    """CreateServerLogSendData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    EmitterID: list[int] = _field(default_factory=lambda: [0] * 4)
+    """ID of Action that will be executed when this command is active (always 0)"""
+    ListenerID: int = 0
+    """
+    ID of associated trigger function: • 0: No Trigger (default) No trigger related behavior • >0:
+    Trigger - Start executing when the trigger function with the identical EmitterID is triggered.
+    Always positive. For more information, see chapter 5.5.12 Triggers
+    """
+    Reserve: int = 0
+    """Reserve"""
+
+
+@_dataclass(kw_only=True, slots=True)
 class EnableRobotOutCmd:
     """EnableRobotOutCmd"""
 
@@ -7987,6 +8069,90 @@ class GroupResetSendData(CmdHeader):
     """GroupResetSendData"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadServerLogOutCmd:
+    """ReadServerLogOutCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    AvailableLogLines: int = 0
+    """Total number of log lines in the requested log"""
+    AvailableFilteredLogLines: int = 0
+    """Number of log lines in the requested log after the ContextFilter"""
+    ReceivedLogLines: int = 0
+    """Number of log lines received and stored in LogFile (spec table 6-120: USINT)"""
+    Progress: float = 0.0
+    """Received log lines compared to AvailableFilteredLogLines [%]"""
+    EndOfLogReached: bool = False
+    """The last log line of the requested log was transmitted"""
+    LogLine: int = 0
+    """Number of the log line received last"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadServerLogParCmd:
+    """ReadServerLogParCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    ServerLogID: int = -1
+    """
+    ID of the requested server log • -1 (default): latest server log • 0: oldest server log (SRCI
+    SDK 1.1; spec table 6-119: 1) • >0: server log with this ID (OutCmd.ServerLogID of
+    CreateServerLog)
+    """
+    StartLine: int = 1
+    """First log line of the requested log that is transferred to the PLC (1: log header)"""
+    ContextFilter: list[int] = _field(default_factory=lambda: [0] * 10)
+    """Only log lines of these contexts (spec table 6-118); all 0: no filter"""
+    ExportMode: int = 0
+    """Target of the log: 0 = output LogFile (default), 1 = export to a file (not supported)"""
+    ExportName: str = ''
+    """File name of the export (ExportMode 1)"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadServerLogRecvData(RspHeader):
+    """ReadServerLogRecvData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    AvailableLogLines: int = 0
+    """Total number of log lines in the requested log"""
+    AvailableFilteredLogLines: int = 0
+    """Number of log lines after the ContextFilter"""
+    LogContentLength: int = 0
+    """Number of characters in LogContent"""
+    IsStartOfLine: bool = False
+    """Byte 13 Bit 0: LogContent starts a log line"""
+    IsEndOfLine: bool = False
+    """Byte 13 Bit 1: LogContent ends a log line"""
+    EndOfLogReached: bool = False
+    """Byte 13 Bit 2: the last log line was transmitted"""
+    LogLine: int = 0
+    """Number of the transmitted log line"""
+    Offset: int = 0
+    """Request counter of the command this response belongs to"""
+    LogContent: str = ''
+    """Part of the log line (CSV)"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadServerLogSendData(CmdHeader):
+    """ReadServerLogSendData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    Enable: bool = False
+    """Byte 4 Bit 0: TRUE while log lines are transferred"""
+    Reserve: int = 0
+    """Reserve"""
+    ServerLogID: int = 0
+    """ID of the requested server log (16#FFFF: latest, 0: oldest)"""
+    StartLine: int = 0
+    """First log line of the requested log"""
+    Offset: int = 0
+    """Request counter (SRCI SDK 1.1): every new value requests the next part of the log"""
+    ContextFilter: list[int] = _field(default_factory=lambda: [0] * 10)
+    """Only log lines of these contexts (spec table 6-118)"""
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -17806,6 +17972,25 @@ ReadActualForceSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
     _iec.IecField('CalibrationData', _iec.USINT),
     _iec.IecField('ReferenceType', _iec.EnumType(_e.ReferenceType)),
 )
+CreateServerLogOutCmd._IEC_FIELDS_ = (
+    _iec.IecField('InvocationCounter', _iec.USINT),
+    _iec.IecField('OriginID', _iec.INT),
+    _iec.IecField('ServerLogID', _iec.INT),
+)
+CreateServerLogParCmd._IEC_FIELDS_ = (
+    _iec.IecField('ListenerID', _iec.SINT),
+)
+CreateServerLogRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
+    _iec.IecField('InvocationCounter', _iec.USINT),
+    _iec.IecField('Reserve', _iec.SINT),
+    _iec.IecField('OriginID', _iec.INT),
+    _iec.IecField('ServerLogID', _iec.INT),
+)
+CreateServerLogSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
+    _iec.IecField('EmitterID', _iec.ArrayType(0, 3, _iec.SINT)),
+    _iec.IecField('ListenerID', _iec.SINT),
+    _iec.IecField('Reserve', _iec.BYTE),
+)
 EnableRobotOutCmd._IEC_FIELDS_ = (
 )
 EnableRobotParCmd._IEC_FIELDS_ = (
@@ -17829,6 +18014,40 @@ GroupResetParCmd._IEC_FIELDS_ = (
 GroupResetRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
 )
 GroupResetSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
+)
+ReadServerLogOutCmd._IEC_FIELDS_ = (
+    _iec.IecField('AvailableLogLines', _iec.UDINT),
+    _iec.IecField('AvailableFilteredLogLines', _iec.UDINT),
+    _iec.IecField('ReceivedLogLines', _iec.UDINT),
+    _iec.IecField('Progress', _iec.REAL),
+    _iec.IecField('EndOfLogReached', _iec.BOOL),
+    _iec.IecField('LogLine', _iec.UDINT),
+)
+ReadServerLogParCmd._IEC_FIELDS_ = (
+    _iec.IecField('ServerLogID', _iec.INT),
+    _iec.IecField('StartLine', _iec.UDINT),
+    _iec.IecField('ContextFilter', _iec.ArrayType(0, 9, _iec.USINT)),
+    _iec.IecField('ExportMode', _iec.USINT),
+    _iec.IecField('ExportName', _iec.StringType(20)),
+)
+ReadServerLogRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
+    _iec.IecField('AvailableLogLines', _iec.UDINT),
+    _iec.IecField('AvailableFilteredLogLines', _iec.UDINT),
+    _iec.IecField('LogContentLength', _iec.USINT),
+    _iec.IecField('IsStartOfLine', _iec.BOOL),
+    _iec.IecField('IsEndOfLine', _iec.BOOL),
+    _iec.IecField('EndOfLogReached', _iec.BOOL),
+    _iec.IecField('LogLine', _iec.UDINT),
+    _iec.IecField('Offset', _iec.UDINT),
+    _iec.IecField('LogContent', _iec.StringType(179)),
+)
+ReadServerLogSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
+    _iec.IecField('Enable', _iec.BOOL),
+    _iec.IecField('Reserve', _iec.BYTE),
+    _iec.IecField('ServerLogID', _iec.UINT),
+    _iec.IecField('StartLine', _iec.UDINT),
+    _iec.IecField('Offset', _iec.UDINT),
+    _iec.IecField('ContextFilter', _iec.ArrayType(0, 9, _iec.USINT)),
 )
 RestartControllerOutCmd._IEC_FIELDS_ = (
     _iec.IecField('RestartAccepted', _iec.BOOL),
