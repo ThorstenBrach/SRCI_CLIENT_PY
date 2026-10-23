@@ -472,10 +472,10 @@ MOTION_KNOWN = {
 def _motion(name: str, h: RobotTaskHarness) -> Any:
     fb = block(name, h)
     # positions only for the axes the simulated robot has (J1..J6, E1): SDK 1.1 rejects a value
-    # for an axis that does not exist (16#8C34, test_rejects_value_of_missing_axis)
+    # for an axis that does not exist (16#8C34, test_core_fbs.py::test_move_axes_value_of_missing_axis_rejected)
     for path, value, owner, key in list(leaves(fb.ParCmd)):
         if isinstance(value, float) and re.search(r"\.e[2-6]$", path.lower()):
-            setattr(owner, key, 0.0)
+            setattr(owner, str(key), 0.0)
     for rate in ("DecelerationRate", "JerkRate"):  # the SDK supports only "not set"
         if hasattr(fb.ParCmd, rate):
             setattr(fb.ParCmd, rate, -1.0)
