@@ -125,7 +125,7 @@ def run(name: str, overrides: tuple[tuple[str, Any], ...] = ()) -> Result:
             fb.Enable = True
 
         def finished() -> bool:
-            return bool(getattr(fb, "Done", False) or getattr(fb, "Valid", False) or fb.Error)
+            return _completed(fb) or bool(fb.Error)
 
         h.run(200, until=finished)
         firmware = sim.firmware_command(cmd_type)
@@ -134,10 +134,17 @@ def run(name: str, overrides: tuple[tuple[str, Any], ...] = ()) -> Result:
         if rsp and hasattr(fb, "OutCmd") and firmware is not None:
             out = {path: value for path, value, _, _ in leaves(fb.OutCmd)}
             recv = compare_fields(_rename(name, out), {k: str(v) for k, v in rsp.items()})
-        done = bool(getattr(fb, "Done", False) or getattr(fb, "Valid", False))
+        done = _completed(fb)
         result = Result(cmd_type, firmware, received, recv, int(fb.ErrorID), done)
         result.notes.append(f"InfoID=16#{int(getattr(fb, 'InfoID', 0)):04X}")
         return result
+
+
+def _completed(fb: Any) -> bool:
+    """Done / Valid; enable blocks without these outputs (e.g. SyncToConveyor, DynamicSpline): Enabled."""
+    if hasattr(fb, "Done") or hasattr(fb, "Valid"):
+        return bool(getattr(fb, "Done", False) or getattr(fb, "Valid", False))
+    return bool(getattr(fb, "Enabled", False))
 
 
 def _set(obj: Any, path: str, value: Any) -> None:

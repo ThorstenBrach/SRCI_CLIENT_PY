@@ -250,9 +250,10 @@ GEN05_SDK_MANDATORY = {
     "MC_WriteIntegersFB": "Index (16#8D50)",
     "MC_WriteRealsFB": "Index (16#8D50)",
     "MC_WriteSystemVariableFB": "ParameterID (16#8D74: at least one parameter)",
+    "MC_RedefineTrackingPosFB": "FrameNo (16#8D08: the WCS cannot follow a conveyor)",
+    "MC_SyncToConveyorFB": "FrameNo (16#8D08: the WCS cannot follow a conveyor)",
 }
 GEN05_KNOWN = {
-    "MC_ActivateConveyorTrackingFB": "precondition: the RC reports ConveyorTrackingEnabled",
     "MC_MoveSuperImposedFB": "precondition: needs a motion to superimpose",
     "MC_MoveSplineFB": "precondition: needs a spline created with CreateSpline",
     "MC_ReadServerLogFB": "precondition: needs a server log created with CreateServerLog (16#8D95)",
