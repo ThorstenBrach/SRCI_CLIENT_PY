@@ -157,6 +157,9 @@ def run(name: str) -> Result:
             if key in sent:  # SDK return: valid numbers instead of the distinct values
                 sent[key] = value
         h.add(fb)
+        from tests.sdk.trigger_pump import attach_listener_trigger
+
+        attach_listener_trigger(h, fb, name)  # "Actions" (ListenerID > 0) wait for their trigger
         if hasattr(fb, "Execute"):
             fb.Execute = True
         else:
@@ -277,7 +280,9 @@ NOT_IN_TELEGRAM: dict[str, tuple[str, ...]] = {
     "MC_MovePickPlaceDirectFB": ("ReductionRate",),
     "MC_MoveAxesAbsoluteFB": ("ConfigMode",),
     "MC_ActivateConveyorTrackingFB": ("PLCEncoderValue", "RCEncoderValue"),
-    "MC_RedefineTrackingPosFB": ("InitObjectPosition",),
+    # ListenerID 1 (an "Action"): InvocationCounter / OriginID are filled by the trigger engine of the
+    # SDK (SDK return, group TRIG), not by the response values of the harness
+    "MC_RedefineTrackingPosFB": ("InitObjectPosition", "InvocationCounter", "OriginID"),
     "MC_MoveSuperImposedFB": (
         "VelocityDiffRate",
         "AccelerationDiffRate",

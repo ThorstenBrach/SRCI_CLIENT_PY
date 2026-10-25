@@ -53,8 +53,17 @@ import srci
 from srci.iec.clock import FakeClock, use_clock
 from tests.bilateral import Comparison, compare_fields, distinct_values, leaves, response_values
 from tests.robot_task_harness import SIZE, RobotTaskHarness
-from tests.sdk.sdk_return import ADDED_TYPES, ERROR_CASES, FW_NOT_PASSED, KNOWN, PARCMD, RSP_VALUES
+from tests.sdk.sdk_return import (
+    ADDED_TYPES,
+    COMPANIONS,
+    ERROR_CASES,
+    FW_NOT_PASSED,
+    KNOWN,
+    PARCMD,
+    RSP_VALUES,
+)
 from tests.sdk.test_bilateral import NOT_IN_TELEGRAM, RECV_NOT_COMPARED, SKIP, _rename
+from tests.sdk.trigger_pump import attach_listener_trigger
 from tools.payload_check import fb_classes, function_name, send_calls
 from tools.spec_tables import load
 
@@ -119,6 +128,9 @@ def run(name: str, overrides: tuple[tuple[str, Any], ...] = ()) -> Result:
         for path, value in (*PARCMD.get(name, {}).items(), *overrides):
             _set(fb.ParCmd, path, value)
         h.add(fb)
+        attach_listener_trigger(h, fb, name)  # "Actions" (ListenerID > 0) wait for their trigger
+        for companion in COMPANIONS.get(name, ()):
+            companion(h, fb)
         if hasattr(fb, "Execute"):
             fb.Execute = True
         else:

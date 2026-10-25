@@ -58,6 +58,7 @@ from srci.types import SequenceFlag
 from tests.bilateral import distinct_values, leaves
 from tests.robot_task_harness import SIZE, RobotTaskHarness
 from tests.sdk.sdk_return.force import PARCMD as FORCE_PARCMD
+from tests.sdk.trigger_pump import attach_listener_trigger
 from tools.payload_check import fb_classes, send_calls
 
 SKIP = {
@@ -158,6 +159,7 @@ def block(name: str, h: RobotTaskHarness, values: bool = True) -> Any:
     for key, value in PARCMD_INPUTS.get(name, {}).items():
         setattr(fb.ParCmd, key, value)
     h.add(fb)
+    attach_listener_trigger(h, fb, name)  # "Actions" (ListenerID > 0) wait for their trigger
     return fb
 
 
@@ -257,6 +259,9 @@ GEN05_SDK_MANDATORY = {
     "MC_SoftSwitchTcpFB": "CompliantAxes (16#8D0C: LimitMode 'No limit defined' needs at least one axis)",
     "MC_RedefineTrackingPosFB": "FrameNo (16#8D08: the WCS cannot follow a conveyor)",
     "MC_SyncToConveyorFB": "FrameNo (16#8D08: the WCS cannot follow a conveyor)",
+    "MC_SetTriggerUserFB": "EmitterID (16#8F04: must not be 0)",
+    "MC_SetTriggerErrorFB": "EmitterID (16#8F04)",
+    "MC_SetTriggerLimitFB": "EmitterID (16#8F04)",
 }
 GEN05_KNOWN = {
     "MC_MoveSuperImposedFB": "precondition: needs a motion to superimpose",
