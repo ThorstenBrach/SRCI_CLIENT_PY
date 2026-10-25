@@ -57,6 +57,7 @@ from srci.iec.clock import FakeClock, use_clock
 from srci.types import SequenceFlag
 from tests.bilateral import distinct_values, leaves
 from tests.robot_task_harness import SIZE, RobotTaskHarness
+from tests.sdk.trigger_pump import attach_listener_trigger
 from tools.payload_check import fb_classes, send_calls
 
 SKIP = {
@@ -155,6 +156,7 @@ def block(name: str, h: RobotTaskHarness, values: bool = True) -> Any:
     for key, value in PARCMD_INPUTS.get(name, {}).items():
         setattr(fb.ParCmd, key, value)
     h.add(fb)
+    attach_listener_trigger(h, fb, name)  # "Actions" (ListenerID > 0) wait for their trigger
     return fb
 
 
@@ -250,6 +252,9 @@ GEN05_SDK_MANDATORY = {
     "MC_WriteIntegersFB": "Index (16#8D50)",
     "MC_WriteRealsFB": "Index (16#8D50)",
     "MC_WriteSystemVariableFB": "ParameterID (16#8D74: at least one parameter)",
+    "MC_SetTriggerUserFB": "EmitterID (16#8F04: must not be 0)",
+    "MC_SetTriggerErrorFB": "EmitterID (16#8F04)",
+    "MC_SetTriggerLimitFB": "EmitterID (16#8F04)",
 }
 GEN05_KNOWN = {
     "MC_ActivateConveyorTrackingFB": "precondition: the RC reports ConveyorTrackingEnabled",
