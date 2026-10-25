@@ -251,6 +251,7 @@ GEN05_SDK_MANDATORY = {
     "MC_WriteRealsFB": "Index (16#8D50)",
     "MC_WriteSystemVariableFB": "ParameterID (16#8D74: at least one parameter)",
     "MC_WaitTimeFB": "WaitTime (16#8D34: the time must be positive)",
+    "MC_SoftSwitchTcpFB": "CompliantAxes (16#8D0C: LimitMode 'No limit defined' needs at least one axis)",
 }
 GEN05_KNOWN = {
     "MC_ActivateConveyorTrackingFB": "precondition: the RC reports ConveyorTrackingEnabled",

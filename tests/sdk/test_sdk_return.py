@@ -124,8 +124,14 @@ def run(name: str, overrides: tuple[tuple[str, Any], ...] = ()) -> Result:
         else:
             fb.Enable = True
 
+        def done() -> bool:
+            # Enable blocks without Valid (OpenBrake, FreeDrive, ...): output Enabled
+            return bool(
+                getattr(fb, "Done", False) or getattr(fb, "Valid", False) or getattr(fb, "Enabled", False)
+            )
+
         def finished() -> bool:
-            return bool(getattr(fb, "Done", False) or getattr(fb, "Valid", False) or fb.Error)
+            return done() or bool(fb.Error)
 
         h.run(200, until=finished)
         firmware = sim.firmware_command(cmd_type)
@@ -134,8 +140,7 @@ def run(name: str, overrides: tuple[tuple[str, Any], ...] = ()) -> Result:
         if rsp and hasattr(fb, "OutCmd") and firmware is not None:
             out = {path: value for path, value, _, _ in leaves(fb.OutCmd)}
             recv = compare_fields(_rename(name, out), {k: str(v) for k, v in rsp.items()})
-        done = bool(getattr(fb, "Done", False) or getattr(fb, "Valid", False))
-        result = Result(cmd_type, firmware, received, recv, int(fb.ErrorID), done)
+        result = Result(cmd_type, firmware, received, recv, int(fb.ErrorID), done())
         result.notes.append(f"InfoID=16#{int(getattr(fb, 'InfoID', 0)):04X}")
         return result
 
@@ -230,7 +235,11 @@ def test_recv(name: str) -> None:
     if result.recv is None:
         pytest.skip("no response values")
     allowed = RECV_NOT_COMPARED + TRIGGER_RSP + NOT_IN_TELEGRAM.get(name, ())
-    covered = lambda p: any(p == a or p.startswith((a + ".", a + "[")) for a in allowed)  # noqa: E731
+
+    # also nested names (e.g. Data.DefinitionMode after RENAME), like _covered of test_bilateral
+    def covered(p: str) -> bool:
+        return any(p == a or p.startswith((a + ".", a + "[")) or f".{a}." in f".{p}." for a in allowed)
+
     problems = [m for m in result.recv.mismatched if not covered(m.split(":")[0])]
     problems += [f"{m}: no field in the telegram" for m in result.recv.missing if not covered(m)]
     assert problems == []
