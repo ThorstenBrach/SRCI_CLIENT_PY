@@ -72,6 +72,7 @@ HEADER_FIELDS = ("Type", "ExecutionMode", "ParSeq", "EmitterID", "ListenerID", "
 # fields of the trigger response header: filled by the SDK (trigger engine), not by the firmware
 TRIGGER_RSP = ("InvocationCounter", "OriginID", "MissedInvocationCounter")
 
+
 @dataclass
 class Result:
     cmd_type: int
@@ -101,10 +102,9 @@ def sdk_parameters() -> Any:
 def run(name: str, overrides: tuple[tuple[str, Any], ...] = ()) -> Result:
     """Executes the function block ``name`` against the SDK (once per test session);
     ``overrides``: ParCmd values (path, value) set after the distinct values."""
+    from tests.sdk.test_bilateral import FB_INPUTS
     from tests.sdk.test_core_fbs import enable
     from tests.sdk.test_methodology import PARCMD_INPUTS
-
-    from tests.sdk.test_bilateral import FB_INPUTS
 
     cls = dict(fb_classes())[name]
     cmd_type = int(send_calls(cls)[0].value)
@@ -262,7 +262,9 @@ def test_recv(name: str) -> None:
     ERROR_CASES,
     ids=[f"{n}-{e:04X}-{i:04X}" for n, _, e, i in ERROR_CASES],
 )
-def test_parameter_check(name: str, overrides: tuple[tuple[str, Any], ...], error_id: int, info_id: int) -> None:
+def test_parameter_check(
+    name: str, overrides: tuple[tuple[str, Any], ...], error_id: int, info_id: int
+) -> None:
     """The SDK checks the parameters of the added commands (error / info codes of the specification)."""
     if name not in _names():
         pytest.skip("function block not in the SRCI library or command not added")

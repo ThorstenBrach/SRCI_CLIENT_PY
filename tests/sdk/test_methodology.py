@@ -281,7 +281,9 @@ def test_gen05_default_values(name: str) -> None:
         fb = block(name, h, values=False)
         start(fb)
         h.run(200, until=lambda: finished(fb))
-        checked_by_sdk = name in GEN05_SDK_MANDATORY and getattr(sim, "answered_by_sdk", lambda _: False)(cmd_type(name))
+        checked_by_sdk = name in GEN05_SDK_MANDATORY and getattr(sim, "answered_by_sdk", lambda _: False)(
+            cmd_type(name)
+        )
         if name in GEN05_MANDATORY or checked_by_sdk:
             assert fb.Error and fb.ErrorID, outputs(fb)
         else:
