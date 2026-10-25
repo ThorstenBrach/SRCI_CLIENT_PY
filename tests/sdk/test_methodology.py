@@ -262,8 +262,24 @@ GEN05_SDK_MANDATORY = {
     "MC_SetTriggerUserFB": "EmitterID (16#8F04: must not be 0)",
     "MC_SetTriggerErrorFB": "EmitterID (16#8F04)",
     "MC_SetTriggerLimitFB": "EmitterID (16#8F04)",
+    "MC_ReadDigitalInputsFB": "Index (16#8D50)",
+    "MC_ReadDigitalOutputsFB": "Index (16#8D50)",
+    "MC_WriteDigitalOutputsFB": "Index (16#8D50)",
+    "MC_ReadSystemVariableFB": "ParameterID (16#8D74)",
+    # spec table 6-758: default TRUE (all axes), the library defaults to no axis (RobotAxesFlags all FALSE)
+    "MC_BrakeTestFB": "RobotAxesActive (SDK 16#8D0C: no axis active)",
 }
+# CalculateFrame / CalculateTool with several positions: the SDK answers every telegram before the
+# last one (DataComplete FALSE) ACTIVE and keeps it active, the library waits for DONE before it sends
+# the next position (DataIndex) -> the command never completes. The spec does not define the state of
+# these telegrams; the library starts DataIndex at 1, the example of the spec (figure 6-257) at 0.
+_CALC_POSITIONS = (
+    "SDK answers the telegrams before DataComplete ACTIVE, the library waits for DONE per position "
+    "(spec 6.5.12.11 does not define the state; DataIndex: library 1.., spec example 0..)"
+)
 GEN05_KNOWN = {
+    "MC_CalculateFrameFB": _CALC_POSITIONS,
+    "MC_CalculateToolFB": _CALC_POSITIONS,
     "MC_MoveSuperImposedFB": "precondition: needs a motion to superimpose",
     "MC_MoveSplineFB": "precondition: needs a spline created with CreateSpline",
     "MC_ReadServerLogFB": "precondition: needs a server log created with CreateServerLog (16#8D95)",
@@ -295,6 +311,7 @@ def test_gen05_default_values(name: str) -> None:
 # one command per position (DataIndex) / per spline point (ST-FIX F33)
 GEN06_REPEAT = {"MC_CalculateFrameFB", "MC_CalculateToolFB", "MC_CreateSplineFB"}
 GEN06_KNOWN = {
+    "MC_CalculateToolFB": _CALC_POSITIONS,
     "MC_MoveSuperImposedFB": "precondition: needs a motion to superimpose",
     "MC_MoveSplineFB": "precondition: needs a spline created with CreateSpline",
 }

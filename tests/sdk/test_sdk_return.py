@@ -7,7 +7,7 @@
 #  Date:        2026-10-25
 #
 #  Description:
-#    Tests of the commands added to the SRCI SDK ("SDK return").
+#    Tests of the commands answered by the SRCI SDK itself ("SDK return").
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,9 +20,10 @@
 #
 # -------------------------------------------------------------------------
 
-"""Tests of the commands added to the SRCI SDK ("SDK return", private SDK branch sdk-return).
+"""Tests of the commands answered by the SRCI SDK itself ("SDK return", private SDK branch sdk-return).
 
-The SDK itself answers these commands: it decodes the command with its own CMD structure, calls
+The commands added to the SDK and the commands of the original SDK whose firmware functions the
+simulated robot implements (group ORIG). The SDK itself answers these commands: it decodes the command with its own CMD structure, calls
 the firmware function (simulated robot of the harness) and encodes the response with its own RSP
 structure. The firmware probe of the harness records the parameters the firmware received and
 answers with the response values of the test (``SdkSimulator.firmware_command`` /
@@ -59,6 +60,7 @@ from tests.sdk.sdk_return import (
     ERROR_CASES,
     FW_NOT_PASSED,
     KNOWN,
+    KNOWN_CASES,
     PARCMD,
     RSP_VALUES,
 )
@@ -257,15 +259,23 @@ def test_recv(name: str) -> None:
     assert problems == []
 
 
-@pytest.mark.parametrize(
-    ("name", "overrides", "error_id", "info_id"),
-    ERROR_CASES,
-    ids=[f"{n}-{e:04X}-{i:04X}" for n, _, e, i in ERROR_CASES],
-)
+def _cases() -> list[Any]:
+    """ERROR_CASES and KNOWN_CASES (spec behaviour the SDK does not fulfil: xfail strict)."""
+    cases = [pytest.param(n, o, e, i, id=f"{n}-{e:04X}-{i:04X}") for n, o, e, i in ERROR_CASES]
+    cases += [
+        pytest.param(
+            n, o, e, i, id=f"{n}-{e:04X}-{i:04X}-known", marks=pytest.mark.xfail(strict=True, reason=r)
+        )
+        for n, o, e, i, r in KNOWN_CASES
+    ]
+    return cases
+
+
+@pytest.mark.parametrize(("name", "overrides", "error_id", "info_id"), _cases())
 def test_parameter_check(
     name: str, overrides: tuple[tuple[str, Any], ...], error_id: int, info_id: int
 ) -> None:
-    """The SDK checks the parameters of the added commands (error / info codes of the specification)."""
+    """The SDK checks the parameters of its commands (error / info codes of the specification)."""
     if name not in _names():
         pytest.skip("function block not in the SRCI library or command not added")
     _skip_unless_added(name)

@@ -30,6 +30,8 @@ Every module (``io.py``, ``gen.py``, ...) defines
   ``FW_NOT_PASSED`` (function block -> fields of the telegram the SDK evaluates itself),
   ``ERROR_CASES`` ((function block, ParCmd values, ErrorID, InfoID) of the parameter checks),
   ``KNOWN`` (function block -> reason, xfail strict),
+  ``KNOWN_CASES`` ((function block, ParCmd values, ErrorID, InfoID, reason): parameter checks of the
+  specification the SDK does not fulfil, xfail strict),
   ``COMPANIONS`` (function block -> callables ``(harness, fb)`` adding function blocks that make the
   condition of a trigger function occur, tests.sdk.trigger_pump.when_buffered).
 
@@ -48,6 +50,7 @@ RSP_VALUES: dict[str, dict[str, object]] = {}
 FW_NOT_PASSED: dict[str, tuple[str, ...]] = {}
 ERROR_CASES: list[tuple[str, tuple[tuple[str, Any], ...], int, int]] = []
 KNOWN: dict[str, str] = {}
+KNOWN_CASES: list[tuple[str, tuple[tuple[str, Any], ...], int, int, str]] = []
 COMPANIONS: dict[str, tuple[Any, ...]] = {}
 
 for _info in sorted(pkgutil.iter_modules(__path__), key=lambda m: m.name):
@@ -58,6 +61,7 @@ for _info in sorted(pkgutil.iter_modules(__path__), key=lambda m: m.name):
     FW_NOT_PASSED.update(getattr(_mod, "FW_NOT_PASSED", {}))
     ERROR_CASES.extend(getattr(_mod, "ERROR_CASES", []))
     KNOWN.update(getattr(_mod, "KNOWN", {}))
+    KNOWN_CASES.extend(getattr(_mod, "KNOWN_CASES", []))
     COMPANIONS.update(getattr(_mod, "COMPANIONS", {}))
 
 ADDED_TYPES = {t for types in ADDED.values() for t in types}

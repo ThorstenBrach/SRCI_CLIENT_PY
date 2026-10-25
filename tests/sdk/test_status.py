@@ -142,7 +142,9 @@ def test_read_position_deactivate_without_running_command(robot: RobotTaskHarnes
 
 def test_deactivate_parallel_read_inputs(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
     """ST-FIX F104 on another block: continuous ReadDigitalInputs ended by DEACTIVATE."""
-    di = fb(robot, "MC_ReadDigitalInputsFB", ProcessingMode=ProcessingMode.CONTINUOUS, Execute=True)
+    di = fb(robot, "MC_ReadDigitalInputsFB", ProcessingMode=ProcessingMode.CONTINUOUS)
+    di.ParCmd.Index[0] = 1  # the SDK rejects all indices 0 (16#8D50, GEN05_SDK_MANDATORY)
+    di.Execute = True
     robot.run(20, until=lambda: bool(di.Valid or di.Error))
     assert di.Valid and di.Busy, state(di)
     deactivate(robot, di)
