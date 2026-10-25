@@ -107,6 +107,7 @@ class Result:
     recv: Comparison | None
     error_id: int = 0
     notes: list[str] = field(default_factory=list)
+    native: bool = False  # the SDK answers the command itself
 
 
 @pytest.fixture(autouse=True, scope="module")
@@ -125,9 +126,10 @@ def run(name: str) -> Result:
     cls = dict(fb_classes())[name]
     cmd_type = int(send_calls(cls)[0].value)
     table = load().get((function_name(name), "recv"))
-    rsp = response_values(table.entries) if table and cmd_type not in SDK_NATIVE else {}
     clock = FakeClock()
     with SdkSimulator(10) as sim, use_clock(clock):
+        native = cmd_type in SDK_NATIVE or _answered_by_sdk(sim, cmd_type)
+        rsp = response_values(table.entries) if table and not native else {}
         h = RobotTaskHarness(sdk_transport(sim, SIZE, SIZE), advance=clock.advance)
         h.run(100, until=lambda: bool(h.ag.State.CMDsEnabled))
         if name != "MC_EnableRobotFB":  # one EnableRobot at a time (16#8F12 for a second one)
@@ -174,7 +176,12 @@ def run(name: str) -> Result:
         if rsp and hasattr(fb, "OutCmd"):
             out = {path: value for path, value, _, _ in leaves(fb.OutCmd)}
             recv = compare_fields(_rename(name, out), {k: str(v) for k, v in rsp.items()})
-        return Result(cmd_type, send, recv, int(fb.ErrorID))
+        return Result(cmd_type, send, recv, int(fb.ErrorID), native=native)
+
+
+def _answered_by_sdk(sim: SdkSimulator, cmd_type: int) -> bool:
+    """The SDK answers ``cmd_type`` itself (SDK with the commands of the SDK return)."""
+    return bool(getattr(sim, "answered_by_sdk", lambda _: False)(cmd_type))
 
 
 def _rename(name: str, values: dict[str, Any]) -> dict[str, Any]:
@@ -230,8 +237,8 @@ def test_recv(sdk_available: None, name: str) -> None:
     if name in SKIP:
         pytest.skip(SKIP[name])
     result = run(name)
-    if result.cmd_type in SDK_NATIVE:
-        pytest.skip("response values of the SDK itself (tests/sdk/test_core_fbs.py)")
+    if result.native:
+        pytest.skip("response values of the SDK itself (tests/sdk/test_core_fbs.py, test_sdk_return.py)")
     if result.recv is None:
         pytest.skip("no response values (no OutCmd or empty response table)")
     if name in KNOWN_RECV:

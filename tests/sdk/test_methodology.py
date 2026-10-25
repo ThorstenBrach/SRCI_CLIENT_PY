@@ -242,6 +242,15 @@ GEN05_MANDATORY = {
     "MC_CreateSplineFB": "SplineData (at least one point)",
     "MC_ReturnToPrimaryFB": "TrajectoryMode (0 = invalid is the default, spec 6.3.11; ST-FIX F99)",
 }
+# mandatory parameters the SDK checks itself when it implements the command (SDK return); the
+# harness of the original SDK answers these commands without a check
+GEN05_SDK_MANDATORY = {
+    "MC_ReadIntegersFB": "Index (16#8D50: at least one index must not be 0)",
+    "MC_ReadRealsFB": "Index (16#8D50)",
+    "MC_WriteIntegersFB": "Index (16#8D50)",
+    "MC_WriteRealsFB": "Index (16#8D50)",
+    "MC_WriteSystemVariableFB": "ParameterID (16#8D74: at least one parameter)",
+}
 GEN05_KNOWN = {
     "MC_ActivateConveyorTrackingFB": "precondition: the RC reports ConveyorTrackingEnabled",
     "MC_MoveSuperImposedFB": "precondition: needs a motion to superimpose",
@@ -257,11 +266,12 @@ def test_gen05_default_values(name: str) -> None:
     without default reject the command."""
     if name in GEN05_KNOWN:
         pytest.xfail(GEN05_KNOWN[name])
-    with robot(enable_robot=name != "MC_EnableRobotFB") as (_, h):
+    with robot(enable_robot=name != "MC_EnableRobotFB") as (sim, h):
         fb = block(name, h, values=False)
         start(fb)
         h.run(200, until=lambda: finished(fb))
-        if name in GEN05_MANDATORY:
+        checked_by_sdk = name in GEN05_SDK_MANDATORY and getattr(sim, "answered_by_sdk", lambda _: False)(cmd_type(name))
+        if name in GEN05_MANDATORY or checked_by_sdk:
             assert fb.Error and fb.ErrorID, outputs(fb)
         else:
             assert finished(fb) and not fb.Error, outputs(fb)
