@@ -7,7 +7,7 @@
 #  Date:        2026-10-25
 #
 #  Description:
-#    Trigger concept (spec 5.5.12) against the trigger engine of the SDK (SDK return, group TRIG).
+#    Trigger concept (spec 5.5.12) against the trigger engine of the SDK (modified SDK by Thorsten, group TRIG).
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""Trigger concept (spec 5.5.12) against the trigger engine of the SDK (SDK return, group TRIG).
+"""Trigger concept (spec 5.5.12) against the trigger engine of the SDK (modified SDK by Thorsten, group TRIG).
 
 "Actions" (ListenerID > 0) are held by the RC until a trigger function with EmitterID = ListenerID
 fires; InvocationCounter / OriginID (= FollowID, the ACR ID of the trigger function; negative: the
@@ -55,7 +55,7 @@ def sdk_parameters() -> Iterator[None]:
         pytest.skip(str(exc))
     with SdkSimulator(10) as sim:
         if not getattr(sim, "answered_by_sdk", lambda _: False)(3005):
-            pytest.skip("SDK without the trigger commands (SDK return, group TRIG)")
+            pytest.skip("SDK without the trigger commands (modified SDK by Thorsten, group TRIG)")
     old = srci.parameters()
     srci.configure(force=True, TOOL_MAX=20, FRAME_MAX=20, LOAD_MAX=20)
     yield

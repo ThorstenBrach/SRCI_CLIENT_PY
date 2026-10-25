@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.wa
+#  Object:      tests.sdk.sdk_modified.wa
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group WA: work areas (14_Application_WorkAreas.cpp).
+#    Modified SDK by Thorsten, group WA: work areas (14_Application_WorkAreas.cpp).
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group WA: work areas (14_Application_WorkAreas.cpp)."""
+"""Modified SDK by Thorsten, group WA: work areas (14_Application_WorkAreas.cpp)."""
 
 from __future__ import annotations
 

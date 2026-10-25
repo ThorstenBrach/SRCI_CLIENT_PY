@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return
+#  Object:      tests.sdk.sdk_modified
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    Test data of the commands added to the SRCI SDK ("SDK return"), one module per group.
+#    Test data of the commands added to the SRCI SDK ("modified SDK by Thorsten"), one module per group.
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""Test data of the commands added to the SRCI SDK ("SDK return"), one module per group.
+"""Test data of the commands added to the SRCI SDK ("modified SDK by Thorsten"), one module per group.
 
 Every module (``io.py``, ``gen.py``, ...) defines
 
@@ -35,7 +35,7 @@ Every module (``io.py``, ``gen.py``, ...) defines
   ``COMPANIONS`` (function block -> callables ``(harness, fb)`` adding function blocks that make the
   condition of a trigger function occur, tests.sdk.trigger_pump.when_buffered).
 
-This package merges them (``tests.sdk.test_sdk_return``).
+This package merges them (``tests.sdk.test_sdk_modified``).
 """
 
 from __future__ import annotations

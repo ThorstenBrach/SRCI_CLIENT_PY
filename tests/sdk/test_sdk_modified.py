@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.test_sdk_return
+#  Object:      tests.sdk.test_sdk_modified
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    Tests of the commands answered by the SRCI SDK itself ("SDK return").
+#    Tests of the commands answered by the SRCI SDK itself ("modified SDK by Thorsten").
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""Tests of the commands answered by the SRCI SDK itself ("SDK return", private SDK branch sdk-return).
+"""Tests of the commands answered by the SRCI SDK itself ("modified SDK by Thorsten").
 
 The commands added to the SDK and the commands of the original SDK whose firmware functions the
 simulated robot implements (group ORIG). The SDK itself answers these commands: it decodes the command with its own CMD structure, calls
@@ -36,8 +36,8 @@ answers with the response values of the test (``SdkSimulator.firmware_command`` 
   SDK matches the specification.
 * the function block completes without error.
 
-Only the function blocks of the command types of the SDK return are tested (test data per group:
-``tests/sdk/sdk_return/<group>.py``); commands this SDK does not answer itself are skipped.
+Only the function blocks of the command types of the modified SDK by Thorsten are tested (test data per group:
+``tests/sdk/sdk_modified/<group>.py``); commands this SDK does not answer itself are skipped.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ import srci
 from srci.iec.clock import FakeClock, use_clock
 from tests.bilateral import Comparison, compare_fields, distinct_values, leaves, response_values
 from tests.robot_task_harness import SIZE, RobotTaskHarness
-from tests.sdk.sdk_return import (
+from tests.sdk.sdk_modified import (
     ADDED_TYPES,
     COMPANIONS,
     ERROR_CASES,
@@ -93,7 +93,7 @@ def sdk_parameters() -> Any:
     except Exception as exc:
         pytest.skip(str(exc))
     if not hasattr(SdkSimulator, "firmware_command"):
-        pytest.skip("SDK simulator without firmware probe (SDK return)")
+        pytest.skip("SDK simulator without firmware probe (modified SDK by Thorsten)")
     old = srci.parameters()
     srci.configure(force=True, TOOL_MAX=20, FRAME_MAX=20, LOAD_MAX=20)
     yield
@@ -203,7 +203,7 @@ def _answered_by_sdk(cmd_type: int) -> bool:
 def _skip_unless_added(name: str) -> None:
     cmd_type = int(send_calls(dict(fb_classes())[name])[0].value)
     if not _answered_by_sdk(cmd_type):
-        pytest.skip("command not implemented by this SDK (group of the SDK return not applied)")
+        pytest.skip("command not implemented by this SDK (group of the modified SDK by Thorsten not applied)")
 
 
 def _result(name: str) -> Result:

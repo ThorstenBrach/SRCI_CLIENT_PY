@@ -154,7 +154,7 @@ def run(name: str) -> Result:
 
         for key, value in PARCMD_INPUTS.get(name, {}).items():
             setattr(fb.ParCmd, key, value)
-            if key in sent:  # SDK return: valid numbers instead of the distinct values
+            if key in sent:  # Modified SDK by Thorsten: valid numbers instead of the distinct values
                 sent[key] = value
         h.add(fb)
         from tests.sdk.trigger_pump import attach_listener_trigger
@@ -185,7 +185,7 @@ def run(name: str) -> Result:
 
 
 def _answered_by_sdk(sim: SdkSimulator, cmd_type: int) -> bool:
-    """The SDK answers ``cmd_type`` itself (SDK with the commands of the SDK return)."""
+    """The SDK answers ``cmd_type`` itself (modified SDK by Thorsten)."""
     return bool(getattr(sim, "answered_by_sdk", lambda _: False)(cmd_type))
 
 
@@ -243,7 +243,7 @@ def test_recv(sdk_available: None, name: str) -> None:
         pytest.skip(SKIP[name])
     result = run(name)
     if result.native:
-        pytest.skip("response values of the SDK itself (tests/sdk/test_core_fbs.py, test_sdk_return.py)")
+        pytest.skip("response values of the SDK itself (tests/sdk/test_core_fbs.py, test_sdk_modified.py)")
     if result.recv is None:
         pytest.skip("no response values (no OutCmd or empty response table)")
     if name in KNOWN_RECV:
@@ -281,7 +281,7 @@ NOT_IN_TELEGRAM: dict[str, tuple[str, ...]] = {
     "MC_MoveAxesAbsoluteFB": ("ConfigMode",),
     "MC_ActivateConveyorTrackingFB": ("PLCEncoderValue", "RCEncoderValue"),
     # ListenerID 1 (an "Action"): InvocationCounter / OriginID are filled by the trigger engine of the
-    # SDK (SDK return, group TRIG), not by the response values of the harness
+    # SDK (modified SDK by Thorsten, group TRIG), not by the response values of the harness
     "MC_RedefineTrackingPosFB": ("InitObjectPosition", "InvocationCounter", "OriginID"),
     "MC_MoveSuperImposedFB": (
         "VelocityDiffRate",

@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.kin
+#  Object:      tests.sdk.sdk_modified.kin
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group KIN: kinematic calculations (12_Application_Kinematics.cpp).
+#    Modified SDK by Thorsten, group KIN: kinematic calculations (12_Application_Kinematics.cpp).
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group KIN: kinematic calculations (12_Application_Kinematics.cpp)."""
+"""Modified SDK by Thorsten, group KIN: kinematic calculations (12_Application_Kinematics.cpp)."""
 
 from __future__ import annotations
 

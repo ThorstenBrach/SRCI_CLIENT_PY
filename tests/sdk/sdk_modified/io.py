@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.io
+#  Object:      tests.sdk.sdk_modified.io
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group IO: registers, analog IO, WriteSystemVariable
+#    Modified SDK by Thorsten, group IO: registers, analog IO, WriteSystemVariable
 #    (10_Application_Registers.cpp).
 #
 #  Copyright:
@@ -21,7 +21,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group IO: registers, analog IO, WriteSystemVariable (10_Application_Registers.cpp)."""
+"""Modified SDK by Thorsten, group IO: registers, analog IO, WriteSystemVariable (10_Application_Registers.cpp)."""
 
 from __future__ import annotations
 

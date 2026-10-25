@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.orig
+#  Object:      tests.sdk.sdk_modified.orig
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group ORIG: commands of the original SDK answered by the SDK itself
+#    Modified SDK by Thorsten, group ORIG: commands of the original SDK answered by the SDK itself
 #    (01_Application.cpp).
 #
 #  Copyright:
@@ -21,7 +21,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group ORIG: commands of the original SDK answered by the SDK itself (01_Application.cpp).
+"""Modified SDK by Thorsten, group ORIG: commands of the original SDK answered by the SDK itself (01_Application.cpp).
 
 The original SDK implements these commands, the simulated robot of the harness implements their
 firmware functions (srci_py_harness/sim_robot_orig.cpp). ReadSafeReferencePosition (7009) and

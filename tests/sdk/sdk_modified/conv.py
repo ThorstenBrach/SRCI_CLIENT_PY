@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.conv
+#  Object:      tests.sdk.sdk_modified.conv
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group CONV: conveyor tracking (17_Application_Conveyor.cpp).
+#    Modified SDK by Thorsten, group CONV: conveyor tracking (17_Application_Conveyor.cpp).
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group CONV: conveyor tracking (17_Application_Conveyor.cpp)."""
+"""Modified SDK by Thorsten, group CONV: conveyor tracking (17_Application_Conveyor.cpp)."""
 
 from __future__ import annotations
 

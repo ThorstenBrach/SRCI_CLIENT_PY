@@ -57,7 +57,7 @@ from srci.iec.clock import FakeClock, use_clock
 from srci.types import SequenceFlag
 from tests.bilateral import distinct_values, leaves
 from tests.robot_task_harness import SIZE, RobotTaskHarness
-from tests.sdk.sdk_return.force import PARCMD as FORCE_PARCMD
+from tests.sdk.sdk_modified.force import PARCMD as FORCE_PARCMD
 from tests.sdk.trigger_pump import attach_listener_trigger
 from tools.payload_check import fb_classes, send_calls
 
@@ -109,7 +109,7 @@ PARCMD_INPUTS: dict[str, dict[str, Any]] = {
 }
 # ReadServerLog: only ExportMode 0 (output LogFile), the export to a file is optional (16#8419)
 PARCMD_INPUTS["MC_ReadServerLogFB"] = {"ExportMode": 0}
-# SDK return: tool / frame / load numbers the SDK checks itself (0..19), the distinct values exceed them
+# Modified SDK by Thorsten: tool / frame / load numbers the SDK checks itself (0..19), the distinct values exceed them
 PARCMD_INPUTS.update(FORCE_PARCMD)
 CLASSES = {n: c for n, c in fb_classes() if hasattr(c, "CreateCommandPayload") and n not in SKIP}
 NAMES = sorted(CLASSES)
@@ -248,7 +248,7 @@ GEN05_MANDATORY = {
     "MC_CreateSplineFB": "SplineData (at least one point)",
     "MC_ReturnToPrimaryFB": "TrajectoryMode (0 = invalid is the default, spec 6.3.11; ST-FIX F99)",
 }
-# mandatory parameters the SDK checks itself when it implements the command (SDK return); the
+# mandatory parameters the SDK checks itself when it implements the command (modified SDK by Thorsten); the
 # harness of the original SDK answers these commands without a check
 GEN05_SDK_MANDATORY = {
     "MC_ReadIntegersFB": "Index (16#8D50: at least one index must not be 0)",
@@ -483,7 +483,7 @@ def test_err02_error_of_the_rc(name: str) -> None:
 ENABLE_RC = sorted(n for n in NAMES if not hasattr(CLASSES[n](), "Execute") and cmd_type(n) not in SDK_NATIVE)
 
 
-# commands the SDK answers itself (SDK return) whose telegram of the library differs from the spec table
+# commands the SDK answers itself (modified SDK by Thorsten) whose telegram of the library differs from the spec table
 ERR03_KNOWN = {
     "MC_MoveSuperImposedDynamicFB": "spec: table 6-492 lacks Offset.RZ, byte numbers inconsistent (the SDK decodes "
     "the table, the library sends Offset.RZ: ReferenceType / InterpolationMode shifted)",
@@ -538,7 +538,7 @@ def _motion(name: str, h: RobotTaskHarness) -> Any:
     for field in ("MoveTime", "BlendingMode", "Manipulation"):  # not supported by the simulation
         if hasattr(fb.ParCmd, field):
             setattr(fb.ParCmd, field, type(getattr(fb.ParCmd, field))(0))
-    # circular motions answered by the SDK (SDK return MOVE): Angle only for CircMode 2 (16#8D64),
+    # circular motions answered by the SDK (modified SDK by Thorsten, group MOVE): Angle only for CircMode 2 (16#8D64),
     # CircPlane XZ unless CircMode 2 (16#8D61), no Tolerance for absolute points (center check 16#8D99)
     for field in ("Angle", "CircPlane", "Tolerance"):
         if hasattr(fb.ParCmd, field) and hasattr(fb.ParCmd, "CircMode"):

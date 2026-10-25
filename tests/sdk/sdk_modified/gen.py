@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.gen
+#  Object:      tests.sdk.sdk_modified.gen
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group GEN: general commands (11_Application_General.cpp).
+#    Modified SDK by Thorsten, group GEN: general commands (11_Application_General.cpp).
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group GEN: general commands (11_Application_General.cpp)."""
+"""Modified SDK by Thorsten, group GEN: general commands (11_Application_General.cpp)."""
 
 from __future__ import annotations
 

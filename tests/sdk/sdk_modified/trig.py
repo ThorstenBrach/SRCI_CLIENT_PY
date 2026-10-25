@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.trig
+#  Object:      tests.sdk.sdk_modified.trig
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group TRIG: trigger functions and "Actions" (16_Application_Triggers.cpp,
+#    Modified SDK by Thorsten, group TRIG: trigger functions and "Actions" (16_Application_Triggers.cpp,
 #    trigger engine).
 #
 #  Copyright:
@@ -21,7 +21,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group TRIG: trigger functions and "Actions" (16_Application_Triggers.cpp, trigger engine).
+"""Modified SDK by Thorsten, group TRIG: trigger functions and "Actions" (16_Application_Triggers.cpp, trigger engine).
 
 The trigger functions are emitters (ListenerID 0); their condition is made to occur by a companion
 function block started once the trigger function is buffered (``COMPANIONS``). ReactAtTrigger /

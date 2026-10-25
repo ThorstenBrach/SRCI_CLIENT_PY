@@ -11,9 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    `MC_MoveDirectCamFB`, `MC_ReadAnalogOutputFB`, `MC_ReadSafeReferencePositionFB`,
    `MC_SafeReferencingFB`; RobotLibrary.xml: export of 2026-10-25 (library 1.5.3 + F109)
  - SDK tests against the modified SDK by Thorsten (all 115 command types, 114 answered by the SDK
-   itself): `tests/sdk/test_sdk_return.py` (CMD / RSP structures of the SDK against the spec tables
+   itself): `tests/sdk/test_sdk_modified.py` (CMD / RSP structures of the SDK against the spec tables
    via the firmware probe of the harness, parameter checks), `test_triggers.py`,
-   `test_sdk_return_spline.py`; test data per group in `tests/sdk/sdk_return/`; known SDK deviations
+   `test_sdk_modified_spline.py`; test data per group in `tests/sdk/sdk_modified/`; known SDK deviations
    as xfail with reason
  - CreateServerLog / ReadServerLog (ST-FIX F108, new in the PLC library): `MC_CreateServerLogFB`,
    `MC_ReadServerLogFB` (log lines into the in-out array `LogFile`, parts of a line joined); telegram
@@ -67,6 +67,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    formerly SRCI_TcpGateway)
 
 ### Changed
+ - Naming: the tests of the commands answered by the SDK itself are named after the modified SDK by
+   Thorsten (`tests/sdk/test_sdk_modified.py`, `test_sdk_modified_spline.py`, test data
+   `tests/sdk/sdk_modified/`, previously `*sdk_return*`).
  - SDK tests against SRCI SDK 1.1.2 (private SDK repository, branch `sdk-1.1.2`): the methodology
    motions set positions only for the axes of the simulated robot (J1..J6, E1; the SDK rejects
    other axes with 16#8C34), EnableRobot under test without a second EnableRobot (one instance,

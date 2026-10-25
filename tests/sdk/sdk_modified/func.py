@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.func
+#  Object:      tests.sdk.sdk_modified.func
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group FUNC: robot functions (13_Application_RobotFunctions.cpp).
+#    Modified SDK by Thorsten, group FUNC: robot functions (13_Application_RobotFunctions.cpp).
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group FUNC: robot functions (13_Application_RobotFunctions.cpp)."""
+"""Modified SDK by Thorsten, group FUNC: robot functions (13_Application_RobotFunctions.cpp)."""
 
 from __future__ import annotations
 

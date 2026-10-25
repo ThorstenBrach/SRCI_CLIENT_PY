@@ -1670,70 +1670,70 @@
  },
  {
   "id": "SDK-LOOP-050",
-  "test": "tests/sdk/test_sdk_return.py::test_done",
+  "test": "tests/sdk/test_sdk_modified.py::test_done",
   "title": "The SDK executes the command without error.",
   "refs": [],
   "status": "active"
  },
  {
   "id": "SDK-LOOP-051",
-  "test": "tests/sdk/test_sdk_return.py::test_send",
+  "test": "tests/sdk/test_sdk_modified.py::test_send",
   "title": "Every parameter the firmware received equals the field of the telegram (CMD structure).",
   "refs": [],
   "status": "active"
  },
  {
   "id": "SDK-LOOP-052",
-  "test": "tests/sdk/test_sdk_return.py::test_recv",
+  "test": "tests/sdk/test_sdk_modified.py::test_recv",
   "title": "Every response value of the firmware appears in OutCmd (RSP structure).",
   "refs": [],
   "status": "active"
  },
  {
   "id": "SDK-LOOP-053",
-  "test": "tests/sdk/test_sdk_return.py::test_parameter_check",
+  "test": "tests/sdk/test_sdk_modified.py::test_parameter_check",
   "title": "The SDK checks the parameters of its commands (error / info codes of the specification).",
   "refs": [],
   "status": "active"
  },
  {
   "id": "SDK-LOOP-054",
-  "test": "tests/sdk/test_sdk_return_spline.py::test_create_spline_one_point_per_command",
+  "test": "tests/sdk/test_sdk_modified_spline.py::test_create_spline_one_point_per_command",
   "title": "CreateSpline: every point is one command, the firmware checks each point.",
   "refs": [],
   "status": "active"
  },
  {
   "id": "SDK-LOOP-055",
-  "test": "tests/sdk/test_sdk_return_spline.py::test_move_spline_done",
+  "test": "tests/sdk/test_sdk_modified_spline.py::test_move_spline_done",
   "title": "MoveSpline of a created spline: one motion through the planner of the SDK, Done with Progress 100 %.",
   "refs": [],
   "status": "active"
  },
  {
   "id": "SDK-LOOP-056",
-  "test": "tests/sdk/test_sdk_return_spline.py::test_move_spline_without_spline_rejected",
+  "test": "tests/sdk/test_sdk_modified_spline.py::test_move_spline_without_spline_rejected",
   "title": "MoveSpline without CreateSpline: the RC rejects the command (spec 6.5.31.4 (1)).",
   "refs": [],
   "status": "active"
  },
  {
   "id": "SDK-LOOP-057",
-  "test": "tests/sdk/test_sdk_return_spline.py::test_delete_spline",
+  "test": "tests/sdk/test_sdk_modified_spline.py::test_delete_spline",
   "title": "DeleteSpline: the spline data set is no longer available for MoveSpline (spec 6.5.31.4 (7)).",
   "refs": [],
   "status": "active"
  },
  {
   "id": "SDK-LOOP-058",
-  "test": "tests/sdk/test_sdk_return_spline.py::test_delete_all_splines",
+  "test": "tests/sdk/test_sdk_modified_spline.py::test_delete_all_splines",
   "title": "DeleteSpline -1 deletes all spline data sets.",
   "refs": [],
   "status": "active"
  },
  {
   "id": "SDK-LOOP-059",
-  "test": "tests/sdk/test_sdk_return_spline.py::test_dynamic_spline_trajectory",
+  "test": "tests/sdk/test_sdk_modified_spline.py::test_dynamic_spline_trajectory",
   "title": "DynamicSpline: points one by one, the end marker ends the trajectory -> TrajectoryCompleted.",
   "refs": [],
   "status": "active"

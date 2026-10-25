@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.force
+#  Object:      tests.sdk.sdk_modified.force
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group FORCE: ForceControl, ForceLimit (19_Application_Force.cpp).
+#    Modified SDK by Thorsten, group FORCE: ForceControl, ForceLimit (19_Application_Force.cpp).
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group FORCE: ForceControl, ForceLimit (19_Application_Force.cpp)."""
+"""Modified SDK by Thorsten, group FORCE: ForceControl, ForceLimit (19_Application_Force.cpp)."""
 
 from __future__ import annotations
 

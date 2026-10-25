@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.misc
+#  Object:      tests.sdk.sdk_modified.misc
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group MISC: measurements, sequence and subprogram control
+#    Modified SDK by Thorsten, group MISC: measurements, sequence and subprogram control
 #    (20_Application_Misc.cpp).
 #
 #  Copyright:
@@ -21,7 +21,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group MISC: measurements, sequence and subprogram control (20_Application_Misc.cpp)."""
+"""Modified SDK by Thorsten, group MISC: measurements, sequence and subprogram control (20_Application_Misc.cpp)."""
 
 from __future__ import annotations
 

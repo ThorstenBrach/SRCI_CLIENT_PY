@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.sdk_return.move
+#  Object:      tests.sdk.sdk_modified.move
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    SDK return, group MOVE: motion commands (15_Application_Motion.cpp).
+#    Modified SDK by Thorsten, group MOVE: motion commands (15_Application_Motion.cpp).
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""SDK return, group MOVE: motion commands (15_Application_Motion.cpp).
+"""Modified SDK by Thorsten, group MOVE: motion commands (15_Application_Motion.cpp).
 
 Relative motions (2105, 2107, 2108, 2110), MoveLinearAbsoluteJ (2109), approach / depart / pick and
 place (2200..2205): motions of the planner of the SDK; cam motions (2400..2402) and SearchHardStop

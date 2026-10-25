@@ -2,12 +2,12 @@
 #  SRCI Robot Library - Python client
 # -------------------------------------------------------------------------
 #
-#  Object:      tests.sdk.test_sdk_return_spline
+#  Object:      tests.sdk.test_sdk_modified_spline
 #  Author:      Thorsten Brach
 #  Date:        2026-10-25
 #
 #  Description:
-#    Scenario tests of the spline commands added to the SRCI SDK ("SDK return", group SPLINE).
+#    Scenario tests of the spline commands added to the SRCI SDK ("modified SDK by Thorsten", group SPLINE).
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,11 +20,11 @@
 #
 # -------------------------------------------------------------------------
 
-"""Scenario tests of the spline commands the SDK answers itself (SDK return, group SPLINE).
+"""Scenario tests of the spline commands the SDK answers itself (modified SDK by Thorsten, group SPLINE).
 
 MoveSpline needs a spline data set created with CreateSpline before (one point per command, ST-FIX
 F33); the SDK stores the points per SplineID until DeleteSpline (spec 5.5.13, 6.5.29 - 6.5.32).
-test_sdk_return.py cannot test MoveSpline (one command per run), these tests run the sequence.
+test_sdk_modified.py cannot test MoveSpline (one command per run), these tests run the sequence.
 """
 
 from __future__ import annotations
@@ -55,7 +55,9 @@ def sdk_parameters() -> Iterator[None]:
 @pytest.fixture
 def robot(sdk: SdkSimulator) -> Iterator[RobotTaskHarness]:
     if not sdk.answered_by_sdk(MOVE):
-        pytest.skip("MoveSpline not implemented by this SDK (group SPLINE of the SDK return not applied)")
+        pytest.skip(
+            "MoveSpline not implemented by this SDK (group SPLINE of the modified SDK by Thorsten not applied)"
+        )
     sdk.set_move_cycles(10)
     clock = FakeClock()
     with use_clock(clock):
