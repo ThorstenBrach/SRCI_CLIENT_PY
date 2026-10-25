@@ -452,12 +452,21 @@ def test_err02_error_of_the_rc(name: str) -> None:
 ENABLE_RC = sorted(n for n in NAMES if not hasattr(CLASSES[n](), "Execute") and cmd_type(n) not in SDK_NATIVE)
 
 
+# commands the SDK answers itself (SDK return) whose telegram of the library differs from the spec table
+ERR03_KNOWN = {
+    "MC_MoveSuperImposedDynamicFB": "spec: table 6-492 lacks Offset.RZ, byte numbers inconsistent (the SDK decodes "
+    "the table, the library sends Offset.RZ: ReferenceType / InterpolationMode shifted)",
+}
+
+
 @pytest.mark.parametrize("name", ENABLE_RC)
 def test_err03_new_enable_after_an_error_of_the_rc(name: str) -> None:
     """ERR-03: the RC answered with an error, Enable FALSE and TRUE again after a few cycles (the
     same instance) -> the new command is sent. ST-FIX F78: the falling edge starts the error clear
     (waits up to 5 s for a response); a new enable in this time was consumed while Error was still
     TRUE -> nothing sent, no Busy, no Error. Found by the TcUnit tests (PM-03 reuses instances)."""
+    if name in ERR03_KNOWN:
+        pytest.xfail(ERR03_KNOWN[name])
     t = cmd_type(name)
     with robot() as (sim, h):
         sim.set_command_error(t, RC_ERROR)
@@ -497,6 +506,11 @@ def _motion(name: str, h: RobotTaskHarness) -> Any:
             setattr(fb.ParCmd, rate, -1.0)
     for field in ("MoveTime", "BlendingMode", "Manipulation"):  # not supported by the simulation
         if hasattr(fb.ParCmd, field):
+            setattr(fb.ParCmd, field, type(getattr(fb.ParCmd, field))(0))
+    # circular motions answered by the SDK (SDK return MOVE): Angle only for CircMode 2 (16#8D64),
+    # CircPlane XZ unless CircMode 2 (16#8D61), no Tolerance for absolute points (center check 16#8D99)
+    for field in ("Angle", "CircPlane", "Tolerance"):
+        if hasattr(fb.ParCmd, field) and hasattr(fb.ParCmd, "CircMode"):
             setattr(fb.ParCmd, field, type(getattr(fb.ParCmd, field))(0))
     return fb
 
