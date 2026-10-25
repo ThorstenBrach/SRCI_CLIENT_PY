@@ -154,6 +154,8 @@ def run(name: str) -> Result:
 
         for key, value in PARCMD_INPUTS.get(name, {}).items():
             setattr(fb.ParCmd, key, value)
+            if key in sent:  # SDK return: valid numbers instead of the distinct values
+                sent[key] = value
         h.add(fb)
         if hasattr(fb, "Execute"):
             fb.Execute = True

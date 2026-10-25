@@ -57,6 +57,7 @@ from srci.iec.clock import FakeClock, use_clock
 from srci.types import SequenceFlag
 from tests.bilateral import distinct_values, leaves
 from tests.robot_task_harness import SIZE, RobotTaskHarness
+from tests.sdk.sdk_return.force import PARCMD as FORCE_PARCMD
 from tools.payload_check import fb_classes, send_calls
 
 SKIP = {
@@ -107,6 +108,8 @@ PARCMD_INPUTS: dict[str, dict[str, Any]] = {
 }
 # ReadServerLog: only ExportMode 0 (output LogFile), the export to a file is optional (16#8419)
 PARCMD_INPUTS["MC_ReadServerLogFB"] = {"ExportMode": 0}
+# SDK return: tool / frame / load numbers the SDK checks itself (0..19), the distinct values exceed them
+PARCMD_INPUTS.update(FORCE_PARCMD)
 CLASSES = {n: c for n, c in fb_classes() if hasattr(c, "CreateCommandPayload") and n not in SKIP}
 NAMES = sorted(CLASSES)
 EXECUTE = sorted(n for n in NAMES if hasattr(CLASSES[n](), "Execute"))
