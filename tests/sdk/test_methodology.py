@@ -252,9 +252,10 @@ GEN05_SDK_MANDATORY = {
     "MC_WriteSystemVariableFB": "ParameterID (16#8D74: at least one parameter)",
     "MC_WaitTimeFB": "WaitTime (16#8D34: the time must be positive)",
     "MC_SoftSwitchTcpFB": "CompliantAxes (16#8D0C: LimitMode 'No limit defined' needs at least one axis)",
+    "MC_RedefineTrackingPosFB": "FrameNo (16#8D08: the WCS cannot follow a conveyor)",
+    "MC_SyncToConveyorFB": "FrameNo (16#8D08: the WCS cannot follow a conveyor)",
 }
 GEN05_KNOWN = {
-    "MC_ActivateConveyorTrackingFB": "precondition: the RC reports ConveyorTrackingEnabled",
     "MC_MoveSuperImposedFB": "precondition: needs a motion to superimpose",
     "MC_MoveSplineFB": "precondition: needs a spline created with CreateSpline",
     "MC_ReadServerLogFB": "precondition: needs a server log created with CreateServerLog (16#8D95)",
