@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+ - Four function blocks that were missing in the PLC library (ST-FIX F109, new in the library):
+   `MC_MoveDirectCamFB`, `MC_ReadAnalogOutputFB`, `MC_ReadSafeReferencePositionFB`,
+   `MC_SafeReferencingFB`; RobotLibrary.xml: export of 2026-10-25 (library 1.5.3 + F109)
+ - SDK tests against the modified SDK by Thorsten (all 115 command types, 114 answered by the SDK
+   itself): `tests/sdk/test_sdk_return.py` (CMD / RSP structures of the SDK against the spec tables
+   via the firmware probe of the harness, parameter checks), `test_triggers.py`,
+   `test_sdk_return_spline.py`; test data per group in `tests/sdk/sdk_return/`; known SDK deviations
+   as xfail with reason
  - CreateServerLog / ReadServerLog (ST-FIX F108, new in the PLC library): `MC_CreateServerLogFB`,
    `MC_ReadServerLogFB` (log lines into the in-out array `LogFile`, parts of a line joined); telegram
    layout of SRCI SDK 1.1 (differs from spec tables 6-123/6-124). Tests SDK-LOG-001 ... 014 against

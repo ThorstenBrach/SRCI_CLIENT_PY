@@ -123,6 +123,7 @@ F28_POUS = (
     "MC_MoveCircularAbsoluteFB",
     "MC_MoveCircularCamFB",
     "MC_MoveCircularRelativeFB",
+    "MC_MoveDirectCamFB",  # F109: new block, template MoveLinearCam
     "MC_MoveDepartDirectFB",
     "MC_MoveDepartLinearFB",
     "MC_MoveDirectAbsoluteFB",
@@ -140,6 +141,7 @@ F28_POUS = (
     "MC_ReadSystemVariableFB",
     "MC_SearchHardStopFB",
     "MC_SearchHardStopJFB",
+    "MC_SafeReferencingFB",  # F109: new block
     "MC_WriteIntegersFB",
     "MC_WriteLoadDataFB",
     "MC_WriteRealsFB",

@@ -1,3 +1,25 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      tests.sdk.sdk_return.move
+#  Author:      Thorsten Brach
+#  Date:        2026-10-25
+#
+#  Description:
+#    SDK return, group MOVE: motion commands (15_Application_Motion.cpp).
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """SDK return, group MOVE: motion commands (15_Application_Motion.cpp).
 
 Relative motions (2105, 2107, 2108, 2110), MoveLinearAbsoluteJ (2109), approach / depart / pick and
@@ -58,6 +80,7 @@ PARCMD: dict[str, dict[str, Any]] = {
     # absolute circle with Tolerance: the aux point must be the center (16#8D99) -> no tolerance
     "MC_MoveCircularCamFB": {**_MOTION, **_CIRC, "Tolerance": 0.0, **_no_ext("AuxPoint", "EndPoint")},
     "MC_MoveLinearCamFB": {**_MOTION, **_no_ext("Position")},
+    "MC_MoveDirectCamFB": {**_MOTION, **_no_ext("Position")},
     "MC_SearchHardStopFB": _no_ext("Position"),
     "MC_SearchHardStopJFB": _no_ext("JointPosition"),
     "MC_MoveSuperImposedFB": _no_ext("Offset"),
@@ -84,6 +107,7 @@ RSP_VALUES: dict[str, dict[str, object]] = {
             "MC_MovePickPlaceLinearFB",
             "MC_MoveCircularCamFB",
             "MC_MoveLinearCamFB",
+            "MC_MoveDirectCamFB",
         )
     },
     "MC_SearchHardStopFB": {**_DONE, "InClamping": 1},
@@ -109,6 +133,7 @@ FW_NOT_PASSED: dict[str, tuple[str, ...]] = {
             "MC_MovePickPlaceLinearFB",
             "MC_MoveCircularCamFB",
             "MC_MoveLinearCamFB",
+            "MC_MoveDirectCamFB",
             "MC_SearchHardStopFB",
         )
     },
@@ -137,6 +162,7 @@ ERROR_CASES: list[tuple[str, tuple[tuple[str, Any], ...], int, int]] = [
     ("MC_MoveLinearCamFB", (("Index", 30),), 0x8D47, 0),
     ("MC_MoveLinearCamFB", (("OutputBitmask", 0),), 0, 0x6D52),
     ("MC_MoveLinearCamFB", (("Index", 0),), 0, 0x6D53),
+    ("MC_MoveDirectCamFB", (("Index", 30),), 0x8D47, 0),
     ("MC_SearchHardStopFB", (("Position.E2", 1.0),), 0x8C34, 0),
     ("MC_SearchHardStopJFB", (("JointPosition.E5", 1.0),), 0x8C34, 0),
     ("MC_MoveSuperImposedFB", (("Offset.E2", 1.0),), 0x8C34, 0),

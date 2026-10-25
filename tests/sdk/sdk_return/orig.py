@@ -1,3 +1,26 @@
+# -------------------------------------------------------------------------
+#  SRCI Robot Library - Python client
+# -------------------------------------------------------------------------
+#
+#  Object:      tests.sdk.sdk_return.orig
+#  Author:      Thorsten Brach
+#  Date:        2026-10-25
+#
+#  Description:
+#    SDK return, group ORIG: commands of the original SDK answered by the SDK itself
+#    (01_Application.cpp).
+#
+#  Copyright:
+#    (C) 2026 Thorsten Brach. All rights reserved
+#             Licensed under the MIT License.
+#
+#  Disclaimer:
+#    This project is provided without any guarantee and can be used for
+#    private and commercial purposes. Any use is at the user's
+#    own risk and responsibility.
+#
+# -------------------------------------------------------------------------
+
 """SDK return, group ORIG: commands of the original SDK answered by the SDK itself (01_Application.cpp).
 
 The original SDK implements these commands, the simulated robot of the harness implements their
@@ -101,6 +124,10 @@ _BRAKE_ORDER = (
 )
 KNOWN: dict[str, str] = {
     "MC_BrakeTestFB": _BRAKE_ORDER,
+    "MC_SafeReferencingFB": "SDK CMD::SafeReferencing has a reserved byte after ToolNo: MaximumDistance and all "
+    "following fields one byte later than in spec table 6-838 (MaximumDistance at byte 13)",
+    "MC_ReadSafeReferencePositionFB": "spec table 6-832 is a copy of ReadActualPosition (E2..E6 twice, joint "
+    "axes E1..E6 at bytes 50..73); the SDK sends J1..J6, E1..E6 from byte 6 - the library follows the table",
     "MC_ReadSystemVariableFB": "SDK readSystemVariable copies only Data_0 .. Data_5 of the firmware into the "
     "response, Data_6 / Data_7 stay 0 (spec ReadSystemVariable: eight parameters, Data_0 .. Data_7)",
 }

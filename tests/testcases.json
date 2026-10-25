@@ -1669,6 +1669,132 @@
   "status": "active"
  },
  {
+  "id": "SDK-LOOP-050",
+  "test": "tests/sdk/test_sdk_return.py::test_done",
+  "title": "The SDK executes the command without error.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-051",
+  "test": "tests/sdk/test_sdk_return.py::test_send",
+  "title": "Every parameter the firmware received equals the field of the telegram (CMD structure).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-052",
+  "test": "tests/sdk/test_sdk_return.py::test_recv",
+  "title": "Every response value of the firmware appears in OutCmd (RSP structure).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-053",
+  "test": "tests/sdk/test_sdk_return.py::test_parameter_check",
+  "title": "The SDK checks the parameters of its commands (error / info codes of the specification).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-054",
+  "test": "tests/sdk/test_sdk_return_spline.py::test_create_spline_one_point_per_command",
+  "title": "CreateSpline: every point is one command, the firmware checks each point.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-055",
+  "test": "tests/sdk/test_sdk_return_spline.py::test_move_spline_done",
+  "title": "MoveSpline of a created spline: one motion through the planner of the SDK, Done with Progress 100 %.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-056",
+  "test": "tests/sdk/test_sdk_return_spline.py::test_move_spline_without_spline_rejected",
+  "title": "MoveSpline without CreateSpline: the RC rejects the command (spec 6.5.31.4 (1)).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-057",
+  "test": "tests/sdk/test_sdk_return_spline.py::test_delete_spline",
+  "title": "DeleteSpline: the spline data set is no longer available for MoveSpline (spec 6.5.31.4 (7)).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-058",
+  "test": "tests/sdk/test_sdk_return_spline.py::test_delete_all_splines",
+  "title": "DeleteSpline -1 deletes all spline data sets.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-059",
+  "test": "tests/sdk/test_sdk_return_spline.py::test_dynamic_spline_trajectory",
+  "title": "DynamicSpline: points one by one, the end marker ends the trajectory -> TrajectoryCompleted.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-060",
+  "test": "tests/sdk/test_triggers.py::test_action_waits_for_its_trigger",
+  "title": "ReadIntegers with ListenerID: buffered (Busy, CommandBuffered) until SetTriggerUser fires the EmitterID; then executed once (Trigger Once) with InvocationCounter 1 and OriginID > 0.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-061",
+  "test": "tests/sdk/test_triggers.py::test_trigger_without_action_warns",
+  "title": "SetTriggerUser without an \"Action\" with its EmitterID: Done with warning 16#7C12.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-062",
+  "test": "tests/sdk/test_triggers.py::test_trigger_multiple_counts_invocations",
+  "title": "Trigger Multiple: the action stays buffered and is executed per trigger (InvocationCounter).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-063",
+  "test": "tests/sdk/test_triggers.py::test_trigger_continuous_stopped_by_negative_emitter",
+  "title": "Trigger Continuous: started by EmitterID 5, stopped by EmitterID -5: buffered again with OriginID negative (spec 5.5.12.5.1).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-064",
+  "test": "tests/sdk/test_triggers.py::test_set_trigger_register_releases_action",
+  "title": "SetTriggerRegister (integer register 2 exceeds 10) releases the action with ListenerID 5; OriginID = FollowID of the trigger function (its ACR ID).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-065",
+  "test": "tests/sdk/test_triggers.py::test_wait_for_trigger_holds_the_sequence",
+  "title": "WaitForTrigger in the sequence: Active until the trigger, the next motion waits for it.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-066",
+  "test": "tests/sdk/test_triggers.py::test_set_trigger_motion_on_move_command",
+  "title": "SetTriggerMotion (ListenerID = EmitterID of a move command) releases the action with ListenerID 5 when 50 % of the motion is traversed.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-LOOP-067",
+  "test": "tests/sdk/test_triggers.py::test_deactivate_buffered_action",
+  "title": "ProcessingMode Deactivate (new rising edge) deletes a buffered action: Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "TCP-001",
   "test": "tests/tcp/test_tcp_transport.py::test_lockstep_cycles",
   "title": "TCP transport: one request, one answer per cycle (lockstep)",

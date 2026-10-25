@@ -76,7 +76,7 @@ def test_generator_is_deterministic() -> None:
 
 def test_counts_match_xml() -> None:
     kinds = [xml_kind(dt) for dt in xml_types().values()]
-    assert len(structs.__all__) == kinds.count("struct") == 599
+    assert len(structs.__all__) == kinds.count("struct") == 615
     real_enums = {n for n in enums.__all__ if getattr(enums, n).__name__ == n}
     assert len(real_enums) == kinds.count("enum") == 81
 

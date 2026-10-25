@@ -386,6 +386,13 @@ def CMD_TYPE_TO_STRING(*, Value: CmdType = CmdType.RobotTask) -> str:
 
         case CmdType.UnitMeasurement:
             CMD_TYPE_TO_STRING = trunc_str(StrReplace(Str='UnitMeasurement ({0})', SubStr1='{0}', SubStr2=UINT_TO_STRING(CmdType.UnitMeasurement)), 80)
+
+        # ST-FIX F109: names of the new command types 7009 / 7010
+        case CmdType.ReadSafeReferencePosition:
+            CMD_TYPE_TO_STRING = trunc_str(StrReplace(Str='ReadSafeReferencePosition ({0})', SubStr1='{0}', SubStr2=UINT_TO_STRING(CmdType.ReadSafeReferencePosition)), 80)
+
+        case CmdType.SafeReferencing:
+            CMD_TYPE_TO_STRING = trunc_str(StrReplace(Str='SafeReferencing ({0})', SubStr1='{0}', SubStr2=UINT_TO_STRING(CmdType.SafeReferencing)), 80)
         case _:
             CMD_TYPE_TO_STRING = trunc_str(CONCAT('CMD_TYPE_TO_STRING Function: Error -> no parsing for value', UINT_TO_STRING(Value)), 80)
     return CMD_TYPE_TO_STRING

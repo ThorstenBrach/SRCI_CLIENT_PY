@@ -70,6 +70,7 @@ from srci.fb.AdvancedMove.MC_MoveCircularRelative.MC_MoveCircularRelativeFB impo
 from srci.fb.AdvancedMove.MC_MoveDepartDirect.MC_MoveDepartDirectFB import MC_MoveDepartDirectFB as MC_MoveDepartDirectFB
 from srci.fb.AdvancedMove.MC_MoveDepartLinear.MC_MoveDepartLinearFB import MC_MoveDepartLinearFB as MC_MoveDepartLinearFB
 from srci.fb.BasicMove.MC_MoveDirectAbsolute.MC_MoveDirectAbsoluteFB import MC_MoveDirectAbsoluteFB as MC_MoveDirectAbsoluteFB
+from srci.fb.AdvancedMove.MC_MoveDirectCam.MC_MoveDirectCamFB import MC_MoveDirectCamFB as MC_MoveDirectCamFB
 from srci.fb.AdvancedMove.MC_MoveDirectOffset.MC_MoveDirectOffsetFB import MC_MoveDirectOffsetFB as MC_MoveDirectOffsetFB
 from srci.fb.AdvancedMove.MC_MoveDirectRelative.MC_MoveDirectRelativeFB import MC_MoveDirectRelativeFB as MC_MoveDirectRelativeFB
 from srci.fb.BasicMove.MC_MoveLinearAbsolute.MC_MoveLinearAbsoluteFB import MC_MoveLinearAbsoluteFB as MC_MoveLinearAbsoluteFB
@@ -90,6 +91,7 @@ from srci.fb.Read.MC_ReadActualPositionCyclic.MC_ReadActualPositionCyclicFB impo
 from srci.fb.Read.MC_ReadActualPosition.MC_ReadActualPositionFB import MC_ReadActualPositionFB as MC_ReadActualPositionFB
 from srci.fb.Read.MC_ReadActualTCPVelocity.MC_ReadActualTCPVelocityFB import MC_ReadActualTCPVelocityFB as MC_ReadActualTCPVelocityFB
 from srci.fb.Read.MC_ReadAnalogInput.MC_ReadAnalogInputFB import MC_ReadAnalogInputFB as MC_ReadAnalogInputFB
+from srci.fb.Read.MC_ReadAnalogOutput.MC_ReadAnalogOutputFB import MC_ReadAnalogOutputFB as MC_ReadAnalogOutputFB
 from srci.fb.Additional.MC_ReadCallSubprogramCyclic.MC_ReadCallSubprogramCyclicFB import MC_ReadCallSubprogramCyclicFB as MC_ReadCallSubprogramCyclicFB
 from srci.fb.Read.MC_ReadDHParameter.MC_ReadDHParameterFB import MC_ReadDHParameterFB as MC_ReadDHParameterFB
 from srci.fb.Read.MC_ReadDigitalInputs.MC_ReadDigitalInputsFB import MC_ReadDigitalInputsFB as MC_ReadDigitalInputsFB
@@ -103,6 +105,7 @@ from srci.fb.Read.MC_ReadRobotData.MC_ReadRobotDataFB import MC_ReadRobotDataFB 
 from srci.fb.Read.MC_ReadRobotDefaultDynamics.MC_ReadRobotDefaultDynamicsFB import MC_ReadRobotDefaultDynamicsFB as MC_ReadRobotDefaultDynamicsFB
 from srci.fb.Read.MC_ReadRobotReferenceDynamics.MC_ReadRobotReferenceDynamicsFB import MC_ReadRobotReferenceDynamicsFB as MC_ReadRobotReferenceDynamicsFB
 from srci.fb.Read.MC_ReadRobotSWLimits.MC_ReadRobotSWLimitsFB import MC_ReadRobotSWLimitsFB as MC_ReadRobotSWLimitsFB
+from srci.fb.Additional.MC_ReadSafeReferencePosition.MC_ReadSafeReferencePositionFB import MC_ReadSafeReferencePositionFB as MC_ReadSafeReferencePositionFB
 from srci.fb.General.MC_ReadServerLog_ToDo.MC_ReadServerLog import MC_ReadServerLog as MC_ReadServerLog
 from srci.fb.General.MC_ReadServerLog.MC_ReadServerLogFB import MC_ReadServerLogFB as MC_ReadServerLogFB
 from srci.fb.Read.MC_ReadSystemVariable.MC_ReadSystemVariableFB import MC_ReadSystemVariableFB as MC_ReadSystemVariableFB
@@ -112,6 +115,7 @@ from srci.fb.ConveyorTracking.MC_RedefineTrackingPos.MC_RedefineTrackingPosFB im
 from srci.fb.General.MC_RestartController.MC_RestartControllerFB import MC_RestartControllerFB as MC_RestartControllerFB
 from srci.fb.BasicMove.MC_ReturnToPrimary.MC_ReturnToPrimaryFB import MC_ReturnToPrimaryFB as MC_ReturnToPrimaryFB
 from srci.fb.General.MC_RobotTask.MC_RobotTaskFB import MC_RobotTaskFB as MC_RobotTaskFB
+from srci.fb.Additional.MC_SafeReferencing.MC_SafeReferencingFB import MC_SafeReferencingFB as MC_SafeReferencingFB
 from srci.fb.SearchHardstop.MC_SearchHardStop.MC_SearchHardStopFB import MC_SearchHardStopFB as MC_SearchHardStopFB
 from srci.fb.SearchHardstop.MC_SearchHardStopJ.MC_SearchHardStopJFB import MC_SearchHardStopJFB as MC_SearchHardStopJFB
 from srci.fb.General.MC_SetOperationMode.MC_SetOperationModeFB import MC_SetOperationModeFB as MC_SetOperationModeFB

@@ -22,7 +22,7 @@
 
 """SRCI structures - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 91dd909c0ed9802d)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 2021bed3e05eb890)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa
@@ -280,6 +280,10 @@ __all__ = [
     'MoveDirectAbsoluteParCmd',
     'MoveDirectAbsoluteRecvData',
     'MoveDirectAbsoluteSendData',
+    'MoveDirectCamOutCmd',
+    'MoveDirectCamParCmd',
+    'MoveDirectCamRecvData',
+    'MoveDirectCamSendData',
     'MoveDirectOffsetOutCmd',
     'MoveDirectOffsetParCmd',
     'MoveDirectOffsetRecvData',
@@ -361,6 +365,10 @@ __all__ = [
     'ReadAnalogInputParCmd',
     'ReadAnalogInputRecvData',
     'ReadAnalogInputSendData',
+    'ReadAnalogOutputOutCmd',
+    'ReadAnalogOutputParCmd',
+    'ReadAnalogOutputRecvData',
+    'ReadAnalogOutputSendData',
     'ReadCallSubprogramCyclicOutCmd',
     'ReadCallSubprogramCyclicParCmd',
     'ReadDHParameterOutCmd',
@@ -411,6 +419,10 @@ __all__ = [
     'ReadRobotSWLimitsParCmd',
     'ReadRobotSWLimitsRecvData',
     'ReadRobotSWLimitsSendData',
+    'ReadSafeReferencePositionOutCmd',
+    'ReadSafeReferencePositionParCmd',
+    'ReadSafeReferencePositionRecvData',
+    'ReadSafeReferencePositionSendData',
     'ReadServerLogOutCmd',
     'ReadServerLogParCmd',
     'ReadServerLogRecvData',
@@ -469,6 +481,10 @@ __all__ = [
     'RobotWorkAreaDataLimitJoint',
     'RspHeader',
     'SWLimits',
+    'SafeReferencingOutCmd',
+    'SafeReferencingParCmd',
+    'SafeReferencingRecvData',
+    'SafeReferencingSendData',
     'SearchHardStopJOutCmd',
     'SearchHardStopJParCmd',
     'SearchHardStopJRecvData',
@@ -1578,6 +1594,166 @@ class ReadCallSubprogramCyclicParCmd:
     """ReadCallSubprogramCyclicParCmd"""
 
     _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadSafeReferencePositionOutCmd:
+    """ReadSafeReferencePositionOutCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    NumberOfPositions: int = 0
+    """Number of existing reference positions on the RC; 0 if no position is defined"""
+    Position: RobotJointPosition = _field(default_factory=lambda: RobotJointPosition())
+    """
+    Absolute safe reference position of the robot in joint position • J1..J6: Position [°] of the
+    joints of the robot • E1..E6: Position of the external axes
+    """
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadSafeReferencePositionParCmd:
+    """ReadSafeReferencePositionParCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    Index: int = 1
+    """
+    Safe referencing position index • 0: Invalid • 1 (default): Read safe reference position 1 • >1:
+    Read the safe reference position according to the index, if available
+    """
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadSafeReferencePositionRecvData(RspHeader):
+    """ReadSafeReferencePositionRecvData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    NumberOfPositions: int = 0
+    """Number of existing reference positions on the RC; 0 if no position is defined"""
+    Reserve: int = 0
+    """Reserve"""
+    Position: RobotJointPosition = _field(default_factory=lambda: RobotJointPosition())
+    """
+    Absolute safe reference position of the robot in joint position • J1..J6: Position [°] of the
+    joints of the robot • E1..E6: Position of the external axes
+    """
+    CartesianPositionExt: _iec.IecArray[float] = _field(default_factory=lambda: _iec.IecArray(2, [0.0] * 5))
+    """Bytes 30..49 of the payload (spec table 6-832: ActualCartesianPosition.E2..E6)"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadSafeReferencePositionSendData(CmdHeader):
+    """ReadSafeReferencePositionSendData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    Index: int = 0
+    """Safe referencing position index (0: invalid, >0: index of the safe reference position)"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class SafeReferencingOutCmd:
+    """SafeReferencingOutCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    Status: int = 0
+    """
+    Status of the referencing process: • 0: Safe referencing not started • 1: Safe referencing in
+    progress • 2: Referencing successfully completed for all required positions • 3: Additional
+    position needs to be referenced • 4: Additional user input required
+    """
+
+
+@_dataclass(kw_only=True, slots=True)
+class SafeReferencingParCmd:
+    """SafeReferencingParCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    JointPosition: RobotJointPosition = _field(default_factory=lambda: RobotJointPosition())
+    """
+    Absolute safe referencing position of the robot in joint position • J1..J6: Position [°] of the
+    joints of the robot • E1..E6: Position of the external axes
+    """
+    MaximumDistance: float = -1.0
+    """
+    Maximum permissible distance [mm] between the current TCP location and the target position
+    defined via "JointPosition" (sphere around "JointPosition"): • <0 (default): Do not use a
+    maximum distance • 0: Current position and "JointPosition" must be identical • >0: Use the
+    parameter value as maximum distance
+    """
+    VelocityRate: float = -1.0
+    """
+    Velocity of the movement in % of nominal velocity • <0%: (default) - Use default velocity • 0%:
+    - Use internal minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot
+    dynamics
+    """
+    AccelerationRate: float = -1.0
+    """
+    Acceleration of the movement in % of nominal acceleration • <0%: (default) - Use default
+    acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
+    acceleration See chapter 5.5.7 Robot dynamics
+    """
+    DecelerationRate: float = -1.0
+    """
+    Deceleration of the movement in % of nominal deceleration • <0%: (default) - Use default
+    deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
+    deceleration See chapter 5.5.7 Robot dynamics
+    """
+    JerkRate: float = -1.0
+    """
+    Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
+    internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    """
+    ToolNo: int = 0
+    """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
+    MoveTime: int = 0
+    """
+    Parameter is used if it is greater than 0 (default) • Velocity input is ignored • Parameter
+    defines the time for the movement to reach the target position Error is sent by the RC if the
+    time cannot be kept
+    """
+
+
+@_dataclass(kw_only=True, slots=True)
+class SafeReferencingRecvData(RspHeader):
+    """SafeReferencingRecvData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    Status: int = 0
+    """
+    Status of the referencing process: • 0: Safe referencing not started • 1: Safe referencing in
+    progress • 2: Referencing successfully completed for all required positions • 3: Additional
+    position needs to be referenced • 4: Additional user input required
+    """
+
+
+@_dataclass(kw_only=True, slots=True)
+class SafeReferencingSendData(CmdHeader):
+    """SafeReferencingSendData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    VelocityRate: int = 0
+    """Velocity in % of nominal velocity multiplied by 100 (16#FFFF: default)"""
+    AccelerationRate: int = 0
+    """Acceleration in % of nominal acceleration multiplied by 100 (16#FFFF: default)"""
+    DecelerationRate: int = 0
+    """Deceleration in % of nominal deceleration multiplied by 100 (16#FFFF: default)"""
+    JerkRate: int = 0
+    """Jerk in % of nominal jerk multiplied by 100 (16#FFFF: default)"""
+    ToolNo: int = 0
+    """Index of tool"""
+    MaximumDistance: float = 0.0
+    """
+    Maximum permissible distance [mm] between the current TCP location and the target position
+    defined via "JointPosition" (sphere around "JointPosition"): • <0 (default): Do not use a
+    maximum distance • 0: Current position and "JointPosition" must be identical • >0: Use the
+    parameter value as maximum distance
+    """
+    JointPosition: RobotJointPosition = _field(default_factory=lambda: RobotJointPosition())
+    """
+    Absolute safe referencing position of the robot in joint position • J1..J6: Position [°] of the
+    joints of the robot • E1..E6: Position of the external axes
+    """
+    MoveTime: int = 0
+    """Time [ms] for the movement to reach the target position (0: not used)"""
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -3920,6 +4096,196 @@ class MoveDepartLinearSendData(CmdHeader):
     """Defines type of reference coordinate system of the offset position"""
     MoveTime: int = 0
     """Time"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class MoveDirectCamOutCmd:
+    """MoveDirectCamOutCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    Progress: float = 0.0
+    """Percentage of already traversed distance of current job. If not supported : • -1"""
+    RemainingDistance: float = 0.0
+    """
+    Distance-to-go of the current job. • -1: No valid value because move command is not yet active
+    (valid values are pending) or not supported by RC • >0: Actual distance between current and
+    target position • 0: Target position reached
+    """
+
+
+@_dataclass(kw_only=True, slots=True)
+class MoveDirectCamParCmd:
+    """MoveDirectCamParCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    Position: RobotCartesianPosition = _field(default_factory=lambda: RobotCartesianPosition())
+    """
+    Absolute target coordinates in the selected coordinate system (see input parameters ToolNo and
+    FrameNo)
+    """
+    VelocityRate: float = -1.0
+    """
+    Velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use internal
+    minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot dynamics
+    """
+    AccelerationRate: float = -1.0
+    """
+    Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
+    acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
+    acceleration See chapter 5.5.7 Robot dynamics
+    """
+    DecelerationRate: float = -1.0
+    """
+    Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
+    deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
+    deceleration See chapter 5.5.7 Robot dynamics
+    """
+    JerkRate: float = -1.0
+    """
+    Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
+    internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    """
+    ToolNo: int = 0
+    """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
+    FrameNo: int = 0
+    """Index of frame • 0: WCS (default) • 1..254: User frames"""
+    BlendingMode: _e.BlendingMode = _e.BlendingMode.EXACT_STOP
+    """
+    Parameter which determines the transition behavior at the end of the movement to be sent to the
+    next command. The user can choose a transition type between exact stop and different blend
+    possibilities
+    """
+    BlendingParameter: list[float] = _field(default_factory=lambda: [10.0, 0.0])
+    """Additional parameter for the blending mode, to define i.e. velocity limit (%) or blending radius"""
+    MoveTime: int = 0
+    """
+    Parameter is used if it is greater than 0 (default) • Velocity input is ignored • Parameter
+    defines the time for the movement to reach the target position Error is sent by the RC if the
+    time cannot be kept
+    """
+    ConfigMode: ArmConfigParameter = _field(default_factory=lambda: ArmConfigParameter())
+    """Defines the usage of the config byte inside the position according to Table 6-238"""
+    TurnMode: _e.TurnMode = _e.TurnMode.USE_TURN_NUMBER
+    """Defines the usage of the TurnNumber byte inside the position."""
+    Index: int = 0
+    """Specifies the desired byte address that shall be written"""
+    OutputBitmask: int = 0
+    """Specifies which output may be written"""
+    Value: int = 0
+    """Value of Digital Output"""
+    RelativePosition: bool = False
+    """
+    Reference position for the trigger point (at least one option must be supported): • 0: Start
+    position (default) O • 1: End position
+    """
+    TriggerDelay: int = 0
+    """Time delay [ms] for the trigger point"""
+    TriggerDistance: float = 0.0
+    """
+    Offset in percentage of the movement towards the trigger point in relation to the reference
+    position
+    """
+    Manipulation: bool = False
+    """
+    Set TRUE to allow manipulation of this move command through superimposing functions. For more
+    information see chapter 5.5.9.5
+    """
+
+
+@_dataclass(kw_only=True, slots=True)
+class MoveDirectCamRecvData(RspHeader):
+    """MoveDirectCamRecvData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    Progress: int = 0
+    """Percentage of already traversed distance of current job. If not supported : • -1"""
+    RemainingDistance: float = 0.0
+    """
+    Distance-to-go of the current job. • -1: No valid value because move command is not yet active
+    (valid values are pending) or not supported by RC • >0: Actual distance between current and
+    target position • 0: Target position reached
+    """
+
+
+@_dataclass(kw_only=True, slots=True)
+class MoveDirectCamSendData(CmdHeader):
+    """MoveDirectCamSendData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    VelocityRate: int = 0
+    """
+    Velocity in % of nominal velocity • <0%: (default) - Use default velocity • 0%: - Use internal
+    minimal velocity • 100%: - Use maximal reference velocity See chapter 5.5.7 Robot dynamics
+    """
+    AccelerationRate: int = 0
+    """
+    Acceleration for movement in % of nominal acceleration • <0%: (default) - Use default
+    acceleration • 0%: - Use internal minimal acceleration • 100%: - Use maximal reference
+    acceleration See chapter 5.5.7 Robot dynamics
+    """
+    DecelerationRate: int = 0
+    """
+    Deceleration for movement in % of nominal deceleration • <0%: (default) - Use default
+    deceleration • 0%: - Use internal minimal deceleration • 100%: - Use maximal reference
+    deceleration See chapter 5.5.7 Robot dynamics
+    """
+    JerkRate: int = 0
+    """
+    Jerk of the movement in % of nominal jerk • <0%: (default) - Use default jerk • 0%: - Use
+    internal minimal jerk • 100%: - Use maximal reference jerk See chapter 5.5.7 Robot dynamics
+    """
+    ToolNo: int = 0
+    """Index of tool • 0: Flange (default) • 1..254: Tool frames"""
+    FrameNo: int = 0
+    """Index of frame • 0: WCS (default) • 1..254: User frames"""
+    BlendingMode: int = 0
+    """
+    Parameter which determines the transition behavior at the end of the movement to be sent to the
+    next command. The user can choose a transition type between exact stop and different blend
+    possibilities
+    """
+    Reserve: int = 0
+    """Reserved (byte 15)"""
+    BlendingParameter: list[float] = _field(default_factory=lambda: [10.0, 0.0])
+    """Additional parameter for the blending mode, to define i.e. velocity limit (%) or blending radius"""
+    Position: RobotCartesianPosition = _field(default_factory=lambda: RobotCartesianPosition())
+    """
+    Absolute target coordinates in the selected coordinate system (see input parameters ToolNo and
+    FrameNo)
+    """
+    TriggerDelay: int = 0
+    """Time delay [ms] for the trigger point"""
+    TriggerDistance: float = 0.0
+    """
+    Offset in percentage of the movement towards the trigger point in relation to the reference
+    position
+    """
+    Index: int = 0
+    """Specifies the desired byte address that shall be written"""
+    RelativePosition: bool = False
+    """
+    Reference position for the trigger point (at least one option must be supported): • 0: Start
+    position (default) O • 1: End position
+    """
+    OutputBitmask: int = 0
+    """Specifies which output may be written"""
+    Value: int = 0
+    """Value of Digital Output"""
+    ConfigMode: list[int] = _field(default_factory=lambda: [0] * 2)
+    """Defines the usage of the config byte inside the position according to Table 6-238"""
+    Manipulation: bool = False
+    """
+    Set TRUE to allow manipulation of this move command through superimposing functions. For more
+    information see chapter 5.5.9.5
+    """
+    TurnMode: int = 0
+    """Defines the usage of the TurnNumber byte inside the position."""
+    MoveTime: int = 0
+    """
+    Parameter is used if it is greater than 0 (default) • Velocity input is ignored • Parameter
+    defines the time for the movement to reach the target position Error is sent by the RC if the
+    time cannot be kept
+    """
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -8821,6 +9187,94 @@ class ReadAnalogInputSendData(CmdHeader):
     """Reserve"""
     Index: int = 0
     """Number of the analog input 1..32"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadAnalogOutputOutCmd:
+    """ReadAnalogOutputOutCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    InvocationCounter: int = 0
+    """
+    Relates to ListenerID >0 Number of successful trigger -based command invocations For more
+    information refer to chapter 5.5.12.4.
+    """
+    OriginID: int = 0
+    """
+    Unique system-generated ID of the "Action" when the function is triggered. • >0: The "Action" is
+    started by the trigger function with identical FollowID. • <0: The "Action" is stopped by the
+    trigger function with identical FollowID. For more information see chapter 5.5.12.4 EmitterID,
+    ListenerID, FollowID and OriginID
+    """
+    Unit: _e.UnitType = _e.UnitType.VOLT
+    """Unit of returned Value: • 0: Volt • 1: Ampere"""
+    Value: float = 0.0
+    """Returned value of analog output"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadAnalogOutputParCmd:
+    """ReadAnalogOutputParCmd"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    Index: int = 0
+    """Number of the analog output 1..32"""
+    ListenerID: int = 0
+    """
+    ID of associated trigger function: • 0: No Trigger (default) No trigger related behavior • >0:
+    Trigger - Start executing when the trigger function with the identical EmitterID is triggered.
+    Always positive. For more information, see chapter 5.5.12 Triggers
+    """
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadAnalogOutputRecvData(RspHeader):
+    """ReadAnalogOutputRecvData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    InvocationCounter: int = 0
+    """
+    Relates to ListenerID >0 Number of successful trigger-based command invocations - For more
+    information refer TO chapter 5.5.12.4
+    """
+    Reserve: int = 0
+    """Reserve"""
+    OriginID: int = 0
+    """
+    Unique system-generated ID of the "Action" when the function is triggered. • >0: The "Action" is
+    started by the trigger function with identical FollowID. • <0: The "Action" is stopped by the
+    trigger function with identical FollowID. For more information see chapter 5.5.12.4 EmitterID,
+    ListenerID, FollowID and OriginID
+    """
+    Unit: int = 0
+    """Unit of returned Value: • 0: Volt • 1: Ampere"""
+    Value: float = 0.0
+    """Returned value of analog output"""
+
+
+@_dataclass(kw_only=True, slots=True)
+class ReadAnalogOutputSendData(CmdHeader):
+    """ReadAnalogOutputSendData"""
+
+    _IEC_FIELDS_: ClassVar[tuple[_iec.IecField, ...]]
+    EmitterID: list[int] = _field(default_factory=lambda: [0] * 4)
+    """
+    ID of Action that will be executed when this command is active • >0: Start Action - Start
+    executing the Action function with the identical ListenerID. • <0: Stop Action - Stop executing
+    the Action function with the identical ListenerID. • 0: No trigger (default)- If no EmitterID is
+    defined, the function will not trigger any Action during its execution For more information see
+    section Triggers of this chapter or chapter 5.5.12.4.
+    """
+    ListenerID: int = 0
+    """
+    ID of associated trigger function: • 0: No Trigger (default) No trigger related behavior • >0:
+    Trigger - Start executing when the trigger function with the identical EmitterID is triggered.
+    Always positive. For more information, see chapter 5.5.12 Triggers
+    """
+    Reserve: int = 0
+    """Reserve"""
+    Index: int = 0
+    """Number of the analog output 1..32"""
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -16380,6 +16834,48 @@ ReadCallSubprogramCyclicOutCmd._IEC_FIELDS_ = (
 )
 ReadCallSubprogramCyclicParCmd._IEC_FIELDS_ = (
 )
+ReadSafeReferencePositionOutCmd._IEC_FIELDS_ = (
+    _iec.IecField('NumberOfPositions', _iec.USINT),
+    _iec.IecField('Position', _iec.StructType(RobotJointPosition)),
+)
+ReadSafeReferencePositionParCmd._IEC_FIELDS_ = (
+    _iec.IecField('Index', _iec.USINT),
+)
+ReadSafeReferencePositionRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
+    _iec.IecField('NumberOfPositions', _iec.USINT),
+    _iec.IecField('Reserve', _iec.BYTE),
+    _iec.IecField('Position', _iec.StructType(RobotJointPosition)),
+    _iec.IecField('CartesianPositionExt', _iec.ArrayType(2, 6, _iec.REAL)),
+)
+ReadSafeReferencePositionSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
+    _iec.IecField('Index', _iec.USINT),
+)
+SafeReferencingOutCmd._IEC_FIELDS_ = (
+    _iec.IecField('Status', _iec.USINT),
+)
+SafeReferencingParCmd._IEC_FIELDS_ = (
+    _iec.IecField('JointPosition', _iec.StructType(RobotJointPosition)),
+    _iec.IecField('MaximumDistance', _iec.REAL),
+    _iec.IecField('VelocityRate', _iec.REAL),
+    _iec.IecField('AccelerationRate', _iec.REAL),
+    _iec.IecField('DecelerationRate', _iec.REAL),
+    _iec.IecField('JerkRate', _iec.REAL),
+    _iec.IecField('ToolNo', _iec.USINT),
+    _iec.IecField('MoveTime', _iec.TIME),
+)
+SafeReferencingRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
+    _iec.IecField('Status', _iec.USINT),
+)
+SafeReferencingSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
+    _iec.IecField('VelocityRate', _iec.UINT),
+    _iec.IecField('AccelerationRate', _iec.UINT),
+    _iec.IecField('DecelerationRate', _iec.UINT),
+    _iec.IecField('JerkRate', _iec.UINT),
+    _iec.IecField('ToolNo', _iec.USINT),
+    _iec.IecField('MaximumDistance', _iec.REAL),
+    _iec.IecField('JointPosition', _iec.StructType(RobotJointPosition)),
+    _iec.IecField('MoveTime', _iec.UINT),
+)
 ShiftPositionOutCmd._IEC_FIELDS_ = (
     _iec.IecField('TransformedPosition', _iec.StructType(RobotCartesianPosition)),
 )
@@ -16935,6 +17431,57 @@ MoveDepartLinearSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
     _iec.IecField('ConfigMode', _iec.ArrayType(0, 1, _iec.BYTE)),
     _iec.IecField('TurnMode', _iec.EnumType(_e.TurnMode)),
     _iec.IecField('ReferenceType', _iec.BOOL),
+    _iec.IecField('MoveTime', _iec.UINT),
+)
+MoveDirectCamOutCmd._IEC_FIELDS_ = (
+    _iec.IecField('Progress', _iec.REAL),
+    _iec.IecField('RemainingDistance', _iec.REAL),
+)
+MoveDirectCamParCmd._IEC_FIELDS_ = (
+    _iec.IecField('Position', _iec.StructType(RobotCartesianPosition)),
+    _iec.IecField('VelocityRate', _iec.REAL),
+    _iec.IecField('AccelerationRate', _iec.REAL),
+    _iec.IecField('DecelerationRate', _iec.REAL),
+    _iec.IecField('JerkRate', _iec.REAL),
+    _iec.IecField('ToolNo', _iec.USINT),
+    _iec.IecField('FrameNo', _iec.USINT),
+    _iec.IecField('BlendingMode', _iec.EnumType(_e.BlendingMode)),
+    _iec.IecField('BlendingParameter', _iec.ArrayType(0, 1, _iec.REAL)),
+    _iec.IecField('MoveTime', _iec.TIME),
+    _iec.IecField('ConfigMode', _iec.StructType(ArmConfigParameter)),
+    _iec.IecField('TurnMode', _iec.EnumType(_e.TurnMode)),
+    _iec.IecField('Index', _iec.USINT),
+    _iec.IecField('OutputBitmask', _iec.BYTE),
+    _iec.IecField('Value', _iec.BYTE),
+    _iec.IecField('RelativePosition', _iec.BOOL),
+    _iec.IecField('TriggerDelay', _iec.UINT),
+    _iec.IecField('TriggerDistance', _iec.REAL),
+    _iec.IecField('Manipulation', _iec.BOOL),
+)
+MoveDirectCamRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
+    _iec.IecField('Progress', _iec.UINT),
+    _iec.IecField('RemainingDistance', _iec.REAL),
+)
+MoveDirectCamSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
+    _iec.IecField('VelocityRate', _iec.UINT),
+    _iec.IecField('AccelerationRate', _iec.UINT),
+    _iec.IecField('DecelerationRate', _iec.UINT),
+    _iec.IecField('JerkRate', _iec.UINT),
+    _iec.IecField('ToolNo', _iec.USINT),
+    _iec.IecField('FrameNo', _iec.USINT),
+    _iec.IecField('BlendingMode', _iec.USINT),
+    _iec.IecField('Reserve', _iec.BYTE),
+    _iec.IecField('BlendingParameter', _iec.ArrayType(0, 1, _iec.REAL)),
+    _iec.IecField('Position', _iec.StructType(RobotCartesianPosition)),
+    _iec.IecField('TriggerDelay', _iec.UINT),
+    _iec.IecField('TriggerDistance', _iec.REAL),
+    _iec.IecField('Index', _iec.USINT),
+    _iec.IecField('RelativePosition', _iec.BOOL),
+    _iec.IecField('OutputBitmask', _iec.BYTE),
+    _iec.IecField('Value', _iec.BYTE),
+    _iec.IecField('ConfigMode', _iec.ArrayType(0, 1, _iec.BYTE)),
+    _iec.IecField('Manipulation', _iec.BOOL),
+    _iec.IecField('TurnMode', _iec.USINT),
     _iec.IecField('MoveTime', _iec.UINT),
 )
 MoveDirectOffsetOutCmd._IEC_FIELDS_ = (
@@ -18241,6 +18788,29 @@ ReadAnalogInputRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
     _iec.IecField('Value', _iec.REAL),
 )
 ReadAnalogInputSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
+    _iec.IecField('EmitterID', _iec.ArrayType(0, 3, _iec.SINT)),
+    _iec.IecField('ListenerID', _iec.SINT),
+    _iec.IecField('Reserve', _iec.BYTE),
+    _iec.IecField('Index', _iec.USINT),
+)
+ReadAnalogOutputOutCmd._IEC_FIELDS_ = (
+    _iec.IecField('InvocationCounter', _iec.USINT),
+    _iec.IecField('OriginID', _iec.INT),
+    _iec.IecField('Unit', _iec.EnumType(_e.UnitType)),
+    _iec.IecField('Value', _iec.REAL),
+)
+ReadAnalogOutputParCmd._IEC_FIELDS_ = (
+    _iec.IecField('Index', _iec.USINT),
+    _iec.IecField('ListenerID', _iec.SINT),
+)
+ReadAnalogOutputRecvData._IEC_FIELDS_ = RspHeader._IEC_FIELDS_ + (
+    _iec.IecField('InvocationCounter', _iec.USINT),
+    _iec.IecField('Reserve', _iec.SINT),
+    _iec.IecField('OriginID', _iec.INT),
+    _iec.IecField('Unit', _iec.USINT),
+    _iec.IecField('Value', _iec.REAL),
+)
+ReadAnalogOutputSendData._IEC_FIELDS_ = CmdHeader._IEC_FIELDS_ + (
     _iec.IecField('EmitterID', _iec.ArrayType(0, 3, _iec.SINT)),
     _iec.IecField('ListenerID', _iec.SINT),
     _iec.IecField('Reserve', _iec.BYTE),

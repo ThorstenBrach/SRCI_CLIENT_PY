@@ -22,7 +22,7 @@
 
 """SRCI constants and library parameters - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 91dd909c0ed9802d)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 2021bed3e05eb890)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa
@@ -49,7 +49,7 @@ class RobotLibraryConstants:
     Version of SRCI specification Bit 0-4 : Minor version = Features (0..31) Bit 5-7 : Major version
     = Breaking change (0..07)
     """
-    PLCLibraryVersion: Final[VersionStruct] = VersionStruct(MajorVersion=1, MinorVersion=5, PatchVersion=2)
+    PLCLibraryVersion: Final[VersionStruct] = VersionStruct(MajorVersion=1, MinorVersion=5, PatchVersion=4)
     """Version of the PLC library"""
     AXES_GROUP_ID_MIN: Final[int] = 0
     """Minimal axes group ID"""

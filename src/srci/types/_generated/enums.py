@@ -22,7 +22,7 @@
 
 """SRCI enumerations - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 91dd909c0ed9802d)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 2021bed3e05eb890)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa
@@ -3422,6 +3422,10 @@ class CmdType(_iec.IecIntEnum):
     """ST-FIX F108: create a server log on the RC (spec 6.2.5)"""
     ReadServerLog = 9004
     """ST-FIX F108: read a server log from the RC (spec 6.2.6)"""
+    ReadSafeReferencePosition = 7009
+    """ST-FIX F109: read the safe reference position of the RC (spec 6.5.38)"""
+    SafeReferencing = 7010
+    """ST-FIX F109: execute the safe referencing process on the RC (spec 6.5.39)"""
 
 
 _iec.register_enum(CmdType, _iec.UINT)
