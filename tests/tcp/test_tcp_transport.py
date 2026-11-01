@@ -67,7 +67,8 @@ def transport(sim: PlcGatewaySimulator, **kw: object) -> TcpTransport:
 
 
 def test_lockstep_cycles(sim: PlcGatewaySimulator) -> None:
-    with transport(sim) as t:
+    # perf_counter: time.monotonic ticks in ~16 ms on Windows, a local exchange can measure 0
+    with transport(sim, clock=time.perf_counter) as t:
         for n in range(200):
             assert t.exchange(request(n)) == answer(request(n))
         s = t.statistics
