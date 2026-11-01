@@ -61,6 +61,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [VAL-MOV](#val-mov) | Validation of the blocks without reference set: motions with stop, interrupt, override, power | 6 | 129 |
 | [VAL-ENA](#val-ena) | Validation of the blocks without reference set: enable, disable, parameter update | 5 | 63 |
 | [VAL-PM](#val-pm) | Validation of the blocks without reference set: ProcessingMode and SequenceFlag | 11 | 464 |
+| [VAL-EFF](#val-eff) | Validation of the blocks without reference set: effect (targets, round trips, kinematics) | 11 | 32 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 61 | 430 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [OPCUA](#opcua) | OPC UA transport | 18 | 28 |
@@ -74,7 +75,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1336 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 223 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **1055** | **10103** |
+| | **Total** | **1066** | **10135** |
 
 ## Test methodology
 
@@ -1078,6 +1079,24 @@ Validation of the blocks without reference set: ProcessingMode and SequenceFlag
 | VAL-PM-009 | Continuous: Busy (a read block also Valid), no Done, also after Execute FALSE; Deactivate ends it. | 14 | `test_continuous_runs_until_deactivated` |
 | VAL-PM-010 | Trigger Once with ListenerID 1: Busy and CommandBuffered without Done until the user trigger with EmitterID 1; then InvocationCounter 1 and Done (a trigger function stays Busy and monitors its condition). | 20 | `test_trigger_once_waits_for_the_trigger` |
 | VAL-PM-011 | Trigger Multiple with ListenerID 1: executed at every user trigger (InvocationCounter 1, 2; a trigger function is activated by the first one), Busy, no Done; Deactivate ends it. | 20 | `test_trigger_multiple_until_deactivated` |
+
+## VAL-EFF
+
+Validation of the blocks without reference set: effect (targets, round trips, kinematics)
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| VAL-EFF-001 | After Done the robot stands at the target of the block (ReadActualPosition): absolute target, start + distance, reference position + offset or end point of the circle. | 17 | `test_motion_ends_at_its_target` |
+| VAL-EFF-002 | MoveSuperImposed during a motion: both Done, the robot ends at target + offset. | 1 | `test_superimposed_offset_is_added_to_the_motion` |
+| VAL-EFF-003 | MoveSuperImposedDynamic during a motion: Enabled, the robot ends at target + offset (OffsetReached); a changed offset moves the robot by the difference. | 1 | `test_superimposed_dynamic_follows_the_offset` |
+| VAL-EFF-004 | Enable FALSE ends MoveSuperImposedDynamic: Enabled, Busy and Active FALSE without error. | 1 | `test_superimposed_dynamic_disable` |
+| VAL-EFF-005 | A value written by the Write block is returned by the Read block (other order of indices). | 5 | `test_written_value_is_read_back` |
+| VAL-EFF-006 | A second write with a bit mask changes only the masked bits of the output byte. | 1 | `test_digital_output_bits_outside_the_mask_are_kept` |
+| VAL-EFF-007 | WriteWorkArea -> ReadWorkArea: every transferred value of the work area is returned, with the requested work area number. | 2 | `test_work_area_is_read_back` |
+| VAL-EFF-008 | ActivateWorkArea TRUE / FALSE is reported by a running MonitorWorkArea (ActivationState 1 / 0). | 1 | `test_activated_work_area_is_monitored` |
+| VAL-EFF-009 | CalculateInverseKinematic of the result of CalculateForwardKinematic returns the joint values. | 1 | `test_inverse_of_forward_kinematic_returns_the_joints` |
+| VAL-EFF-010 | CalculateForwardKinematic of the joints ReadActualPosition returns gives its Cartesian position. | 1 | `test_forward_kinematic_of_the_actual_joints_is_the_actual_position` |
+| VAL-EFF-011 | CalculateCartesianPosition frame 1 -> frame 2 and back returns the position (frames written with WriteFrameData); the position in frame 2 differs from the one in frame 1. | 1 | `test_position_converted_to_another_frame_and_back_is_unchanged` |
 
 ## SDK-LOOP
 

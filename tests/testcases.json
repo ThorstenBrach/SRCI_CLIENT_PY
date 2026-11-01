@@ -4882,6 +4882,83 @@
   "status": "active"
  },
  {
+  "id": "VAL-EFF-001",
+  "test": "tests/sdk/validation/test_val_effect.py::test_motion_ends_at_its_target",
+  "title": "After Done the robot stands at the target of the block (ReadActualPosition): absolute target, start + distance, reference position + offset or end point of the circle.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-EFF-002",
+  "test": "tests/sdk/validation/test_val_effect.py::test_superimposed_offset_is_added_to_the_motion",
+  "title": "MoveSuperImposed during a motion: both Done, the robot ends at target + offset.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-EFF-003",
+  "test": "tests/sdk/validation/test_val_effect.py::test_superimposed_dynamic_follows_the_offset",
+  "title": "MoveSuperImposedDynamic during a motion: Enabled, the robot ends at target + offset (OffsetReached); a changed offset moves the robot by the difference.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-EFF-004",
+  "test": "tests/sdk/validation/test_val_effect.py::test_superimposed_dynamic_disable",
+  "title": "Enable FALSE ends MoveSuperImposedDynamic: Enabled, Busy and Active FALSE without error.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-EFF-005",
+  "test": "tests/sdk/validation/test_val_effect.py::test_written_value_is_read_back",
+  "title": "A value written by the Write block is returned by the Read block (other order of indices).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-EFF-006",
+  "test": "tests/sdk/validation/test_val_effect.py::test_digital_output_bits_outside_the_mask_are_kept",
+  "title": "A second write with a bit mask changes only the masked bits of the output byte.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-EFF-007",
+  "test": "tests/sdk/validation/test_val_effect.py::test_work_area_is_read_back",
+  "title": "WriteWorkArea -> ReadWorkArea: every transferred value of the work area is returned, with the requested work area number.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-EFF-008",
+  "test": "tests/sdk/validation/test_val_effect.py::test_activated_work_area_is_monitored",
+  "title": "ActivateWorkArea TRUE / FALSE is reported by a running MonitorWorkArea (ActivationState 1 / 0).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-EFF-009",
+  "test": "tests/sdk/validation/test_val_effect.py::test_inverse_of_forward_kinematic_returns_the_joints",
+  "title": "CalculateInverseKinematic of the result of CalculateForwardKinematic returns the joint values.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-EFF-010",
+  "test": "tests/sdk/validation/test_val_effect.py::test_forward_kinematic_of_the_actual_joints_is_the_actual_position",
+  "title": "CalculateForwardKinematic of the joints ReadActualPosition returns gives its Cartesian position.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-EFF-011",
+  "test": "tests/sdk/validation/test_val_effect.py::test_position_converted_to_another_frame_and_back_is_unchanged",
+  "title": "CalculateCartesianPosition frame 1 -> frame 2 and back returns the position (frames written with WriteFrameData); the position in frame 2 differs from the one in frame 1.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-LOOP-001",
   "test": "tests/sdk/test_sdk_in_the_loop.py::test_sdk_library",
   "title": "The SDK simulator library is found and has the expected C API version",
