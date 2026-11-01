@@ -157,6 +157,8 @@ How to fix them in ST (exact ST diffs, generated from the corrections): [ST_Find
 | F143 | `MC_MovePickPlaceDirectFB`, `MC_MovePickPlaceLinearFB` `.CheckParameterValid` | BlendingParameter[0..1] is not checked: NaN / infinity is sent to the RC | the other motion blocks reject an invalid BlendingParameter | open (VAL-PAR, strict xfail) |
 | F144 | `MC_ShiftPositionFB.CheckParameterValid` | RotationAngle is not checked: NaN / infinity is sent to the RC | REAL parameters must be valid numbers | open (VAL-PAR, strict xfail) |
 | F145 | `MC_WriteWorkAreaFB.CheckParameterValid` | the limits of the external axes E1Limit..E6Limit (Lower/UpperLimit) are not checked, J1..J6 are: NaN / infinity is sent to the RC | REAL parameters must be valid numbers | open (VAL-PAR, strict xfail) |
+| F146 | `MC_FreeDriveFB`, `MC_PathAccuracyModeFB` `.CheckParameterChanged` | the method returns at once when ParCmd is empty (`SIZEOF(ParCmd) = 0`), before the internal update `_parameterUpdateInternal` is handled: the update with Enable FALSE is never sent, the block stays Enabled / Busy and the RC keeps the function enabled | "Enable" blocks end the function with the falling edge of Enable | open (VAL-ENA, strict xfail) |
+| F147 | `OnUpdateStateFlags` of the "Enable" blocks (ForceControl, ForceLimit, ActivateConveyorTracking, SyncToConveyor, DynamicSpline, MonitorWorkArea, UnitMeasurement, AvoidSingularity, ExchangeConfiguration, OpenBrake, ...) | `ParameterAccepted` is set only for BUFFERED / BUFFERED_IN_PLANNER; a function the RC answers ACTIVE at once and every acknowledged parameter update (response ParSeq = command ParSeq) never show it | output ParameterAccepted: parameters acknowledged by the RC, can differ from CommandBuffered for "Enable" blocks | open (VAL-ENA, strict xfail) |
 
 ## Notes on the SRCI SDK (simulation)
 
@@ -164,6 +166,13 @@ How to fix them in ST (exact ST diffs, generated from the corrections): [ST_Find
   parameter update is copied into the buffered command but never evaluated, the movement continues and no
   ABORTED is reported (spec figure 6-100 (6)). Not patched on purpose: robot makers use the SDK unchanged.
   The library works around it (F141); to be reported to the SDK maintainers, then F141 can be removed.
+- **"Enable" functions ignore Enable FALSE** (same cause): ActivateConveyorTracking, DynamicSpline,
+  ForceControl, ForceLimit, MonitorWorkArea, SyncToConveyor and UnitMeasurement stay ACTIVE on the RC after
+  the parameter update of the falling edge of Enable; the library resets its block anyway, so the
+  function stays enabled on the RC without a block (a second SyncToConveyor stays buffered behind it).
+  AvoidSingularity, ExchangeConfiguration, OpenBrake and ReadMessages end with DONE. VAL-ENA
+  `test_disable_ends_the_function_on_the_rc` (strict xfail "SDK-GAP"). To be reported with the
+  ReturnToPrimary note.
 Changes inside the private SDK copy are marked `SRCI_PY CUSTOM BEGIN/END` and listed in
 `srci_py_harness/CUSTOM_CHANGES.md` of the SDK folder:
 

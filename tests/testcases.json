@@ -4770,6 +4770,41 @@
   "status": "active"
  },
  {
+  "id": "VAL-ENA-001",
+  "test": "tests/sdk/validation/test_val_enable.py::test_enable_and_disable",
+  "title": "Enable TRUE: Busy and enabled without error, also some cycles later; Enable FALSE: the outputs return to FALSE without error.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-ENA-002",
+  "test": "tests/sdk/validation/test_val_enable.py::test_enable_again",
+  "title": "After Enable FALSE the same instance can be enabled again: the command is sent a second time.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-ENA-003",
+  "test": "tests/sdk/validation/test_val_enable.py::test_disable_ends_the_function_on_the_rc",
+  "title": "Enable FALSE also ends the function on the RC: the command is DONE or ABORTED there.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-ENA-004",
+  "test": "tests/sdk/validation/test_val_enable.py::test_parameter_update_is_acknowledged",
+  "title": "A parameter changed while enabled is sent as parameter update (new ParSeq) and acknowledged by the RC; the function stays enabled without error.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-ENA-005",
+  "test": "tests/sdk/validation/test_val_enable.py::test_parameter_accepted_while_enabled",
+  "title": "ParameterAccepted is TRUE once the RC acknowledged the parameters: after the enable and again after a parameter update (spec: can differ from CommandBuffered for \"Enable\" blocks).",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-LOOP-001",
   "test": "tests/sdk/test_sdk_in_the_loop.py::test_sdk_library",
   "title": "The SDK simulator library is found and has the expected C API version",

@@ -157,6 +157,11 @@ AREAS: list[tuple[str, str, str]] = [
         "VAL-MOV",
         "Validation of the blocks without reference set: motions with stop, interrupt, override, power",
     ),
+    (
+        "sdk/validation/test_val_enable",
+        "VAL-ENA",
+        "Validation of the blocks without reference set: enable, disable, parameter update",
+    ),
     ("sdk/", "SDK-LOOP", "SDK in the loop (simulator binding)"),
     ("tcp/", "TCP", "TCP transport"),
     ("opcua/", "OPCUA", "OPC UA transport"),

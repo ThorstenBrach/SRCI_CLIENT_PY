@@ -59,6 +59,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [PLC-SAFE](#plc-safe) | Validation Client: brake test, safe referencing, safety functions | 4 | 8 |
 | [VAL-PAR](#val-par) | Validation of the blocks without reference set: parameters against the specification | 3 | 3471 |
 | [VAL-MOV](#val-mov) | Validation of the blocks without reference set: motions with stop, interrupt, override, power | 6 | 129 |
+| [VAL-ENA](#val-ena) | Validation of the blocks without reference set: enable, disable, parameter update | 5 | 63 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 61 | 430 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [OPCUA](#opcua) | OPC UA transport | 18 | 28 |
@@ -72,7 +73,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1336 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 223 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **1039** | **9576** |
+| | **Total** | **1044** | **9639** |
 
 ## Test methodology
 
@@ -1046,6 +1047,18 @@ Validation of the blocks without reference set: motions with stop, interrupt, ov
 | VAL-MOV-004 | Power off during the motion: CommandInterrupted with INFO_CMD_INTERRUPTED_BY_RA_NOT_ENABLED, not Active, not Done, the robot stands still. | 19 | `test_disable_robot_interrupts_the_motion` |
 | VAL-MOV-005 | While the motion is Active the RC reports Executing (not Idle); after Done it is Idle again. | 19 | `test_user_data_follow_the_motion` |
 | VAL-MOV-006 | Tool / frame number 255 (outside 0..254) is rejected by the block with its range error; the robot does not move. | 34 | `test_tool_or_frame_outside_the_range_is_rejected` |
+
+## VAL-ENA
+
+Validation of the blocks without reference set: enable, disable, parameter update
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| VAL-ENA-001 | Enable TRUE: Busy and enabled without error, also some cycles later; Enable FALSE: the outputs return to FALSE without error. | 13 | `test_enable_and_disable` |
+| VAL-ENA-002 | After Enable FALSE the same instance can be enabled again: the command is sent a second time. | 13 | `test_enable_again` |
+| VAL-ENA-003 | Enable FALSE also ends the function on the RC: the command is DONE or ABORTED there. | 13 | `test_disable_ends_the_function_on_the_rc` |
+| VAL-ENA-004 | A parameter changed while enabled is sent as parameter update (new ParSeq) and acknowledged by the RC; the function stays enabled without error. | 12 | `test_parameter_update_is_acknowledged` |
+| VAL-ENA-005 | ParameterAccepted is TRUE once the RC acknowledged the parameters: after the enable and again after a parameter update (spec: can differ from CommandBuffered for "Enable" blocks). | 12 | `test_parameter_accepted_while_enabled` |
 
 ## SDK-LOOP
 
