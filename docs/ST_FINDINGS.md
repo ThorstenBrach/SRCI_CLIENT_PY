@@ -159,6 +159,8 @@ How to fix them in ST (exact ST diffs, generated from the corrections): [ST_Find
 | F145 | `MC_WriteWorkAreaFB.CheckParameterValid` | the limits of the external axes E1Limit..E6Limit (Lower/UpperLimit) are not checked, J1..J6 are: NaN / infinity is sent to the RC | REAL parameters must be valid numbers | open (VAL-PAR, strict xfail) |
 | F146 | `MC_FreeDriveFB`, `MC_PathAccuracyModeFB` `.CheckParameterChanged` | the method returns at once when ParCmd is empty (`SIZEOF(ParCmd) = 0`), before the internal update `_parameterUpdateInternal` is handled: the update with Enable FALSE is never sent, the block stays Enabled / Busy and the RC keeps the function enabled | "Enable" blocks end the function with the falling edge of Enable | open (VAL-ENA, strict xfail) |
 | F147 | `OnUpdateStateFlags` of the "Enable" blocks (ForceControl, ForceLimit, ActivateConveyorTracking, SyncToConveyor, DynamicSpline, MonitorWorkArea, UnitMeasurement, AvoidSingularity, ExchangeConfiguration, OpenBrake, ...) | `ParameterAccepted` is set only for BUFFERED / BUFFERED_IN_PLANNER; a function the RC answers ACTIVE at once and every acknowledged parameter update (response ParSeq = command ParSeq) never show it | output ParameterAccepted: parameters acknowledged by the RC, can differ from CommandBuffered for "Enable" blocks | open (VAL-ENA, strict xfail) |
+| F148 | `MC_LoadMeasurementSequentialFB.CheckParameterValid` | a ProcessingMode other than Buffered / Aborting / Parallel sets ERR_ABORTINGMODE_INVALID (16#8411) | table 7-1: ERR_PROCESSINGMODE_NOT_ALLOWED (16#8603), like every other block | open (VAL-PM, strict xfail) |
+| F149 | `MC_ActivateNextCommandFB`, `MC_RedefineTrackingPosFB` `.OnApplyOutCmd` | InvocationCounter / OriginID are copied only in state DONE: in Trigger Multiple the command stays ACTIVE and OutCmd.InvocationCounter stays 0 although the RC counts every trigger | output InvocationCounter: number of executions by a trigger (the read / write blocks copy it in ACTIVE and DONE) | open (VAL-PM, strict xfail) |
 
 ## Notes on the SRCI SDK (simulation)
 
@@ -235,6 +237,12 @@ Changes inside the private SDK copy are marked `SRCI_PY CUSTOM BEGIN/END` and li
 - Table 6-474 (SyncToConveyor) has `EmitterID` as USINT, all other tables SINT.
 - Tables 6-224/6-229 (Read/WriteWorkArea) place `ZeroPointX` (REAL) at the odd offset 17, the
   PLC library inserts a byte before it – to be clarified.
+- ReadActualTCPVelocity: the command values (table 6-59) list the trigger ProcessingModes 12..14
+  and the input ListenerID, the CMD payload (table 6-63) has no EmitterID / ListenerID. The
+  library follows the payload, so a triggered ReadActualTCPVelocity is executed at once
+  (VAL-PM, strict xfail) – to be clarified with the PI.
+- CollisionDetection: the SequenceFlag values (1, 2) omit "No sequence", although the block
+  allows ProcessingMode Parallel, which needs it.
 
 - 5.6.6.2 states "The actual SRCI version is V1.3" (also in draft 1.5.9) while the SDK uses 1.5.
   Only the major version is checked (SDK `04_Network.cpp`). Python uses 1.5.0 (generator override).

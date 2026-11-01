@@ -162,6 +162,11 @@ AREAS: list[tuple[str, str, str]] = [
         "VAL-ENA",
         "Validation of the blocks without reference set: enable, disable, parameter update",
     ),
+    (
+        "sdk/validation/test_val_processing_mode",
+        "VAL-PM",
+        "Validation of the blocks without reference set: ProcessingMode and SequenceFlag",
+    ),
     ("sdk/", "SDK-LOOP", "SDK in the loop (simulator binding)"),
     ("tcp/", "TCP", "TCP transport"),
     ("opcua/", "OPCUA", "OPC UA transport"),

@@ -60,6 +60,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [VAL-PAR](#val-par) | Validation of the blocks without reference set: parameters against the specification | 3 | 3471 |
 | [VAL-MOV](#val-mov) | Validation of the blocks without reference set: motions with stop, interrupt, override, power | 6 | 129 |
 | [VAL-ENA](#val-ena) | Validation of the blocks without reference set: enable, disable, parameter update | 5 | 63 |
+| [VAL-PM](#val-pm) | Validation of the blocks without reference set: ProcessingMode and SequenceFlag | 11 | 464 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 61 | 430 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [OPCUA](#opcua) | OPC UA transport | 18 | 28 |
@@ -73,7 +74,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1336 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 223 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **1044** | **9639** |
+| | **Total** | **1055** | **10103** |
 
 ## Test methodology
 
@@ -1059,6 +1060,24 @@ Validation of the blocks without reference set: enable, disable, parameter updat
 | VAL-ENA-003 | Enable FALSE also ends the function on the RC: the command is DONE or ABORTED there. | 13 | `test_disable_ends_the_function_on_the_rc` |
 | VAL-ENA-004 | A parameter changed while enabled is sent as parameter update (new ParSeq) and acknowledged by the RC; the function stays enabled without error. | 12 | `test_parameter_update_is_acknowledged` |
 | VAL-ENA-005 | ParameterAccepted is TRUE once the RC acknowledged the parameters: after the enable and again after a parameter update (spec: can differ from CommandBuffered for "Enable" blocks). | 12 | `test_parameter_accepted_while_enabled` |
+
+## VAL-PM
+
+Validation of the blocks without reference set: ProcessingMode and SequenceFlag
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| VAL-PM-001 | A ProcessingMode the specification does not list for the block: Error ERR_PROCESSINGMODE_NOT_ALLOWED, the command is not sent. | 104 | `test_processing_mode_not_allowed_is_rejected` |
+| VAL-PM-002 | Every ProcessingMode the specification lists (except Deactivate) with the SequenceFlag that fits it: the command is sent and the RC accepts it, no error. | 124 | `test_processing_mode_allowed_is_executed` |
+| VAL-PM-003 | Spec 5.5.3.4: a mode in the sequence with "No sequence", or a mode outside the sequence with primary sequence, is detected by the client: Error ERR_SEQFLAG_INVALID_IN_PROC_MODE (or ERR_SEQFLAG_NOT_ALLOWED when the block does not allow the flag at all), not sent. | 102 | `test_sequence_flag_that_does_not_fit_is_rejected` |
+| VAL-PM-004 | Parallel: executed while the robot is not enabled (parallel buffer): Done without error. | 17 | `test_parallel_without_power` |
+| VAL-PM-005 | Buffered in the primary sequence while the robot is not enabled: CommandInterrupted with INFO_CMD_INTERRUPTED_BY_RA_NOT_ENABLED, Busy, no Done, no error. | 15 | `test_buffered_without_power_is_interrupted` |
+| VAL-PM-006 | Buffered behind an active motion: CommandBuffered and Busy while the robot moves, Done only after the motion is Done. | 16 | `test_buffered_waits_for_the_motion` |
+| VAL-PM-007 | Aborting during an active motion: the motion is CommandAborted, the block is Done. | 16 | `test_aborting_aborts_the_motion` |
+| VAL-PM-008 | Parallel during an active motion: Done while the motion is still Active; the motion goes on. | 16 | `test_parallel_runs_next_to_the_motion` |
+| VAL-PM-009 | Continuous: Busy (a read block also Valid), no Done, also after Execute FALSE; Deactivate ends it. | 14 | `test_continuous_runs_until_deactivated` |
+| VAL-PM-010 | Trigger Once with ListenerID 1: Busy and CommandBuffered without Done until the user trigger with EmitterID 1; then InvocationCounter 1 and Done (a trigger function stays Busy and monitors its condition). | 20 | `test_trigger_once_waits_for_the_trigger` |
+| VAL-PM-011 | Trigger Multiple with ListenerID 1: executed at every user trigger (InvocationCounter 1, 2; a trigger function is activated by the first one), Busy, no Done; Deactivate ends it. | 20 | `test_trigger_multiple_until_deactivated` |
 
 ## SDK-LOOP
 

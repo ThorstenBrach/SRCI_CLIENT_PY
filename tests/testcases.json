@@ -4805,6 +4805,83 @@
   "status": "active"
  },
  {
+  "id": "VAL-PM-001",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_processing_mode_not_allowed_is_rejected",
+  "title": "A ProcessingMode the specification does not list for the block: Error ERR_PROCESSINGMODE_NOT_ALLOWED, the command is not sent.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PM-002",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_processing_mode_allowed_is_executed",
+  "title": "Every ProcessingMode the specification lists (except Deactivate) with the SequenceFlag that fits it: the command is sent and the RC accepts it, no error.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PM-003",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_sequence_flag_that_does_not_fit_is_rejected",
+  "title": "Spec 5.5.3.4: a mode in the sequence with \"No sequence\", or a mode outside the sequence with primary sequence, is detected by the client: Error ERR_SEQFLAG_INVALID_IN_PROC_MODE (or ERR_SEQFLAG_NOT_ALLOWED when the block does not allow the flag at all), not sent.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PM-004",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_parallel_without_power",
+  "title": "Parallel: executed while the robot is not enabled (parallel buffer): Done without error.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PM-005",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_buffered_without_power_is_interrupted",
+  "title": "Buffered in the primary sequence while the robot is not enabled: CommandInterrupted with INFO_CMD_INTERRUPTED_BY_RA_NOT_ENABLED, Busy, no Done, no error.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PM-006",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_buffered_waits_for_the_motion",
+  "title": "Buffered behind an active motion: CommandBuffered and Busy while the robot moves, Done only after the motion is Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PM-007",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_aborting_aborts_the_motion",
+  "title": "Aborting during an active motion: the motion is CommandAborted, the block is Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PM-008",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_parallel_runs_next_to_the_motion",
+  "title": "Parallel during an active motion: Done while the motion is still Active; the motion goes on.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PM-009",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_continuous_runs_until_deactivated",
+  "title": "Continuous: Busy (a read block also Valid), no Done, also after Execute FALSE; Deactivate ends it.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PM-010",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_trigger_once_waits_for_the_trigger",
+  "title": "Trigger Once with ListenerID 1: Busy and CommandBuffered without Done until the user trigger with EmitterID 1; then InvocationCounter 1 and Done (a trigger function stays Busy and monitors its condition).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PM-011",
+  "test": "tests/sdk/validation/test_val_processing_mode.py::test_trigger_multiple_until_deactivated",
+  "title": "Trigger Multiple with ListenerID 1: executed at every user trigger (InvocationCounter 1, 2; a trigger function is activated by the first one), Busy, no Done; Deactivate ends it.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-LOOP-001",
   "test": "tests/sdk/test_sdk_in_the_loop.py::test_sdk_library",
   "title": "The SDK simulator library is found and has the expected C API version",
