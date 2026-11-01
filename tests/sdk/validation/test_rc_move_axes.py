@@ -87,7 +87,7 @@ _GAP_LIMITS = pytest.mark.xfail(
 def _last(sdk: SdkSimulator) -> dict[str, str]:
     cmd = sdk.last_command(MOVE_AXES_ABSOLUTE)
     assert cmd is not None
-    return cmd
+    return dict(cmd)
 
 
 def _first_cycles(h: RobotTaskHarness, blocks: list[Any], cycles: int, until: Any) -> list[dict[str, int]]:

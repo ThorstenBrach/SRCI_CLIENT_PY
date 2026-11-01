@@ -80,7 +80,7 @@ def _key(j: Any, name: str, on: bool = True) -> None:
 def _travel(h: RobotTaskHarness, sdk: SdkSimulator, cycles: int, axis: int = 0) -> float:
     before = sdk.joints[axis]
     h.run(cycles)
-    return sdk.joints[axis] - before
+    return float(sdk.joints[axis] - before)
 
 
 # ---------------------------------------------------------------- continuous jogging

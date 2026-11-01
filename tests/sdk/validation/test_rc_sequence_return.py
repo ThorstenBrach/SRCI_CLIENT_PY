@@ -124,7 +124,7 @@ def _active(h: RobotTaskHarness, block: Any) -> None:
 def _held(h: RobotTaskHarness, sdk: SdkSimulator, cycles: int = 20) -> bool:
     before = list(sdk.joints)
     h.run(cycles)
-    return sdk.joints == before
+    return bool(sdk.joints == before)
 
 
 # ---------------------------------------------------------------- target position

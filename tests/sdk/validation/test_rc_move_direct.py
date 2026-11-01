@@ -86,7 +86,7 @@ def _telegram(sdk: SdkSimulator) -> dict[str, str]:
     """Fields of the last MoveDirectAbsolute telegram as the SDK decoded them."""
     received = sdk.last_command(MOVE_DIRECT)
     assert received is not None, "no MoveDirectAbsolute telegram received"
-    return received
+    return dict(received)
 
 
 def _accepted(sdk: SdkSimulator, since: int) -> int:

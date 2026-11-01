@@ -77,7 +77,7 @@ def _set_mode(h: RobotTaskHarness, mode: OperationMode) -> None:
 def _moving(sdk: SdkSimulator, h: RobotTaskHarness, cycles: int = 5) -> bool:
     before = list(sdk.joints)
     h.run(cycles)
-    return sdk.joints != before
+    return bool(sdk.joints != before)
 
 
 def _wait(h: RobotTaskHarness, cond: Any, cycles: int = 300) -> bool:

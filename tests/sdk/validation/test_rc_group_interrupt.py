@@ -111,7 +111,7 @@ def _rc(h: RobotTaskHarness) -> dict[str, bool]:
 def _held(h: RobotTaskHarness, sdk: SdkSimulator, cycles: int = 20) -> bool:
     before = list(sdk.joints)
     h.run(cycles)
-    return sdk.joints == before
+    return bool(sdk.joints == before)
 
 
 # ---------------------------------------------------------------- GroupInterrupt
