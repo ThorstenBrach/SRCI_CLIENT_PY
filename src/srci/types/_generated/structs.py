@@ -22,7 +22,7 @@
 
 """SRCI structures - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 2021bed3e05eb890)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 1c7c5d83772f8a44)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa
@@ -14013,6 +14013,8 @@ class AxesGroupState:
     """Current Sequence ID has changed -> send new data"""
     LastACK: list[int] = _field(default_factory=lambda: [0] * 2)
     """Last received acknowledge ID"""
+    RobotTaskId: int = 0
+    """ST-FIX F132: instance of the RobotTask that uses this axes group (0 = none)"""
 
 
 @_dataclass(kw_only=True, slots=True)
@@ -20194,6 +20196,7 @@ AxesGroupState._IEC_FIELDS_ = (
     _iec.IecField('CurrentACK', _iec.ArrayType(0, 1, _iec.UINT)),
     _iec.IecField('NewSEQ', _iec.ArrayType(0, 1, _iec.BOOL)),
     _iec.IecField('LastACK', _iec.ArrayType(0, 1, _iec.UINT)),
+    _iec.IecField('RobotTaskId', _iec.UDINT),
 )
 AxesGroup._IEC_FIELDS_ = (
     _iec.IecField('Parameter', _iec.StructType(AxesGroupParameter)),

@@ -35,7 +35,7 @@ from typing import Any
 import pytest
 from srci_sdk_sim.sdk import SdkSimulator
 
-from srci.types import ProcessingMode, RobotLibraryErrorIdEnum, SequenceFlag
+from srci.types import ExecutionMode, ProcessingMode, RobotLibraryErrorIdEnum, SequenceFlag
 from tests.robot_task_harness import RobotTaskHarness
 from tests.sdk.validation.conftest import fb, state
 
@@ -48,14 +48,6 @@ CMD_TYPE = {
 E = RobotLibraryErrorIdEnum
 PM = ProcessingMode
 SF = SequenceFlag
-
-_BUG_LISTENER = pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F119: MC_CreateServerLogFB.CheckParameterValid tests 'ListenerID > 0 only with a trigger "
-    "based ProcessingMode' as (~ProcessingMode & 255) >= TRIGGER_BUFFERED, i.e. a bitwise NOT; it is TRUE "
-    "for every mode, so each trigger mode with ListenerID > 0 is rejected with 16#8605 (table 7-1, 5.5.12.4: "
-    "trigger based ProcessingModes need a ListenerID > 0). MC_CallSubprogramFB uses the correct boolean NOT",
-)
 
 
 def _rejected(
@@ -87,8 +79,8 @@ def _rejected(
         (PM.CONTINUOUS, SF.SECONDARY_SEQUENCE, 0, E.ERR_SEQFLAG_INVALID_IN_PROC_MODE),
         (PM.BUFFERED, 12, 0, E.ERR_SEQFLAG_NOT_ALLOWED),
         (22, SF.PRIMARY_SEQUENCE, 0, E.ERR_PROCESSINGMODE_NOT_DEFINED),
-        (4, SF.PRIMARY_SEQUENCE, 0, E.ERR_PROCESSINGMODE_NOT_ALLOWED),
-        (5, SF.PRIMARY_SEQUENCE, 0, E.ERR_PROCESSINGMODE_NOT_ALLOWED),
+        (4, SF.PRIMARY_SEQUENCE, 0, E.ERR_PROCESSINGMODE_NOT_DEFINED),
+        (5, SF.PRIMARY_SEQUENCE, 0, E.ERR_PROCESSINGMODE_NOT_DEFINED),
         (PM.TRIGGER_CONTINUOUS, SF.NO_SEQUENCE, 0, E.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO),
     ],
     ids=[
@@ -171,7 +163,6 @@ def test_create_server_log_invalid_parameters(
     )
 
 
-@_BUG_LISTENER
 @pytest.mark.parametrize(
     ("pm", "sf"),
     [
@@ -203,21 +194,23 @@ def test_create_server_log_trigger_mode_with_sequence_flag(
     )
 
 
-@_BUG_LISTENER
 @pytest.mark.parametrize(
     "pm", [PM.TRIGGER_ONCE, PM.TRIGGER_MULTIPLE], ids=["trigger-once", "trigger-multiple"]
 )
 def test_create_server_log_trigger_mode_with_listener_is_sent(
     robot: RobotTaskHarness, sdk: SdkSimulator, pm: int
 ) -> None:
-    """CreateServerLog in a trigger mode with ListenerID > 0 passes the client checks and is sent with that ListenerID."""
+    """CreateServerLog in a trigger mode with ListenerID > 0 passes the client checks and is sent (trigger mode)."""
     cl = fb(robot, "MC_CreateServerLogFB", ProcessingMode=pm, SequenceFlag=SF.NO_SEQUENCE)
     cl.ParCmd.ListenerID = 10
     cl.Execute = True
     robot.run(3)
     assert cl.ErrorID != E.ERR_LISTENERID_NOT_ALLOWED, state(cl)
+    assert not cl.Error, state(cl)
     sent = sdk.last_command(CMD_TYPE["MC_CreateServerLogFB"])
-    assert sent is not None and sent["ListenerID"] == "10", sent
+    # the fields decoded by the SDK harness contain no ListenerID for CreateServerLog: check the execution mode
+    expected = ExecutionMode.PARALLEL if pm == PM.TRIGGER_ONCE else ExecutionMode.TRIGGER_MULTIPLE
+    assert sent is not None and sent["ExecutionMode"] == str(int(expected)), sent
 
 
 @pytest.mark.parametrize("export_mode", [2, 3, 255])

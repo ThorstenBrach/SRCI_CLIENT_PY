@@ -77,11 +77,12 @@ from srci.functions.Convert.TO_STRING.TELEGRAM_CONTROL_TO_STRING import TELEGRAM
 from srci.functions.Convert.TO_STRING.TELEGRAM_STATE_TO_STRING import TELEGRAM_STATE_TO_STRING
 from srci.functions.Convert.TO_STRING.WORD_TO_STRING_BIN import WORD_TO_STRING_BIN
 from srci.iec.conv import BYTE_TO_SINT, DINT_TO_STRING, DINT_TO_UDINT, DINT_TO_UINT, DINT_TO_USINT, INT_TO_BYTE, INT_TO_SINT, SINT_TO_BYTE, SINT_TO_INT, STRING_TO_USINT, TIME_TO_STRING, TIME_TO_UINT, UDINT_TO_STRING, UINT_TO_DINT, UINT_TO_STRING
-from srci.iec.rt import ADR, CONCAT, LIMIT, LOWER_BOUND, MID, MIN, SysDepMemCmp, UPPER_BOUND, array_type, bit, copy_into, set_bit, st_for_end, trunc_str, wrap
+from srci.iec.rt import ADR, ADR_ELEM, CONCAT, LIMIT, LOWER_BOUND, MID, MIN, StaticVar, SysDepMemCmp, UPPER_BOUND, array_type, bit, copy_into, ptr_eq, set_bit, st_for_end, trunc_str, wrap
 from srci.iec.standard import F_TRIG, R_TRIG, TON
 from srci.types import AxesGroupAcyclicAcrEntryCmdBuffer, AxesGroupStateDataChanged, BufferStateCmd, CmdType, ComDirection, ControlHalfByte, DefaultDynamics, ExecutionMode, FragmentAction, Frame, Load, MessageType, PriorityLevel, RaSequenceState, ReferenceDynamics, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryInfoIdEnum, RobotLibraryParameter, RobotLibraryWarningIdEnum, RobotTaskParCfg, RobotWorkArea, SWLimits, SequenceFlag, SequenceFlagEnum, Severity, SyncMode, SyncTime, SystemTime, Telegram, TelegramState, Tool
 
 if TYPE_CHECKING:
+    from srci.iec.rt import Ptr
     from srci.interfaces.IMessageLogger import IMessageLogger
     from srci.types import AlarmMessage, AxesGroup, UserData
 
@@ -90,6 +91,16 @@ __all__ = ['MC_RobotTaskFB']
 
 class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
     """Handles multiple mechanisms required for operation of the interface. For maximal performance, this FB must be called after the function FB's, so that the data can be written to the fieldbus in the same cycle as the start of FB occours"""
+
+    # VAR_STAT (shared by all instances)
+    # ST-FIX F132: number of RobotTask instances created (source of _instanceId)
+    _instanceCount = StaticVar(lambda: 0)
+    # ST-FIX F132: instance that uses the telegram buffers of the entry (0 = free entry)
+    _peripheryOwner = StaticVar(lambda: _iec.IecArray(1, [0] * 16))
+    # ST-FIX F132: address of RobotInData of the entry
+    _peripheryInAdr = StaticVar(lambda: _iec.IecArray(1, [None] * 16))
+    # ST-FIX F132: address of RobotOutData of the entry
+    _peripheryOutAdr = StaticVar(lambda: _iec.IecArray(1, [None] * 16))
 
     def _init_vars_(self) -> None:
         # VAR_INPUT
@@ -103,9 +114,10 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         self.OnlineChange: bool = False
         # Axes Group ID -> is used to uniquely identify each RA on a per RC basis.
         # 
-        # For convenience, an RC with only one RA must assign ID 1 to this RA.
-        # An RC with multiple RAs must assign numeric values 1-15 to those RAs.
-        self.AxesGroupID: int = 0  #  ToDo: Mistake in specification : ID should start with 1, but must start with 0 !
+        # The IDs start with 0: an RC with only one RA uses ID 0.
+        # ST-FIX F138: spec V1.5.9 says 1 (one RA) and 1-15 (several RAs); this is an error of the spec
+        # (confirmed by PI), the SDK uses 0 too.
+        self.AxesGroupID: int = 0
         # Configuration parameter
         self.ParCfg: RobotTaskParCfg = RobotTaskParCfg()
         # VAR_IN_OUT
@@ -377,6 +389,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         self._initErrorState: TelegramState = TelegramState.UNDEFINED
         self._turns: int = 0  #  ST-FIX F60: turn number nibble
         self._restartReset: bool = False  #  ST-FIX F23: interface reset on the RC requested by a restart
+        # ST-FIX F132: identification of this instance (1..n, assigned in FB_init, kept by an online change)
+        self._instanceId: int = 0
+        # VAR CONSTANT
+        # ST-FIX F132: number of RobotTask instances whose telegram buffers are checked
+        self.PERIPHERY_ENTRIES: int = 16
         # VAR_INST of HandleAliveBit
         self._HandleAliveBit_First: bool = True
         # VAR_INST of HandleInvalidFrames
@@ -442,6 +459,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         self.ROBOT_OUT_DATA_MIN = LOWER_BOUND(self.RobotOutData)
         self.ROBOT_OUT_DATA_MAX = UPPER_BOUND(self.RobotOutData)
         self.ROBOT_OUT_DATA_SIZE = DINT_TO_UDINT(self.ROBOT_OUT_DATA_MAX - self.ROBOT_OUT_DATA_MIN + 1)
+
+        # ST-FIX F132: an AxesGroup and the telegram buffers belong to one RobotTask only (table 7-1:
+        # 16#8007 / 16#8008); a second instance does nothing else, so it cannot disturb the first one
+        if not self.CheckAssignmentValid(AxesGroup=self.AxesGroup, RobotInData=self.RobotInData, RobotOutData=self.RobotOutData):
+            self.Error = self.HasError
+            self.ErrorIdEnum = RobotLibraryErrorIdEnum(self.ErrorID)
+            return
 
         self.HandleAxesGroup(AxesGroup=self.AxesGroup, ToolData=self.ToolData, FrameData=self.FrameData, LoadData=self.LoadData, WorkAreas=self.WorkAreas, SWLimits=self.SWLimits, DefaultDynamics=self.DefaultDynamics, ReferenceDynamics=self.ReferenceDynamics)
 
@@ -960,6 +984,60 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                 AxesGroup.State.FragmentCountSend[_seqIdx] = _fragIdx
         return AxesGroupToTelegramSequence
 
+    def CheckAssignmentValid(self, *, AxesGroup: _T.AxesGroup, RobotInData: list[int] | bytearray, RobotOutData: list[int] | bytearray) -> bool:  # PRIVATE
+        """ST-FIX F132: checks that the AxesGroup and the telegram buffers are not used by another RobotTask (table 7-1: 16#8007 ERR_AXESGROUP_INVALID, 16#8008 ERR_PERIPHERY_INVALID) and registers them"""
+        CheckAssignmentValid: bool = False
+        # Loop index over the entries
+        _idx: int = 0
+        # Entry of this instance
+        _own: int = 0
+        # First free entry
+        _free: int = 0
+        # Address of RobotInData
+        _inAdr: Ptr | None = None
+        # Address of RobotOutData
+        _outAdr: Ptr | None = None
+
+        CheckAssignmentValid = False
+
+        # AxesGroup used by another RobotTask ?
+        if AxesGroup.State.RobotTaskId != 0 and AxesGroup.State.RobotTaskId != self._instanceId:
+            if self.ErrorID != RobotLibraryErrorIdEnum.ERR_AXESGROUP_INVALID:
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_AXESGROUP_INVALID, Overwrite=True)
+                # Create log entry
+                self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='AxesGroup is already used by RobotTask {1}', Para1=UDINT_TO_STRING(AxesGroup.State.RobotTaskId))
+            return CheckAssignmentValid
+
+        # telegram buffers used by another RobotTask ?
+        _inAdr = ADR_ELEM(RobotInData, self.ROBOT_IN_DATA_MIN, _iec.BYTE)
+        _outAdr = ADR_ELEM(RobotOutData, self.ROBOT_OUT_DATA_MIN, _iec.BYTE)
+        _own = 0
+        _free = 0
+        for _idx in range(1, self.PERIPHERY_ENTRIES + 1):
+            if self._peripheryOwner[_idx] == self._instanceId:
+                _own = _idx
+            elif self._peripheryOwner[_idx] == 0:
+                if _free == 0:
+                    _free = _idx
+            elif ptr_eq(self._peripheryInAdr[_idx], _inAdr) | ptr_eq(self._peripheryOutAdr[_idx], _outAdr):
+                if self.ErrorID != RobotLibraryErrorIdEnum.ERR_PERIPHERY_INVALID:
+                    self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PERIPHERY_INVALID, Overwrite=True)
+                    # Create log entry
+                    self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Telegram buffers are already used by RobotTask {1}', Para1=UDINT_TO_STRING(self._peripheryOwner[_idx]))
+                return CheckAssignmentValid
+
+        # register this instance (the addresses can change after an online change)
+        if _own == 0:
+            _own = _free
+        if _own > 0:
+            self._peripheryOwner[_own] = self._instanceId
+            self._peripheryInAdr[_own] = _inAdr
+            self._peripheryOutAdr[_own] = _outAdr
+        AxesGroup.State.RobotTaskId = self._instanceId
+
+        CheckAssignmentValid = True
+        return CheckAssignmentValid
+
     def CheckParameterChanged(self, *, AxesGroup: _T.AxesGroup) -> bool:  # PROTECTED
         CheckParameterChanged: bool = False
         # internal index for loops
@@ -1110,248 +1188,167 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         # EndRegion }}}
         # Region ParCfg.Rob.OptionalCyclic {{{
         # Check configuration if optional cyclic CartesianPosition valid ?
-        if self.ParCfg.Rob.OptionalCyclic.UseCartesianPosition and self.ParCfg.Rob.OptionalCyclic.UseCartesianPositionExt:
+        # ST-FIX F137: the extended cartesian position cannot be used without the cartesian position ->
+        # the cartesian position is activated automatically (spec 6.4.2 and InfoID 16#6002, table 7-6);
+        # before: both together were rejected and the extended position was switched off
+        if self.ParCfg.Rob.OptionalCyclic.UseCartesianPositionExt and (not self.ParCfg.Rob.OptionalCyclic.UseCartesianPosition):
             # set to valid configuration
             self.ParCfg.Rob.OptionalCyclic.UseCartesianPosition = True
-            self.ParCfg.Rob.OptionalCyclic.UseCartesianPositionExt = False
 
             # Set info
             self.SetInfo(InfoID=RobotLibraryInfoIdEnum.INFO_RECV_EXT_CART_POS_NOT_USABLE_WITH_RECV_CART_POS, Overwrite=True)
 
             # Create log entry
-            self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='UseCartesianPosition and UseCartesianPositionExt cannot be configured together -> UseCartesianPosition is automatically activated')
+            self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='UseCartesianPositionExt cannot be used without UseCartesianPosition -> UseCartesianPosition is automatically activated')
 
         # Check configuration if optional cyclic JointPosition valid ?
-        # {warning 'ToDo: Yaskawa need this combination for debugging via JointPosExt '}
-        if (self.ParCfg.Rob.OptionalCyclic.UseJointPosition and self.ParCfg.Rob.OptionalCyclic.UseJointPositionExt) and False:
+        # ST-FIX F137: the extended joint position cannot be used without the joint position -> the joint
+        # position is activated automatically (spec 6.4.2 and InfoID 16#6003, table 7-6); before: the check
+        # (both together rejected) was switched off with AND FALSE
+        if self.ParCfg.Rob.OptionalCyclic.UseJointPositionExt and (not self.ParCfg.Rob.OptionalCyclic.UseJointPosition):
             # set to valid configuration
             self.ParCfg.Rob.OptionalCyclic.UseJointPosition = True
-            self.ParCfg.Rob.OptionalCyclic.UseJointPositionExt = False
 
             # Set info
             self.SetInfo(InfoID=RobotLibraryInfoIdEnum.INFO_RECV_EXT_JOINT_POS_NOT_USABLE_WITH_RECV_JOINT_POS, Overwrite=True)
 
             # Create log entry
-            self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='UseJointPosition and UseJointPositionExt cannot be configured together -> UseJointPosition is automatically activated')
+            self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='UseJointPositionExt cannot be used without UseJointPosition -> UseJointPosition is automatically activated')
 
         # EndRegion }}}
         # Region ParCfg.Parameter.SynchronizationModes {{{
         # Check ToolData synchronisation mode during startup
         # Automatic is not allowed during startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.DURING_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.DURING_START_UP] >= SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_TOOL_DATA_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.DURING_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.DURING_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check ToolData synchronisation mode after startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP] > SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_TOOL_DATA_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check FrameData synchronisation mode during startup
         # Automatic is not allowed during startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.DURING_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.DURING_START_UP] >= SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_FRAME_DATA_SYNC_MODE_INVALID, Overwrite=False)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.DURING_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.DURING_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check FrameData synchronisation mode after startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP] > SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_FRAME_DATA_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check LoadData synchronisation mode during startup
         # Automatic is not allowed during startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.DURING_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.DURING_START_UP] >= SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_LOAD_DATA_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.DURING_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.DURING_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check LoadData synchronisation mode after startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP] > SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_LOAD_DATA_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check WorkAreas synchronisation mode during startup
         # Automatic is not allowed during startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.DURING_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.DURING_START_UP] >= SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_WORK_AREA_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.DURING_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.DURING_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check WorkAreas synchronisation mode after startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP] > SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_WORK_AREA_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check SWLimits synchronisation mode during startup
         # Automatic is not allowed during startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.DURING_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.DURING_START_UP] >= SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_SW_LIMITS_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.DURING_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.DURING_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check SWLimits synchronisation mode after startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP] > SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_SW_LIMITS_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check DefaultDynamics synchronisation mode during startup
         # Automatic is not allowed during startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.DURING_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.DURING_START_UP] >= SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_DEFAULT_DYNAMICS_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.DURING_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.DURING_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check DefaultDynamics synchronisation mode after startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP] > SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_DEFAULT_DYNAMICS_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check ReferenceDynamics synchronisation mode during startup
         # Automatic is not allowed during startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.DURING_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.DURING_START_UP] >= SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_REFERENCE_DYNAMICS_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.DURING_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.DURING_START_UP]))
-            # no further validation
-            return CheckParameterValid
 
         # Check ReferenceDynamics synchronisation mode after startup
         if self.ParCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP] < SyncMode.NO_SYNCHRONIZATION or self.ParCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP] > SyncMode.AUTOMATIC:
-            # parameter(s) not valid
-            CheckParameterValid = False
-
-            # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)  # own defined error - not in specification
-            # Set warning
+            # ST-FIX F130: only the warning of the data set (spec: no error); the RobotTask is initialized,
+            # the data set is not synchronized (SyncModesValid in the HandleSync... methods)
             self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_REFERENCE_DYNAMICS_SYNC_MODE_INVALID, Overwrite=True)
 
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ParCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP] invalid SyncMode {1}', Para1=SYNC_MODE_TO_STRING(Value=self.ParCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP]))
-            # no further validation
-            return CheckParameterValid
         # EndRegion }}}
         return CheckParameterValid
 
@@ -1359,6 +1356,11 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
         FB_init: bool = False
 
         self.MyType = 'MC_RobotTaskFB'
+
+        # ST-FIX F132: identification of this instance (an online change keeps the old value)
+        if not bInCopyCode:
+            self._instanceCount = wrap(self._instanceCount + 1, 'UDINT')
+            self._instanceId = self._instanceCount
 
         # Create log entry
         self.CreateLogMessage(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='PLC started / restarted')
@@ -1477,6 +1479,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
             AxesGroup.Parameter.Rob.Parameter.DecceleratingSupported = self._exchangeConfiguration.OutCmd.DecceleratingSupported
             AxesGroup.Parameter.Rob.Parameter.ConstantVelocitySupported = self._exchangeConfiguration.OutCmd.ConstantVelocitySupported
             AxesGroup.Parameter.Rob.Parameter.RCWorkingHours = self._exchangeConfiguration.OutCmd.RCWorkingHours
+        elif self._stepCmd > 0:
+            # ST-FIX F151: while the RobotTask initializes, use the configuration taken at the enable
+            # (_parCfg, including the corrections of CheckParameterValid, e.g. F137); the input ParCfg is
+            # written again by the caller in every cycle and would change the telegram number during the start-up
+            copy_into(AxesGroup.Parameter.Plc.Parameter, self._parCfg.Plc.Parameter)
+            copy_into(AxesGroup.Parameter.Plc.OptionalCyclic, self._parCfg.Plc.OptionalCyclic)
+            copy_into(AxesGroup.Parameter.Rob.OptionalCyclic, self._parCfg.Rob.OptionalCyclic)
         else:
             copy_into(AxesGroup.Parameter.Plc.Parameter, self.ParCfg.Plc.Parameter)
             copy_into(AxesGroup.Parameter.Plc.OptionalCyclic, self.ParCfg.Plc.OptionalCyclic)
@@ -1807,7 +1816,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
         match self._stepSyncFrameData:
             case 0:
-                if self._parCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
+                # ST-FIX F130: an invalid sync mode (warning of CheckParameterValid) -> no synchronization of the data set
+                if (self._parCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION) | (not self.SyncModesValid(During=self._parCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.DURING_START_UP], After=self._parCfg.Plc.Parameter.SynchronizationModes.Frame[SyncTime.AFTER_START_UP])):
                     return
 
                 # wait for initialisation done
@@ -1990,7 +2000,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                                     self._stepSyncFrameData = 10  # -> jump to after startup
                             case _:
                                 # invalid sync mode for startup
-                                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_FRAME_DATA_SYNC_MODE_INVALID, Overwrite=True)  # ST-FIX F130: warning instead of the own error
                     else:
                         # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
                         if CheckTimeout(rTimer=self._timerSyncFrameData) == RobotLibraryConstants.OK:
@@ -2379,7 +2389,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
         match self._stepSyncLoadData:
             case 0:
-                if self._parCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
+                # ST-FIX F130: an invalid sync mode (warning of CheckParameterValid) -> no synchronization of the data set
+                if (self._parCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION) | (not self.SyncModesValid(During=self._parCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.DURING_START_UP], After=self._parCfg.Plc.Parameter.SynchronizationModes.Load[SyncTime.AFTER_START_UP])):
                     return
 
                 # wait for initialisation done
@@ -2567,7 +2578,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                                     self._stepSyncLoadData = 10  # -> jump to after startup
                             case _:
                                 # invalid sync mode for startup
-                                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_LOAD_DATA_SYNC_MODE_INVALID, Overwrite=True)  # ST-FIX F130: warning instead of the own error
                     else:
                         # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
                         if CheckTimeout(rTimer=self._timerSyncLoadData) == RobotLibraryConstants.OK:
@@ -2960,7 +2971,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
         match self._stepSyncDefaultDynamics:
             case 0:
-                if self._parCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
+                # ST-FIX F130: an invalid sync mode (warning of CheckParameterValid) -> no synchronization of the data set
+                if (self._parCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION) | (not self.SyncModesValid(During=self._parCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.DURING_START_UP], After=self._parCfg.Plc.Parameter.SynchronizationModes.DefaultDynamics[SyncTime.AFTER_START_UP])):
                     return
 
                 # wait for initialisation done
@@ -3096,7 +3108,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                                     self._stepSyncDefaultDynamics = 10  # -> jump to after startup
                             case _:
                                 # invalid sync mode for startup
-                                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_DEFAULT_DYNAMICS_SYNC_MODE_INVALID, Overwrite=True)  # ST-FIX F130: warning instead of the own error
                     else:
                         # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
                         if CheckTimeout(rTimer=self._timerSyncDefaultDynamics) == RobotLibraryConstants.OK:
@@ -3424,7 +3436,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
         match self._stepSyncReferenceDynamics:
             case 0:
-                if self._parCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
+                # ST-FIX F130: an invalid sync mode (warning of CheckParameterValid) -> no synchronization of the data set
+                if (self._parCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION) | (not self.SyncModesValid(During=self._parCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.DURING_START_UP], After=self._parCfg.Plc.Parameter.SynchronizationModes.ReferenceDynamics[SyncTime.AFTER_START_UP])):
                     return
 
                 # wait for initialisation done
@@ -3560,7 +3573,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                                     self._stepSyncReferenceDynamics = 10  # -> jump to after startup
                             case _:
                                 # invalid sync mode for startup
-                                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_REFERENCE_DYNAMICS_SYNC_MODE_INVALID, Overwrite=True)  # ST-FIX F130: warning instead of the own error
                     else:
                         # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
                         if CheckTimeout(rTimer=self._timerSyncReferenceDynamics) == RobotLibraryConstants.OK:
@@ -3884,12 +3897,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
         match self._stepSyncSWLimits:
             case 0:
-                if self._parCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
+                # ST-FIX F130: an invalid sync mode (warning of CheckParameterValid) -> no synchronization of the data set
+                if (self._parCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION) | (not self.SyncModesValid(During=self._parCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.DURING_START_UP], After=self._parCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP])):
                     return
 
                 # Check RC function for sync mode is available ?
                 if (AxesGroup.State.Initialized == True and AxesGroup.State.RobotData.RCSupportedFunctions.WriteRobotSWLimits == False) and ((self._parCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.DURING_START_UP] == SyncMode.CLIENT_TO_SERVER or self._parCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP] == SyncMode.CLIENT_TO_SERVER) or self._parCfg.Plc.Parameter.SynchronizationModes.SWLimits[SyncTime.AFTER_START_UP] == SyncMode.AUTOMATIC):
-                    self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=False)
+                    self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_SW_LIMITS_SYNC_MODE_INVALID, Overwrite=False)  # ST-FIX F130: warning instead of the own error
                     # Create log entry
                     self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='HandleSyncRobotSWLimits: SyncMode needs WriteRobotSWLimits function which is not available on RC', Para1='')
                     return
@@ -4029,7 +4043,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                                     self._stepSyncSWLimits = 10  # -> jump to after startup
                             case _:
                                 # invalid sync mode for startup
-                                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_SW_LIMITS_SYNC_MODE_INVALID, Overwrite=True)  # ST-FIX F130: warning instead of the own error
                     else:
                         # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
                         if CheckTimeout(rTimer=self._timerSyncSWLimits) == RobotLibraryConstants.OK:
@@ -4362,7 +4376,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
         match self._stepSyncToolData:
             case 0:
-                if self._parCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
+                # ST-FIX F130: an invalid sync mode (warning of CheckParameterValid) -> no synchronization of the data set
+                if (self._parCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION) | (not self.SyncModesValid(During=self._parCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.DURING_START_UP], After=self._parCfg.Plc.Parameter.SynchronizationModes.Tool[SyncTime.AFTER_START_UP])):
                     return
 
                 # wait for initialisation done
@@ -4544,7 +4559,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                                     self._stepSyncToolData = 10  # -> jump to after startup
                             case _:
                                 # invalid sync mode for startup
-                                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_TOOL_DATA_SYNC_MODE_INVALID, Overwrite=True)  # ST-FIX F130: warning instead of the own error
                     else:
                         # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
                         if CheckTimeout(rTimer=self._timerSyncToolData) == RobotLibraryConstants.OK:
@@ -4931,7 +4946,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
         match self._stepSyncWorkArea:
             case 0:
-                if self._parCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION:
+                # ST-FIX F130: an invalid sync mode (warning of CheckParameterValid) -> no synchronization of the data set
+                if (self._parCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.DURING_START_UP] == SyncMode.NO_SYNCHRONIZATION and self._parCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP] == SyncMode.NO_SYNCHRONIZATION) | (not self.SyncModesValid(During=self._parCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.DURING_START_UP], After=self._parCfg.Plc.Parameter.SynchronizationModes.WorkAreas[SyncTime.AFTER_START_UP])):
                     return
 
                 # wait for initialisation done
@@ -5114,7 +5130,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                                     self._stepSyncWorkArea = 10  # -> jump to after startup
                             case _:
                                 # invalid sync mode for startup
-                                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, Overwrite=True)
+                                self.SetWarning(WarningID=RobotLibraryWarningIdEnum.WARN_WORK_AREA_SYNC_MODE_INVALID, Overwrite=True)  # ST-FIX F130: warning instead of the own error
                     else:
                         # ST-FIX F94: the user resolves the conflict with the write / read functions - read the RC data again
                         if CheckTimeout(rTimer=self._timerSyncWorkArea) == RobotLibraryConstants.OK:
@@ -5484,8 +5500,7 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
             # Check Interface changed after being initialized ?
             if (self.Enable and self._lastTelegramState == TelegramState.INITIALIZED) and (self.Telegram.RobToPlc.Header.TelegramState == TelegramState.READY_FOR_INITIALIZATION or self.Telegram.RobToPlc.Header.TelegramState == TelegramState.READY_TO_RESUME):
-                # {warning 'ToDo'}
-                # SetError( ErrorID := RobotLibraryErrorIdEnum.ERR_INTERFACE_WAS_RESET_AFTER_INIT_0x80A7  , Overwrite := TRUE );
+                # the error 16#80A7 (interface reset after the initialization) is set in OnCall (ST-FIX F65)
                 pass
 
             # apply new telegram state
@@ -5606,7 +5621,8 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
 
         # Check AxesGroupID valid
         if self.AxesGroupID < RobotLibraryConstants.AXES_GROUP_ID_MIN or self.AxesGroupID > RobotLibraryConstants.AXES_GROUP_ID_MAX:
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_AXES_GROUP_ID, Overwrite=True)
+            # ST-FIX F138: client error of the specification (16#80AA, table 7-2) instead of the internal ID 3
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_AXESGROUP_ID_INVALID_0x80AA, Overwrite=True)
             return
 
         # Reset flag for initialization / Synchronization
@@ -5906,7 +5922,9 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                         self.ErrorAddTxt = trunc_str(CONCAT('_stepCmd = ', DINT_TO_STRING(self._stepCmd)), 40)
 
             case 8:
-                self.Initialized = not self.Error and (not self.Synchronized)  # {warning 'ToDo'}
+                # ST-FIX F131: Initialized stays TRUE while Synchronized (RI state "Synchronized" includes the
+                # initialization); otherwise CheckParameterChanged did not run while synchronized
+                self.Initialized = not self.Error
 
                 # ST-FIX F29: the next line overwrote the error check above
                 # Initialized := NOT Synchronized;
@@ -6010,6 +6028,13 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
     def SetWarning(self, *, WarningID: int = 0, Overwrite: bool = False) -> None:  # PUBLIC
         if not self.HasWarning or Overwrite:
             self.WarningID = WarningID
+
+    def SyncModesValid(self, *, During: SyncMode = SyncMode.NO_SYNCHRONIZATION, After: SyncMode = SyncMode.NO_SYNCHRONIZATION) -> bool:  # PRIVATE
+        """ST-FIX F130: TRUE when the synchronization modes of a data set are defined (during the start-up NO_SYNCHRONIZATION .. SERVER_TO_CLIENT, after the start-up also AUTOMATIC)"""
+        SyncModesValid: bool = False
+
+        SyncModesValid = ((During >= SyncMode.NO_SYNCHRONIZATION and During < SyncMode.AUTOMATIC) and After >= SyncMode.NO_SYNCHRONIZATION) and After <= SyncMode.AUTOMATIC
+        return SyncModesValid
 
     def _get_HasError(self) -> bool:
         HasError: bool = False

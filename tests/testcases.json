@@ -560,14 +560,14 @@
   "test": "tests/sdk/test_sync.py::test_automatic_during_start_up_is_rejected",
   "title": "AUTOMATIC is not available during the start-up (table 5-109): the RobotTask rejects the configuration.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "SDK-SYNC-007",
   "test": "tests/sdk/test_sync.py::test_undefined_sync_mode_is_rejected",
   "title": "An undefined synchronization mode (7) is rejected with ERR_SYNC_MODE_INVALID and the warning of the data set.",
   "refs": [],
-  "status": "active"
+  "status": "retired"
  },
  {
   "id": "SDK-SYNC-008",
@@ -706,6 +706,20 @@
   "id": "SDK-SYNC-027",
   "test": "tests/sdk/test_sync.py::test_plc_change_while_rc_data_are_read_automatic",
   "title": "AUTOMATIC: the PLC data are changed while the client reads the data changed on the RC - the PLC change is the most recent one (spec 5.6.7.2 \"Automatic\") and must not be lost (F107).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-028",
+  "test": "tests/sdk/test_sync.py::test_automatic_during_start_up_gives_the_mode_warning",
+  "title": "AUTOMATIC is not available during the start-up (table 5-109): only the mode warning of the data set (F130).",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "SDK-SYNC-029",
+  "test": "tests/sdk/test_sync.py::test_undefined_sync_mode_gives_the_mode_warning",
+  "title": "An undefined synchronization mode (7) gives only the mode warning of the data set, no error (F130).",
   "refs": [],
   "status": "active"
  },
@@ -3855,7 +3869,7 @@
  {
   "id": "PLC-SUBL-005",
   "test": "tests/sdk/validation/test_plc_subprogram_log.py::test_create_server_log_trigger_mode_with_listener_is_sent",
-  "title": "CreateServerLog in a trigger mode with ListenerID > 0 passes the client checks and is sent with that ListenerID.",
+  "title": "CreateServerLog in a trigger mode with ListenerID > 0 passes the client checks and is sent (trigger mode).",
   "refs": [],
   "status": "active"
  },

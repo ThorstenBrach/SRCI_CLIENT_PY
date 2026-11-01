@@ -451,7 +451,7 @@ class MC_ReadToolDataFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # {warning 'ToDo: value are swapped in comparation to Specification V1.3'}
+        # ST-FIX F27: ToolNo first, then DataChanged (table 6-190 of spec V1.5.9)
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
             # Get Response.ToolData.ToolNoReturn (ST-FIX F27)

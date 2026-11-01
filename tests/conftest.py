@@ -49,3 +49,12 @@ def pytest_sessionstart(session: pytest.Session) -> None:
             find_sdk_library()
         except SdkNotAvailableError as exc:
             raise pytest.UsageError(f"SRCI_REQUIRE_SDK is set, but {exc}") from None
+
+
+@pytest.fixture(autouse=True)
+def _reset_static_vars() -> None:
+    """Every test starts like after a PLC restart: initial values of all VAR_STAT (e.g. the
+    RobotTask instance register of F132)."""
+    from srci.iec.rt import reset_static_vars
+
+    reset_static_vars()

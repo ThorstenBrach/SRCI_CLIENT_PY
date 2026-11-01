@@ -489,6 +489,139 @@ class MC_WriteWorkAreaFB(RobotLibraryBaseExecuteFB):
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.J6Limit.UpperLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.J6Limit.UpperLimit))
             return CheckParameterValid
+
+        # ST-FIX F145: limits of the external axes E1..E6 were not checked (J1..J6 are)
+        # Check ParCmd.WorkAreaData.E1Limit.LowerLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E1Limit.LowerLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E1Limit.LowerLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E1Limit.LowerLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E1Limit.UpperLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E1Limit.UpperLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E1Limit.UpperLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E1Limit.UpperLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E2Limit.LowerLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E2Limit.LowerLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E2Limit.LowerLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E2Limit.LowerLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E2Limit.UpperLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E2Limit.UpperLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E2Limit.UpperLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E2Limit.UpperLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E3Limit.LowerLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E3Limit.LowerLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E3Limit.LowerLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E3Limit.LowerLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E3Limit.UpperLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E3Limit.UpperLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E3Limit.UpperLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E3Limit.UpperLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E4Limit.LowerLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E4Limit.LowerLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E4Limit.LowerLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E4Limit.LowerLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E4Limit.UpperLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E4Limit.UpperLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E4Limit.UpperLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E4Limit.UpperLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E5Limit.LowerLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E5Limit.LowerLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E5Limit.LowerLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E5Limit.LowerLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E5Limit.UpperLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E5Limit.UpperLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E5Limit.UpperLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E5Limit.UpperLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E6Limit.LowerLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E6Limit.LowerLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E6Limit.LowerLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E6Limit.LowerLimit))
+            return CheckParameterValid
+
+        # Check ParCmd.WorkAreaData.E6Limit.UpperLimit ?
+        if SysDepIsValidReal(Value=self.ParCmd.WorkAreaData.E6Limit.UpperLimit) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.E6Limit.UpperLimit = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.WorkAreaData.E6Limit.UpperLimit))
+            return CheckParameterValid
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL

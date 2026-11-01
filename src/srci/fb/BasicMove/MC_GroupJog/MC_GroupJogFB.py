@@ -146,7 +146,9 @@ class MC_GroupJogFB(RobotLibraryBaseEnableFB):
         # check parameter valid ?
         self._parameterValid = self.CheckParameterValid(AxesGroup=AxesGroup)
 
-        if self._parameterChanged and self._parameterValid or self._parameterUpdateInternal:
+        # ST-FIX F128: an invalid parameter while jogging stops the jog on the RC: the update is sent
+        # with the Enable bit FALSE (CreateCommandPayload: Enable AND NOT HasError), only once per change
+        if (self._parameterChanged and self._parameterValid or ((self._parameterChanged and (not self._parameterValid)) and self._stepCmd == 1)) or self._parameterUpdateInternal:
             # Create log entry for parameter changed event
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='NotifyParameterChanged Event {1}', Para1='')
 
@@ -254,7 +256,8 @@ class MC_GroupJogFB(RobotLibraryBaseEnableFB):
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority
 
-        self._command.Enable = self.Enable
+        # ST-FIX F128: with an error of the block (invalid parameter while jogging) the jog is disabled on the RC
+        self._command.Enable = self.Enable and (not self.HasError)
         self._command.Reserve = 0
         self._command.ToolNo = self._parCmd.ToolNo
         self._command.FrameNo = self._parCmd.FrameNo
@@ -633,7 +636,7 @@ class MC_GroupJogFB(RobotLibraryBaseEnableFB):
                     # Set Busy flag
                     self.Busy = True
                     # reset busy flag
-                    self.Enabled = False  # {warning 'ToDo: doit for all others the same'}
+                    self.Enabled = False  # ST-FIX F135: done for all enable FBs in RobotLibraryBaseEnableFB
                     # trigger parameter update to disable FB
                     self._parameterUpdateInternal = True
                     # reset the falling edge
@@ -763,4 +766,6 @@ class MC_GroupJogFB(RobotLibraryBaseEnableFB):
         self.Busy = False
         self.CommandBuffered = False
         self.ParameterAccepted = False
+        # ST-FIX F127: Active stayed TRUE after Enable FALSE
+        self.Active = False
         return Reset

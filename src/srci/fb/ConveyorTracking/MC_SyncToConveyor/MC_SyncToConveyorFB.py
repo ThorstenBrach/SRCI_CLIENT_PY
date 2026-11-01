@@ -42,7 +42,7 @@ from srci.functions.Common import CheckTimeout, SetTimeout
 from srci.functions.Convert.TO_STRING.SYNC_IN_MODE_TO_STRING import SYNC_IN_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
 from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, trunc_str, wrap
+from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, imod, trunc_str, wrap
 from srci.types import CmdMessageState, CmdType, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, SyncInMode, SyncToConveyorOutCmd, SyncToConveyorParCmd, SyncToConveyorRecvData, SyncToConveyorSendData, SystemTime
 
 if TYPE_CHECKING:
@@ -660,6 +660,11 @@ class MC_SyncToConveyorFB(RobotLibraryBaseEnableFB):
             case CmdMessageState.ERROR:
                 self.Error = True
                 self.Busy = False
+
+        # ST-FIX F147: parameters acknowledged by the RC also while the function is ACTIVE
+        # (response ParSeq = command ParSeq, ParSeq is 4 bit in the telegram)
+        if (State == CmdMessageState.ACTIVE) & (imod(self._response.ParSeq, 16) == imod(self._command.ParSeq, 16)):
+            self.ParameterAccepted = True
 
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:

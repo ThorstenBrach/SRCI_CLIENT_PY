@@ -312,7 +312,8 @@ class MC_CalculateToolFB(RobotLibraryBaseExecuteFB):
                 return CheckParameterValid
 
             # Check ParCmd.PositionsArray[x].E2 valid ?
-            if SysDepIsValidReal(Value=self.ParCmd.PositionsArray[_idx].E1) == False:
+            # ST-FIX F142: checked E1 instead of E2
+            if SysDepIsValidReal(Value=self.ParCmd.PositionsArray[_idx].E2) == False:
                 # Parameter not valid
                 CheckParameterValid = False
                 # Set error

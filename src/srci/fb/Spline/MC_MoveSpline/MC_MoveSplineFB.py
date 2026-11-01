@@ -224,10 +224,10 @@ class MC_MoveSplineFB(RobotLibraryBaseExecuteFB):
                 # Parameter not valid
                 CheckParameterValid = False
                 # Set error
-                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_JERK_INVALID, Overwrite=True)
+                # ST-FIX F112: blending parameter error instead of the jerk error, log the blending parameter, leave the method
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
                 # Create log entry
                 self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.BlendingParameter[{2}] = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.BlendingParameter[_idx]), Para2=DINT_TO_STRING(_idx))
-                break
                 return CheckParameterValid
 
         # Check ParCmd.MoveTime valid ?
@@ -373,7 +373,9 @@ class MC_MoveSplineFB(RobotLibraryBaseExecuteFB):
 
         if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
-            self.OutCmd.ActualIndex = 0  # {warning 'ToDo'}
+            # ActualIndex is an output of the FB (spec V1.5.9), but the response payload has no field for it
+            # (table 6-789 of spec V1.5.9) -> stays 0 (gap of the specification)
+            self.OutCmd.ActualIndex = 0
             self.OutCmd.Progress = PERCENT_UINT_TO_REAL(Value=self._response.Progress, IsOptional=True)
             self.OutCmd.RemainingDistance = self._response.RemainingDistance
 

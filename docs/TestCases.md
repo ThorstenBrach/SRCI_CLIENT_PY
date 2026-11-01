@@ -223,8 +223,6 @@ Synchronization of the user data against the SDK
 | SDK-SYNC-003 | AUTOMATIC after the start-up: a change on the PLC (the most recent change) is written to the RC. | 6 | `test_change_after_start_up_automatic` |
 | SDK-SYNC-004 | NO_SYNCHRONIZATION after the start-up: nothing is transferred, but the change is detected (Synchronized FALSE). | 6 | `test_change_after_start_up_without_synchronization` |
 | SDK-SYNC-005 | A data set disabled for synchronization (NO_SYNCHRONIZATION during and after the start-up) is not compared. | 1 | `test_change_of_a_data_set_without_synchronization` |
-| SDK-SYNC-006 | AUTOMATIC is not available during the start-up (table 5-109): the RobotTask rejects the configuration. | 6 | `test_automatic_during_start_up_is_rejected` |
-| SDK-SYNC-007 | An undefined synchronization mode (7) is rejected with ERR_SYNC_MODE_INVALID and the warning of the data set. | 12 | `test_undefined_sync_mode_is_rejected` |
 | SDK-SYNC-008 | A synchronization mode changed while the RobotTask runs is reported (info) and only used after a restart. | 24 | `test_sync_mode_changed_while_running` |
 | SDK-SYNC-009 | SERVER_TO_CLIENT during the start-up: different PLC data are overwritten with the RC data, then Synchronized. | 6 | `test_start_up_conflict_server_to_client` |
 | SDK-SYNC-010 | CLIENT_TO_SERVER during the start-up: different PLC data are written to the RC, then Synchronized. | 6 | `test_start_up_conflict_client_to_server` |
@@ -245,6 +243,8 @@ Synchronization of the user data against the SDK
 | SDK-SYNC-025 | NO_SYNCHRONIZATION after the start-up: a change on the RC side is neither read nor written, but detected (Synchronized FALSE, spec 5.6.7.3). | 6 | `test_rc_change_without_synchronization` |
 | SDK-SYNC-026 | AUTOMATIC: changed on the RC and on the PLC so that the client sees both changes at once - it cannot decide and reports the warning "both sides changed" (16#7013 ..., ST-FIX F58: only with AUTOMATIC); nothing is transferred until the user resolves it. | 6 | `test_both_sides_changed_automatic` |
 | SDK-SYNC-027 | AUTOMATIC: the PLC data are changed while the client reads the data changed on the RC - the PLC change is the most recent one (spec 5.6.7.2 "Automatic") and must not be lost (F107). | 6 | `test_plc_change_while_rc_data_are_read_automatic` |
+| SDK-SYNC-028 | AUTOMATIC is not available during the start-up (table 5-109): only the mode warning of the data set (F130). | 6 | `test_automatic_during_start_up_gives_the_mode_warning` |
+| SDK-SYNC-029 | An undefined synchronization mode (7) gives only the mode warning of the data set, no error (F130). | 12 | `test_undefined_sync_mode_gives_the_mode_warning` |
 
 ## SDK-RT
 
@@ -862,7 +862,7 @@ Validation Client: CallSubprogram, StopSubprogram, server logs
 | PLC-SUBL-002 | StopSubprogram with an undefined ProcessingMode, StopMode or SequenceFlag is rejected by the client. | 3 | `test_stop_subprogram_invalid_parameters` |
 | PLC-SUBL-003 | CreateServerLog with an invalid ProcessingMode / SequenceFlag / ListenerID combination is rejected by the client. | 8 | `test_create_server_log_invalid_parameters` |
 | PLC-SUBL-004 | CreateServerLog in a parallel trigger mode with ListenerID > 0 and a SequenceFlag is rejected with ERR_SEQFLAG_INVALID_IN_PROC_MODE. | 4 | `test_create_server_log_trigger_mode_with_sequence_flag` |
-| PLC-SUBL-005 | CreateServerLog in a trigger mode with ListenerID > 0 passes the client checks and is sent with that ListenerID. | 2 | `test_create_server_log_trigger_mode_with_listener_is_sent` |
+| PLC-SUBL-005 | CreateServerLog in a trigger mode with ListenerID > 0 passes the client checks and is sent (trigger mode). | 2 | `test_create_server_log_trigger_mode_with_listener_is_sent` |
 | PLC-SUBL-006 | ReadServerLog with an undefined ExportMode is rejected by the client with ERR_EXPORTMODE_NOT_EXIST. | 3 | `test_read_server_log_undefined_export_mode` |
 
 ## RC-UDP

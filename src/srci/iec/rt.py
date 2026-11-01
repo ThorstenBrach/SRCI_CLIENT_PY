@@ -65,6 +65,7 @@ __all__ = [
     "ROR",
     "UPPER_BOUND",
     "Ptr",
+    "StaticVar",
     "SysDepIsValidReal",
     "SysDepMemCmp",
     "SysDepMemCpy",
@@ -78,6 +79,8 @@ __all__ = [
     "mem_image",
     "mem_read",
     "new_value",
+    "ptr_eq",
+    "reset_static_vars",
     "set_bit",
     "sizeof_value",
     "st_for_end",
@@ -509,6 +512,50 @@ class Ptr:
         new, _ = _unpack(bytes(image), 0, self.type, current)
         if new is not current:
             self.value = new
+
+
+def ptr_eq(a: Ptr | None, b: Ptr | None) -> bool:
+    """``p1 = p2`` for two pointers: the same address (same target object, key and offset)."""
+    if a is None or b is None:
+        return a is b
+    if a is b:
+        return True
+    return a.owner is b.owner and a.key == b.key and a.offset == b.offset
+
+
+# ---------------------------------------------------------------------- VAR_STAT
+
+_STATIC_VARS: list[StaticVar] = []
+
+
+class StaticVar:
+    """``VAR_STAT``: one value shared by all instances of the function block that declares it.
+
+    Used as class attribute; ``self.x`` reads / writes the shared value. ``reset_static_vars``
+    restores the initial values (like a PLC restart, e.g. between tests).
+    """
+
+    def __init__(self, factory: Callable[[], Any]) -> None:
+        self._factory = factory
+        self._value: Any = factory()
+        _STATIC_VARS.append(self)
+
+    def __get__(self, obj: Any, objtype: Any = None) -> Any:
+        if obj is None:
+            return self
+        return self._value
+
+    def __set__(self, obj: Any, value: Any) -> None:
+        self._value = value
+
+    def reset(self) -> None:
+        self._value = self._factory()
+
+
+def reset_static_vars() -> None:
+    """Initial values for every ``VAR_STAT`` (PLC restart)."""
+    for v in _STATIC_VARS:
+        v.reset()
 
 
 class _ValuePtr(Ptr):

@@ -193,12 +193,6 @@ def test_robot_stays_enabled_when_data_change(sdk: SdkSimulator, clock: FakeCloc
     assert _robot_enabled(h) and sdk.enabled
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F129: MC_EnableRobotFB.CheckSynchronizationValid runs in every cycle while Enable is TRUE and sets "
-    "ERR_SYNC_STATE_PROHIBITS_COMMAND as soon as Synchronized is FALSE (any after-start-up mode set), independent "
-    "of SyncReaction - the block drops Enabled although the RC keeps the robot enabled (table 5-108)",
-)
 @pytest.mark.parametrize("reaction", REACTIONS_WITH_ENABLE_CHECK)
 def test_enable_block_stays_enabled_when_data_change(
     sdk: SdkSimulator, clock: FakeClock, reaction: int

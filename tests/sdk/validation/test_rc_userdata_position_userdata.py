@@ -126,8 +126,9 @@ def _ud(h: RobotTaskHarness, *names: str) -> dict[str, Any]:
         ((), 0, 18, 10),
         (("UseCartesianPosition",), 2, 20, 50),
         (("UseJointPosition",), 4, 18, 40),
-        (("UseCartesianPositionExt",), 512, 18, 30),
-        (("UseJointPositionExt",), 1024, 18, 30),
+        # the extended position switches the base position on (InfoID 16#6002 / 16#6003, ST-FIX F137)
+        (("UseCartesianPositionExt",), 514, 20, 70),
+        (("UseJointPositionExt",), 1028, 18, 60),
         (("UseJointPosition", "UseJointPositionExt"), 1028, 18, 60),
     ],
     ids=["default", "cartesian", "joint", "cartesian-ext", "joint-ext", "joint-and-ext"],
@@ -139,7 +140,8 @@ def test_telegram_number_and_cyclic_lengths(
 
     The RC accepts the layout (start-up completes). Cyclic area PLC->RC: 18 bytes (+2 for the
     ToolNo / FrameNo of the Cartesian position); RC->PLC: 10 bytes plus 40 (Cartesian),
-    30 (joint), 20 (each extended part). The telegram number PLC->RC stays 0.
+    30 (joint), 20 (each extended part). An extended part without its base position also activates
+    the base position. The telegram number PLC->RC stays 0.
     """
 
     def setup(h: RobotTaskHarness) -> None:

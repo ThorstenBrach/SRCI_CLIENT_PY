@@ -170,8 +170,9 @@ class MC_RedefineTrackingPosFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
         # ST-FIX F26
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -503,7 +504,8 @@ class MC_RedefineTrackingPosFB(RobotLibraryBaseExecuteFB):
             # Reset command outputs
             SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(RedefineTrackingPosOutCmd)), Value=0, DataLen=3)
 
-        if State == CmdMessageState.DONE:
+        # ST-FIX F149: copy the results also in ACTIVE (Trigger Multiple stays ACTIVE)
+        if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
             self.OutCmd.OriginID = self._response.OriginID
             self.OutCmd.InvocationCounter = self._response.InvocationCounter

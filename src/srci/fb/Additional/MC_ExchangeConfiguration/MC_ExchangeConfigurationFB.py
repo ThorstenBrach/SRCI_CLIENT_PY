@@ -46,7 +46,7 @@ from srci.functions.Convert.TO_STRING.DATA_IN_SYNC_TO_STRING import DATA_IN_SYNC
 from srci.functions.Convert.TO_STRING.LOG_LEVEL_TO_STRING import LOG_LEVEL_TO_STRING
 from srci.functions.Convert.TO_STRING.SYNC_REACTION_TO_STRING import SYNC_REACTION_TO_STRING
 from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, SINT_TO_USINT, UDINT_TO_STRING, UINT_TO_STRING, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, set_bit, trunc_str, wrap
+from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, imod, set_bit, trunc_str, wrap
 from srci.types import CmdMessageState, CmdType, ExchangeConfigurationOutCmd, ExchangeConfigurationParCmd, ExchangeConfigurationRecvData, ExchangeConfigurationSendData, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, SyncReaction, SystemTime
 
 if TYPE_CHECKING:
@@ -737,6 +737,11 @@ class MC_ExchangeConfigurationFB(RobotLibraryBaseEnableFB):
                 self.Busy = False
                 # ST-FIX F106: error response without payload
                 self.Enabled = False
+
+        # ST-FIX F147: parameters acknowledged by the RC also while the function is ACTIVE
+        # (response ParSeq = command ParSeq, ParSeq is 4 bit in the telegram)
+        if (State == CmdMessageState.ACTIVE) & (imod(self._response.ParSeq, 16) == imod(self._command.ParSeq, 16)):
+            self.ParameterAccepted = True
 
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:

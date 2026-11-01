@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING, Any
 import srci.types as _T
 from srci.fb._internal.BaseFBs.RobotLibraryBaseEnableFB import RobotLibraryBaseEnableFB
 from srci.iec.rt import copy_into, trunc_str
-from srci.types import ExecutionMode, PriorityLevel, Severity, WriteCallSubprogramCyclicOutCmd, WriteCallSubprogramCyclicParCmd
+from srci.types import ExecutionMode, PriorityLevel, RobotLibraryErrorIdEnum, Severity, WriteCallSubprogramCyclicOutCmd, WriteCallSubprogramCyclicParCmd
 
 if TYPE_CHECKING:
     from srci.interfaces.IMessageLogger import IMessageLogger
@@ -112,11 +112,47 @@ class MC_WriteCallSubprogramCyclicFB(RobotLibraryBaseEnableFB):
         # call base implementation
         super().OnExecRun(AxesGroup=AxesGroup)
 
+        # configures the optional cyclic data area of the message frame (applied with the next initialization)
         AxesGroup.Parameter.Plc.OptionalCyclic.UseCallSubprogram = self.Enable
 
-        # {warning 'ToDo: modify like MC_ReadActualPositionCyclic'}
-        self.Enabled = AxesGroup.CyclicOptional.PlcToRob.SubProgramData.Active
-        self.Busy = self.Enabled != self.Enable
+        # ST-FIX F136: step chain like MC_ReadCallSubprogramCyclicFB (spec 6.5.19): the function must be
+        # supported, "Enabled" while the cyclic area is active and "Data" is written only while enabled
+        match self._stepCmd:
 
-        copy_into(AxesGroup.CyclicOptional.PlcToRob.SubProgramData.Data, self.ParCmd.Data)
+            case 0:
+                if self._enable_R.Q and (not self.Error):
+                    # reset the rising edge
+                    self._enable_R()
+                    # Check function is supported ?
+                    if self.CheckFunctionSupported(AxesGroup=AxesGroup):
+                        # Reset all internal flags
+                        self.Reset()
+                        # set busy flag
+                        self.Busy = True
+                        # inc step counter
+                        self._stepCmd = self._stepCmd + 1
+
+            case 1:
+                if AxesGroup.CyclicOptional.PlcToRob.SubProgramData.Active:
+                    self.Busy = False
+                    self.Enabled = True
+                    # write the data to the RC
+                    copy_into(AxesGroup.CyclicOptional.PlcToRob.SubProgramData.Data, self.ParCmd.Data)
+
+                if self._enable_F.Q:
+                    # reset the falling edge
+                    self._enable_F()
+                    # inc step counter
+                    self._stepCmd = self._stepCmd + 1
+
+            case 2:
+                if not self.Enable:
+                    self.Reset()
+            case _:
+                # invalid step
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_STEP, Overwrite=True)
+
+        # Reset FB
+        if self._enable_R.Q or self._enable_F.Q:
+            self.Reset()
         return OnExecRun

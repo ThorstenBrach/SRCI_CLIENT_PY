@@ -137,10 +137,6 @@ def test_jog_both_directions_of_one_axis_rejected(
     assert sdk.joints[0] == 0.0
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F127: MC_GroupJogFB.Reset does not clear Active, it stays TRUE after Enable FALSE",
-)
 def test_jog_outputs_reset_after_disable(robot: RobotTaskHarness) -> None:
     """After Enable FALSE all GroupJog outputs are FALSE, Active included."""
     enable(robot)
@@ -151,10 +147,6 @@ def test_jog_outputs_reset_after_disable(robot: RobotTaskHarness) -> None:
     assert not any(v for k, v in state(j).items() if k != "ErrorID"), state(j)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F128: invalid ToolNo while jogging sets Error at once but the RC jog keeps moving until Enable FALSE",
-)
 def test_jog_invalid_tool_while_jogging(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
     """An invalid ToolNo while a direction key is pressed: the FB reports Error and the robot no longer moves."""
     enable(robot)

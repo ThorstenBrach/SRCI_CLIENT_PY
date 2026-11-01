@@ -184,7 +184,8 @@ class MC_ReadAnalogOutputFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error

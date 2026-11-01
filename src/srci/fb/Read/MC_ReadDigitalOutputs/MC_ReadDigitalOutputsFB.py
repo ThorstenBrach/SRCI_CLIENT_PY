@@ -183,8 +183,9 @@ class MC_ReadDigitalOutputsFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
         # ST-FIX F26
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error

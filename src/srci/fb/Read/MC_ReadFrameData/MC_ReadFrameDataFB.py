@@ -437,7 +437,7 @@ class MC_ReadFrameDataFB(RobotLibraryBaseExecuteFB):
             # inc parameter counter
             _parameterCnt = _parameterCnt + 1
 
-        # {warning 'ToDo: value are swapped in comparation to Specification V1.3'}
+        # ST-FIX F27: FrameNo first, then DataChanged (table 6-184 of spec V1.5.9)
         # Check payload remaining ?
         if ResponseData.IsPayloadRemaining:
             # Get Response.FrameNoReturn (ST-FIX F27)

@@ -226,7 +226,8 @@ class MC_WriteRobotReferenceDynamicsFB(RobotLibraryBaseExecuteFB):
         self._command.ParSeq = self._command.ParSeq
         self._command.Priority = self.Priority
 
-        copy_into(self._command.DynamicValues, self._parCmd.DynamicValues)  # {warning 'ToDo: Check if this is a mistake in the SRCI specification ? '}
+        # the reference dynamics are sent as REAL values, not as percentages (table 6-163)
+        copy_into(self._command.DynamicValues, self._parCmd.DynamicValues)
 
         # _command.Timestamp             := _parCmd.DynamicValues.Timestamp;
         # _command.VelocityReference     := REAL_TO_PERCENT_UINT(_parCmd.DynamicValues.VelocityReference     , IsOptional := FALSE);

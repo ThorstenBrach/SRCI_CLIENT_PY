@@ -174,7 +174,8 @@ class MC_CreateServerLogFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ProcessingMode defined ?
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -224,7 +225,8 @@ class MC_CreateServerLogFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # a ListenerID > 0 only with a trigger based ProcessingMode
-        if (self.ProcessingMode != ProcessingMode.DEACTIVATE and ~self.ProcessingMode & 255 >= ProcessingMode.TRIGGER_BUFFERED) and self.ParCmd.ListenerID > 0:
+        # ST-FIX F119: brackets - NOT binds stronger than >= (bitwise NOT of the INT, TRUE for every mode)
+        if (self.ProcessingMode != ProcessingMode.DEACTIVATE and (not self.ProcessingMode >= ProcessingMode.TRIGGER_BUFFERED)) and self.ParCmd.ListenerID > 0:
             # Parameter not valid
             CheckParameterValid = False
             # Set error

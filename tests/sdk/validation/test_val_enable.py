@@ -45,23 +45,11 @@ REFERENCE = {"MC_EnableRobotFB", "MC_GroupJogFB", "MC_ReturnToPrimaryFB"}
 PRECONDITION = {"MC_MoveSuperImposedDynamicFB"}
 NAMES = sorted(n for n, c in CLASSES.items() if hasattr(c(), "Enable") and n not in REFERENCE | PRECONDITION)
 UPDATE = [n for n in NAMES if hasattr(CLASSES[n](), "ParameterAccepted")]
-_F146 = (
-    "LIB-BUG F146: CheckParameterChanged returns at once for an empty ParCmd, so the internal update "
-    "with Enable FALSE is never sent: the block stays Enabled / Busy and the RC keeps the function enabled"
-)
-_F147 = (
-    "LIB-BUG F147: ParameterAccepted is set only for the RC states BUFFERED / BUFFERED_IN_PLANNER; an "
-    "enable function the RC answers ACTIVE at once, and every acknowledged parameter update, never shows it"
-)
 _SDK_ENABLE = (
     "SDK-GAP: the Enable FALSE of a parameter update is not evaluated by the SDK, the function stays ACTIVE "
     "(see the SDK notes of ST_FINDINGS, like ReturnToPrimary / F141)"
 )
 KNOWN: dict[tuple[str, str], str] = {
-    **{
-        (t, n): _F146 for n in ("MC_FreeDriveFB", "MC_PathAccuracyModeFB") for t in ("cycle", "again", "ends")
-    },
-    **{("accepted", n): _F147 for n in UPDATE},
     **{
         ("ends", n): _SDK_ENABLE
         for n in (

@@ -142,12 +142,6 @@ def test_undefined_config_mode_rejected(
     assert _expect_rejected_by_client(robot, sdk, _config_mode(robot, axes, value)) != 0
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F111: CheckParameterValid of MC_MoveLinearAbsoluteFB reports an undefined ParCmd.ConfigMode "
-    "with ERR_INVALID_PAR_CMD (16#0008); the client codes 16#8405 / 16#8406 / 16#8407 (ConfigMode "
-    "elbow / shoulder / wrist) are used for ParCmd.Position.Config instead (spec client error table, 6.3.2).",
-)
 @pytest.mark.parametrize("axis", CONFIG_AXES)
 def test_undefined_config_mode_error_id(robot: RobotTaskHarness, sdk: SdkSimulator, axis: str) -> None:
     """An undefined ConfigMode of one axis is rejected with the axis specific ErrorID ERR_CONFIGMODE_<axis>_INVALID."""

@@ -318,12 +318,6 @@ def test_invalid_mode_at_start_up_is_reported(
     assert data.get(h) == data.plc_value
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F130: an invalid SyncMode also sets the own (non-spec) error ERR_SYNC_MODE_INVALID and stops the "
-    "initialization; the spec only defines the warning WARN_*_SYNC_MODE_INVALID (16#7011 ...), the RobotTask "
-    "should stay initialized without error (MC_RobotTaskFB.CheckParameterValid)",
-)
 @pytest.mark.parametrize("data", DATA_SETS, ids=IDS)
 def test_invalid_mode_at_start_up_is_only_a_warning(
     sdk: SdkSimulator, clock: FakeClock, data: DataSet
@@ -681,12 +675,6 @@ def test_mode_changed_while_running_is_used_after_a_restart(
         assert data.get(h) == data.plc_value
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F131: MC_RobotTaskFB.CheckParameterChanged returns at once when Initialized is FALSE, and Initialized "
-    "is set to NOT Synchronized (OnExecRun) - a mode changed while synchronized is reported only after the "
-    "synchronization is lost",
-)
 def test_mode_change_is_reported_while_synchronized(sdk: SdkSimulator, clock: FakeClock) -> None:
     """A mode changed while the RobotTask is synchronized is reported with the info at once."""
     data = DATA_SETS[3]

@@ -38,7 +38,7 @@ import srci.types as _T
 from srci.fb._internal.BaseFBs.RobotLibraryBaseFB import RobotLibraryBaseFB
 from srci.fb._internal.Recv.RobotLibraryResponseDataFB import RobotLibraryResponseDataFB
 from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommandDataFB
-from srci.functions.Common import SetTimeout
+from srci.functions.Common import CheckTimeout, SetTimeout
 from srci.functions.Convert.Misc import CombineHalfSints, PERCENT_UINT_TO_REAL, REAL_TO_PERCENT_UINT
 from srci.functions.Convert.TO_STRING.ARM_CONFIG_ELBOW_TO_STRING import ARM_CONFIG_ELBOW_TO_STRING
 from srci.functions.Convert.TO_STRING.ARM_CONFIG_SHOULDER_TO_STRING import ARM_CONFIG_SHOULDER_TO_STRING
@@ -894,7 +894,22 @@ class MC_MoveSuperImposedDynamicFB(RobotLibraryBaseFB):
                         self._stepCmd = self._stepCmd + 1
 
             case 1:
-                if self._responseReceived:
+                # The payload has no Enable field: parameter update with execution mode Stop (abort request),
+                # the RC answers ABORTED / DONE (step 03)
+                if self._enable_F.Q:
+                    # function is no longer enabled
+                    self.Enabled = False
+                    # execution mode Stop for the parameter update
+                    self.ExecMode = ExecutionMode.STOP_PARALLEL_CONTINUOUS_TRIGGER
+                    # trigger parameter update to end the function
+                    self._parameterUpdateInternal = True
+                    # reset the falling edge
+                    self._enable_F()
+                    # set timeout
+                    SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
+                    # wait for the end of the function
+                    self._stepCmd = 3
+                elif self._responseReceived:
                     # reset response received flag
                     self._responseReceived = False
                     # update state flags
@@ -912,6 +927,25 @@ class MC_MoveSuperImposedDynamicFB(RobotLibraryBaseFB):
             case 2:
                 if not self.Enable:
                     self.Reset()
+
+            # ST-FIX F150: wait for the end of the function on the RC (ABORTED / DONE / ERROR) or timeout
+            case 3:
+                if self._responseReceived:
+                    # reset response received flag
+                    self._responseReceived = False
+                    # Error: keep it until the next enable
+                    if self._response.State == CmdMessageState.ERROR:
+                        self.OnUpdateStateFlags(State=self._response.State)
+                        # execution mode for the next enable
+                        self.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
+                    elif self._response.State >= CmdMessageState.DONE:
+                        self.Reset()
+                        # execution mode for the next enable
+                        self.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
+                elif CheckTimeout(rTimer=self._timerCmd) == RobotLibraryConstants.OK:
+                    self.Reset()
+                    # execution mode for the next enable
+                    self.ExecMode = ExecutionMode.SEQUENCE_PRIMARY
             case _:
                 # invalid step
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_STEP, Overwrite=True)

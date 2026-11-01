@@ -178,8 +178,9 @@ class MC_LoadMeasurementSequentialFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
         # ST-FIX F26
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -193,7 +194,8 @@ class MC_LoadMeasurementSequentialFB(RobotLibraryBaseExecuteFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_ABORTINGMODE_INVALID, Overwrite=True)
+            # ST-FIX F148: ProcessingMode error instead of the AbortingMode error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_PROCESSINGMODE_NOT_ALLOWED, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ProcessingMode = {1}', Para1=PROCESSING_MODE_TO_STRING(Value=self.ProcessingMode))
             return CheckParameterValid

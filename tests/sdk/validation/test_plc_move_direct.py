@@ -159,13 +159,6 @@ def test_second_edge_while_active_is_ignored(robot: RobotTaskHarness, sdk: SdkSi
     assert sdk.joints[0] == pytest.approx(200.0)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F114: a ParCmd change while the command is Busy but not yet sent turns the queued ACR "
-    "entry (state CREATED) into a parameter update (UPDATE_AVAILABLE); the command is never sent and "
-    "ends after the command timeout with ERR_TIMEOUT_CMD (ActiveCommandRegisterFB NotifyParameterChanged, "
-    "MC_MoveDirectAbsoluteFB.CheckParameterChanged; parameters are latched at the rising edge, spec 6.3.3.3)",
-)
 @pytest.mark.parametrize("new_edge", [False, True], ids=["execute_held", "execute_retriggered"])
 def test_position_changed_before_transmission(
     robot: RobotTaskHarness, sdk: SdkSimulator, new_edge: bool
@@ -263,13 +256,6 @@ CONFIG_ERRORS = {
 }
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F111: an undefined ParCmd.ConfigMode.<joint> is rejected with the generic ERR_INVALID_PAR_CMD "
-    "(16#0008) instead of the client ErrorID for ConfigMode ERR_CONFIGMODE_<JOINT>_INVALID 16#8405..16#8407 "
-    "(table 7-1 'commands using the parameter ConfigMode'); the library uses these IDs for Position.Config "
-    "(MC_MoveDirectAbsoluteFB.CheckParameterValid)",
-)
 @pytest.mark.parametrize(
     ("joints", "value"),
     [

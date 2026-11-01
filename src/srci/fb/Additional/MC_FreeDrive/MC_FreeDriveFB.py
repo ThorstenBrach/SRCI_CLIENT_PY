@@ -40,7 +40,7 @@ from srci.fb._internal.Recv.RobotLibraryResponseDataFB import RobotLibraryRespon
 from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommandDataFB
 from srci.functions.Common import CheckTimeout, SetTimeout
 from srci.iec.conv import BOOL_TO_STRING, DINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, trunc_str, wrap
+from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, imod, trunc_str, wrap
 from srci.types import CmdMessageState, CmdType, ExecutionMode, FreeDriveOutCmd, FreeDriveParCmd, FreeDriveRecvData, FreeDriveSendData, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, SystemTime
 
 if TYPE_CHECKING:
@@ -128,12 +128,14 @@ class MC_FreeDriveFB(RobotLibraryBaseEnableFB):
     def CheckParameterChanged(self, *, AxesGroup: _T.AxesGroup) -> bool:  # PROTECTED
         CheckParameterChanged: bool = False
 
-        # Check ParCmd Size is > 0, because MemCmp does not work correctly with size = 0
-        if 0 == 0 or self._stepCmd == 0:
+        # ST-FIX F146: an empty ParCmd must not skip the internal update (falling edge of Enable)
+        if self._stepCmd == 0:
             return CheckParameterChanged
 
-        # compare memory
-        self._parameterChanged = SysDepMemCmp(pData1=ADR(self, 'ParCmd', _iec.StructType(FreeDriveParCmd)), pData2=ADR(self, '_parCmd', _iec.StructType(FreeDriveParCmd)), DataLen=0) != RobotLibraryConstants.OK
+        # Check ParCmd Size is > 0, because MemCmp does not work correctly with size = 0
+        if 0 > 0:
+            # compare memory
+            self._parameterChanged = SysDepMemCmp(pData1=ADR(self, 'ParCmd', _iec.StructType(FreeDriveParCmd)), pData2=ADR(self, '_parCmd', _iec.StructType(FreeDriveParCmd)), DataLen=0) != RobotLibraryConstants.OK
 
         # check parameter valid ?
         self._parameterValid = self.CheckParameterValid(AxesGroup=AxesGroup)
@@ -418,6 +420,11 @@ class MC_FreeDriveFB(RobotLibraryBaseEnableFB):
                 self.Busy = False
                 # ST-FIX F106: error response without payload
                 self.Enabled = False
+
+        # ST-FIX F147: parameters acknowledged by the RC also while the function is ACTIVE
+        # (response ParSeq = command ParSeq, ParSeq is 4 bit in the telegram)
+        if (State == CmdMessageState.ACTIVE) & (imod(self._response.ParSeq, 16) == imod(self._command.ParSeq, 16)):
+            self.ParameterAccepted = True
 
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:

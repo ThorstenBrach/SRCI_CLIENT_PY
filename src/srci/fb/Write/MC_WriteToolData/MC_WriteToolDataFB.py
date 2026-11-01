@@ -180,8 +180,9 @@ class MC_WriteToolDataFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
         # ST-FIX F26
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -646,8 +647,10 @@ class MC_WriteToolDataFB(RobotLibraryBaseExecuteFB):
 
                     # Done, Aborted or Error ?
                     if self._response.State >= CmdMessageState.DONE:
-                        # Update the ToolData in user defined system datas
-                        AxesGroup.SystemData.UpdateToolData(Caller=self, SystemTime=AxesGroup.State.SystemTime, ToolNo=self._parCmd.ToolNo, ToolData=self._parCmd.ToolData)
+                        # ST-FIX F115: the user data are updated only when the RC has accepted the data (DONE)
+                        if self._response.State == CmdMessageState.DONE:
+                            # Update the ToolData in user defined system datas
+                            AxesGroup.SystemData.UpdateToolData(Caller=self, SystemTime=AxesGroup.State.SystemTime, ToolNo=self._parCmd.ToolNo, ToolData=self._parCmd.ToolData)
                         # set timeout
                         SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
                         # inc step counter

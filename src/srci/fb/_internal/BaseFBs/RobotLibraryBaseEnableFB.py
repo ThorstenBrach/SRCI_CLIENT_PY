@@ -88,6 +88,11 @@ class RobotLibraryBaseEnableFB(RobotLibraryBaseFB):
     def __body(self) -> None:
         super().__call__(AxesGroup=self.AxesGroup)
 
+        # ST-FIX F135: "Enabled" is reset with the falling edge of "Enable" as soon as possible
+        # (spec 5.5.10 output status), also while the FB still sends the deactivation to the RC
+        if not self.Enable:
+            self.Enabled = False
+
     def OnCall(self, *, AxesGroup: _T.AxesGroup) -> None:  # PROTECTED
         # internal return value
         _retVal: int = 0

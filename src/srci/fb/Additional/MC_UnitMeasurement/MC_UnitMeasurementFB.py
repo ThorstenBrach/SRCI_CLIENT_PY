@@ -44,7 +44,7 @@ from srci.functions.Convert.TO_STRING.MEASUREING_UNIT_MODE_TO_STRING import MEAS
 from srci.functions.Convert.TO_STRING.MEASURING_UNIT_MODE_TO_STRING import MEASURING_UNIT_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.TRIGGER_MODE_MEASUREMENT_TO_STRING import TRIGGER_MODE_MEASUREMENT_TO_STRING
 from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, trunc_str, wrap
+from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, imod, trunc_str, wrap
 from srci.types import CmdMessageState, CmdType, ExecutionMode, MeasuringUnitMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, SystemTime, TriggerModeMeasurement, UnitMeasurementOutCmd, UnitMeasurementParCmd, UnitMeasurementRecvData, UnitMeasurementSendData
 
 if TYPE_CHECKING:
@@ -546,8 +546,9 @@ class MC_UnitMeasurementFB(RobotLibraryBaseEnableFB):
                 self.CommandBuffered = True
                 self.ParameterAccepted = True
             # Currently active and in progress
+            # the response has no Enabled flag (table 6-826): enabled while the command is active
             case CmdMessageState.ACTIVE:
-                self.Enabled = True  # {warning 'ToDo: Indicator for Enabled'}
+                self.Enabled = True
             # Interrupted and awaiting continuation
             case CmdMessageState.INTERRUPTED:
                 pass
@@ -564,6 +565,11 @@ class MC_UnitMeasurementFB(RobotLibraryBaseEnableFB):
             case CmdMessageState.ERROR:
                 self.Error = True
                 self.Busy = False
+
+        # ST-FIX F147: parameters acknowledged by the RC also while the function is ACTIVE
+        # (response ParSeq = command ParSeq, ParSeq is 4 bit in the telegram)
+        if (State == CmdMessageState.ACTIVE) & (imod(self._response.ParSeq, 16) == imod(self._command.ParSeq, 16)):
+            self.ParameterAccepted = True
 
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:

@@ -356,6 +356,9 @@ class MC_ReadActualPositionCyclicFB(RobotLibraryBaseEnableFB):
                         self.OutCmd.JointPosition.J5 = self.OutCmd.JointPositionShort.J5
                         self.OutCmd.JointPositionShort.J6 = AxesGroup.CyclicOptional.RobToPlc.JointPosition.J6
                         self.OutCmd.JointPosition.J6 = self.OutCmd.JointPositionShort.J6
+                        # ST-FIX F123: the first external axis is part of the joint position (like E1 of the cartesian position)
+                        self.OutCmd.JointPositionShort.E1 = AxesGroup.CyclicOptional.RobToPlc.JointPosition.E1
+                        self.OutCmd.JointPosition.E1 = self.OutCmd.JointPositionShort.E1
 
                     # Set extended joint position
                     if self._parCmd.ReadJointPositionExt:

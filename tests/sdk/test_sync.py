@@ -417,29 +417,31 @@ def test_change_of_a_data_set_without_synchronization(sdk: SdkSimulator, clock: 
 
 
 @pytest.mark.parametrize("data", DATA_SETS, ids=IDS)
-def test_automatic_during_start_up_is_rejected(sdk: SdkSimulator, clock: FakeClock, data: DataSet) -> None:
-    """AUTOMATIC is not available during the start-up (table 5-109): the RobotTask rejects the configuration."""
+def test_automatic_during_start_up_gives_the_mode_warning(
+    sdk: SdkSimulator, clock: FakeClock, data: DataSet
+) -> None:
+    """AUTOMATIC is not available during the start-up (table 5-109): only the mode warning of the data set (F130)."""
     h = harness(sdk, clock, data, SyncMode.AUTOMATIC, SyncMode.AUTOMATIC)
-    h.run(300, until=lambda: bool(h.rt.Error))
-    assert h.rt.Error and h.rt.ErrorID == RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, h.history
+    h.run(300, until=lambda: bool(h.rt.WarningID))
+    h.run(50)
     assert h.rt.WarningID == data.mode_invalid
-    assert not h.rt.Initialized and not h.rt.Synchronized
+    assert not h.rt.Error and h.rt.Initialized and not h.rt.Synchronized, h.history
 
 
 @pytest.mark.parametrize(
     "time", [SyncTime.DURING_START_UP, SyncTime.AFTER_START_UP], ids=["start-up", "after"]
 )
 @pytest.mark.parametrize("data", DATA_SETS, ids=IDS)
-def test_undefined_sync_mode_is_rejected(
+def test_undefined_sync_mode_gives_the_mode_warning(
     sdk: SdkSimulator, clock: FakeClock, data: DataSet, time: SyncTime
 ) -> None:
-    """An undefined synchronization mode (7) is rejected with ERR_SYNC_MODE_INVALID and the warning of the data set."""
+    """An undefined synchronization mode (7) gives only the mode warning of the data set, no error (F130)."""
     h = harness(sdk, clock, data, SyncMode.CLIENT_TO_SERVER, SyncMode.CLIENT_TO_SERVER)
     getattr(h.cfg.Plc.Parameter.SynchronizationModes, data.name)[time] = 7
-    h.run(300, until=lambda: bool(h.rt.Error))
-    assert h.rt.Error and h.rt.ErrorID == RobotLibraryErrorIdEnum.ERR_SYNC_MODE_INVALID, h.history
+    h.run(300, until=lambda: bool(h.rt.WarningID))
+    h.run(50)
     assert h.rt.WarningID == data.mode_invalid
-    assert not h.rt.Initialized and not h.rt.Synchronized
+    assert not h.rt.Error and h.rt.Initialized, h.history
 
 
 @pytest.mark.parametrize(

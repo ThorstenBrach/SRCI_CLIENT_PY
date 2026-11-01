@@ -440,6 +440,18 @@ class MC_ShiftPositionFB(RobotLibraryBaseExecuteFB):
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.TransformationParameter_2 = {1}', Para1=REFERENCE_ELEMENT_TO_STRING(Value=self.ParCmd.TransformationParameter_2))
             return CheckParameterValid
+
+        # ST-FIX F144: RotationAngle was not checked
+        # Check ParCmd.RotationAngle valid ?
+        if SysDepIsValidReal(Value=self.ParCmd.RotationAngle) == False:
+            # Parameter not valid
+            CheckParameterValid = False
+            # Set error
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+
+            # Create log entry
+            self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.RotationAngle = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.RotationAngle))
+            return CheckParameterValid
         return CheckParameterValid
 
     def CreateCommandPayload(self, *, AxesGroup: _T.AxesGroup) -> RobotLibraryCommandDataFB:  # INTERNAL

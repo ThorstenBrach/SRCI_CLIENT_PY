@@ -107,23 +107,12 @@ TRIGGERED = {
 }
 # ActivateNextCommand ends the active motion of the sequence: that is its function (VAL-EFF)
 ENDS_THE_MOTION = {"MC_ActivateNextCommandFB"}
-_F148 = (
-    "LIB-BUG F148: CheckParameterValid of LoadMeasurementSequential sets ERR_ABORTINGMODE_INVALID "
-    "(16#8411) for a ProcessingMode that is not allowed instead of ERR_PROCESSINGMODE_NOT_ALLOWED (16#8603)"
-)
-_F149 = (
-    "LIB-BUG F149: OnApplyOutCmd copies InvocationCounter / OriginID only in state DONE; with Trigger "
-    "Multiple the command stays ACTIVE and OutCmd.InvocationCounter stays 0 (the read blocks copy it in ACTIVE)"
-)
 _TCP_VELOCITY = (
     "SPEC: the command values of ReadActualTCPVelocity (table 6-59) list the trigger modes and ListenerID, "
     "the CMD payload (table 6-63) has no EmitterID / ListenerID: the library follows the payload, the RC "
     "executes the command at once (see the notes on the specification of ST_FINDINGS)"
 )
 KNOWN: dict[tuple[str, str], str] = {
-    ("not-allowed", "MC_LoadMeasurementSequentialFB"): _F148,
-    ("multiple", "MC_ActivateNextCommandFB"): _F149,
-    ("multiple", "MC_RedefineTrackingPosFB"): _F149,
     ("once", "MC_ReadActualTCPVelocityFB"): _TCP_VELOCITY,
     ("multiple", "MC_ReadActualTCPVelocityFB"): _TCP_VELOCITY,
 }

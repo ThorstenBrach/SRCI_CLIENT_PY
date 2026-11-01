@@ -232,11 +232,6 @@ def _two_tasks(
     return h, second.rt
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F132: no check that an AxesGroup is used by one RobotTask only - ERR_AXESGROUP_INVALID (16#8007) "
-    "is defined but never set (MC_RobotTaskFB)",
-)
 @pytest.mark.parametrize("same_buffers", [True, False], ids=["same-telegrams", "other-telegrams"])
 def test_second_robot_task_on_the_same_axes_group(
     sdk: SdkSimulator, clock: FakeClock, same_buffers: bool
@@ -247,11 +242,6 @@ def test_second_robot_task_on_the_same_axes_group(
     assert h.rt.Initialized and not h.rt.Error
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F132: no check that the telegram buffers (periphery) are used by one RobotTask only - "
-    "ERR_PERIPHERY_INVALID (16#8008) is defined but never set (MC_RobotTaskFB)",
-)
 def test_second_robot_task_on_the_same_telegrams(sdk: SdkSimulator, clock: FakeClock) -> None:
     """A second RobotTask with other AxesGroup but the same telegram buffers is rejected with 16#8008."""
     h, second = _two_tasks(sdk, clock, same_group=False, same_buffers=True)

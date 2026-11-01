@@ -76,27 +76,7 @@ NOT_PARCMD = {
 }
 NUMBERS = re.compile(r"(Tool|Frame|Load|WorkArea|Conveyor|Reference)No$")
 INTEGER_TYPES = {"USINT": (0, 255), "SINT": (-128, 127), "UINT": (0, 65535), "INT": (-32768, 32767)}
-_F142 = "LIB-BUG F142: the check of PositionsArray[x].E2 tests E1, an invalid E2 is sent"
-_F143 = "LIB-BUG F143: BlendingParameter is not checked, an invalid value is sent"
-_F144 = "LIB-BUG F144: RotationAngle is not checked, an invalid value is sent"
-_F145 = "LIB-BUG F145: the limits of the external axes are not checked, an invalid value is sent"
-_UNCHECKED = (
-    [("MC_CalculateToolFB", f"PositionsArray[{i}].E2", _F142) for i in range(6)]
-    + [
-        (f"MC_MovePickPlace{k}FB", f"BlendingParameter[{i}]", _F143)
-        for k in ("Direct", "Linear")
-        for i in (0, 1)
-    ]
-    + [("MC_ShiftPositionFB", "RotationAngle", _F144)]
-    + [
-        ("MC_WriteWorkAreaFB", f"WorkAreaData.E{i}Limit.{b}Limit", _F145)
-        for i in range(1, 7)
-        for b in ("Lower", "Upper")
-    ]
-)
-KNOWN: dict[tuple[str, str, str], str] = {
-    (test, name, path): reason for name, path, reason in _UNCHECKED for test in ("nan",)
-}
+KNOWN: dict[tuple[str, str, str], str] = {}
 
 
 def _spec(name: str) -> list[dict[str, Any]]:

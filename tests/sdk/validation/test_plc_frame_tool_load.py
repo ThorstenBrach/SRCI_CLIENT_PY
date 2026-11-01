@@ -304,11 +304,6 @@ def _bad_load(h: RobotTaskHarness) -> tuple[Any, Any]:
     return wr, h.loads[4]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F115: MC_WriteFrameData/ToolData/LoadDataFB update the user data array for every final state "
-    "(State >= DONE, also ERROR and ABORTED); the read blocks only for DONE (ST-FIX F16)",
-)
 @pytest.mark.parametrize("make", [_bad_frame, _bad_tool, _bad_load], ids=["frame", "tool", "load"])
 def test_rejected_write_keeps_the_user_data(robot: RobotTaskHarness, make: Any) -> None:
     """A write the RC rejects with an error leaves the entry of the user data array (FrameData / ToolData /

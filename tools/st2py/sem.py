@@ -289,6 +289,9 @@ class TypeEnv:
     def named(self, name: str) -> SType:
         if name.upper() in ELEM_SIZE:
             return SElem(name.upper())
+        if name.upper() == "PVOID":
+            # TwinCAT: untyped pointer (POINTER TO BYTE)
+            return SPtr(SElem("BYTE"))
         canonical = self.canonical_type(name)
         if canonical is not None:
             r = self.gen.resolve(_derived(canonical))

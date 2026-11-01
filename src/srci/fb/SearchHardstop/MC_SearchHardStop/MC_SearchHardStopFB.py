@@ -484,7 +484,8 @@ class MC_SearchHardStopFB(RobotLibraryBaseExecuteFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # ST-FIX F111: an undefined ConfigMode has its own ErrorID (table 7-1)
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_CONFIGMODE_SHOULDER_INVALID, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ConfigMode.Shoulder = {1}', Para1=ARM_CONFIG_SHOULDER_TO_STRING(Value=self.ParCmd.ConfigMode.Shoulder))
             return CheckParameterValid
@@ -494,7 +495,8 @@ class MC_SearchHardStopFB(RobotLibraryBaseExecuteFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # ST-FIX F111: an undefined ConfigMode has its own ErrorID (table 7-1)
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_CONFIGMODE_ELBOW_INVALID, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ConfigMode.Elbow = {1}', Para1=ARM_CONFIG_ELBOW_TO_STRING(Value=self.ParCmd.ConfigMode.Elbow))
             return CheckParameterValid
@@ -504,7 +506,8 @@ class MC_SearchHardStopFB(RobotLibraryBaseExecuteFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # ST-FIX F111: an undefined ConfigMode has its own ErrorID (table 7-1)
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_CONFIGMODE_WRIST_INVALID, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ConfigMode.Wrist = {1}', Para1=ARM_CONFIG_WRIST_TO_STRING(Value=self.ParCmd.ConfigMode.Wrist))
             return CheckParameterValid

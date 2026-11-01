@@ -180,8 +180,9 @@ class MC_WriteLoadDataFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
         # ST-FIX F26
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -655,8 +656,10 @@ class MC_WriteLoadDataFB(RobotLibraryBaseExecuteFB):
 
                     # Done, Aborted or Error ?
                     if self._response.State >= CmdMessageState.DONE:
-                        # Update the LoadData in user defined system datas
-                        AxesGroup.SystemData.UpdateLoadData(Caller=self, SystemTime=AxesGroup.State.SystemTime, LoadNo=self._parCmd.LoadNo, LoadData=self._parCmd.LoadData)
+                        # ST-FIX F115: the user data are updated only when the RC has accepted the data (DONE)
+                        if self._response.State == CmdMessageState.DONE:
+                            # Update the LoadData in user defined system datas
+                            AxesGroup.SystemData.UpdateLoadData(Caller=self, SystemTime=AxesGroup.State.SystemTime, LoadNo=self._parCmd.LoadNo, LoadData=self._parCmd.LoadData)
                         # set timeout
                         SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
                         # inc step counter

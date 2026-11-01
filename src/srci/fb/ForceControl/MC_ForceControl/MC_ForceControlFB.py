@@ -45,7 +45,7 @@ from srci.functions.Convert.TO_STRING.REFERENCE_TYPE_TO_STRING import REFERENCE_
 from srci.functions.Convert.TO_STRING.SENSOR_CONNECTION_MODE_TO_STRING import SENSOR_CONNECTION_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
 from srci.iec.conv import BYTE_TO_STRING, DINT_TO_STRING, REAL_TO_STRING, UINT_TO_STRING, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, set_bit, st_for_end, trunc_str, wrap
+from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, imod, set_bit, st_for_end, trunc_str, wrap
 from srci.types import CmdMessageState, CmdType, ErrorReaction, ExecutionMode, ForceControlOutCmd, ForceControlParCmd, ForceControlRecvData, ForceControlSendData, MessageType, PriorityLevel, ReferenceType, RobotLibraryConstants, RobotLibraryErrorIdEnum, SensorConnectionMode, Severity, SystemTime
 
 if TYPE_CHECKING:
@@ -1304,6 +1304,11 @@ class MC_ForceControlFB(RobotLibraryBaseEnableFB):
                 self.Busy = False
                 # ST-FIX F106: error response without payload
                 self.Enabled = False
+
+        # ST-FIX F147: parameters acknowledged by the RC also while the function is ACTIVE
+        # (response ParSeq = command ParSeq, ParSeq is 4 bit in the telegram)
+        if (State == CmdMessageState.ACTIVE) & (imod(self._response.ParSeq, 16) == imod(self._command.ParSeq, 16)):
+            self.ParameterAccepted = True
 
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:

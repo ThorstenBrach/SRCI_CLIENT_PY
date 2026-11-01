@@ -55,7 +55,7 @@ from srci.functions.Convert.TO_STRING.REFERENCE_TYPE_TO_STRING import REFERENCE_
 from srci.functions.Convert.TO_STRING.SEQUENCE_FLAG_TO_STRING import SEQUENCE_FLAG_TO_STRING
 from srci.functions.Convert.TO_STRING.TURN_MODE_TO_STRING import TURN_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
-from srci.iec.conv import BOOL_TO_BYTE, BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UINT_TO_STRING, USINT_TO_STRING
+from srci.iec.conv import BOOL_TO_BYTE, BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UDINT_TO_DINT, UINT_TO_STRING, USINT_TO_STRING
 from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, st_for_end, trunc_str, wrap
 from srci.types import AbortingMode, AbortingModeEnum, ArmConfigElbow, ArmConfigShoulder, ArmConfigWrist, BlendingMode, CircMode, CircPlane, CmdMessageState, CmdType, ExecutionMode, MessageType, MoveCircularRelativeOutCmd, MoveCircularRelativeParCmd, MoveCircularRelativeRecvData, MoveCircularRelativeSendData, OriMode, PathChoice, PriorityLevel, ReferenceType, RobotLibraryConstants, RobotLibraryErrorIdEnum, SequenceFlag, SequenceFlagEnum, Severity, SystemTime, TurnMode
 
@@ -690,10 +690,10 @@ class MC_MoveCircularRelativeFB(RobotLibraryBaseExecuteFB):
                 # Parameter not valid
                 CheckParameterValid = False
                 # Set error
-                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_JERK_INVALID, Overwrite=True)
+                # ST-FIX F112: blending parameter error instead of the jerk error, log the blending parameter, leave the method
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
                 # Create log entry
-                self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.BlendingParameter[{2}] = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.JerkRate), Para2=DINT_TO_STRING(_idx))
-                break
+                self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.BlendingParameter[{2}] = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.BlendingParameter[_idx]), Para2=DINT_TO_STRING(_idx))
                 return CheckParameterValid
         else:
             _idx = st_for_end(0, 1)
@@ -723,7 +723,8 @@ class MC_MoveCircularRelativeFB(RobotLibraryBaseExecuteFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # ST-FIX F111: an undefined ConfigMode has its own ErrorID (table 7-1)
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_CONFIGMODE_SHOULDER_INVALID, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ConfigMode.Shoulder = {1}', Para1=ARM_CONFIG_SHOULDER_TO_STRING(Value=self.ParCmd.ConfigMode.Shoulder))
             return CheckParameterValid
@@ -733,7 +734,8 @@ class MC_MoveCircularRelativeFB(RobotLibraryBaseExecuteFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # ST-FIX F111: an undefined ConfigMode has its own ErrorID (table 7-1)
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_CONFIGMODE_ELBOW_INVALID, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ConfigMode.Elbow = {1}', Para1=ARM_CONFIG_ELBOW_TO_STRING(Value=self.ParCmd.ConfigMode.Elbow))
             return CheckParameterValid
@@ -743,7 +745,8 @@ class MC_MoveCircularRelativeFB(RobotLibraryBaseExecuteFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # ST-FIX F111: an undefined ConfigMode has its own ErrorID (table 7-1)
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_CONFIGMODE_WRIST_INVALID, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ConfigMode.Wrist = {1}', Para1=ARM_CONFIG_WRIST_TO_STRING(Value=self.ParCmd.ConfigMode.Wrist))
             return CheckParameterValid
@@ -1703,7 +1706,8 @@ class MC_MoveCircularRelativeFB(RobotLibraryBaseExecuteFB):
 
         if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
-            self.OutCmd.FollowID = self._response.OriginID
+            # ST-FIX F133: FollowID is the ID of the command in the ACR (spec 5.5.12.4), not the OriginID of the response
+            self.OutCmd.FollowID = UDINT_TO_DINT(self._uniqueID)
             self.OutCmd.Progress = PERCENT_UINT_TO_REAL(Value=self._response.Progress, IsOptional=True)
             self.OutCmd.RemainingDistance = self._response.RemainingDistance
 

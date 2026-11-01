@@ -41,7 +41,7 @@ from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommand
 from srci.functions.Common import SetTimeout
 from srci.functions.Convert.TO_STRING.ERROR_TRIGGER_MODE_TO_STRING import ERROR_TRIGGER_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.PROCESSING_MODE_TO_STRING import PROCESSING_MODE_TO_STRING
-from srci.iec.conv import BOOL_TO_STRING, DINT_TO_STRING, DWORD_TO_STRING, INT_TO_STRING, SINT_TO_STRING, USINT_TO_STRING
+from srci.iec.conv import BOOL_TO_STRING, DINT_TO_STRING, DWORD_TO_STRING, INT_TO_STRING, SINT_TO_STRING, UDINT_TO_DINT, USINT_TO_STRING
 from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
 from srci.types import CmdMessageState, CmdType, ErrorTriggerMode, ExecutionMode, MessageType, PriorityLevel, ProcessingMode, ProcessingModeEnum, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryParameter, SetTriggerErrorOutCmd, SetTriggerErrorParCmd, SetTriggerErrorRecvData, SetTriggerErrorSendData, Severity, SystemTime
 
@@ -168,8 +168,9 @@ class MC_SetTriggerErrorFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
         # ST-FIX F26
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -419,7 +420,8 @@ class MC_SetTriggerErrorFB(RobotLibraryBaseExecuteFB):
 
         if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
-            self.OutCmd.FollowID = self._response.OriginID
+            # ST-FIX F133: FollowID is the ID of the command in the ACR (spec 5.5.12.4), not the OriginID of the response
+            self.OutCmd.FollowID = UDINT_TO_DINT(self._uniqueID)
             self.OutCmd.OriginID = self._response.OriginID
             self.OutCmd.InvocationCounter = self._response.InvocationCounter
 

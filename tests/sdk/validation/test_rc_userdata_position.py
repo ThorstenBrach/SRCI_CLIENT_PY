@@ -521,12 +521,6 @@ def test_cyclic_coordinate_systems_follow_motions(sdk: SdkSimulator, field: str,
             _finish(h, mv)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F123: MC_ReadActualPositionCyclicFB copies only J1..J6 of the cyclic joint position "
-    "(OnExecRun step 1), the first external axis E1 (part of 'Receive joint position', spec "
-    "optional cyclic data) stays 0.0 although AxesGroup.CyclicOptional has it.",
-)
 def test_cyclic_joint_position(sdk: SdkSimulator) -> None:
     """Cyclic joint position: ReadingJointPosition, J1..J6 and E1 equal the robot position."""
     with _configured(sdk, _optional("UseJointPosition")) as h:

@@ -70,18 +70,6 @@ _GAP_BUFFERED = pytest.mark.xfail(
     "BUFFERED, so CommandBuffered is not set; an RC confirms the command with BUFFERED before it starts it "
     "(spec 5.6 command states, CallSubprogram interface: CommandBuffered mandatory)",
 )
-_BUG_PARAMETER_ACCEPTED = pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F120: MC_CallSubprogramFB never sets ParameterAccepted (OnUpdateStateFlags sets it for no "
-    "state, only Reset / CheckParameterChanged clear it); spec interface CallSubprogram: ParameterAccepted "
-    "is a mandatory output (parameters acknowledged by the RC)",
-)
-_BUG_INSTANCE_ID = pytest.mark.xfail(
-    strict=True,
-    reason="LIB-BUG F121: MC_CallSubprogramFB.OnApplyOutCmd writes OutCmd.InstanceID := 0 (marked ToDo); spec "
-    "interface CallSubprogram: InstanceID is a mandatory unique ID, the TargetID of StopSubprogram with "
-    "StopMode 1 (6.5.21). The response telegram (table 6-710) has no InstanceID, its source must be defined",
-)
 _GAP_RC_ERROR = pytest.mark.xfail(
     strict=True,
     reason="SDK-GAP: no stimulus for an error inside a running subprogram of the sequence; the simulated "
@@ -214,7 +202,6 @@ def test_call_reports_command_buffered(robot: RobotTaskHarness) -> None:
     assert order(seen, "Busy", "CommandBuffered", "Valid", "Done"), seen.flags
 
 
-@_BUG_PARAMETER_ACCEPTED
 def test_call_reports_parameter_accepted(robot: RobotTaskHarness) -> None:
     """CallSubprogram sets ParameterAccepted once the RC acknowledged the parameters of the running call."""
     cs = _call(robot, mode=CONTINUOUS, Execute=True)
@@ -223,7 +210,6 @@ def test_call_reports_parameter_accepted(robot: RobotTaskHarness) -> None:
     assert cs.ParameterAccepted, _flags(cs)
 
 
-@_BUG_INSTANCE_ID
 def test_call_instance_ids_are_unique(robot: RobotTaskHarness) -> None:
     """Two calls running at the same time report two different, non-zero InstanceIDs."""
     first = _call(robot, job=1, mode=CONTINUOUS, Execute=True)
@@ -440,7 +426,6 @@ def test_stop_all_subprograms(robot: RobotTaskHarness) -> None:
     assert first.CommandAborted and second.CommandAborted, (_flags(first), _flags(second))
 
 
-@_BUG_INSTANCE_ID
 def test_stop_by_instance_id(robot: RobotTaskHarness) -> None:
     """StopMode STOP_INSTANCE_ID with the InstanceID of the first call aborts only that call."""
     first = _call(robot, job=0, mode=CONTINUOUS, Execute=True)

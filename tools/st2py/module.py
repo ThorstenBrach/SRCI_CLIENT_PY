@@ -382,10 +382,23 @@ class ModuleEmitter(PouEmitter):
         self.scope = Scope(pou)
         self.shadow = set()
         out.add(0, "")
+        stat = [v for v in pou.vars if v.section == "stat"]
+        if stat:
+            # VAR_STAT: one value for all instances (class attribute)
+            out.add(1, "# VAR_STAT (shared by all instances)")
+            for v in stat:
+                for d in v.doc:
+                    out.add(1, f"# {d}")
+                t = self.type_of_decl(v)
+                factory = f"lambda: {src(self.default(t, v.init))}"
+                out.add(1, f"{py_name(v.name)} = {src(self.use_rt('StaticVar'))}({factory})")
+            out.add(0, "")
         out.add(1, "def _init_vars_(self) -> None:")
         section = None
         n = 0
         for v in pou.vars:
+            if v.section == "stat":
+                continue
             title = SECTION_TITLES.get(v.section, "VAR") + (" CONSTANT" if v.constant else "")
             if title != section:
                 out.add(2, f"# {title}")

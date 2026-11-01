@@ -181,8 +181,9 @@ class MC_WriteIntegersFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
         # ST-FIX F26
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -222,21 +223,8 @@ class MC_WriteIntegersFB(RobotLibraryBaseExecuteFB):
                 self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.Index[{2}] = {1}', Para1=USINT_TO_STRING(self.ParCmd.Index[_idx]), Para2=DINT_TO_STRING(_idx))
                 break
                 return CheckParameterValid
-        else:
-            _idx = st_for_end(0, 6)
 
-        for _idx in range(0, 7):
-            # Check ParCmd.Values[_idx] valid ?
-            if self.ParCmd.Values[_idx] < 0 or self.ParCmd.Values[_idx] > 4294967295:
-                # Parameter not valid
-                CheckParameterValid = False
-                # Set error
-                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
-                # Create log entry
-                self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.Values[{2}] = {1}', Para1=INT_TO_STRING(self.ParCmd.Values[_idx]), Para2=DINT_TO_STRING(_idx))
-                break
-                return CheckParameterValid
-
+        # ST-FIX F110: no range check of ParCmd.Values, the INT type limits the range (the unsigned check rejected negative values)
         # Check ParCmd.HighPriority valid ?
         if self.ParCmd.HighPriority != False and self.ParCmd.HighPriority != True:
             # Parameter not valid

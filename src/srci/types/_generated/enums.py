@@ -22,7 +22,7 @@
 
 """SRCI enumerations - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 2021bed3e05eb890)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 1c7c5d83772f8a44)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa
@@ -192,8 +192,6 @@ class RobotLibraryErrorIdEnum(_iec.IecIntEnum):
     """Invalid command parameter - see log file for details (LogLevel Error)"""
     ERR_SYNC_STATE_PROHIBITS_COMMAND = 9
     """Synchronisation state prohibits command execution"""
-    ERR_SYNC_MODE_INVALID = 10
-    """Synchronisation mode is invalid"""
     ERR_LOADNO_UNAVAILABLE = 11
     """
     Client Invalid parameter value - LoadNo not available on RC Commands using the parameter

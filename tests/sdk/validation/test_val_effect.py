@@ -63,14 +63,6 @@ MOVE_CYCLES = 100
 CART = ("X", "Y", "Z", "Rx", "Ry", "Rz")
 JOINT = ("J1", "J2", "J3", "J4", "J5", "J6")
 START = [10.0, 20.0, 30.0, 0.0, 0.0, 0.0] + [0.0] * 6
-_F110 = (
-    "LIB-BUG F110: CheckParameterValid of WriteIntegers rejects every negative value (UDINT range check), "
-    "Values is ARRAY OF INT"
-)
-_F150 = (
-    "LIB-BUG F150: MoveSuperImposedDynamic resets Busy / Active with the falling edge of Enable but keeps "
-    "Enabled TRUE and sends nothing: the superimposed function stays ACTIVE on the RC"
-)
 
 
 @contextmanager
@@ -231,7 +223,6 @@ def test_superimposed_dynamic_follows_the_offset() -> None:
         assert _run(h, "MC_ReadActualPositionFB").ActualCartesianPosition.X == pytest.approx(58.0)
 
 
-@pytest.mark.xfail(strict=True, reason=_F150)
 def test_superimposed_dynamic_disable() -> None:
     """Enable FALSE ends MoveSuperImposedDynamic: Enabled, Busy and Active FALSE without error."""
     with _robot([0.0] * 12) as (_, h):
@@ -263,7 +254,6 @@ ROUND_TRIPS = [
         {"Index": [1, 2, 3, 4, 5, 6, 7]},
         [-1, -22, 33, -32768, 55, 66, 77],
         id="integers-negative",
-        marks=pytest.mark.xfail(strict=True, reason=_F110),
     ),
     pytest.param(
         "MC_WriteRealsFB",

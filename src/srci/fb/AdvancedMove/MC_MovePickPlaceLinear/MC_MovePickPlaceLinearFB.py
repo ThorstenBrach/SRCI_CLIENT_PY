@@ -52,8 +52,8 @@ from srci.functions.Convert.TO_STRING.REFERENCE_TYPE_TO_STRING import REFERENCE_
 from srci.functions.Convert.TO_STRING.SEQUENCE_FLAG_TO_STRING import SEQUENCE_FLAG_TO_STRING
 from srci.functions.Convert.TO_STRING.TURN_MODE_TO_STRING import TURN_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
-from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UINT_TO_STRING, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, trunc_str, wrap
+from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UDINT_TO_DINT, UINT_TO_STRING, USINT_TO_STRING
+from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, st_for_end, trunc_str, wrap
 from srci.types import AbortingMode, AbortingModeEnum, ArmConfigElbow, ArmConfigShoulder, ArmConfigWrist, BlendingMode, CmdMessageState, CmdType, ExecutionMode, MessageType, MovePickPlaceLinearOutCmd, MovePickPlaceLinearParCmd, MovePickPlaceLinearRecvData, MovePickPlaceLinearSendData, OriMode, PriorityLevel, ReferenceType, RobotLibraryConstants, RobotLibraryErrorIdEnum, SequenceFlag, SequenceFlagEnum, Severity, SystemTime, TurnMode
 
 if TYPE_CHECKING:
@@ -629,12 +629,27 @@ class MC_MovePickPlaceLinearFB(RobotLibraryBaseExecuteFB):
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.OriMode = {1}', Para1=ORI_MODE_TO_STRING(Value=self.ParCmd.OriMode))
             return CheckParameterValid
 
+        # ST-FIX F143: BlendingParameter was not checked (like the other motion blocks)
+        for _idx in range(0, 2):
+            # Check ParCmd.BlendingParameter valid ?
+            if SysDepIsValidReal(Value=self.ParCmd.BlendingParameter[_idx]) == False:
+                # Parameter not valid
+                CheckParameterValid = False
+                # Set error
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+                # Create log entry
+                self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.BlendingParameter[{2}] = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.BlendingParameter[_idx]), Para2=DINT_TO_STRING(_idx))
+                return CheckParameterValid
+        else:
+            _idx = st_for_end(0, 1)
+
         # Check ParCmd.ConfigMode.Shoulder valid ?
         if (((self.ParCmd.ConfigMode.Shoulder != ArmConfigShoulder.USE_CONFIG and self.ParCmd.ConfigMode.Shoulder != ArmConfigShoulder.SAME) and self.ParCmd.ConfigMode.Shoulder != ArmConfigShoulder.FREE) and self.ParCmd.ConfigMode.Shoulder != ArmConfigShoulder.BACK) and self.ParCmd.ConfigMode.Shoulder != ArmConfigShoulder.FRONT:
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # ST-FIX F111: an undefined ConfigMode has its own ErrorID (table 7-1)
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_CONFIGMODE_SHOULDER_INVALID, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ConfigMode.Shoulder = {1}', Para1=ARM_CONFIG_SHOULDER_TO_STRING(Value=self.ParCmd.ConfigMode.Shoulder))
             return CheckParameterValid
@@ -644,7 +659,8 @@ class MC_MovePickPlaceLinearFB(RobotLibraryBaseExecuteFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # ST-FIX F111: an undefined ConfigMode has its own ErrorID (table 7-1)
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_CONFIGMODE_ELBOW_INVALID, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ConfigMode.Elbow = {1}', Para1=ARM_CONFIG_ELBOW_TO_STRING(Value=self.ParCmd.ConfigMode.Elbow))
             return CheckParameterValid
@@ -654,7 +670,8 @@ class MC_MovePickPlaceLinearFB(RobotLibraryBaseExecuteFB):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
-            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
+            # ST-FIX F111: an undefined ConfigMode has its own ErrorID (table 7-1)
+            self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_CONFIGMODE_WRIST_INVALID, Overwrite=True)
             # Create log entry
             self.CreateLogMessagePara1(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.ConfigMode.Wrist = {1}', Para1=ARM_CONFIG_WRIST_TO_STRING(Value=self.ParCmd.ConfigMode.Wrist))
             return CheckParameterValid
@@ -1540,7 +1557,8 @@ class MC_MovePickPlaceLinearFB(RobotLibraryBaseExecuteFB):
         if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
             self.OutCmd.Progress = PERCENT_UINT_TO_REAL(Value=self._response.Progress, IsOptional=True)
-            self.OutCmd.FollowID = self._response.OriginID
+            # ST-FIX F133: FollowID is the ID of the command in the ACR (spec 5.5.12.4), not the OriginID of the response
+            self.OutCmd.FollowID = UDINT_TO_DINT(self._uniqueID)
             self.OutCmd.RemainingDistance = self._response.RemainingDistance
 
     def OnExecRun(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED

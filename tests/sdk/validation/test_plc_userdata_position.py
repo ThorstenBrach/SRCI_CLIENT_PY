@@ -128,18 +128,7 @@ def test_read_invalid_tool_or_frame_rejected(
         (PM.BUFFERED, SF.NO_SEQUENCE, 0, E.ERR_SEQFLAG_INVALID_IN_PROC_MODE),
         (PM.ABORTING, SF.NO_SEQUENCE, 0, E.ERR_SEQFLAG_INVALID_IN_PROC_MODE),
         (PM.PARALLEL, 3, 0, E.ERR_SEQFLAG_NOT_ALLOWED),
-        pytest.param(
-            5,
-            SF.NO_SEQUENCE,
-            0,
-            E.ERR_PROCESSINGMODE_NOT_DEFINED,
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="LIB-BUG F122: MC_ReadActualPositionFB.CheckParameterValid reports a ProcessingMode "
-                "inside 0..14 that the spec does not define (4..8) as 16#8603 'not allowed' instead "
-                "of 16#8602 'not defined' (table 5-77 / 7-1); only values outside 0..14 give 16#8602.",
-            ),
-        ),
+        (5, SF.NO_SEQUENCE, 0, E.ERR_PROCESSINGMODE_NOT_DEFINED),
         (PM.TRIGGER_ONCE, SF.NO_SEQUENCE, 0, E.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO),
         (PM.TRIGGER_MULTIPLE, SF.NO_SEQUENCE, 0, E.ERR_LISTENERID_MUST_BE_GREATER_THAN_ZERO),
     ],

@@ -42,7 +42,7 @@ from srci.functions.Common import SetTimeout
 from srci.functions.Convert.TO_STRING.PROCESSING_MODE_TO_STRING import PROCESSING_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.SEQUENCE_FLAG_TO_STRING import SEQUENCE_FLAG_TO_STRING
 from srci.functions.String.StrReplace import StrReplace
-from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, SINT_TO_STRING, UINT_TO_STRING, USINT_TO_STRING
+from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, SINT_TO_STRING, UDINT_TO_DINT, UINT_TO_STRING, USINT_TO_STRING
 from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
 from srci.types import CallSubprogramOutCmd, CallSubprogramParCmd, CallSubprogramRecvData, CallSubprogramSendData, CmdMessageState, CmdType, ExecutionMode, MessageType, PriorityLevel, ProcessingMode, ProcessingModeEnum, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryParameter, SequenceFlag, SequenceFlagEnum, Severity, SystemTime
 
@@ -185,8 +185,9 @@ class MC_CallSubprogramFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
         # ST-FIX F26
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -441,9 +442,13 @@ class MC_CallSubprogramFB(RobotLibraryBaseExecuteFB):
             # Reset command outputs
             SysDepMemSet(pDest=ADR(self, 'OutCmd', _iec.StructType(CallSubprogramOutCmd)), Value=0, DataLen=type_size(_iec.StructType(CallSubprogramOutCmd)))
 
+        # ST-FIX F134: InstanceID is the ID of the command in the ACR (unique per instance of CallSubprogram),
+        # available while the subprogram runs so that StopSubprogram can stop this instance (StopMode 1)
+        if State != CmdMessageState.EMPTY:
+            self.OutCmd.InstanceID = UDINT_TO_DINT(self._uniqueID)
+
         if State == CmdMessageState.DONE:
             # Update results
-            self.OutCmd.InstanceID = 0  # {warning 'ToDo'}
             self.OutCmd.OriginID = self._response.OriginID
             self.OutCmd.InvocationCounter = self._response.InvocationCounter
             copy_into(self.OutCmd.ReturnData, self._response.ReturnData)
@@ -538,12 +543,16 @@ class MC_CallSubprogramFB(RobotLibraryBaseExecuteFB):
             # Buffered and awaiting execution
             case CmdMessageState.BUFFERED:
                 self.CommandBuffered = True
+                # ST-FIX F120: parameters acknowledged by the RC
+                self.ParameterAccepted = True
             # Buffered in planner for future execution
             case CmdMessageState.BUFFERED_IN_PLANNER:
                 self.CommandBuffered = True
+                # ST-FIX F120: parameters acknowledged by the RC
+                self.ParameterAccepted = True
             # Currently active and in progress
             case CmdMessageState.ACTIVE:
-                pass
+                self.ParameterAccepted = True
             # Interrupted and awaiting continuation
             case CmdMessageState.INTERRUPTED:
                 self.CommandInterrupted = True

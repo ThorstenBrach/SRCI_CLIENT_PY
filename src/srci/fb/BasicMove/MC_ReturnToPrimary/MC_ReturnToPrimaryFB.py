@@ -38,13 +38,13 @@ import srci.types as _T
 from srci.fb._internal.BaseFBs.RobotLibraryBaseFB import RobotLibraryBaseFB
 from srci.fb._internal.Recv.RobotLibraryResponseDataFB import RobotLibraryResponseDataFB
 from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommandDataFB
-from srci.functions.Common import SetTimeout
+from srci.functions.Common import CheckTimeout, SetTimeout
 from srci.functions.Convert.Misc import PERCENT_UINT_TO_REAL, REAL_TO_PERCENT_UINT
 from srci.functions.Convert.TO_STRING.RETURN_MODE_TO_STRING import RETURN_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.TRAJECTORY_MODE_TO_STRING import TRAJECTORY_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
-from srci.iec.conv import BOOL_TO_STRING, DINT_TO_STRING, REAL_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UINT_TO_STRING, UINT_TO_USINT, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, set_bit, trunc_str, wrap
+from srci.iec.conv import BOOL_TO_STRING, DINT_TO_STRING, REAL_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UINT_TO_STRING, USINT_TO_STRING
+from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, imod, set_bit, trunc_str, wrap
 from srci.iec.standard import F_TRIG, R_TRIG
 from srci.types import CmdMessageState, CmdType, ExecutionMode, MessageType, PriorityLevel, ReturnMode, ReturnToPrimaryOutCmd, ReturnToPrimaryParCmd, ReturnToPrimaryRecvData, ReturnToPrimarySendData, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, SystemTime, TrajectoryMode
 
@@ -329,7 +329,7 @@ class MC_ReturnToPrimaryFB(RobotLibraryBaseFB):
         # call base implementation to copy header to payload buffer
         CreateCommandPayload = super().CreateCommandPayload(AxesGroup=AxesGroup)
 
-        # {warning 'ToDo: Changes in Spec V1.5, which are different to Spec V1.3'}
+        # payload as table 6-332 of spec V1.5.9
         # Check parameter must be added ?
         if self.CheckAddParameter(PayloadPtr=CreateCommandPayload.PayloadPtr):
             # add command.VelocityRate
@@ -503,8 +503,9 @@ class MC_ReturnToPrimaryFB(RobotLibraryBaseFB):
             # Update results
             self.OutCmd.Progress = PERCENT_UINT_TO_REAL(Value=self._response.Progress, IsOptional=True)
             self.OutCmd.RemainingDistance = self._response.RemainingDistance
-            self.OutCmd.PrimaryPosToolNo = UINT_TO_USINT(self._response.PrimaryPosToolNo)  # {warning 'ToDo'}
-            self.OutCmd.PrimaryPosFrameNo = UINT_TO_USINT(self._response.PrimaryPosFrameNo)  # {warning 'ToDo'}
+            # ST-FIX F139: PrimaryPosToolNo / PrimaryPosFrameNo are USINT in the response (table 6-333)
+            self.OutCmd.PrimaryPosToolNo = self._response.PrimaryPosToolNo
+            self.OutCmd.PrimaryPosFrameNo = self._response.PrimaryPosFrameNo
 
     def OnExecRun(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
         OnExecRun: int = 0
@@ -565,9 +566,48 @@ class MC_ReturnToPrimaryFB(RobotLibraryBaseFB):
                         # inc step counter
                         self._stepCmd = self._stepCmd + 1
 
+                # ST-FIX F118: falling edge of Enable while the command runs -> send the Enable bit FALSE
+                # (parameter update with the next ParSeq) and wait for the end state of the RC instead of a reset
+                if self._enable_F.Q and self._stepCmd == 1:
+                    # reset the falling edge, so that the block is not reset below
+                    self._enable_F()
+                    # trigger parameter update with Enable = FALSE
+                    self._parameterUpdateInternal = True
+                    # set timeout
+                    SetTimeout(PT=self._timeoutCmd, rTimer=self._timerCmd)
+                    # wait for the end state of the RC
+                    self._stepCmd = 10
+
             case 2:
                 if not self.Enable:
                     self.Reset()
+
+            # ST-FIX F118: Enable FALSE was sent, wait until the RC has ended the command
+            case 10:
+                if self._responseReceived:
+                    # reset response received flag
+                    self._responseReceived = False
+                    # update state flags (CommandAborted / Done / Error for one cycle)
+                    self.OnUpdateStateFlags(State=self._response.State)
+                    # update command outputs
+                    self.OnApplyOutCmd(State=self._response.State)
+
+                    # Done, Aborted or Error ?
+                    if self._response.State >= CmdMessageState.DONE:
+                        # reset the block in the next cycle
+                        self._stepCmd = 11
+                    elif imod(self._response.ParSeq, 16) == imod(self._command.ParSeq, 16):
+                        # Create log entry
+                        self.CreateLogMessage(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.WARNING, MessageCode=0, MessageText='Enable FALSE confirmed by the RC, but the command was not ended -> block reset')
+                        self.Reset()
+
+                # no end state within the timeout or RobotTask not initialized -> reset
+                if (self._stepCmd == 10) & (CheckTimeout(rTimer=self._timerCmd) == RobotLibraryConstants.OK or not AxesGroup.State.Initialized):
+                    self.Reset()
+
+            # ST-FIX F118: the end state was shown for one cycle
+            case 11:
+                self.Reset()
             case _:
                 # invalid step
                 self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_STEP, Overwrite=True)
@@ -705,7 +745,7 @@ class MC_ReturnToPrimaryFB(RobotLibraryBaseFB):
         # dec remaining parameter(s)
         ParameterCnt = ParameterCnt - 1
         # Create log entry for PrimaryPosToolNo
-        self.CreateLogMessagePara1(Timestamp=Timestamp, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='Response.PrimaryPosToolNo = {1}', Para1=UINT_TO_STRING(self._response.PrimaryPosToolNo))
+        self.CreateLogMessagePara1(Timestamp=Timestamp, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='Response.PrimaryPosToolNo = {1}', Para1=USINT_TO_STRING(self._response.PrimaryPosToolNo))
 
         # Return if no parameter is remaining...
         if ParameterCnt == 0:
@@ -713,7 +753,7 @@ class MC_ReturnToPrimaryFB(RobotLibraryBaseFB):
         # dec remaining parameter(s)
         ParameterCnt = ParameterCnt - 1
         # Create log entry for PrimaryPosFrameNo
-        self.CreateLogMessagePara1(Timestamp=Timestamp, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='Response.PrimaryPosFrameNo = {1}', Para1=UINT_TO_STRING(self._response.PrimaryPosFrameNo))
+        self.CreateLogMessagePara1(Timestamp=Timestamp, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='Response.PrimaryPosFrameNo = {1}', Para1=USINT_TO_STRING(self._response.PrimaryPosFrameNo))
 
     def Reset(self) -> int:  # PROTECTED
         Reset: int = 0

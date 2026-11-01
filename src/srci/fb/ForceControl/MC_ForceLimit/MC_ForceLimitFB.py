@@ -42,8 +42,8 @@ from srci.functions.Common import CheckTimeout, SetTimeout
 from srci.functions.Convert.TO_STRING.CONNECTION_MODE_TO_STRING import CONNECTION_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.REFERENCE_TYPE_TO_STRING import REFERENCE_TYPE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
-from srci.iec.conv import BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, SINT_TO_USINT, USINT_TO_SINT, USINT_TO_STRING
-from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, set_bit, st_for_end, trunc_str, wrap
+from srci.iec.conv import BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, SINT_TO_USINT, UDINT_TO_DINT, USINT_TO_SINT, USINT_TO_STRING
+from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, bit, copy_into, copy_value, imod, set_bit, st_for_end, trunc_str, wrap
 from srci.types import CmdMessageState, CmdType, ConnectionMode, ExecutionMode, ForceLimitOutCmd, ForceLimitParCmd, ForceLimitRecvData, ForceLimitSendData, MessageType, PriorityLevel, ReferenceType, RobotLibraryConstants, RobotLibraryErrorIdEnum, Severity, SystemTime
 
 if TYPE_CHECKING:
@@ -556,7 +556,8 @@ class MC_ForceLimitFB(RobotLibraryBaseEnableFB):
             self.OutCmd.ForceStatus.SpecifiedForceLimitReached = bit(self._response.ForceStatus, 5)
             self.OutCmd.ForceStatus.Bit06 = bit(self._response.ForceStatus, 6)
             self.OutCmd.ForceStatus.Bit07 = bit(self._response.ForceStatus, 7)
-            self.OutCmd.FollowID = self._response.OriginID  # {warning 'ToDo'}
+            # ST-FIX F133: FollowID is the ID of the command in the ACR (spec 5.5.12.4), not the OriginID of the response
+            self.OutCmd.FollowID = UDINT_TO_DINT(self._uniqueID)
 
     def OnExecCancel(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED
         OnExecCancel: int = 0
@@ -771,6 +772,11 @@ class MC_ForceLimitFB(RobotLibraryBaseEnableFB):
                 self.Busy = False
                 # ST-FIX F106: error response without payload
                 self.Enabled = False
+
+        # ST-FIX F147: parameters acknowledged by the RC also while the function is ACTIVE
+        # (response ParSeq = command ParSeq, ParSeq is 4 bit in the telegram)
+        if (State == CmdMessageState.ACTIVE) & (imod(self._response.ParSeq, 16) == imod(self._command.ParSeq, 16)):
+            self.ParameterAccepted = True
 
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:

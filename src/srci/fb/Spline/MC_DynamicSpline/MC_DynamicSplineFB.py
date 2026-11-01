@@ -50,7 +50,7 @@ from srci.functions.Convert.TO_STRING.SEQUENCE_FLAG_TO_STRING import SEQUENCE_FL
 from srci.functions.Convert.TO_STRING.SPLINE_MODE_TO_STRING import SPLINE_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
 from srci.iec.conv import BOOL_TO_STRING, BYTE_TO_STRING, DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, TIME_TO_STRING, TIME_TO_UINT, UINT_TO_STRING, USINT_TO_STRING
-from srci.iec.rt import ADR, ADR_ELEM, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, st_for_end, trunc_str, type_size, wrap
+from srci.iec.rt import ADR, ADR_ELEM, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, imod, st_for_end, trunc_str, type_size, wrap
 from srci.types import AbortingMode, AbortingModeEnum, ArmConfigElbow, ArmConfigShoulder, ArmConfigWrist, BlendingMode, CmdMessageState, CmdType, DynamicSplineOutCmd, DynamicSplineParCmd, DynamicSplineRecvData, DynamicSplineSendData, ExecutionMode, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, RobotLibraryParameter, SequenceFlag, SequenceFlagEnum, Severity, SplineData, SplineMode, SystemTime
 
 if TYPE_CHECKING:
@@ -226,10 +226,10 @@ class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
                 # Parameter not valid
                 CheckParameterValid = False
                 # Set error
-                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_JERK_INVALID, Overwrite=True)
+                # ST-FIX F112: blending parameter error instead of the jerk error, log the blending parameter, leave the method
+                self.SetError(ErrorID=RobotLibraryErrorIdEnum.ERR_INVALID_PAR_CMD, Overwrite=True)
                 # Create log entry
                 self.CreateLogMessagePara2(Timestamp=AxesGroup.State.SystemTime, MessageType=MessageType.CMD, Severity=Severity.ERROR, MessageCode=self.ErrorID, MessageText='Invalid Parameter ParCmd.BlendingParameter[{2}] = {1}', Para1=VALID_REAL_TO_STRING(Value=self.ParCmd.BlendingParameter[_idx]), Para2=DINT_TO_STRING(_idx))
-                break
                 return CheckParameterValid
         else:
             _idx = st_for_end(0, 1)
@@ -1254,6 +1254,11 @@ class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
             case CmdMessageState.ERROR:
                 self.Error = True
                 self.Busy = False
+
+        # ST-FIX F147: parameters acknowledged by the RC also while the function is ACTIVE
+        # (response ParSeq = command ParSeq, ParSeq is 4 bit in the telegram)
+        if (State == CmdMessageState.ACTIVE) & (imod(self._response.ParSeq, 16) == imod(self._command.ParSeq, 16)):
+            self.ParameterAccepted = True
 
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:

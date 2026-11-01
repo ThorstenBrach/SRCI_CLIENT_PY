@@ -623,6 +623,12 @@ class PouEmitter:
                     if op not in ("=", "<>"):
                         raise EmitError(f"line {e.line}: pointer comparison {op}")
                     return R(py.Compare(left=x.node, ops=[cmp_op], comparators=[C(None)]), BOOL)
+            if isinstance(a.type, SPtr) and isinstance(b.type, SPtr):
+                # address comparison: ADR creates a new pointer object each time
+                if op not in ("=", "<>"):
+                    raise EmitError(f"line {e.line}: pointer comparison {op}")
+                eq = py.Call(func=self.use_rt("ptr_eq"), args=[a.node, b.node], keywords=[])
+                return R(eq if op == "=" else py.UnaryOp(op=py.Not(), operand=eq), BOOL)
             if isinstance(a.type, SPtr | SItf) and isinstance(b.type, SPtr | SItf):
                 cmp_op = py.Is() if op == "=" else py.IsNot()
                 return R(py.Compare(left=a.node, ops=[cmp_op], comparators=[b.node]), BOOL)

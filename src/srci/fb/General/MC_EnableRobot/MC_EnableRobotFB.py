@@ -142,8 +142,10 @@ class MC_EnableRobotFB(RobotLibraryBaseEnableFB):
         self._parameterChanged = SysDepMemCmp(pData1=ADR(self, 'ParCmd', _iec.StructType(EnableRobotParCmd)), pData2=ADR(self, '_parCmd', _iec.StructType(EnableRobotParCmd)), DataLen=3) != RobotLibraryConstants.OK
         # check parameter valid ?
         self._parameterValid = self.CheckParameterValid(AxesGroup=AxesGroup)
-        # check synchronization valid ?
-        self._synchronizationValid = self.CheckSynchronizationValid(AxesGroup=AxesGroup)
+        # ST-FIX F129: the synchronization is checked only at the start of the command (OnExecRun step 0);
+        # while the command runs the RC decides about a loss of the synchronization via SyncReaction (spec 5.6.7.5)
+        # _synchronizationValid := CheckSynchronizationValid( AxesGroup := AxesGroup );
+        self._synchronizationValid = True
 
         if (self._parameterChanged and self._parameterValid) and self._synchronizationValid or self._parameterUpdateInternal:
             # Create log entry for parameter changed event

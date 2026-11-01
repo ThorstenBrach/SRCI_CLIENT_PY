@@ -214,6 +214,9 @@ def parse_library(path: Path) -> Library:
         lib.function_blocks = {p.get("name", "") for p in pous if p.get("pouType") == "functionBlock"}
 
     for gv in root.iter(f"{NS}globalVars"):
+        if not gv.get("name"):
+            # VAR_STAT of a POU is exported as an unnamed globalVars block in its interface
+            continue
         consts: list[ConstDef] = []
         for v in gv.findall(f"{NS}variable"):
             t = v.find(f"{NS}type")

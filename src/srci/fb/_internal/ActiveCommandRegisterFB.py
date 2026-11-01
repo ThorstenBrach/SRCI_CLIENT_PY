@@ -449,7 +449,12 @@ class ActiveCommandRegisterFB(RobotLibraryLogFB):
         for _regIdx in range(1, RobotLibraryParameter.ACTIVE_CMD_REGISTER_ENTRIES_MAX + 1):
             # check unique ID found ?
             if self.Register[_regIdx].UniqueID == NotifyParameterChanged:
-                if self.Register[_regIdx].Command[self.ACTIVE_CMD].State != BufferStateCmd.SENDING and self.Register[_regIdx].Command[self.ACTIVE_CMD].State != BufferStateCmd.PROCESSED:
+                # ST-FIX F114: a parameter change before the command is sent (state CREATED) must not turn the new
+                # command into a parameter update (it was never sent): the command keeps the parameters of the rising edge
+                if self.Register[_regIdx].Command[self.ACTIVE_CMD].State == BufferStateCmd.CREATED:
+                    # Create log entry
+                    self.CreateLogMessagePara1(Timestamp=self.SystemTime, MessageType=MessageType.CMD, Severity=Severity.INFO, MessageCode=0, MessageText='ACR-ID [{1}]: Cmd-Parameter changed before the command was sent -> ignored', Para1=DINT_TO_STRING(_regIdx))
+                elif self.Register[_regIdx].Command[self.ACTIVE_CMD].State != BufferStateCmd.SENDING and self.Register[_regIdx].Command[self.ACTIVE_CMD].State != BufferStateCmd.PROCESSED:
                     # Check pointer is valid ?
                     if self.Register[_regIdx].pCommandFB is not None:
                         # add to send register

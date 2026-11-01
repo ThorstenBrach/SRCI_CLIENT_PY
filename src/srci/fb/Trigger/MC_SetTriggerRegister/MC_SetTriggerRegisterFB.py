@@ -42,7 +42,7 @@ from srci.functions.Common import SetTimeout
 from srci.functions.Convert.TO_STRING.PROCESSING_MODE_TO_STRING import PROCESSING_MODE_TO_STRING
 from srci.functions.Convert.TO_STRING.TRIGGER_MODE_IO_TO_STRING import TRIGGER_MODE_IO_TO_STRING
 from srci.functions.Convert.TO_STRING.VALID_REAL_TO_STRING import VALID_REAL_TO_STRING
-from srci.iec.conv import DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, USINT_TO_STRING
+from srci.iec.conv import DINT_TO_STRING, INT_TO_STRING, REAL_TO_STRING, SINT_TO_STRING, UDINT_TO_DINT, USINT_TO_STRING
 from srci.iec.rt import ADR, LIMIT, SysDepIsValidReal, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, trunc_str, wrap
 from srci.types import CmdMessageState, CmdType, ExecutionMode, MessageType, PriorityLevel, ProcessingMode, ProcessingModeEnum, RobotLibraryConstants, RobotLibraryErrorIdEnum, SetTriggerRegisterOutCmd, SetTriggerRegisterParCmd, SetTriggerRegisterRecvData, SetTriggerRegisterSendData, Severity, SystemTime, TriggerModeIo
 
@@ -169,8 +169,9 @@ class MC_SetTriggerRegisterFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.ProcessingMode defined ?
+        # ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
         # ST-FIX F26
-        if self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE:
+        if (self.ProcessingMode < ProcessingMode.BUFFERED or self.ProcessingMode > ProcessingMode.TRIGGER_MULTIPLE) or (self.ProcessingMode > ProcessingMode.CONTINUOUS and self.ProcessingMode < ProcessingMode.DEACTIVATE):
             # Parameter not valid
             CheckParameterValid = False
             # Set error
@@ -507,6 +508,8 @@ class MC_SetTriggerRegisterFB(RobotLibraryBaseExecuteFB):
         if State == CmdMessageState.ACTIVE or State == CmdMessageState.DONE:
             # Update results
             self.OutCmd.InvocationCounter = self._response.InvocationCounter
+            # ST-FIX F133: FollowID is the ID of the command in the ACR (spec 5.5.12.4), not the OriginID of the response
+            self.OutCmd.FollowID = UDINT_TO_DINT(self._uniqueID)
             self.OutCmd.OriginID = self._response.OriginID
 
     def OnExecRun(self, *, AxesGroup: _T.AxesGroup) -> int:  # PROTECTED

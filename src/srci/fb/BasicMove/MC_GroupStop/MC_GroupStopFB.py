@@ -39,7 +39,7 @@ from srci.fb._internal.BaseFBs.RobotLibraryBaseExecuteFB import RobotLibraryBase
 from srci.fb._internal.Recv.RobotLibraryResponseDataFB import RobotLibraryResponseDataFB
 from srci.fb._internal.Send.RobotLibraryCommandDataFB import RobotLibraryCommandDataFB
 from srci.functions.Common import SetTimeout
-from srci.iec.conv import DINT_TO_STRING
+from srci.iec.conv import DINT_TO_STRING, SINT_TO_USINT
 from srci.iec.rt import ADR, LIMIT, SysDepMemCmp, SysDepMemCpy, SysDepMemSet, copy_into, copy_value, trunc_str, wrap
 from srci.types import CmdMessageState, CmdType, ExecutionMode, GroupStopOutCmd, GroupStopParCmd, GroupStopRecvData, GroupStopSendData, MessageType, PriorityLevel, RobotLibraryConstants, RobotLibraryErrorIdEnum, SequenceFlag, Severity, SystemTime
 
@@ -291,7 +291,8 @@ class MC_GroupStopFB(RobotLibraryBaseExecuteFB):
         self.Active = State == CmdMessageState.ACTIVE
 
         # ST-FIX F32: output AbortedSequence
-        self.AbortedSequence = SequenceFlag(self._response.AbortedSequence)
+        # ST-FIX W01: explicit conversion, the response carries a SINT and SequenceFlag is based on USINT
+        self.AbortedSequence = SequenceFlag(SINT_TO_USINT(self._response.AbortedSequence))
 
     def ParseResponsePayload(self, *, ResponseData: RobotLibraryResponseDataFB | None = None, Timestamp: SystemTime | None = None) -> int:  # INTERNAL
         if ResponseData is None:
