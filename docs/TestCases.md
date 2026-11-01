@@ -57,6 +57,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [PLC-SYN](#plc-syn) | Validation Client: synchronization and RobotTask | 12 | 252 |
 | [RC-SAFE](#rc-safe) | Validation RC: brake test, safe referencing, safety functions | 28 | 59 |
 | [PLC-SAFE](#plc-safe) | Validation Client: brake test, safe referencing, safety functions | 4 | 8 |
+| [VAL-PAR](#val-par) | Validation of the blocks without reference set: parameters against the specification | 3 | 3471 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 61 | 430 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [OPCUA](#opcua) | OPC UA transport | 18 | 28 |
@@ -70,7 +71,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1336 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 223 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **1030** | **5976** |
+| | **Total** | **1033** | **9447** |
 
 ## Test methodology
 
@@ -1021,6 +1022,16 @@ Validation Client: brake test, safe referencing, safety functions
 | PLC-SAFE-002 | SafeReferencing with a tool number above the highest configured tool: Error ERR_TOOLNO_UNAVAILABLE. | 1 | `test_safe_referencing_unknown_tool_rejected` |
 | PLC-SAFE-003 | ReadSafeReferencePosition with index 0: Error ERR_INVALID_PAR_CMD, no command reaches the RC. | 1 | `test_read_reference_position_index_zero_rejected` |
 | PLC-SAFE-004 | The user defined command name is part of the message written for an RC error of the command. | 2 | `test_command_name_in_error_message` |
+
+## VAL-PAR
+
+Validation of the blocks without reference set: parameters against the specification
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| VAL-PAR-001 | A REAL parameter that is not a number (NaN) is rejected by the client: Error, nothing is sent. | 2945 | `test_real_not_a_number` |
+| VAL-PAR-002 | A value the specification lists for the parameter (or a bound of its range) is sent to the RC. | 418 | `test_specified_value_is_sent` |
+| VAL-PAR-003 | A value the specification marks as invalid, or above its values and ranges, ends with Error (client or RC). | 108 | `test_value_outside_the_specification_is_an_error` |
 
 ## SDK-LOOP
 

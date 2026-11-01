@@ -147,6 +147,11 @@ AREAS: list[tuple[str, str, str]] = [
         "PLC-SAFE",
         "Validation Client: brake test, safe referencing, safety functions",
     ),
+    (
+        "sdk/validation/test_val_parameters",
+        "VAL-PAR",
+        "Validation of the blocks without reference set: parameters against the specification",
+    ),
     ("sdk/", "SDK-LOOP", "SDK in the loop (simulator binding)"),
     ("tcp/", "TCP", "TCP transport"),
     ("opcua/", "OPCUA", "OPC UA transport"),

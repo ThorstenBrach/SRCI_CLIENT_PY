@@ -153,6 +153,10 @@ How to fix them in ST (exact ST diffs, generated from the corrections): [ST_Find
 | F139 | `MC_ReturnToPrimaryFB.OnApplyOutCmd` | `PrimaryPosToolNo` / `PrimaryPosFrameNo` converted with `UINT_TO_USINT` | table 6-333: USINT at bytes 10/11 | fixed in ST 2026-11-01 (type change only, no runtime test) |
 | F140 | `MC_RobotTaskFB.ParseRecvPayload` | the SEQ_ACK check covers only the first sequence | two sequences | fixed in ST 2026-11-01 |
 | F141 | `MC_ReturnToPrimaryFB.OnExecRun` step 10 (after F118) | with the SDK the block waits for an end state after Enable FALSE that never comes (Busy/Active stay TRUE, robot keeps moving) | figure 6-100 (6): Enable FALSE aborts the movement; **SDK gap**, see the SDK notes | workaround in ST 2026-11-01: block reset when the RC confirmed the update (ParSeq) without ending the command; **ToDo: remove when the SDK aborts** (TcUnit SDK_RTP_006/010) |
+| F142 | `MC_CalculateToolFB.CheckParameterValid` | the check "PositionsArray[x].E2 valid" tests E1 (copy error): NaN / infinity in E2 is sent to the RC | REAL parameters must be valid numbers (like every other position value of the block) | open (VAL-PAR, strict xfail) |
+| F143 | `MC_MovePickPlaceDirectFB`, `MC_MovePickPlaceLinearFB` `.CheckParameterValid` | BlendingParameter[0..1] is not checked: NaN / infinity is sent to the RC | the other motion blocks reject an invalid BlendingParameter | open (VAL-PAR, strict xfail) |
+| F144 | `MC_ShiftPositionFB.CheckParameterValid` | RotationAngle is not checked: NaN / infinity is sent to the RC | REAL parameters must be valid numbers | open (VAL-PAR, strict xfail) |
+| F145 | `MC_WriteWorkAreaFB.CheckParameterValid` | the limits of the external axes E1Limit..E6Limit (Lower/UpperLimit) are not checked, J1..J6 are: NaN / infinity is sent to the RC | REAL parameters must be valid numbers | open (VAL-PAR, strict xfail) |
 
 ## Notes on the SRCI SDK (simulation)
 

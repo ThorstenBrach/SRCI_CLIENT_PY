@@ -4707,6 +4707,27 @@
   "status": "active"
  },
  {
+  "id": "VAL-PAR-001",
+  "test": "tests/sdk/validation/test_val_parameters.py::test_real_not_a_number",
+  "title": "A REAL parameter that is not a number (NaN) is rejected by the client: Error, nothing is sent.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PAR-002",
+  "test": "tests/sdk/validation/test_val_parameters.py::test_specified_value_is_sent",
+  "title": "A value the specification lists for the parameter (or a bound of its range) is sent to the RC.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-PAR-003",
+  "test": "tests/sdk/validation/test_val_parameters.py::test_value_outside_the_specification_is_an_error",
+  "title": "A value the specification marks as invalid, or above its values and ranges, ends with Error (client or RC).",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-LOOP-001",
   "test": "tests/sdk/test_sdk_in_the_loop.py::test_sdk_library",
   "title": "The SDK simulator library is found and has the expected C API version",
