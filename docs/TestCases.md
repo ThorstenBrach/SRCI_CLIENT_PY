@@ -33,9 +33,33 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [SDK-SUB](#sdk-sub) | CallSubprogram / StopSubprogram as long running commands | 14 | 14 |
 | [SDK-RTP](#sdk-rtp) | ReturnToPrimary: progress, interruption, stop, disable | 9 | 10 |
 | [SDK-LOG](#sdk-log) | Server and client logs: CreateServerLog / ReadServerLog against the SDK | 14 | 14 |
+| [RC-MLIN](#rc-mlin) | Validation RC: MoveLinearAbsolute | 36 | 118 |
+| [PLC-MLIN](#plc-mlin) | Validation Client: MoveLinearAbsolute | 4 | 30 |
+| [RC-MDIR](#rc-mdir) | Validation RC: MoveDirectAbsolute | 32 | 118 |
+| [PLC-MDIR](#plc-mdir) | Validation Client: MoveDirectAbsolute | 12 | 31 |
+| [RC-MAX](#rc-max) | Validation RC: MoveAxesAbsolute | 31 | 86 |
+| [PLC-MAX](#plc-max) | Validation Client: MoveAxesAbsolute | 8 | 20 |
+| [RC-GRP](#rc-grp) | Validation RC: GroupStop, GroupInterrupt, GroupContinue, GroupReset | 28 | 37 |
+| [PLC-GRP](#plc-grp) | Validation Client: GroupStop, GroupInterrupt, GroupContinue, GroupReset | 2 | 6 |
+| [RC-SEQ](#rc-seq) | Validation RC: SetSequence, ReturnToPrimary, ChangeSpeedOverride | 43 | 98 |
+| [PLC-SEQ](#plc-seq) | Validation Client: SetSequence, ReturnToPrimary, ChangeSpeedOverride | 6 | 26 |
+| [RC-DATA](#rc-data) | Validation RC: frame, tool and load data | 25 | 98 |
+| [PLC-DATA](#plc-data) | Validation Client: frame, tool and load data | 10 | 54 |
+| [RC-DYN](#rc-dyn) | Validation RC: default/reference dynamics and software limits | 28 | 61 |
+| [PLC-DYN](#plc-dyn) | Validation Client: default/reference dynamics and software limits | 4 | 23 |
+| [RC-ENJ](#rc-enj) | Validation RC: EnableRobot, GroupJog, SetOperationMode, general behaviour | 47 | 80 |
+| [PLC-ENJ](#plc-enj) | Validation Client: EnableRobot, GroupJog, SetOperationMode, general behaviour | 7 | 11 |
+| [RC-SUBL](#rc-subl) | Validation RC: CallSubprogram, StopSubprogram, server logs | 34 | 50 |
+| [PLC-SUBL](#plc-subl) | Validation Client: CallSubprogram, StopSubprogram, server logs | 6 | 30 |
+| [RC-UDP](#rc-udp) | Validation RC: robot user data, ReadActualPosition (single and cyclic) | 53 | 92 |
+| [PLC-UDP](#plc-udp) | Validation Client: robot user data, ReadActualPosition (single and cyclic) | 7 | 26 |
+| [RC-SYN](#rc-syn) | Validation RC: synchronization and RobotTask | 16 | 29 |
+| [PLC-SYN](#plc-syn) | Validation Client: synchronization and RobotTask | 12 | 252 |
+| [RC-SAFE](#rc-safe) | Validation RC: brake test, safe referencing, safety functions | 28 | 59 |
+| [PLC-SAFE](#plc-safe) | Validation Client: brake test, safe referencing, safety functions | 4 | 8 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 61 | 430 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
-| [OPCUA](#opcua) | OPC UA transport | 18 | 28 |
+| [OPCUA](#opcua) | OPC UA transport | 18 | 0 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 121 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
 | [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 68 | 154 |
@@ -46,7 +70,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1336 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 223 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **547** | **4533** |
+| | **Total** | **1030** | **5948** |
 
 ## Test methodology
 
@@ -347,6 +371,657 @@ Server and client logs: CreateServerLog / ReadServerLog against the SDK
 | SDK-LOG-013 | New rising edge of Execute during the transfer: the transfer starts again, LogFile from the start. | 1 | `test_read_server_log_restart` |
 | SDK-LOG-014 | ProcessingMode CONTINUOUS is not allowed for CreateServerLog: client error, nothing sent. | 1 | `test_create_server_log_continuous_rejected` |
 
+## RC-MLIN
+
+Validation RC: MoveLinearAbsolute
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-MLIN-001 | A valid MoveLinearAbsolute with Execute held runs Busy, CommandBuffered, Active, Done and reaches the target. | 1 | `test_reaches_target_with_progress` |
+| RC-MLIN-002 | With the robot not enabled a MoveLinearAbsolute is buffered but neither becomes active nor moves the robot. | 1 | `test_robot_not_enabled_no_motion` |
+| RC-MLIN-003 | A new rising edge on Execute while the motion is active does not start a second command; the first motion ends with Done. | 1 | `test_second_edge_while_active_same_target` |
+| RC-MLIN-004 | Fifty rising edges on Execute while the motion is active neither fill a buffer nor raise an error; the motion ends with Done. | 1 | `test_many_edges_while_active` |
+| RC-MLIN-005 | A changed target together with a new rising edge while the motion is active is ignored; the robot ends at the first target. | 1 | `test_second_edge_with_new_target_is_ignored` |
+| RC-MLIN-006 | A motion fault during the movement stops the robot before the target and ends the command with Error or CommandInterrupted. | 3 | `test_motion_fault_during_motion` |
+| RC-MLIN-007 | Four commands, the third with AbortingMode ABORT: the active and the buffered command are aborted, the third and fourth end with Done. | 1 | `test_aborting_command_discards_buffered` |
+| RC-MLIN-008 | Three commands with AbortingMode ABORT started after the first one is active: the first two are aborted, the last one ends with Done. | 1 | `test_aborting_commands_in_a_row` |
+| RC-MLIN-009 | GroupInterrupt during the motion resets Active and sets CommandInterrupted; after GroupContinue the motion ends with Done at the target. | 1 | `test_interrupt_and_continue` |
+| RC-MLIN-010 | GroupStop after GroupInterrupt ends the interrupted motion with CommandAborted; the robot stays where it stopped. | 1 | `test_interrupt_and_stop` |
+| RC-MLIN-011 | Disabling the robot during the motion resets Active and sets CommandInterrupted; the command stays buffered. | 1 | `test_disable_during_motion` |
+| RC-MLIN-012 | A MoveLinearAbsolute started while the robot is enabled and interrupted is buffered and does not move; after GroupContinue it ends with Done. | 1 | `test_start_while_interrupted` |
+| RC-MLIN-013 | With SequenceFlag PRIMARY the command runs in the primary sequence to Done; the secondary sequence stays inactive. | 1 | `test_primary_sequence_flag` |
+| RC-MLIN-014 | A primary command started while the secondary sequence is active is buffered without motion; after returning to the primary sequence and GroupContinue it ends with Done. | 1 | `test_primary_command_waits_while_secondary_active` |
+| RC-MLIN-015 | After switching to the secondary sequence and GroupContinue a command with SequenceFlag SECONDARY runs to Done. | 1 | `test_secondary_command_in_secondary_sequence` |
+| RC-MLIN-016 | Switching to the secondary sequence during a primary motion interrupts it; back in the primary sequence GroupContinue finishes both primary commands. | 1 | `test_change_sequence_during_motion_then_continue` |
+| RC-MLIN-017 | Secondary commands started after the return to the primary sequence end with Error ERR_SECONDARY_SEQUENCE_NOT_ACTIVE; the primary commands finish after GroupContinue. | 1 | `test_secondary_commands_after_return_to_primary` |
+| RC-MLIN-018 | A command with SequenceFlag SECONDARY while the primary sequence is active ends with Error ERR_SECONDARY_SEQUENCE_NOT_ACTIVE (16#8F16) without motion. | 1 | `test_secondary_flag_without_secondary_sequence` |
+| RC-MLIN-019 | Ten short MoveLinearAbsolute commands, each started when the previous one is buffered, all end with Done in order; each one gets Active only after its predecessor is Done. | 2 | `test_ten_short_commands_buffered` |
+| RC-MLIN-020 | MoveLinearAbsolute with a dynamics rate of -25 %, 0 % or 100 % reaches the target with Done; the RC receives the default, the minimum or 100 %. | 12 | `test_dynamics_rate_accepted` |
+| RC-MLIN-021 | A motion with a dynamics rate of 5 % takes longer than the same distance with 95 %. | 4 | `test_dynamics_rate_changes_duration` |
+| RC-MLIN-022 | MoveLinearAbsolute with a Time on an RC without the optional Time parameter ends with Error ERR_OPTIONAL_PARAM_TIME_NOT_SUPPORTED and no motion. | 1 | `test_move_time_not_supported_rejected` |
+| RC-MLIN-023 | Two motions with the same Time and different VelocityRate take the same time, given by Time. | 1 | `test_move_time_defines_duration` |
+| RC-MLIN-024 | A single MoveLinearAbsolute with a supported blending mode and any blending parameters has no successor and ends with Done exactly at the target. | 16 | `test_blending_single_command_stops_at_target` |
+| RC-MLIN-025 | A blending mode the RC does not offer (optional) ends with Error ERR_OPTIONAL_PARAM_BLENDING_MODE_NOT_SUPPORTED without motion. | 12 | `test_blending_mode_not_offered_rejected` |
+| RC-MLIN-026 | Two commands, the first with blending: the second is buffered and gets Active only after the first is Done; both end with Done at the second target. | 18 | `test_blending_into_second_command` |
+| RC-MLIN-027 | A second command with AbortingMode ABORT started while a blended first command is active aborts it and ends with Done at its own target. | 1 | `test_blending_with_aborting_second_command` |
+| RC-MLIN-028 | MoveLinearAbsolute after a MoveDirectAbsolute with ConfigMode SAME, FREE or an explicit configuration ends with Done; the robot keeps or takes the expected configuration. | 7 | `test_config_mode_accepted` |
+| RC-MLIN-029 | MoveLinearAbsolute with ConfigMode USE_CONFIG or an explicit configuration ends with the commanded configuration at the target. | 7 | `test_config_mode_applied` |
+| RC-MLIN-030 | With TurnMode FREE or SAME the turn number of the target is not used; the command ends with Done at the target. | 4 | `test_turn_mode_ignores_turn_number` |
+| RC-MLIN-031 | With TurnMode USE_TURN_NUMBER a reachable turn number is passed to the RC and the command ends with Done. | 1 | `test_turn_mode_use_turn_number` |
+| RC-MLIN-032 | With TurnMode USE_TURN_NUMBER and a turn number outside the axis range the command ends with Error and the robot does not move. | 1 | `test_turn_mode_use_turn_number_not_reachable` |
+| RC-MLIN-033 | MoveLinearAbsolute with a changed orientation and OriMode linear or joint interpolated ends with Done at the target pose. | 2 | `test_ori_mode_interpolated` |
+| RC-MLIN-034 | OriMode FIX or PATH on an RC that does not offer them (optional) ends with Error ERR_OPTIONAL_PARAM_ORI_MODE_NOT_SUPPORTED without motion. | 4 | `test_ori_mode_not_offered_rejected` |
+| RC-MLIN-035 | MoveLinearAbsolute with tool / frame 0 (default) or a tool / frame written before ends with Done; the RC receives the number. | 4 | `test_tool_and_frame_number` |
+| RC-MLIN-036 | MoveLinearAbsolute with a tool written as external TCP ends with Done. | 1 | `test_external_tcp_tool` |
+
+## PLC-MLIN
+
+Validation Client: MoveLinearAbsolute
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-MLIN-001 | A dynamics rate above 100 % is rejected by the block with the rate specific ErrorID (16#8401..16#8404); nothing is sent. | 12 | `test_dynamics_rate_above_100_rejected` |
+| PLC-MLIN-002 | An undefined AbortingMode, BlendingMode, OriMode or TurnMode or a tool / frame number outside 0..254 is rejected by the block with its ErrorID; nothing is sent. | 7 | `test_undefined_parameter_rejected` |
+| PLC-MLIN-003 | An undefined ConfigMode for shoulder, elbow, wrist or all three axes is rejected by the block; nothing is sent. | 8 | `test_undefined_config_mode_rejected` |
+| PLC-MLIN-004 | An undefined ConfigMode of one axis is rejected with the axis specific ErrorID ERR_CONFIGMODE_<axis>_INVALID. | 3 | `test_undefined_config_mode_error_id` |
+
+## RC-MDIR
+
+Validation RC: MoveDirectAbsolute
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-MDIR-001 | A valid MoveDirectAbsolute shows Busy, CommandBuffered, Active, Done and the robot reaches the target. | 1 | `test_valid_move_reaches_the_target` |
+| RC-MDIR-002 | MoveDirectAbsolute with default parameters runs through Busy, CommandBuffered, Active, Done in this order. | 1 | `test_flag_sequence_of_a_valid_move` |
+| RC-MDIR-003 | MoveDirectAbsolute with an empty (all zero) position completes and the robot ends at the origin. | 1 | `test_empty_position_moves_to_the_origin` |
+| RC-MDIR-004 | Without power the command is buffered by the RC but neither becomes Active nor moves the robot. | 1 | `test_robot_not_enabled_command_waits` |
+| RC-MDIR-005 | A command with AbortingMode ABORT aborts the active and the buffered command; a later buffered command runs. | 1 | `test_aborting_command_cancels_active_and_buffered` |
+| RC-MDIR-006 | Three commands with AbortingMode ABORT: the first two end with CommandAborted, the last one with Done. | 1 | `test_every_command_aborting` |
+| RC-MDIR-007 | GroupInterrupt stops the active MoveDirectAbsolute (CommandInterrupted), GroupContinue lets it finish at the target. | 1 | `test_interrupt_and_continue` |
+| RC-MDIR-008 | A MoveDirectAbsolute started while the group is interrupted is buffered and only runs after GroupContinue. | 1 | `test_new_command_while_interrupted_waits` |
+| RC-MDIR-009 | GroupStop after GroupInterrupt ends the interrupted MoveDirectAbsolute with CommandAborted. | 1 | `test_interrupt_then_stop_aborts` |
+| RC-MDIR-010 | Switching the power off during the motion turns Active off and sets CommandInterrupted with the matching InfoID. | 1 | `test_disable_during_motion_interrupts` |
+| RC-MDIR-011 | MoveDirectAbsolute with the default or the explicit primary SequenceFlag runs in the primary sequence. | 2 | `test_primary_sequence_command` |
+| RC-MDIR-012 | While the secondary sequence is active a primary MoveDirectAbsolute is only buffered and does not move. | 1 | `test_primary_command_waits_while_secondary_active` |
+| RC-MDIR-013 | After SetSequence(secondary) and GroupContinue a MoveDirectAbsolute with the secondary SequenceFlag finishes. | 1 | `test_secondary_command_runs_after_continue` |
+| RC-MDIR-014 | Two buffered primary commands are interrupted by SetSequence(secondary) and finish after SetSequence(primary) and GroupContinue. | 1 | `test_back_to_primary_and_continue` |
+| RC-MDIR-015 | Secondary commands not yet executed end with CommandAborted when the sequence returns to primary; the primary commands then finish. | 1 | `test_secondary_commands_aborted_when_back_to_primary` |
+| RC-MDIR-016 | A secondary-sequence MoveDirectAbsolute while the primary sequence is active is rejected by the RC and the robot does not move. | 1 | `test_secondary_flag_while_primary_active_rejected` |
+| RC-MDIR-017 | A dynamics rate in the valid range (or negative = default) is sent to the RC and the move completes. | 16 | `test_dynamics_rate_reaches_the_rc` |
+| RC-MDIR-018 | The same distance takes longer with a VelocityRate of 5 % than with 95 %. | 1 | `test_lower_velocity_rate_takes_longer` |
+| RC-MDIR-019 | A MoveTime is executed by the RC (Done at the target) or rejected as unsupported without motion. | 4 | `test_move_time` |
+| RC-MDIR-020 | Two commands with the same MoveTime but different VelocityRate take the same time, or both are rejected as unsupported. | 1 | `test_move_time_overrides_velocity` |
+| RC-MDIR-021 | MoveDirectAbsolute with the default or a defined tool / frame sends that number and completes at the target. | 4 | `test_tool_and_frame_number` |
+| RC-MDIR-022 | A second MoveDirectAbsolute with a given arm configuration and ConfigMode completes and both reach the RC. | 15 | `test_arm_config_and_config_mode` |
+| RC-MDIR-023 | After a move with turn number 1 on J2, a second move with the given TurnMode / turn numbers completes and both values reach the RC. | 5 | `test_turn_mode` |
+| RC-MDIR-024 | With TurnMode 'use turn number' a turn number the robot cannot reach ends with Error and no motion. | 1 | `test_unreachable_turn_number_rejected` |
+| RC-MDIR-025 | A target outside the software limits is not reached: the robot stops at the limit with a warning or the command ends with Error. | 1 | `test_target_outside_software_limits` |
+| RC-MDIR-026 | Ten short MoveDirectAbsolute commands, each started when the previous one is buffered, run one after another and all end with Done. | 1 | `test_ten_short_moves_buffered` |
+| RC-MDIR-027 | A single MoveDirectAbsolute with a blending mode completes at the target (no successor) or is rejected as unsupported. | 14 | `test_single_blended_command` |
+| RC-MDIR-028 | With WaitAtBlendingZone a single command without effective blending (exact stop or first parameter 0) completes or is rejected as unsupported. | 11 | `test_wait_at_blending_zone_without_blending` |
+| RC-MDIR-029 | With WaitAtBlendingZone a single blended command waits in the blending zone (Active, not Done, waiting InfoID) or is rejected. | 8 | `test_wait_at_blending_zone_single_command` |
+| RC-MDIR-030 | A blended first command followed by a buffered second command: the second one becomes Active only after the first one finished and ends at its target. | 15 | `test_blending_into_a_second_command` |
+| RC-MDIR-031 | A blended active command is aborted by a second command with AbortingMode ABORT, which then finishes at its target. | 3 | `test_blended_command_aborted_by_second` |
+| RC-MDIR-032 | Ten short commands with corner-distance blending, each started when the previous is buffered, run in order and all end with Done. | 1 | `test_ten_short_blended_moves` |
+
+## PLC-MDIR
+
+Validation Client: MoveDirectAbsolute
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-MDIR-001 | A valid MoveDirectAbsolute that is never executed keeps every BOOL output FALSE, every number 0 and sends nothing. | 1 | `test_not_executed_outputs_are_zero` |
+| PLC-MDIR-002 | Execute reset while Busy does not cancel the move: the robot reaches the target and Done is TRUE for exactly one cycle. | 1 | `test_execute_reset_while_busy_shows_done_one_cycle` |
+| PLC-MDIR-003 | MoveDirectAbsolute on an axes group whose RobotTask never enabled the commands ends with ERR_COMMANDS_NOT_ENABLED. | 1 | `test_axes_group_not_ready_rejected` |
+| PLC-MDIR-004 | A new rising edge of Execute while the move is Active sends no second command; the move finishes with Done at its target. | 1 | `test_second_edge_while_active_is_ignored` |
+| PLC-MDIR-005 | Changing the target in the first Busy cycle (before the command is sent) does not lose the command: it finishes with Done. | 2 | `test_position_changed_before_transmission` |
+| PLC-MDIR-006 | A dynamics rate above 100 % is rejected by the client with the rate-specific ErrorID; nothing is sent and the robot does not move. | 8 | `test_rate_above_100_rejected` |
+| PLC-MDIR-007 | A SequenceFlag other than primary / secondary is rejected with ERR_SEQFLAG_NOT_ALLOWED and the robot does not move. | 2 | `test_invalid_sequence_flag_rejected` |
+| PLC-MDIR-008 | An undefined AbortingMode (12) is rejected with ERR_ABORTINGMODE_INVALID and the robot does not move. | 1 | `test_invalid_aborting_mode_rejected` |
+| PLC-MDIR-009 | An undefined BlendingMode or TurnMode is rejected by the client (ERR_INVALID_PAR_CMD) and nothing is sent. | 3 | `test_undefined_mode_rejected` |
+| PLC-MDIR-010 | An undefined ConfigMode value is rejected with the ConfigMode ErrorID of an affected joint and the robot does not move. | 6 | `test_undefined_config_mode_rejected` |
+| PLC-MDIR-011 | A ToolNo / FrameNo outside the range or above the highest index of the RC is rejected by the client and the robot does not move. | 4 | `test_undefined_tool_or_frame_rejected` |
+| PLC-MDIR-012 | After a rejected command (Execute reset) the same block executes a corrected command normally. | 1 | `test_valid_move_after_rejected_one` |
+
+## RC-MAX
+
+Validation RC: MoveAxesAbsolute
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-MAX-001 | A valid MoveAxesAbsolute runs Busy, CommandBuffered, Active, Done, reports a rising Progress up to 100 % and Done falls with Execute. | 1 | `test_flag_sequence_progress_and_done_reset` |
+| RC-MAX-002 | MoveAxesAbsolute moves the linear external axis E1 (unit mm) to its target and ends with Done. | 1 | `test_linear_external_axis_moves_in_mm` |
+| RC-MAX-003 | A J6 target beyond one turn either runs to Done at exactly that angle or is rejected as not reachable without motion. | 2 | `test_wrist_axis_beyond_one_turn` |
+| RC-MAX-004 | MoveAxesAbsolute with the flange or an available tool runs to Done and the RC receives that ToolNo. | 2 | `test_tool_number_is_used` |
+| RC-MAX-005 | A dynamic rate between 0 % and 100 % or a negative rate (default) is executed to Done and reaches the RC in 1/100 %. | 16 | `test_dynamic_rate_in_range_is_executed` |
+| RC-MAX-006 | A VelocityRate with two decimals is executed to Done without error and reaches the RC with full resolution. | 3 | `test_fractional_velocity_rate` |
+| RC-MAX-007 | The same motion with a rate of 5 % takes longer than with 95 %. | 4 | `test_lower_rate_takes_longer` |
+| RC-MAX-008 | A motion with acceleration 50 % / deceleration 100 % takes the same time as the way back with 100 % / 50 %. | 1 | `test_swapped_acceleration_and_deceleration_take_the_same_time` |
+| RC-MAX-009 | MoveAxesAbsolute with a reachable MoveTime runs to Done and the RC receives the time. | 1 | `test_move_time_is_executed` |
+| RC-MAX-010 | Two motions with the same MoveTime but VelocityRate 80 % and 10 % take the same time (the velocity is ignored). | 1 | `test_move_time_overrides_velocity` |
+| RC-MAX-011 | A MoveTime far too short for a long distance ends with an error of the RC (dynamic limit, not reachable or invalid time). | 1 | `test_move_time_too_short_for_the_distance` |
+| RC-MAX-012 | A single MoveAxesAbsolute with a blending mode and no following motion runs to Done and stops exactly at its target. | 26 | `test_single_blended_motion_stops_at_target` |
+| RC-MAX-013 | Two buffered MoveAxesAbsolute, the first with a blending mode: both run to Done in order and the robot ends at the second target. | 7 | `test_blended_motion_into_a_second_motion` |
+| RC-MAX-014 | A second MoveAxesAbsolute with AbortingMode ABORT started while a blended first motion is active aborts it and runs to Done. | 1 | `test_blended_motion_aborted_by_second_motion` |
+| RC-MAX-015 | Ten MoveAxesAbsolute of 2 deg each, each started when the previous one is buffered, all run to Done one after the other. | 2 | `test_ten_short_motions_in_a_row` |
+| RC-MAX-016 | Of four commands (buffer, buffer, abort, buffer) started while the first is active, the first two are aborted and the last two run to Done. | 1 | `test_aborting_command_between_buffered_commands` |
+| RC-MAX-017 | Of three MoveAxesAbsolute with AbortingMode ABORT the earlier ones end with CommandAborted and only the last one runs to Done. | 2 | `test_aborting_commands_last_one_wins` |
+| RC-MAX-018 | GroupInterrupt during MoveAxesAbsolute resets Active, sets CommandInterrupted and freezes Progress; GroupContinue resumes to Done. | 1 | `test_interrupt_and_continue` |
+| RC-MAX-019 | GroupStop after GroupInterrupt ends the interrupted MoveAxesAbsolute with CommandAborted; the robot stays where it was interrupted. | 1 | `test_stop_after_interrupt_aborts_motion` |
+| RC-MAX-020 | Disabling the robot during MoveAxesAbsolute resets Active and sets CommandInterrupted; the command stays buffered (Busy). | 1 | `test_power_off_during_motion_interrupts` |
+| RC-MAX-021 | MoveAxesAbsolute started while the robot is disabled is buffered (Busy, CommandBuffered) and the robot does not move. | 1 | `test_start_without_power_waits_buffered` |
+| RC-MAX-022 | MoveAxesAbsolute started while the enabled robot is interrupted is buffered and waits; after GroupContinue it runs to Done. | 1 | `test_start_while_interrupted_waits_buffered` |
+| RC-MAX-023 | MoveAxesAbsolute with the default SequenceFlag runs in the primary sequence to Done; the secondary sequence stays inactive. | 1 | `test_default_sequence_flag_runs_in_primary` |
+| RC-MAX-024 | MoveAxesAbsolute with SequenceFlag SECONDARY while the primary sequence is active is rejected by the RC (secondary not active) without motion. | 1 | `test_secondary_flag_rejected_while_primary_active` |
+| RC-MAX-025 | After SetSequence(secondary) a primary MoveAxesAbsolute is buffered but not executed; the secondary sequence stays active. | 1 | `test_primary_command_waits_while_secondary_active` |
+| RC-MAX-026 | After SetSequence(secondary) and GroupContinue a MoveAxesAbsolute with SequenceFlag SECONDARY runs to Done in the secondary sequence. | 1 | `test_secondary_command_runs_after_set_sequence_and_continue` |
+| RC-MAX-027 | Two primary motions, SetSequence(secondary) while the first is active, then SetSequence(primary) and GroupContinue: both run to Done. | 1 | `test_primary_motions_continue_after_sequence_round_trip` |
+| RC-MAX-028 | Secondary commands still buffered when SetSequence(primary) is given end with CommandAborted; the primary ones stay buffered. | 1 | `test_secondary_commands_aborted_on_return_to_primary` |
+| RC-MAX-029 | An aborting primary MoveAxesAbsolute given while the secondary sequence is active aborts the interrupted one after the return to primary and runs to Done. | 1 | `test_aborting_primary_command_given_in_secondary_takes_over` |
+| RC-MAX-030 | A target outside the software limits is not reached: the RC rejects it or stops at the limit with an error or a warning. | 1 | `test_target_outside_software_limits` |
+| RC-MAX-031 | A J1 target far beyond the axis range (1000 deg) is not reached: the RC rejects it or stops at the limit. | 1 | `test_target_beyond_axis_range` |
+
+## PLC-MAX
+
+Validation Client: MoveAxesAbsolute
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-MAX-001 | A dynamic rate above 100 % is rejected by the block with the error of that rate; nothing is sent and the robot does not move. | 8 | `test_rate_above_100_percent_rejected` |
+| PLC-MAX-002 | An undefined BlendingMode is rejected by the block with ERR_INVALID_PAR_CMD; nothing is sent and the robot does not move. | 3 | `test_undefined_blending_mode_rejected` |
+| PLC-MAX-003 | An undefined AbortingMode is rejected by the block with ERR_ABORTINGMODE_INVALID; nothing is sent and the robot does not move. | 2 | `test_undefined_aborting_mode_rejected` |
+| PLC-MAX-004 | A SequenceFlag other than primary or secondary is rejected by the block with ERR_SEQFLAG_NOT_ALLOWED; nothing is sent. | 2 | `test_undefined_sequence_flag_rejected` |
+| PLC-MAX-005 | A ToolNo above the highest tool index of the RC is rejected by the block with ERR_TOOLNO_UNAVAILABLE; nothing is sent. | 1 | `test_unavailable_tool_rejected` |
+| PLC-MAX-006 | SetSequence with the undefined target sequence 3 ends with Error; the primary sequence stays active. | 1 | `test_set_sequence_undefined_target_rejected` |
+| PLC-MAX-007 | A falling edge of Execute while the motion is active does not cancel it: the block stays Busy and Active and the robot reaches the target. | 1 | `test_execute_reset_while_active_keeps_motion` |
+| PLC-MAX-008 | A new rising edge of Execute while the motion is active sends the command again with the current target; the robot ends there with Done. | 2 | `test_new_rising_edge_while_active_restarts` |
+
+## RC-GRP
+
+Validation RC: GroupStop, GroupInterrupt, GroupContinue, GroupReset
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-GRP-001 | GroupInterrupt during a linear motion ends Done, the motion is CommandInterrupted and the robot stands still. | 2 | `test_interrupt_holds_linear_motion` |
+| RC-GRP-002 | A motion started while interrupted is buffered; GroupContinue finishes the interrupted and then the new motion. | 1 | `test_interrupt_then_buffer_and_continue` |
+| RC-GRP-003 | GroupInterrupt while jogging ends Done, the jog is aborted and the robot stands still. | 1 | `test_interrupt_aborts_jog` |
+| RC-GRP-004 | GroupInterrupt during a motion of the secondary sequence interrupts that motion. | 1 | `test_interrupt_secondary_motion` |
+| RC-GRP-005 | GroupContinue followed by GroupInterrupt in the same cycle: the interrupt wins, the motion is held. | 1 | `test_continue_and_interrupt_in_one_cycle` |
+| RC-GRP-006 | GroupStop and GroupInterrupt in the same cycle: both Done, the motion is aborted and the RA state is Interrupted. | 1 | `test_stop_and_interrupt_in_one_cycle` |
+| RC-GRP-007 | GroupInterrupt without power ends Done and the RA sequence state changes to Interrupted. | 1 | `test_interrupt_without_power` |
+| RC-GRP-008 | Motion, interrupt, motion, interrupt, motion in one cycle: both interrupts Done, no motion runs. | 1 | `test_interrupts_and_motions_in_one_cycle` |
+| RC-GRP-009 | Sixteen GroupInterrupt blocks started in the same cycle end with an error of the RC. | 1 | `test_more_than_15_interrupts_in_one_cycle` |
+| RC-GRP-010 | GroupInterrupt then GroupContinue at standstill: the RA state goes Idle -> Interrupted -> Idle, both blocks Done. | 1 | `test_continue_after_interrupt_returns_to_idle` |
+| RC-GRP-011 | GroupContinue after jogging away from the interrupted path is rejected with ERROR_CONTINUE_NOT_POSSIBLE_BY_NOT_IN_PRIMARY_POS. | 1 | `test_continue_off_path_rejected` |
+| RC-GRP-012 | Off the path, GroupContinue is accepted after switching to the secondary sequence (Done, RA state Idle). | 1 | `test_continue_off_path_in_secondary_sequence` |
+| RC-GRP-013 | GroupContinue in operation mode T1 external is rejected with ERR_CONTINUE_NOT_POSSIBLE_BY_MANUAL_MODE, the robot does not move. | 1 | `test_continue_in_manual_mode_rejected` |
+| RC-GRP-014 | GroupContinue while the robot is idle and not interrupted ends Done and changes nothing (RA state stays Idle). | 1 | `test_continue_when_not_interrupted` |
+| RC-GRP-015 | After SetSequence(secondary) the RA state is Interrupted; GroupContinue ends Done and the state is Idle. | 1 | `test_continue_interrupted_secondary_sequence` |
+| RC-GRP-016 | GroupContinue without power is rejected with ERROR_CONTINUE_NOT_POSSIBLE_BY_NOT_ENABLED. | 2 | `test_continue_without_power_rejected` |
+| RC-GRP-017 | GroupReset with a pending RC error ends Done and the error is no longer pending. | 2 | `test_reset_acknowledges_pending_error` |
+| RC-GRP-018 | GroupReset while the cause of the error persists ends Done, but the error stays pending. | 1 | `test_reset_with_lasting_error_cause` |
+| RC-GRP-019 | GroupReset without a pending error ends Done without error and leaves power and sequence unchanged. | 4 | `test_reset_without_pending_error` |
+| RC-GRP-020 | GroupReset during a motion clears the message buffer of the axes group; the motion continues to its target. | 1 | `test_reset_keeps_motion_and_clears_messages` |
+| RC-GRP-021 | GroupStop during a linear motion aborts it and the buffered next motion, the robot stands still. | 2 | `test_stop_aborts_active_and_buffered_motions` |
+| RC-GRP-022 | GroupStop during a motion passes Busy, Active and Done in this order and aborts the motion. | 1 | `test_stop_shows_active_until_stopped` |
+| RC-GRP-023 | GroupStop while the secondary sequence is active reports AbortedSequence 2 and keeps the paused primary motion. | 1 | `test_stop_in_secondary_keeps_primary_motion` |
+| RC-GRP-024 | GroupStop during a motion of the secondary sequence aborts it and reports AbortedSequence 2. | 1 | `test_stop_aborts_secondary_motion` |
+| RC-GRP-025 | SetSequence(secondary) and GroupStop started in the same cycle both end Done, the stop reports the secondary sequence. | 1 | `test_stop_and_set_sequence_in_one_cycle` |
+| RC-GRP-026 | Motion, stop, motion, stop, motion started in one cycle: the first two motions are aborted, the last one is executed. | 2 | `test_stops_and_motions_in_one_cycle` |
+| RC-GRP-027 | GroupStop without power or in operation mode T1 external ends Done without error. | 2 | `test_stop_accepted_without_motion` |
+| RC-GRP-028 | Sixteen GroupStop blocks started in the same cycle (more than the 4-bit stop counter can count) end with an error of the RC. | 1 | `test_more_than_15_stops_in_one_cycle` |
+
+## PLC-GRP
+
+Validation Client: GroupStop, GroupInterrupt, GroupContinue, GroupReset
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-GRP-001 | A group command on an axes group that is not served by a RobotTask ends with ERR_COMMANDS_NOT_ENABLED and is not left Busy. | 4 | `test_unlinked_axes_group_rejected` |
+| PLC-GRP-002 | Every executed GroupStop / GroupInterrupt increases the stop counter in the telegram by one; it wraps after 15. | 2 | `test_stop_counter_counts_every_execute` |
+
+## RC-SEQ
+
+Validation RC: SetSequence, ReturnToPrimary, ChangeSpeedOverride
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-SEQ-001 | After the initialization of the interface the RC reports an actual override of 5 %. | 1 | `test_initial_override_after_initialization` |
+| RC-SEQ-002 | ChangeSpeedOverride from 50 % to 10 % ends Done and the actual override is 10 %. | 2 | `test_override_applied` |
+| RC-SEQ-003 | ChangeSpeedOverride with a value in 0..100 % ends Done and the RC reports exactly this value (resolution 0.01 %). | 7 | `test_override_values` |
+| RC-SEQ-004 | One ChangeSpeedOverride instance executed again for several values: every run ends Done with the new value applied. | 1 | `test_override_values_in_a_row` |
+| RC-SEQ-005 | ChangeSpeedOverride without power ends Done and the value is applied. | 1 | `test_override_without_power` |
+| RC-SEQ-006 | In T1 external and T2 external ChangeSpeedOverride 10 % ends Done and the actual override is 10 %. | 2 | `test_override_in_external_manual_modes` |
+| RC-SEQ-007 | With override 0 % a MoveDirect becomes Active but the robot does not move; 10 % lets it reach its target (Done). | 1 | `test_override_zero_holds_new_motion` |
+| RC-SEQ-008 | ChangeSpeedOverride from 20 % to 50 % during a motion ends Done, the new value is active at once and the motion finishes. | 1 | `test_override_change_during_motion` |
+| RC-SEQ-009 | ReturnToPrimary (linear, ReturnMode 0) passes Busy, CommandBuffered, Active, Done and ends at the interrupt position. | 1 | `test_return_to_interrupt_position` |
+| RC-SEQ-010 | A DistanceLimit larger than the distance to the path does not prevent the return (Done at the interrupt position). | 2 | `test_return_within_distance_limit` |
+| RC-SEQ-011 | A DistanceLimit below the distance to the path: ERR_LIMIT_EXCEEDED_RETURN_POS, the robot does not move. | 1 | `test_return_beyond_distance_limit_rejected` |
+| RC-SEQ-012 | ReturnMode 1 moves to the target of the interrupted motion (Done); after GroupContinue the interrupted motion ends Done. | 1 | `test_return_to_end_position` |
+| RC-SEQ-013 | Interrupted but not jogged away: ReturnMode 1 ends Done at the target of the interrupted motion, InPrimaryPos TRUE. | 1 | `test_return_to_end_position_without_leaving_path` |
+| RC-SEQ-014 | After GroupStop, ReturnToPrimary (ReturnMode 1, DistanceLimit 10) fails with ERR_LIMIT_EXCEEDED_RETURN_POS. | 1 | `test_return_after_group_stop_rejected` |
+| RC-SEQ-015 | Motion to P1 completed, robot jogged away: ReturnToPrimary (ReturnMode 0 or 1) moves back to P1 and ends Done. | 2 | `test_return_after_completed_motion` |
+| RC-SEQ-016 | A second ReturnToPrimary during an active one fails with ERR_SECONDARY_SEQUENCE_BLOCKED_BY_CMD. | 1 | `test_second_return_rejected` |
+| RC-SEQ-017 | ReturnToPrimary during the continued primary motion fails with ERR_CMD_REQUIRES_INTERRUPT_OR_IDLE_STATE. | 2 | `test_return_rejected_during_primary_motion` |
+| RC-SEQ-018 | ReturnToPrimary in the interrupted secondary sequence fails with ERR_CMD_NOT_ALLOWED_DURING_ACTIVE_INTERRUPT. | 1 | `test_return_rejected_in_interrupted_secondary` |
+| RC-SEQ-019 | After SetSequence(secondary) and GroupContinue, ReturnToPrimary ends Done at the interrupt position. | 1 | `test_return_in_running_secondary` |
+| RC-SEQ-020 | An interrupted ReturnToPrimary is CommandInterrupted; a second one fails (ERR_SECONDARY_SEQUENCE_BLOCKED_BY_CMD). | 1 | `test_second_return_while_first_interrupted` |
+| RC-SEQ-021 | GroupStop after GroupInterrupt of an active ReturnToPrimary aborts it (CommandAborted, not Done). | 1 | `test_stop_interrupted_return` |
+| RC-SEQ-022 | ReturnToPrimary without power stays Busy and CommandBuffered; power on and GroupContinue finish it. | 1 | `test_return_without_power_waits` |
+| RC-SEQ-023 | Power off during ReturnToPrimary: CommandInterrupted, Busy and CommandBuffered TRUE, Active FALSE. | 1 | `test_power_off_while_returning` |
+| RC-SEQ-024 | An RC motion error during ReturnToPrimary ends the block with Error and an ErrorID. | 1 | `test_rc_error_while_returning` |
+| RC-SEQ-025 | A dynamics rate of ReturnToPrimary is sent as value * 100 and the return ends Done. | 24 | `test_dynamics_rate_sent` |
+| RC-SEQ-026 | A dynamics rate changed from 5 % to 100 % while returning does not disturb the active return (Done at the interrupt position). | 4 | `test_dynamics_rate_changed_while_returning` |
+| RC-SEQ-027 | ReturnMode, DistanceLimit or TrajectoryMode changed while returning: the active return keeps its target and ends Done. | 4 | `test_input_changed_while_returning` |
+| RC-SEQ-028 | ReturnToPrimary with Time > 0 is answered with ERR_OPTIONAL_PARAM_TIME_NOT_SUPPORTED, no return. | 4 | `test_move_time_not_supported` |
+| RC-SEQ-029 | ToolNo / FrameNo must match the interrupted motion unless AllowDifferences is set. | 6 | `test_tool_and_frame_of_interrupted_motion` |
+| RC-SEQ-030 | Tool or frame data rewritten after the interrupt: ReturnToPrimary fails unless AllowDifferences is set. | 4 | `test_tool_or_frame_data_changed` |
+| RC-SEQ-031 | SetSequence(secondary) ends Done (Busy, Active, Done); the RA state is Interrupted and the secondary sequence is active. | 2 | `test_switch_to_secondary` |
+| RC-SEQ-032 | SetSequence(primary) while the primary sequence is active ends Done; the RA state stays Idle. | 1 | `test_switch_to_primary_while_primary` |
+| RC-SEQ-033 | SetSequence(secondary) and then SetSequence(primary) without motions: both Done, the primary sequence is active and idle. | 1 | `test_switch_back_to_primary` |
+| RC-SEQ-034 | Without power, SetSequence(primary) from the secondary sequence ends Done and the primary sequence is active. | 1 | `test_switch_to_primary_without_power` |
+| RC-SEQ-035 | In operation mode T1 external SetSequence(secondary) ends Done and the secondary sequence is active. | 1 | `test_switch_in_manual_mode` |
+| RC-SEQ-036 | SetSequence(secondary) and GroupContinue: both Done, the RA state is Idle in the secondary sequence. | 1 | `test_secondary_then_continue` |
+| RC-SEQ-037 | SetSequence(secondary) and GroupInterrupt in the same cycle: both Done, secondary sequence active and RA state Interrupted. | 1 | `test_switch_and_interrupt_in_one_cycle` |
+| RC-SEQ-038 | SetSequence(secondary) during a primary motion: Done, the motion is CommandInterrupted and the robot holds. | 3 | `test_switch_interrupts_primary_motion` |
+| RC-SEQ-039 | After secondary and back to primary the held motion does not continue by itself; GroupContinue makes it Active and Done. | 1 | `test_primary_motion_resumes_with_continue` |
+| RC-SEQ-040 | A buffered motion of the secondary sequence is aborted when the primary sequence is selected; GroupContinue does not start it. | 1 | `test_secondary_motion_aborted_on_switch_to_primary` |
+| RC-SEQ-041 | SetSequence while a jog moves the robot is rejected with ERR_SECONDARY_SEQUENCE_BLOCKED_BY_CMD; the jog stays active. | 2 | `test_switch_rejected_while_jogging` |
+| RC-SEQ-042 | SetSequence while a ReturnToPrimary is active is rejected with ERR_SECONDARY_SEQUENCE_BLOCKED_BY_CMD; the return finishes. | 1 | `test_switch_rejected_while_returning` |
+| RC-SEQ-043 | GroupJog activates the secondary sequence while it runs; after the jog the flag is FALSE again. | 1 | `test_jog_activates_secondary_sequence` |
+
+## PLC-SEQ
+
+Validation Client: SetSequence, ReturnToPrimary, ChangeSpeedOverride
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-SEQ-001 | The block on an axes group that is not served by a RobotTask ends with ERR_COMMANDS_NOT_ENABLED and is not left Busy. | 3 | `test_unlinked_axes_group_rejected` |
+| PLC-SEQ-002 | SetSequence with a target sequence other than 1 or 2 ends with ERR_INVALID_PAR_CMD and nothing is sent; the sequence is unchanged. | 4 | `test_set_sequence_undefined_target_rejected` |
+| PLC-SEQ-003 | ChangeSpeedOverride outside 0..100 % ends with ERR_OVERRIDE_INVALID, nothing is sent and the actual override stays 50 %. | 5 | `test_override_out_of_range_rejected` |
+| PLC-SEQ-004 | ChangeSpeedOverride executed with the default parameters sets the actual override to 10 %. | 1 | `test_override_default_value` |
+| PLC-SEQ-005 | A ReturnToPrimary dynamics rate above 100 % is rejected by the block with the rate's error ID. | 12 | `test_return_rate_above_range_rejected` |
+| PLC-SEQ-006 | Enable FALSE during an active ReturnToPrimary stops the robot and shows CommandAborted for one cycle. | 1 | `test_return_disabled_while_active_stops` |
+
+## RC-DATA
+
+Validation RC: frame, tool and load data
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-DATA-001 | WriteFrameData stores all fields of a frame (incl. | 3 | `test_frame_written_and_read_back` |
+| RC-DATA-002 | WriteToolData stores all fields of a tool (ID, TCP, load number, external TCP) on the RC: ReadToolData returns them unchanged and the entry of the user data array is Available. | 2 | `test_tool_written_and_read_back` |
+| RC-DATA-003 | WriteLoadData stores mass, centre of mass, orientation and inertia of a load on the RC: ReadLoadData returns them unchanged and the entry of the user data array is Available. | 2 | `test_load_written_and_read_back` |
+| RC-DATA-004 | One write instance executed twice in a row, first number 3 with X = 100, then number 4 with X = 300: both numbers keep their own value on the RC. | 3 | `test_same_instance_writes_two_numbers` |
+| RC-DATA-005 | The time stamp (date and time of day) written with the data is returned unchanged by the read command. | 3 | `test_timestamp_written_and_read_back` |
+| RC-DATA-006 | Writing data with all values at their default (0) is accepted and replaces earlier values: the read command returns 0 for every field (a tool keeps its load number). | 4 | `test_empty_data_overwrites_old_values` |
+| RC-DATA-007 | A tool may use a load with another number (tool 3, load 4): WriteToolData is Done and ReadToolData returns load number 4. | 1 | `test_tool_with_another_load_number` |
+| RC-DATA-008 | Reading frame 0 (world) or tool 0 (flange) is Done and returns number 0. | 2 | `test_read_number_zero` |
+| RC-DATA-009 | Number -1 at standstill returns the number currently active on the RC: frame 0, tool 0 and the load of tool 0 (load 1). | 3 | `test_read_active_number_at_standstill` |
+| RC-DATA-010 | Number -1 while a MoveLinearAbsolute with frame 5 and tool 5 is active returns 5 and the data of number 5; the read runs in parallel and does not disturb the motion. | 2 | `test_read_active_number_during_motion` |
+| RC-DATA-011 | Frame 0 (the world frame, also the default value of FrameNo) cannot be overwritten: the RC answers WriteFrameData with ERR_INVALID_PARAM_FRAMENO (16#8D08). | 1 | `test_write_frame_zero_is_rejected` |
+| RC-DATA-012 | A frame whose reference frame is the frame itself (frame 2 relative to frame 2) is rejected by the RC with ERR_FRAME_INVALID (16#8C13). | 1 | `test_frame_referring_to_itself_is_rejected` |
+| RC-DATA-013 | A load of 4000 kg exceeds the payload of the robot: the RC rejects WriteLoadData with ERR_INVALID_PARAM_MASS_EXCEEDS_PAYLOAD (16#8D49) and keeps the old load. | 1 | `test_load_heavier_than_the_payload_is_rejected` |
+| RC-DATA-014 | A load value outside the range the RC supports (here inertia above 1000, angle outside -180..180) is rejected by the RC with the ErrorID of that field. | 6 | `test_load_value_outside_the_rc_range_is_rejected` |
+| RC-DATA-015 | With the robot disabled (commands enabled, drives off) a data command with the default processing mode (parallel) is executed: Busy, then Done without error. | 6 | `test_data_command_while_robot_disabled` |
+| RC-DATA-016 | In operation mode T1 external (5) the data commands are executed: Busy, then Done without error. | 6 | `test_data_command_in_t1_external` |
+| RC-DATA-017 | A buffered write of the primary sequence while the robot is disabled is not executed: it is CommandBuffered and CommandInterrupted with info 16#6F02; a following GroupStop aborts it. | 3 | `test_sequence_data_command_waits_while_robot_disabled` |
+| RC-DATA-018 | A parallel write while a motion is active is executed at once (Done without error) and the motion is not disturbed: it stays active and reaches its target afterwards; the new value can be read back. | 3 | `test_parallel_write_during_motion` |
+| RC-DATA-019 | A buffered write of the primary sequence between two motions is CommandBuffered while the first motion is active, Done only after the first motion and before the second one; both motions end Done. | 3 | `test_buffered_write_waits_for_the_motion` |
+| RC-DATA-020 | A MoveLinearAbsolute to X = 10 in frame 5 after frame 5 was written with an offset of X = 100 ends at X = 110 in world coordinates. | 1 | `test_motion_uses_the_written_frame` |
+| RC-DATA-021 | A write with processing mode aborting in the primary sequence aborts the active motion and the buffered one (CommandAborted) and is executed (Done); the robot stops before the target. | 3 | `test_aborting_write_aborts_the_motions` |
+| RC-DATA-022 | GroupStop while a buffered write waits behind an active motion aborts both: the write reports CommandAborted and is never Done. | 3 | `test_group_stop_aborts_a_buffered_write` |
+| RC-DATA-023 | GroupInterrupt while a buffered write waits behind an active motion: the motion is interrupted, the write stays buffered (not Done, not aborted); after GroupContinue the motion and then the write are Done. | 3 | `test_group_interrupt_holds_a_buffered_write` |
+| RC-DATA-024 | A write with the given SequenceFlag / ProcessingMode while the primary or the secondary sequence is active: parallel writes and writes for the active sequence are Done, a write for the inactive secondary sequence is rejected with 16#8F16, a write for the primary sequence while the secondary one is active waits (CommandBuffered) and is Done after SetSequence back to the primary sequence. | 30 | `test_write_in_primary_and_secondary_sequence` |
+| RC-DATA-025 | Primary motion interrupted, secondary sequence selected and continued, a secondary motion active: an aborting write of the secondary sequence aborts the secondary motion and is Done; the interrupted primary motion is not affected. | 3 | `test_aborting_write_in_the_secondary_sequence` |
+
+## PLC-DATA
+
+Validation Client: frame, tool and load data
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-DATA-001 | A data block called with an axes group that no RobotTask serves reports ERR_COMMANDS_NOT_ENABLED (16#8612) and sends nothing. | 6 | `test_axes_group_not_connected_is_rejected` |
+| PLC-DATA-002 | ReadToolData whose AxesGroup input is switched to a second, fully initialized axes group while the command is Busy ends with ERR_AXESGROUP_CHANGED (16#8614). | 1 | `test_axes_group_changed_while_busy_is_rejected` |
+| PLC-DATA-003 | Load number 0 (also the default value of LoadNo) is rejected by the load blocks with ERR_LOADNO_RANGE (16#8418) before anything is sent. | 2 | `test_load_number_zero_is_rejected` |
+| PLC-DATA-004 | A write block whose SequenceFlag does not fit the ProcessingMode (parallel with a sequence, buffered or aborting without one) is rejected with ERR_SEQFLAG_INVALID_IN_PROC_MODE (16#8625), nothing is sent. | 12 | `test_sequence_flag_does_not_fit_the_processing_mode` |
+| PLC-DATA-005 | A write block with an undefined SequenceFlag (ERR_SEQFLAG_NOT_ALLOWED, 16#8616) or an undefined ProcessingMode (ERR_PROCESSINGMODE_NOT_DEFINED, 16#8602) is rejected before anything is sent. | 9 | `test_undefined_sequence_flag_or_processing_mode` |
+| PLC-DATA-006 | Execute TRUE for a single cycle: the command is still executed once, Done is TRUE for exactly one cycle (with the returned number of a read block), then all flags are FALSE again. | 6 | `test_execute_pulse_shows_done_for_one_cycle` |
+| PLC-DATA-007 | Execute held TRUE: the command is sent once, Done stays TRUE until Execute is reset, then Busy, Done and Error are FALSE and ErrorID is 0. | 6 | `test_continuous_execute_keeps_done` |
+| PLC-DATA-008 | Execute FALSE and TRUE again (with another number) while the block is still Busy: the running command is finished and sent only once, the new edge starts nothing; a read block reports the first number. | 6 | `test_new_edge_while_busy_is_ignored` |
+| PLC-DATA-009 | The same read instance executed twice in a row, first with number 1, then (new rising edge after Done) with number 5: the second Done returns number 5. | 3 | `test_same_instance_reads_another_number` |
+| PLC-DATA-010 | A write the RC rejects with an error leaves the entry of the user data array (FrameData / ToolData / LoadData) unchanged: it stays not Available and keeps its old values. | 3 | `test_rejected_write_keeps_the_user_data` |
+
+## RC-DYN
+
+Validation RC: default/reference dynamics and software limits
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-DYN-001 | WriteRobotDefaultDynamics with all four rates ends with Done and the RC reports exactly these rates. | 2 | `test_default_dynamics_written_and_read_back` |
+| RC-DYN-002 | A negative default rate leaves that rate of the RC unchanged, the other rates are written. | 5 | `test_default_dynamics_negative_rate_keeps_the_value` |
+| RC-DYN-003 | WriteRobotDefaultDynamics with all four rates negative (nothing to change) is rejected by the RC. | 2 | `test_default_dynamics_without_any_rate_rejected` |
+| RC-DYN-004 | A default rate of 0 % selects the internal minimum of the RC (spec 6.2.14): Done, the RC reports its minimum. | 2 | `test_default_dynamics_zero_selects_the_minimum` |
+| RC-DYN-005 | A default velocity rate of 200 % (sent by the client) is rejected by an RC that allows at most 100 %. | 1 | `test_default_velocity_above_the_rc_range_rejected` |
+| RC-DYN-006 | The same write block executed twice (Execute released while Busy) ends both times with Done; the second values win. | 2 | `test_default_dynamics_written_twice` |
+| RC-DYN-007 | WriteRobotDefaultDynamics runs in parallel to two buffered motions: it is Done while the first motion is still active. | 1 | `test_default_dynamics_changed_while_motions_are_queued` |
+| RC-DYN-008 | After a motion was aborted by GroupStop the default dynamics can be written and a new motion reaches its target. | 1 | `test_default_dynamics_changed_after_group_stop` |
+| RC-DYN-009 | WriteRobotReferenceDynamics with all four values ends with Done and the RC reports exactly these values. | 2 | `test_reference_dynamics_written_and_read_back` |
+| RC-DYN-010 | A negative reference value leaves that value of the RC unchanged, the other values are written. | 3 | `test_reference_dynamics_negative_value_keeps_the_value` |
+| RC-DYN-011 | WriteRobotReferenceDynamics with all four values negative (nothing to change) is rejected with 16#8D25. | 1 | `test_reference_dynamics_without_any_value_rejected` |
+| RC-DYN-012 | Reference values of 0 are inside the range of the simulated RC: Done, the RC reports 0 for all four values. | 1 | `test_reference_dynamics_zero_accepted` |
+| RC-DYN-013 | A reference velocity above the range of the RC (here 2000 mm/s) is rejected with 16#8D29. | 3 | `test_reference_dynamics_above_the_rc_range_rejected` |
+| RC-DYN-014 | WriteRobotReferenceDynamics with an untouched ParCmd (spec default: negative = no change) is rejected with 16#8D25. | 1 | `test_reference_dynamics_untouched_parcmd_changes_nothing` |
+| RC-DYN-015 | The same write block executed twice ends both times with Done; the RC reports the result of the second write. | 2 | `test_reference_dynamics_written_twice` |
+| RC-DYN-016 | WriteRobotReferenceDynamics runs in parallel to two buffered motions: Done while the first motion is still active. | 1 | `test_reference_dynamics_changed_while_motions_are_queued` |
+| RC-DYN-017 | WriteRobotSWLimits with limits for J1..J6 ends with Done and ReadRobotSWLimits reports exactly these limits. | 4 | `test_sw_limits_written_and_read_back` |
+| RC-DYN-018 | The write block is executed with a first set of limits, changed while Busy and executed again: the second set is active. | 1 | `test_sw_limits_written_twice_the_second_set_wins` |
+| RC-DYN-019 | Limits -10..-1 for J1..J6 are accepted when the robot stands inside them: Done, the RC reports -10 / -1. | 1 | `test_sw_limits_with_negative_ranges` |
+| RC-DYN-020 | WriteRobotSWLimits with all limits 0 is rejected with 16#8D15; the limits of the RC stay unchanged. | 2 | `test_sw_limits_all_zero_rejected` |
+| RC-DYN-021 | Limits for external axes the robot does not have (E2..E6) are rejected with 16#8C29; the limits stay unchanged. | 1 | `test_sw_limits_for_missing_external_axes_rejected` |
+| RC-DYN-022 | WriteRobotSWLimits while a motion is active is rejected with 16#8C54; the motion continues to its target. | 1 | `test_sw_limits_during_a_motion_rejected` |
+| RC-DYN-023 | A J1 limit of -361..361 degree (beyond the +-360 degree of the axis) is rejected with 16#8D16; the limits stay unchanged. | 1 | `test_sw_limits_beyond_the_mechanical_range_rejected` |
+| RC-DYN-024 | Limits -655.36..655.36 for the external axis E1 (outside its range) are rejected with 16#8D16. | 1 | `test_sw_limits_external_axis_out_of_range_rejected` |
+| RC-DYN-025 | An RC that applies new software limits at once reports RestartRequested FALSE and returns the new limits immediately. | 1 | `test_sw_limits_applied_without_restart` |
+| RC-DYN-026 | Reading and writing dynamics and software limits does not need an enabled robot: Done without error. | 6 | `test_commands_with_the_robot_disabled` |
+| RC-DYN-027 | Reading and writing dynamics and software limits works in operation mode T1 external: Done without error. | 6 | `test_commands_in_operation_mode_t1_external` |
+| RC-DYN-028 | Reading and writing dynamics and software limits works while the secondary sequence is active: Done without error. | 6 | `test_commands_while_the_secondary_sequence_is_active` |
+
+## PLC-DYN
+
+Validation Client: default/reference dynamics and software limits
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-DYN-001 | A default rate above 655.35 % (does not fit into the UINT * 100 of the telegram) is rejected by the block. | 6 | `test_default_rate_too_large_for_the_telegram_rejected` |
+| PLC-DYN-002 | On an axes group whose RobotTask is not initialized the block ends with Error 16#8612 and sends nothing. | 6 | `test_rejected_on_an_axes_group_that_is_not_initialized` |
+| PLC-DYN-003 | Execute reset while Busy: the command completes, Done is TRUE for exactly one cycle, with valid outputs in that cycle. | 6 | `test_done_of_a_short_execute_pulse_for_one_cycle` |
+| PLC-DYN-004 | The outputs of a finished command stay after Execute falls and are cleared by the next rising edge of Execute. | 5 | `test_new_execution_clears_the_previous_outputs` |
+
+## RC-ENJ
+
+Validation RC: EnableRobot, GroupJog, SetOperationMode, general behaviour
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-ENJ-001 | EnableRobot with default parameters switches the drives on and Enable FALSE switches them off again. | 1 | `test_enable_and_disable_switch_drives` |
+| RC-ENJ-002 | Enable TRUE for a single cycle: afterwards all outputs are reset and the drives stay off. | 1 | `test_enable_for_one_cycle_only` |
+| RC-ENJ-003 | A motion error of the RC switches the drives off: EnableRobot reports Error 16#8C04 and Enabled FALSE. | 1 | `test_rc_error_disables_robot` |
+| RC-ENJ-004 | While the RC reports a pending error a new enable request ends with Busy then Error and the drives stay off. | 1 | `test_enable_rejected_while_error_pending` |
+| RC-ENJ-005 | A change of the operation mode while enabled switches the drives off: EnableRobot Error 16#8C04, Enabled FALSE. | 2 | `test_operation_mode_change_disables_robot` |
+| RC-ENJ-006 | The RC rejects the configuration of the initialization: the axes group is not initialized and EnableRobot fails. | 1 | `test_enable_after_failed_configuration` |
+| RC-ENJ-007 | Alternating enable / disable requests are processed one after the other; the last request (enable) wins. | 2 | `test_repeated_enable_requests` |
+| RC-ENJ-008 | EnableRobot works while the secondary sequence is active and the robot can be disabled after the switch back. | 1 | `test_enable_in_secondary_sequence` |
+| RC-ENJ-009 | Auto external: a rising edge of HoldToRun continues an interrupted sequence; the move runs Active then Done. | 1 | `test_hold_to_run_continues_interrupted_sequence` |
+| RC-ENJ-010 | Auto external: HoldToRun pulsed while a move is executing does not stop it; the move reaches Done. | 1 | `test_hold_to_run_release_without_press_has_no_effect` |
+| RC-ENJ-011 | Auto external: after a continue by HoldToRun, releasing HoldToRun interrupts the move; pressing it again finishes it. | 1 | `test_hold_to_run_release_interrupts_after_continue` |
+| RC-ENJ-012 | Auto external: buffered moves are executed one after the other independent of HoldToRun, each Active then Done. | 4 | `test_moves_run_without_hold_to_run_in_auto` |
+| RC-ENJ-013 | A move interrupted by switching to the secondary sequence and back is continued by HoldToRun and reaches Done. | 1 | `test_hold_to_run_continues_after_sequence_switch` |
+| RC-ENJ-014 | ManualStep is rejected by the RC in auto external (16#8C20) and in T1 without StepMode (16#8C21). | 3 | `test_manual_step_rejected` |
+| RC-ENJ-015 | T1 external: GroupContinue is not allowed (16#8C10); the buffered move does not start. | 1 | `test_continue_rejected_in_t1` |
+| RC-ENJ-016 | T1 external: a buffered move waits interrupted without HoldToRun and runs Active then Done while HoldToRun is TRUE. | 2 | `test_t1_move_runs_only_with_hold_to_run` |
+| RC-ENJ-017 | T1 external: releasing HoldToRun while moving interrupts the move; pressing it again finishes the move. | 1 | `test_t1_release_hold_to_run_interrupts` |
+| RC-ENJ-018 | T1 external: four buffered moves wait interrupted and run one after the other in order while HoldToRun is TRUE. | 2 | `test_t1_several_moves_with_hold_to_run` |
+| RC-ENJ-019 | With StepMode active the RC interrupts before every command; each trigger (HoldToRun edge, ManualStep, continue) runs exactly one command. | 5 | `test_step_mode_stops_after_each_command` |
+| RC-ENJ-020 | StepMode active: a GroupInterrupt during the first move holds it, HoldToRun edges finish both moves one by one. | 1 | `test_step_mode_and_group_interrupt_with_hold_to_run` |
+| RC-ENJ-021 | StepMode switched off after the first continue: the remaining buffered moves run without further interruption. | 1 | `test_step_mode_switched_off_runs_remaining_commands` |
+| RC-ENJ-022 | StepMode switched on during the first move interrupts the sequence; GroupContinue finishes the first move and the next waits. | 1 | `test_step_mode_switched_on_while_moving` |
+| RC-ENJ-023 | GroupJog: Enable gives Busy, CommandBuffered, Enabled; the first direction key moves the robot until Enable is reset. | 4 | `test_jog_moves_while_key_pressed` |
+| RC-ENJ-024 | The jog speed is proportional to the jog override (5 %, 50 %, 100 %). | 3 | `test_jog_speed_follows_override` |
+| RC-ENJ-025 | Changing the override while jogging changes the speed without stopping (5 % -> 20 % -> 60 %). | 1 | `test_jog_override_change_while_jogging` |
+| RC-ENJ-026 | Changing the pressed key changes the jog direction (Y, then X, then Z) without leaving the jog mode. | 2 | `test_jog_direction_change` |
+| RC-ENJ-027 | Releasing the direction key stops the motion: MotionActive FALSE, Enabled stays TRUE. | 1 | `test_jog_key_release_stops_motion` |
+| RC-ENJ-028 | GroupJog with the robot not enabled: the command is buffered with InfoID 16#6F02 and the robot does not move. | 1 | `test_jog_robot_not_enabled` |
+| RC-ENJ-029 | A second GroupJog while the first one jogs ends with Error 16#8F15; the first jog keeps moving. | 1 | `test_second_jog_instance_rejected` |
+| RC-ENJ-030 | GroupJog while a move is active ends with Error 16#8C33; the move continues to Done. | 1 | `test_jog_during_motion_rejected` |
+| RC-ENJ-031 | After SetSequence to the secondary sequence and GroupContinue a GroupJog moves the robot until Enable is reset. | 1 | `test_jog_in_secondary_sequence_after_continue` |
+| RC-ENJ-032 | GroupJog while the secondary sequence is interrupted ends with Error 16#8F17; the robot does not move. | 1 | `test_jog_rejected_in_interrupted_secondary_sequence` |
+| RC-ENJ-033 | An undefined jog mode is sent to the RC and rejected: Busy then Error 16#8D21, no motion. | 2 | `test_undefined_jog_mode_rejected_by_rc` |
+| RC-ENJ-034 | Incremental jogging: the robot moves exactly the increment and reports DistanceReached; Enable FALSE resets the outputs. | 3 | `test_jog_increment_reached` |
+| RC-ENJ-035 | After the increment is reached the robot stands still and MotionActive is FALSE while the key stays pressed. | 1 | `test_jog_not_moving_after_increment` |
+| RC-ENJ-036 | An increment that does not apply to the pressed key (rotation for X, translation for joints) is ignored: continuous jog. | 3 | `test_jog_increment_of_other_kind_ignored` |
+| RC-ENJ-037 | Pressing a second key during an incremental jog starts a new increment for both keys (X: 2.5 + 5, Y: 5). | 1 | `test_jog_second_key_starts_new_increment` |
+| RC-ENJ-038 | Releasing the key before the increment is reached stops the robot early; MotionActive FALSE, Enabled TRUE. | 1 | `test_jog_key_released_before_increment` |
+| RC-ENJ-039 | A new increment while the key is pressed is not used for the running jog step (5.0 stays); the next key press uses it. | 1 | `test_jog_increment_change_ignored_until_key_change` |
+| RC-ENJ-040 | GroupInterrupt / GroupStop during a jog: Done, the jog stops with InfoID 16#6C15 / 16#6C14 and stays Enabled. | 2 | `test_jog_interrupted_or_stopped` |
+| RC-ENJ-041 | Jogging towards a SW limit stops at the limit with InfoID 16#6C03; the jog stays Enabled. | 1 | `test_jog_stops_at_sw_limit` |
+| RC-ENJ-042 | Switching the drives off while jogging stops the robot; the jog reports MotionActive FALSE and InfoID 16#6F02. | 1 | `test_disable_robot_while_jogging` |
+| RC-ENJ-043 | An allowed mode change ends with Busy then Done; Done stays while Execute is TRUE, is reset with Execute FALSE, and the mode follows. | 8 | `test_mode_change_done_and_reset` |
+| RC-ENJ-044 | Auto external to T1 external while enabled: Busy then Done, the mode is T1 external and the RC switches the drives off. | 1 | `test_auto_to_t1_while_enabled_switches_power_off` |
+| RC-ENJ-045 | Selecting the active auto external mode once more ends with Done; the mode and the power state stay unchanged. | 1 | `test_same_mode_again_is_done_without_change` |
+| RC-ENJ-046 | Auto external and T2 external cannot be switched directly: Error 16#8C08 (T1 external first), the mode stays. | 2 | `test_direct_switch_between_auto_and_t2_rejected` |
+| RC-ENJ-047 | While a local mode is active at the robot the RC rejects a change by the PLC (16#8C56): Busy then Error, the mode stays. | 1 | `test_change_rejected_in_local_mode` |
+
+## PLC-ENJ
+
+Validation Client: EnableRobot, GroupJog, SetOperationMode, general behaviour
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-ENJ-001 | EnableRobot with an undefined StepMode: Error with ERR_INVALID_PAR_CMD and the drives stay off. | 1 | `test_undefined_step_mode_at_enable` |
+| PLC-ENJ-002 | Changing StepMode to an undefined value while enabled: Error with ERR_INVALID_PAR_CMD, the robot stays enabled. | 1 | `test_undefined_step_mode_while_enabled` |
+| PLC-ENJ-003 | SetOperationMode with an undefined mode: Error with ERR_INVALID_PAR_CMD without Done, the mode stays. | 2 | `test_undefined_operation_mode_rejected` |
+| PLC-ENJ-004 | GroupJog with an invalid tool or frame number: Error with the matching ID, not Enabled, a key press does not move. | 3 | `test_jog_invalid_tool_or_frame_rejected` |
+| PLC-ENJ-005 | GroupJog with the positive and the negative key of the same axis pressed together: Error and no motion. | 2 | `test_jog_both_directions_of_one_axis_rejected` |
+| PLC-ENJ-006 | After Enable FALSE all GroupJog outputs are FALSE, Active included. | 1 | `test_jog_outputs_reset_after_disable` |
+| PLC-ENJ-007 | An invalid ToolNo while a direction key is pressed: the FB reports Error and the robot no longer moves. | 1 | `test_jog_invalid_tool_while_jogging` |
+
+## RC-SUBL
+
+Validation RC: CallSubprogram, StopSubprogram, server logs
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-SUBL-001 | A valid CallSubprogram runs with Valid / InProgress and ends with Done; Execute FALSE resets all outputs. | 3 | `test_call_runs_to_done` |
+| RC-SUBL-002 | Execute TRUE for a single cycle starts the subprogram anyway, Done is shown for one cycle at the end. | 1 | `test_call_execute_pulse_still_reports_done` |
+| RC-SUBL-003 | CallSubprogram reports CommandBuffered (RC confirmed the command) before the subprogram is in progress. | 1 | `test_call_reports_command_buffered` |
+| RC-SUBL-004 | CallSubprogram sets ParameterAccepted once the RC acknowledged the parameters of the running call. | 1 | `test_call_reports_parameter_accepted` |
+| RC-SUBL-005 | Two calls running at the same time report two different, non-zero InstanceIDs. | 1 | `test_call_instance_ids_are_unique` |
+| RC-SUBL-006 | A JobID without program on the RC ends with Error ERR_JOBID_NOT_EXIST, Done / InProgress stay FALSE. | 1 | `test_call_job_id_unknown_to_rc_is_an_error` |
+| RC-SUBL-007 | Execute FALSE and TRUE again with the same JobID while the call runs: the block keeps showing that call. | 1 | `test_call_reexecuted_with_same_job_while_running` |
+| RC-SUBL-008 | A sequence command (CallSubprogram / StopSubprogram) without power stays Busy with CommandInterrupted. | 2 | `test_sequence_command_without_power_is_interrupted` |
+| RC-SUBL-009 | Disabling the robot while a sequence call runs: CommandInterrupted, InProgress FALSE, Progress kept. | 1 | `test_power_off_interrupts_sequence_call` |
+| RC-SUBL-010 | An error of the RC inside a running sequence subprogram interrupts it: CommandInterrupted, no Done. | 1 | `test_rc_error_interrupts_sequence_call` |
+| RC-SUBL-011 | With the secondary sequence active a primary call waits, a secondary call runs to Done. | 1 | `test_primary_call_waits_while_secondary_sequence_active` |
+| RC-SUBL-012 | New Data while a CONTINUOUS call runs: Valid drops and comes back, the RC gets the new data, it runs on. | 1 | `test_continuous_call_takes_new_data` |
+| RC-SUBL-013 | A new JobID while a CONTINUOUS call runs is rejected by the RC with ERR_JOBID_CHANGE_PM3_NOT_ALLOWED. | 1 | `test_continuous_call_rejects_job_change` |
+| RC-SUBL-014 | A CONTINUOUS call started with a one-cycle Execute pulse runs on; DEACTIVATE + new edge ends it with Done. | 1 | `test_continuous_call_with_execute_pulse_and_deactivate` |
+| RC-SUBL-015 | TRIGGER_CONTINUOUS with ListenerID > 0 and no trigger: buffered, no error, no Done, InvocationCounter 0. | 1 | `test_trigger_continuous_call_waits_for_its_trigger` |
+| RC-SUBL-016 | StopSubprogram with the JobID of the running call ends with Done, the call with CommandAborted. | 5 | `test_stop_by_job_aborts_running_call` |
+| RC-SUBL-017 | Two CONTINUOUS calls with the same JobID: StopSubprogram via that JobID aborts both. | 1 | `test_stop_by_job_aborts_every_instance_of_the_job` |
+| RC-SUBL-018 | StopMode STOP_ALL_SUBPROGRAMS with TargetID -1 aborts every running call. | 1 | `test_stop_all_subprograms` |
+| RC-SUBL-019 | StopMode STOP_INSTANCE_ID with the InstanceID of the first call aborts only that call. | 1 | `test_stop_by_instance_id` |
+| RC-SUBL-020 | Two calls in the primary sequence; stopping the JobID of the second (still buffered) aborts it, the first ends Done. | 1 | `test_stop_buffered_call_that_has_not_started` |
+| RC-SUBL-021 | StopSubprogram when nothing matches ends with Done, no Error, and the InfoID of table 7-1. | 4 | `test_stop_without_matching_subprogram_reports_info` |
+| RC-SUBL-022 | StopMode STOP_ALL_SUBPROGRAMS with a TargetID other than -1: Error ERR_STOP_MODE_2_TARGETID_NEG1. | 1 | `test_stop_all_with_target_id_is_rejected_by_rc` |
+| RC-SUBL-023 | A sequence StopSubprogram waits while the sequence is interrupted; after GroupContinue it aborts the call. | 1 | `test_buffered_stop_runs_after_continue` |
+| RC-SUBL-024 | A sequence StopSubprogram waiting in the interrupted sequence ends with CommandAborted on GroupStop. | 1 | `test_buffered_stop_aborted_by_group_stop` |
+| RC-SUBL-025 | With the optional cyclic subprogram data both cyclic blocks are enabled and exchange 26 bytes with a running call. | 1 | `test_cyclic_subprogram_data_round_trip` |
+| RC-SUBL-026 | CreateServerLog ends with Done and a ServerLogID > 0, without Error / CommandAborted / CommandInterrupted. | 3 | `test_create_server_log_done` |
+| RC-SUBL-027 | The header of a new log (ContextFilter 1) holds its ServerLogID and a creation time 'YYYY-MM-DD hh:mm:ss'. | 1 | `test_log_header_holds_id_and_creation_time` |
+| RC-SUBL-028 | The log header names its fields ServerLogID and ServerLogCreationTime. | 1 | `test_log_header_uses_the_key_names_of_the_spec` |
+| RC-SUBL-029 | ReadServerLog into LogFile (export to a file not requested) ends with Done, every line received, Progress 100. | 2 | `test_read_server_log_to_log_file` |
+| RC-SUBL-030 | LogFile with exactly as many elements as the log has lines: Done, all lines, EndOfLogReached TRUE. | 1 | `test_read_server_log_log_file_exactly_fits` |
+| RC-SUBL-031 | ContextFilter with one context: only lines of this context and its children, as many as the full log has. | 3 | `test_read_server_log_single_context` |
+| RC-SUBL-032 | ContextFilter with all 10 elements used: the selected contexts are sent, the others are left out. | 1 | `test_read_server_log_ten_contexts` |
+| RC-SUBL-033 | The RC reports the number of server logs; the log with that ID can be read, the next ID is unknown. | 1 | `test_number_of_server_logs` |
+| RC-SUBL-034 | A ContextFilter value of no context is rejected by the RC with ERR_INVALID_PARAM_SERVER_LOG_CONTEXT_FILTER_UNKNOWN. | 2 | `test_read_server_log_unknown_context_rejected` |
+
+## PLC-SUBL
+
+Validation Client: CallSubprogram, StopSubprogram, server logs
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-SUBL-001 | CallSubprogram with an invalid ProcessingMode / SequenceFlag / ListenerID combination is rejected by the client. | 10 | `test_call_subprogram_invalid_parameters` |
+| PLC-SUBL-002 | StopSubprogram with an undefined ProcessingMode, StopMode or SequenceFlag is rejected by the client. | 3 | `test_stop_subprogram_invalid_parameters` |
+| PLC-SUBL-003 | CreateServerLog with an invalid ProcessingMode / SequenceFlag / ListenerID combination is rejected by the client. | 8 | `test_create_server_log_invalid_parameters` |
+| PLC-SUBL-004 | CreateServerLog in a parallel trigger mode with ListenerID > 0 and a SequenceFlag is rejected with ERR_SEQFLAG_INVALID_IN_PROC_MODE. | 4 | `test_create_server_log_trigger_mode_with_sequence_flag` |
+| PLC-SUBL-005 | CreateServerLog in a trigger mode with ListenerID > 0 passes the client checks and is sent with that ListenerID. | 2 | `test_create_server_log_trigger_mode_with_listener_is_sent` |
+| PLC-SUBL-006 | ReadServerLog with an undefined ExportMode is rejected by the client with ERR_EXPORTMODE_NOT_EXIST. | 3 | `test_read_server_log_undefined_export_mode` |
+
+## RC-UDP
+
+Validation RC: robot user data, ReadActualPosition (single and cyclic)
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-UDP-001 | After a completed motion ReadActualPosition returns the target in joint and Cartesian values. | 2 | `test_read_after_motion_returns_target` |
+| RC-UDP-002 | A parallel ReadActualPosition is executed while the robot is not enabled: Done, Valid, position. | 1 | `test_read_parallel_while_robot_disabled` |
+| RC-UDP-003 | A buffered ReadActualPosition in the primary sequence is interrupted while the robot is disabled. | 1 | `test_read_in_primary_sequence_while_disabled_is_interrupted` |
+| RC-UDP-004 | ReadActualPosition with the valid ProcessingMode / SequenceFlag pairs ends with Done and Valid. | 2 | `test_read_with_sequence_settings` |
+| RC-UDP-005 | ReadActualPosition reports the requested tool and frame numbers with the position. | 4 | `test_read_returns_requested_coordinate_system` |
+| RC-UDP-006 | The Cartesian position is expressed in the requested tool / user frame. | 2 | `test_read_position_is_transformed_into_tool_and_frame` |
+| RC-UDP-007 | ToolNo / FrameNo -1 returns the tool / frame currently used by the RC (the running motion). | 2 | `test_read_minus_one_returns_coordinate_system_of_running_motion` |
+| RC-UDP-008 | An explicit ToolNo / FrameNo 4 is returned even while the motion uses number 6. | 2 | `test_read_explicit_number_during_motion_with_other_number` |
+| RC-UDP-009 | The external axis E1 is returned in the Cartesian and the joint position; missing axes are 0.0. | 1 | `test_read_returns_external_axis` |
+| RC-UDP-010 | A read buffered into the primary sequence while the secondary one is active waits for it. | 1 | `test_read_buffered_in_primary_while_secondary_active` |
+| RC-UDP-011 | Two ReadActualPosition instances started in the same cycle both end with Done and Valid. | 1 | `test_two_reads_in_the_same_cycle` |
+| RC-UDP-012 | A continuous read keeps running when the robot is disabled: Valid, Busy, no Done, no error. | 1 | `test_continuous_read_survives_disable` |
+| RC-UDP-013 | A second rising edge of Execute on a running continuous read does not end it: Busy and Valid stay. | 1 | `test_continuous_read_new_rising_edge_keeps_running` |
+| RC-UDP-014 | A continuous read in frame 1 follows a running MoveDirect and keeps reporting frame 1. | 1 | `test_continuous_read_in_frame_follows_motion` |
+| RC-UDP-015 | TRIGGER_ONCE with ListenerID 1 waits for the trigger, then reads once: Done, Valid, counter 1. | 1 | `test_trigger_once_reads_after_the_trigger` |
+| RC-UDP-016 | TRIGGER_MULTIPLE reads at every trigger (Valid, counter 1, 2; no Done) until DEACTIVATE ends it. | 1 | `test_trigger_multiple_reads_at_each_trigger_and_is_deactivated` |
+| RC-UDP-017 | Cyclic Cartesian position: Enabled, ReadingCartesianPosition, position and requested coordinate system. | 3 | `test_cyclic_cartesian_position` |
+| RC-UDP-018 | Changing ToolNo / FrameNo of an enabled cyclic read switches the coordinate system without restart. | 2 | `test_cyclic_coordinate_system_changed_online` |
+| RC-UDP-019 | ToolNo / FrameNo -1 of the cyclic read after start-up (no motion yet) reports 0. | 2 | `test_cyclic_minus_one_without_motion_is_zero` |
+| RC-UDP-020 | During two motions with tool (frame) 3 and then 5 the current coordinate system follows them. | 4 | `test_cyclic_coordinate_systems_follow_motions` |
+| RC-UDP-021 | Cyclic joint position: ReadingJointPosition, J1..J6 and E1 equal the robot position. | 1 | `test_cyclic_joint_position` |
+| RC-UDP-022 | Cyclic extended position (E2..E6): Reading flag set, the axes the robot does not have report 0.0. | 2 | `test_cyclic_extended_axes_missing_axes_are_zero` |
+| RC-UDP-023 | All four cyclic position data activated: the RobotTask starts and every output follows the robot. | 1 | `test_cyclic_all_position_data` |
+| RC-UDP-024 | Cyclic read enabled with no position data selected: Enabled, all Reading flags FALSE, values 0. | 1 | `test_cyclic_without_any_data` |
+| RC-UDP-025 | Disabling the cyclic read resets its outputs; the AxesGroup keeps receiving the cyclic position. | 1 | `test_cyclic_disabled_resets_outputs` |
+| RC-UDP-026 | Disabling the cyclic read reports warning 16#7303: the position data are still transmitted. | 1 | `test_cyclic_disabled_reports_data_still_sent` |
+| RC-UDP-027 | The cyclic position is mirrored into the UserData (Reading flag, position) with its coordinate systems. | 2 | `test_cyclic_data_in_user_data` |
+| RC-UDP-028 | ReadActualPositionCyclic and ReadActualPosition return the same position and coordinate system. | 3 | `test_cyclic_and_acyclic_read_match` |
+| RC-UDP-029 | The optional cyclic position data set the telegram number RC->PLC and the cyclic lengths. | 6 | `test_telegram_number_and_cyclic_lengths` |
+| RC-UDP-030 | The acyclic area (telegram size - cyclic data - 1 footer byte) belongs to one or two sequences. | 4 | `test_sequence_areas` |
+| RC-UDP-031 | The telegram lengths in the cyclic header equal the configured telegram size (both directions). | 2 | `test_telegram_size_follows_configuration` |
+| RC-UDP-032 | UserData shows the PLC information of the configuration, the library version and the RC information. | 1 | `test_plc_and_rc_info` |
+| RC-UDP-033 | UserData reports the axes and units of the RC: J1..J6 used (degrees), E1 used (mm), E2..E6 unused. | 1 | `test_axes_used_and_units` |
+| RC-UDP-034 | Every defined LogLevel of the RC server log is sent with ExchangeConfiguration and accepted. | 6 | `test_server_log_level_is_transmitted` |
+| RC-UDP-035 | Every defined MessageLevel is sent with ReadMessages at start-up and accepted by the RC. | 4 | `test_message_level_is_transmitted` |
+| RC-UDP-036 | A valid LifeSignTimeOut (10 ms minimum, 50 ms default) is accepted: start-up without error. | 2 | `test_lifesign_timeout_accepted` |
+| RC-UDP-037 | DelayTime 500 ms: the RC waits 500 ms after the first move command before the robot moves. | 1 | `test_delay_time_before_first_motion` |
+| RC-UDP-038 | WaitForNrOfCmd 2 (DelayTime 500 ms): one buffered move waits; the robot starts with the 2nd command. | 1 | `test_wait_for_number_of_commands` |
+| RC-UDP-039 | When the RC stops answering, Initialized, CMDsEnabled and the lifesign state drop; the RobotTask errors. | 1 | `test_connection_loss_clears_initialized_state` |
+| RC-UDP-040 | Reset, enable, stop, then a MoveLinear: the UserData state follows the RA state machine. | 1 | `test_state_during_motion` |
+| RC-UDP-041 | SetSequence(secondary) from the idle primary sequence: secondary active, primary interrupted. | 1 | `test_switch_to_secondary_sequence_state` |
+| RC-UDP-042 | A motion interrupted by GroupInterrupt, then jogging in the secondary sequence leaves the path. | 1 | `test_interrupt_and_jog_away_from_path` |
+| RC-UDP-043 | While GroupJog moves the robot, UserData.IsMoving and Executing are TRUE. | 1 | `test_jog_sets_is_moving` |
+| RC-UDP-044 | Jogging J1 towards the software limit (170 deg) stops the jog with an error before the limit. | 1 | `test_jog_beyond_software_limit` |
+| RC-UDP-045 | After new software limits a controller restart shows RestartInProgress in the UserData. | 1 | `test_restart_in_progress_after_restart` |
+| RC-UDP-046 | New software limits (J1 -160 / +160) are written (Done) and read back unchanged. | 1 | `test_software_limits_written_and_read` |
+| RC-UDP-047 | EnableRobot (StepMode 0): Busy then Enabled; UserData Enabled, Automatic External, step modes off. | 1 | `test_enable_robot_state` |
+| RC-UDP-048 | A move started while the robot is disabled waits; after EnableRobot and GroupContinue it runs to Done. | 1 | `test_move_while_disabled_runs_after_enable_and_continue` |
+| RC-UDP-049 | A move started while the robot is disabled reports CommandInterrupted with InfoID 16#6F02. | 1 | `test_move_while_disabled_reports_interrupted` |
+| RC-UDP-050 | SetOperationMode T1 External then Automatic External: Done; UserData shows the mode, robot disabled, idle. | 1 | `test_operation_mode_switch_t1_and_back` |
+| RC-UDP-051 | ChangeSpeedOverride 50 %: Done and UserData.ActualOverride = 50 (also while a motion is active). | 2 | `test_override_change_shown_in_user_data` |
+| RC-UDP-052 | The RC does not support the motion phase flags: Supported FALSE and Accelerating / Decelerating / ConstantVelocity stay FALSE during a MoveLinear and during jogging. | 2 | `test_motion_phase_flags_without_support` |
+| RC-UDP-053 | Two MoveLinear with blending (mode 3, 10 mm): UserData.IsBlending is TRUE during the transition. | 1 | `test_is_blending_between_two_moves` |
+
+## PLC-UDP
+
+Validation Client: robot user data, ReadActualPosition (single and cyclic)
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-UDP-001 | ReadActualPosition with a tool / frame number outside -1..254 or above the RC's highest index is rejected. | 7 | `test_read_invalid_tool_or_frame_rejected` |
+| PLC-UDP-002 | ReadActualPosition with a ProcessingMode / SequenceFlag / ListenerID combination that is not allowed is rejected by the client: Error with the ErrorID of table 7-1, nothing sent, position 0. | 10 | `test_read_invalid_mode_combination_rejected` |
+| PLC-UDP-003 | A running continuous read whose ToolNo / FrameNo is changed to 99 (not on the RC) ends with an error. | 2 | `test_continuous_read_changed_to_invalid_number` |
+| PLC-UDP-004 | Optional cyclic data activated after the start-up (no restart): warning, the cyclic read is rejected. | 3 | `test_cyclic_data_changed_online_without_restart` |
+| PLC-UDP-005 | ReadActualPositionCyclic for the Cartesian position without that data in the telegram: Error. | 1 | `test_cyclic_enabled_for_data_not_in_telegram` |
+| PLC-UDP-006 | LifeSignTimeOut 8 ms (< 10 ms) is corrected by the client to 10 ms with an info before it is sent. | 1 | `test_lifesign_timeout_below_minimum_is_raised_to_10ms` |
+| PLC-UDP-007 | An undefined LogLevel (RC server log) or MessageLevel (PLC message log) of 30 stops the start-up. | 2 | `test_undefined_log_or_message_level_rejected` |
+
+## RC-SYN
+
+Validation RC: synchronization and RobotTask
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-SYN-001 | SyncReaction 0: the robot can be enabled whether the client is synchronized or not. | 2 | `test_no_reaction_enable_is_independent_of_the_synchronization` |
+| RC-SYN-002 | SyncReaction 1..3: enabling while the client is not synchronized ends with the RC error "not synchronized". | 3 | `test_enable_is_refused_when_not_synchronized` |
+| RC-SYN-003 | SyncReaction 1 / 2: data changed with AUTOMATIC are synchronized again, then enable and continue work. | 2 | `test_enable_is_allowed_after_resynchronization` |
+| RC-SYN-004 | SyncReaction 1..3: a data change while the robot is enabled does not disable the robot on the RC. | 3 | `test_robot_stays_enabled_when_data_change` |
+| RC-SYN-005 | SyncReaction 1..3: the EnableRobot block keeps Enabled without error when the data change and are resynchronized. | 3 | `test_enable_block_stays_enabled_when_data_change` |
+| RC-SYN-006 | SyncReaction 2 / 3: when the sync is lost the robot stays enabled, but it cannot be continued or enabled again. | 2 | `test_continue_is_refused_when_not_synchronized` |
+| RC-SYN-007 | A data change during a motion: reaction 2 lets the motion end (Done), reaction 3 interrupts it at once. | 2 | `test_data_change_during_a_motion` |
+| RC-SYN-008 | SyncDelay: the RC keeps "synchronized" for the delay after the loss, then it interrupts the sequence. | 1 | `test_sync_delay_postpones_the_reaction` |
+| RC-SYN-009 | SyncReaction 4 (undefined) is rejected: RobotTask error, entry in the message log, not initialized. | 1 | `test_undefined_sync_reaction` |
+| RC-SYN-010 | After a PLC restart a new RobotTask initializes again: Initialized TRUE, not synchronized, no error. | 1 | `test_plc_restart_after_initialization` |
+| RC-SYN-011 | A restarted RC (three times): Initialized drops, the reset of the interface is reported, then it initializes again. | 1 | `test_rc_restart_after_initialization` |
+| RC-SYN-012 | Connection lost or RC restarted during a motion: the motion ends without Done, the robot can be restarted. | 3 | `test_connection_lost_during_a_motion` |
+| RC-SYN-013 | A second RobotTask with the same AxesGroup is rejected with 16#8007; the first one stays initialized. | 2 | `test_second_robot_task_on_the_same_axes_group` |
+| RC-SYN-014 | A second RobotTask with other AxesGroup but the same telegram buffers is rejected with 16#8008. | 1 | `test_second_robot_task_on_the_same_telegrams` |
+| RC-SYN-015 | Direct and linear motions with blending, started together, all end with Done at the last target. | 1 | `test_blending_between_direct_and_linear_motions` |
+| RC-SYN-016 | A read command with an Execute pulse of one cycle still shows Done (for one cycle) when it has finished. | 1 | `test_done_is_shown_after_a_short_execute` |
+
+## PLC-SYN
+
+Validation Client: synchronization and RobotTask
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-SYN-001 | An invalid start-up mode (AUTOMATIC or undefined) gives the mode warning of the data set and no synchronization. | 24 | `test_invalid_mode_at_start_up_is_reported` |
+| PLC-SYN-002 | An invalid start-up mode leaves the RobotTask initialized without error, only the mode warning is set. | 6 | `test_invalid_mode_at_start_up_is_only_a_warning` |
+| PLC-SYN-003 | A data set with NO_SYNCHRONIZATION during and after the start-up does not affect Synchronized. | 6 | `test_data_set_without_synchronization_is_not_compared` |
+| PLC-SYN-004 | All data sets without synchronization: the RobotTask is initialized, never synchronized, no error. | 1 | `test_all_data_sets_without_synchronization` |
+| PLC-SYN-005 | Synchronization switched off for all data sets while synchronized: used only after a restart. | 1 | `test_all_data_sets_switched_off_while_running` |
+| PLC-SYN-006 | Without start-up synchronization and equal data, later changes are synchronized in the after-start-up direction. | 24 | `test_after_start_up_mode_with_equal_data` |
+| PLC-SYN-007 | Without start-up synchronization a difference found at the start-up is handled like a change after it. | 30 | `test_after_start_up_mode_with_a_difference_at_the_start_up` |
+| PLC-SYN-008 | A difference at the start-up is resolved in the start-up direction, later changes in the after-start-up one. | 42 | `test_start_up_direction_then_after_start_up_direction` |
+| PLC-SYN-009 | With user interaction a difference at the start-up is not resolved: sync warning, not synchronized. | 36 | `test_start_up_difference_with_user_interaction` |
+| PLC-SYN-010 | A mode changed while the RobotTask runs is reported with an info and only used after a restart. | 78 | `test_mode_changed_while_running_is_used_after_a_restart` |
+| PLC-SYN-011 | A mode changed while the RobotTask is synchronized is reported with the info at once. | 1 | `test_mode_change_is_reported_while_synchronized` |
+| PLC-SYN-012 | The RC has 15 elements, the PLC array only 10: the count error of the data set, not synchronized. | 3 | `test_more_elements_on_the_rc_than_in_the_plc_array` |
+
+## RC-SAFE
+
+Validation RC: brake test, safe referencing, safety functions
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| RC-SAFE-001 | BrakeTest of all robot axes: Busy then Done, every axis reported as passed, no warning; the selection reaches the RC. | 1 | `test_brake_test_all_axes` |
+| RC-SAFE-002 | BrakeTest of one robot axis: Done, only this axis is reported as passed. | 6 | `test_brake_test_single_axis` |
+| RC-SAFE-003 | BrakeTest without external axes: no external axis is reported as tested. | 1 | `test_brake_test_external_axes_not_selected` |
+| RC-SAFE-004 | A failed brake on J2 and J5 (with warning) set by the RC: Done, J2 and J5 not passed and flagged in the warning output. | 1 | `test_brake_test_failure_and_warning_reported` |
+| RC-SAFE-005 | A failed brake on J2 only (with warning): J2 is reported as not passed and flagged in the warning output. | 1 | `test_brake_test_failure_of_one_axis` |
+| RC-SAFE-006 | BrakeTest / SafeReferencing while the robot is not enabled: Busy, then CommandInterrupted with info 16#6F02. | 2 | `test_command_needs_enabled_robot` |
+| RC-SAFE-007 | BrakeTest / SafeReferencing after GroupInterrupt: CommandInterrupted with info 16#6F01, Done after GroupContinue. | 2 | `test_command_while_interrupted` |
+| RC-SAFE-008 | BrakeTest / SafeReferencing with AbortingMode ABORT during a motion: the motion ends with CommandAborted (16#6C06), the command with Done. | 6 | `test_aborting_mode_cancels_motion` |
+| RC-SAFE-009 | BrakeTest / SafeReferencing with the secondary sequence flag while the primary sequence is active: Error 16#8F16. | 2 | `test_secondary_flag_rejected_in_primary_sequence` |
+| RC-SAFE-010 | BrakeTest / SafeReferencing in the primary sequence while the secondary is active: buffered, done after switching back and GroupContinue. | 2 | `test_primary_command_waits_during_secondary_sequence` |
+| RC-SAFE-011 | BrakeTest / SafeReferencing with the secondary flag while the secondary sequence is active: Done. | 2 | `test_secondary_command_in_secondary_sequence` |
+| RC-SAFE-012 | Buffered motion to the test position, BrakeTest, motion to the parking position: all three end with Done, also after a failed brake. | 6 | `test_parking_sequence` |
+| RC-SAFE-013 | Motion - BrakeTest - parking motion with GroupInterrupt during the parking motion: interrupted, Done after GroupContinue. | 1 | `test_parking_after_interrupted_motion` |
+| RC-SAFE-014 | A BrakeTest takes time on the robot: Busy, Active, then Done. | 1 | `test_brake_test_active_while_running` |
+| RC-SAFE-015 | SafeReferencing with default values: Busy then Done without error; the command reaches the RC. | 1 | `test_safe_referencing_default_command` |
+| RC-SAFE-016 | A finished SafeReferencing reports status 2 (completed). | 1 | `test_safe_referencing_status_completed` |
+| RC-SAFE-017 | The status reported by the RC (another reference position required / user input required) appears at the output. | 2 | `test_safe_referencing_status_passed_through` |
+| RC-SAFE-018 | SafeReferencing moves the robot to the given joint position: Active while moving, Done at the position. | 1 | `test_safe_referencing_moves_to_reference_position` |
+| RC-SAFE-019 | A reference position farther away than MaximumDistance: Error 16#8C67, the robot does not move. | 1 | `test_safe_referencing_maximum_distance_exceeded` |
+| RC-SAFE-020 | An RC error (optional parameter not supported, distance exceeded, referencing failed): Busy then Error with the RC code, no Done. | 3 | `test_safe_referencing_rc_error` |
+| RC-SAFE-021 | A negative dynamic rate selects the default of the RC: Done without error. | 4 | `test_safe_referencing_negative_rate_uses_default` |
+| RC-SAFE-022 | SafeReferencing with the default tool or tool 1: Done, the tool number reaches the RC. | 2 | `test_safe_referencing_tool_reaches_rc` |
+| RC-SAFE-023 | SafeReferencing buffered behind a motion, then GroupInterrupt and GroupStop: both end with CommandAborted (16#6C05). | 1 | `test_safe_referencing_aborted_by_group_stop` |
+| RC-SAFE-024 | ReadSafeReferencePosition: Busy then Done; joint position and number of positions as reported by the RC. | 1 | `test_read_reference_position` |
+| RC-SAFE-025 | No reference position defined for the index: Busy then Error with the RC code, no Done (stimulated by a forced error). | 1 | `test_read_reference_position_undefined_index` |
+| RC-SAFE-026 | Index 255 (no such reference position): Error from the RC. | 1 | `test_read_reference_position_index_out_of_range` |
+| RC-SAFE-027 | Auto external to T1 external during a motion: the drives switch off, the robot stops, the motion is interrupted (16#6F02) and EnableRobot reports 16#8C04; after enabling again the motion does not resume by itself. | 3 | `test_auto_to_t1_stops_motion` |
+| RC-SAFE-028 | T1 external to auto external during a motion with HoldToRun: the robot stops and the motion is interrupted. | 3 | `test_t1_to_auto_stops_motion` |
+
+## PLC-SAFE
+
+Validation Client: brake test, safe referencing, safety functions
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| PLC-SAFE-001 | SafeReferencing with a dynamic rate of 101 %: Error with the matching ID without Busy, no command reaches the RC. | 4 | `test_safe_referencing_rate_above_100_rejected` |
+| PLC-SAFE-002 | SafeReferencing with a tool number above the highest configured tool: Error ERR_TOOLNO_UNAVAILABLE. | 1 | `test_safe_referencing_unknown_tool_rejected` |
+| PLC-SAFE-003 | ReadSafeReferencePosition with index 0: Error ERR_INVALID_PAR_CMD, no command reaches the RC. | 1 | `test_read_reference_position_index_zero_rejected` |
+| PLC-SAFE-004 | The user defined command name is part of the message written for an RC error of the command. | 2 | `test_command_name_in_error_message` |
+
 ## SDK-LOOP
 
 SDK in the loop (simulator binding)
@@ -445,24 +1120,24 @@ OPC UA transport
 
 | ID | Test case | Instances | Test |
 |---|---|---:|---|
-| OPCUA-001 | The telegram is written to out_node and the telegram of in_node is read (ByteString, Byte[], Double[]). | 3 | `test_write_and_read` |
-| OPCUA-002 | Close twice; an exchange after close raises TransportClosedError. | 1 | `test_close_is_idempotent_and_final` |
-| OPCUA-003 | Without connect() the first exchange opens the connection. | 1 | `test_connects_on_first_exchange` |
-| OPCUA-004 | Unknown NodeId, wrong data type and wrong length are reported on connect. | 7 | `test_connect_checks_nodes` |
-| OPCUA-005 | Check_lengths=False accepts a node with another length; a wrong answer is a protocol error. | 1 | `test_length_check_can_be_disabled` |
-| OPCUA-006 | The RC writes an answer of the wrong length: TransportProtocolError, the connection stays. | 1 | `test_wrong_answer_length_is_protocol_error` |
-| OPCUA-007 | No server at the endpoint: TransportConnectError, reconnect backoff starts. | 1 | `test_no_server` |
-| OPCUA-008 | A server that accepts but never answers: connect fails within the timeout. | 1 | `test_silent_server_times_out` |
-| OPCUA-009 | The server goes down: TransportClosedError; after the restart the transport reconnects. | 1 | `test_server_restart_and_reconnect` |
-| OPCUA-010 | With reconnect disabled a lost connection stays lost. | 1 | `test_reconnect_disabled` |
-| OPCUA-011 | A timeout of a request is a TransportTimeoutError, any other error a TransportClosedError. | 1 | `test_timeout_and_errors_of_a_request_drop_the_connection` |
-| OPCUA-012 | User and password are given to the client (anonymous server: the login is rejected or ignored). | 1 | `test_username_password_are_passed` |
-| OPCUA-013 | Without asyncua the connect explains how to install it. | 1 | `test_missing_asyncua` |
-| OPCUA-014 | Browse lists the variables with data type, length and write access. | 1 | `test_browse_lists_telegram_candidates` |
-| OPCUA-015 | Browse of an unreachable endpoint raises TransportConnectError. | 1 | `test_browse_no_server` |
-| OPCUA-016 | Two transports (two robots) on one server in two threads. | 1 | `test_parallel_transports` |
-| OPCUA-017 | The simulator answers every cycle; the client sees the answer to its request a few cycles later. | 3 | `test_simulator_answers_in_its_own_cycle` |
-| OPCUA-018 | SDK in the loop over OPC UA: the RobotTask initializes and reads the robot data. | 1 | `test_srci_client_over_opcua_against_sdk` |
+| OPCUA-001 | The telegram is written to out_node and the telegram of in_node is read (ByteString, Byte[], Double[]). | 0 | `test_write_and_read` |
+| OPCUA-002 | Close twice; an exchange after close raises TransportClosedError. | 0 | `test_close_is_idempotent_and_final` |
+| OPCUA-003 | Without connect() the first exchange opens the connection. | 0 | `test_connects_on_first_exchange` |
+| OPCUA-004 | Unknown NodeId, wrong data type and wrong length are reported on connect. | 0 | `test_connect_checks_nodes` |
+| OPCUA-005 | Check_lengths=False accepts a node with another length; a wrong answer is a protocol error. | 0 | `test_length_check_can_be_disabled` |
+| OPCUA-006 | The RC writes an answer of the wrong length: TransportProtocolError, the connection stays. | 0 | `test_wrong_answer_length_is_protocol_error` |
+| OPCUA-007 | No server at the endpoint: TransportConnectError, reconnect backoff starts. | 0 | `test_no_server` |
+| OPCUA-008 | A server that accepts but never answers: connect fails within the timeout. | 0 | `test_silent_server_times_out` |
+| OPCUA-009 | The server goes down: TransportClosedError; after the restart the transport reconnects. | 0 | `test_server_restart_and_reconnect` |
+| OPCUA-010 | With reconnect disabled a lost connection stays lost. | 0 | `test_reconnect_disabled` |
+| OPCUA-011 | A timeout of a request is a TransportTimeoutError, any other error a TransportClosedError. | 0 | `test_timeout_and_errors_of_a_request_drop_the_connection` |
+| OPCUA-012 | User and password are given to the client (anonymous server: the login is rejected or ignored). | 0 | `test_username_password_are_passed` |
+| OPCUA-013 | Without asyncua the connect explains how to install it. | 0 | `test_missing_asyncua` |
+| OPCUA-014 | Browse lists the variables with data type, length and write access. | 0 | `test_browse_lists_telegram_candidates` |
+| OPCUA-015 | Browse of an unreachable endpoint raises TransportConnectError. | 0 | `test_browse_no_server` |
+| OPCUA-016 | Two transports (two robots) on one server in two threads. | 0 | `test_parallel_transports` |
+| OPCUA-017 | The simulator answers every cycle; the client sees the answer to its request a few cycles later. | 0 | `test_simulator_answers_in_its_own_cycle` |
+| OPCUA-018 | SDK in the loop over OPC UA: the RobotTask initializes and reads the robot data. | 0 | `test_srci_client_over_opcua_against_sdk` |
 
 ## SPEC-IF
 

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+ - Validation tests per command (`tests/sdk/validation`, areas RC-* = behaviour of the robot
+   controller, PLC-* = behaviour of the client library; 483 test functions, 1443 tests against the
+   SDK simulator): motions (MoveLinear / MoveDirect / MoveAxes), group commands, sequences and
+   override, frame / tool / load data, dynamics and SW limits, EnableRobot / GroupJog / operation
+   mode, safety functions, subprograms and server logs, user data and actual position,
+   synchronization and RobotTask. Shared fixtures and helpers in `tests/sdk/validation/conftest.py`.
+   Known deviations are strict xfail: `SDK-GAP` (simulator) and `LIB-BUG Fxxx` (PLC library,
+   findings F111 ... F132 in docs/ST_FINDINGS.md)
  - Four function blocks that were missing in the PLC library (ST-FIX F109, new in the library):
    `MC_MoveDirectCamFB`, `MC_ReadAnalogOutputFB`, `MC_ReadSafeReferencePositionFB`,
    `MC_SafeReferencingFB`; RobotLibrary.xml: export of 2026-10-25 (library 1.5.3 + F109)
