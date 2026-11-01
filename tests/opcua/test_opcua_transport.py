@@ -27,6 +27,7 @@ from __future__ import annotations
 import socket
 import sys
 import threading
+import time
 from collections.abc import Iterator
 from typing import Any
 
@@ -137,7 +138,8 @@ def test_write_and_read(server: Server, kind: str) -> None:
         server.set("Arr.In", list(answer), ua.VariantType.Byte)
     else:
         server.set("Num.In", [float(b) for b in answer], ua.VariantType.Double)
-    with transport(server, kind) as t:
+    # perf_counter: time.monotonic ticks in ~16 ms on Windows, a local exchange can measure 0
+    with transport(server, kind, clock=time.perf_counter) as t:
         assert t.state is TransportState.CONNECTED
         for n in range(20):
             out = bytes([n]) + bytes(range(1, SEND))
