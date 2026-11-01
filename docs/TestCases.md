@@ -58,6 +58,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [RC-SAFE](#rc-safe) | Validation RC: brake test, safe referencing, safety functions | 28 | 59 |
 | [PLC-SAFE](#plc-safe) | Validation Client: brake test, safe referencing, safety functions | 4 | 8 |
 | [VAL-PAR](#val-par) | Validation of the blocks without reference set: parameters against the specification | 3 | 3471 |
+| [VAL-MOV](#val-mov) | Validation of the blocks without reference set: motions with stop, interrupt, override, power | 6 | 129 |
 | [SDK-LOOP](#sdk-loop) | SDK in the loop (simulator binding) | 61 | 430 |
 | [TCP](#tcp) | TCP transport | 17 | 17 |
 | [OPCUA](#opcua) | OPC UA transport | 18 | 28 |
@@ -71,7 +72,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1336 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 223 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **1033** | **9447** |
+| | **Total** | **1039** | **9576** |
 
 ## Test methodology
 
@@ -1032,6 +1033,19 @@ Validation of the blocks without reference set: parameters against the specifica
 | VAL-PAR-001 | A REAL parameter that is not a number (NaN) is rejected by the client: Error, nothing is sent. | 2945 | `test_real_not_a_number` |
 | VAL-PAR-002 | A value the specification lists for the parameter (or a bound of its range) is sent to the RC. | 418 | `test_specified_value_is_sent` |
 | VAL-PAR-003 | A value the specification marks as invalid, or above its values and ranges, ends with Error (client or RC). | 108 | `test_value_outside_the_specification_is_an_error` |
+
+## VAL-MOV
+
+Validation of the blocks without reference set: motions with stop, interrupt, override, power
+
+| ID | Test case | Instances | Test |
+|---|---|---:|---|
+| VAL-MOV-001 | GroupStop during the motion: CommandAborted, not Done, the robot stands still. | 19 | `test_stop_aborts_the_motion` |
+| VAL-MOV-002 | GroupInterrupt during the motion: CommandInterrupted, Busy, the robot stands still; GroupContinue: the motion ends with Done. | 19 | `test_interrupt_and_continue` |
+| VAL-MOV-003 | Speed override 0 %: the motion becomes Active but the robot does not move; 100 %: Done. | 19 | `test_override_zero_holds_the_motion` |
+| VAL-MOV-004 | Power off during the motion: CommandInterrupted with INFO_CMD_INTERRUPTED_BY_RA_NOT_ENABLED, not Active, not Done, the robot stands still. | 19 | `test_disable_robot_interrupts_the_motion` |
+| VAL-MOV-005 | While the motion is Active the RC reports Executing (not Idle); after Done it is Idle again. | 19 | `test_user_data_follow_the_motion` |
+| VAL-MOV-006 | Tool / frame number 255 (outside 0..254) is rejected by the block with its range error; the robot does not move. | 34 | `test_tool_or_frame_outside_the_range_is_rejected` |
 
 ## SDK-LOOP
 

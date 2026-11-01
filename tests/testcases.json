@@ -4728,6 +4728,48 @@
   "status": "active"
  },
  {
+  "id": "VAL-MOV-001",
+  "test": "tests/sdk/validation/test_val_motion.py::test_stop_aborts_the_motion",
+  "title": "GroupStop during the motion: CommandAborted, not Done, the robot stands still.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-MOV-002",
+  "test": "tests/sdk/validation/test_val_motion.py::test_interrupt_and_continue",
+  "title": "GroupInterrupt during the motion: CommandInterrupted, Busy, the robot stands still; GroupContinue: the motion ends with Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-MOV-003",
+  "test": "tests/sdk/validation/test_val_motion.py::test_override_zero_holds_the_motion",
+  "title": "Speed override 0 %: the motion becomes Active but the robot does not move; 100 %: Done.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-MOV-004",
+  "test": "tests/sdk/validation/test_val_motion.py::test_disable_robot_interrupts_the_motion",
+  "title": "Power off during the motion: CommandInterrupted with INFO_CMD_INTERRUPTED_BY_RA_NOT_ENABLED, not Active, not Done, the robot stands still.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-MOV-005",
+  "test": "tests/sdk/validation/test_val_motion.py::test_user_data_follow_the_motion",
+  "title": "While the motion is Active the RC reports Executing (not Idle); after Done it is Idle again.",
+  "refs": [],
+  "status": "active"
+ },
+ {
+  "id": "VAL-MOV-006",
+  "test": "tests/sdk/validation/test_val_motion.py::test_tool_or_frame_outside_the_range_is_rejected",
+  "title": "Tool / frame number 255 (outside 0..254) is rejected by the block with its range error; the robot does not move.",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "SDK-LOOP-001",
   "test": "tests/sdk/test_sdk_in_the_loop.py::test_sdk_library",
   "title": "The SDK simulator library is found and has the expected C API version",
