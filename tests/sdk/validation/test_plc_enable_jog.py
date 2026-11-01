@@ -32,7 +32,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from srci_sdk_sim.sdk import SdkSimulator
@@ -113,7 +113,7 @@ def test_jog_invalid_tool_or_frame_rejected(
 ) -> None:
     """GroupJog with an invalid tool or frame number: Error with the matching ID, not Enabled, a key press does not move."""
     enable(robot)
-    j = _jog(robot, **par)
+    j = _jog(robot, **cast(dict[str, Any], par))
     assert j.Error and j.ErrorID == err and not j.Enabled, state(j)
     j.ParCmd.Control.X_J1_Pos = True
     robot.run(20)

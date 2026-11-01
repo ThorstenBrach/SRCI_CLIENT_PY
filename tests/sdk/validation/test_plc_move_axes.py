@@ -188,9 +188,12 @@ def test_new_rising_edge_while_active_restarts(
     mv.ParCmd.JointPosition.J1 = second_target
     mv.Execute = True
     history: list[tuple[bool, bool]] = []
-    watch(
-        robot, [mv], 16 * MOVE_CYCLES, lambda: history.append((mv.Busy, mv.CommandBuffered)) or finished(mv)
-    )
+
+    def until() -> bool:
+        history.append((mv.Busy, mv.CommandBuffered))
+        return bool(finished(mv))
+
+    watch(robot, [mv], 16 * MOVE_CYCLES, until)
     assert mv.Done and not mv.Error, state(mv)
     assert _sent(sdk, since) == 2
     assert all(busy for busy, _ in history[:-1])

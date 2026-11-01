@@ -37,7 +37,7 @@ cannot be checked - the tests check that ToolNo / FrameNo / Mode reach the RC).
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from srci_sdk_sim.sdk import SdkSimulator
@@ -281,7 +281,7 @@ def test_jog_increment_reached(
 ) -> None:
     """Incremental jogging: the robot moves exactly the increment and reports DistanceReached; Enable FALSE resets the outputs."""
     enable(robot)
-    j = _jog(robot, mode=mode, **{kind: increment})
+    j = _jog(robot, mode=mode, **cast(dict[str, Any], {kind: increment}))
     _key(j, "X_J1_Pos")
     robot.run(int(increment / STEP) + 20, until=lambda: bool(j.OutCmd.DistanceReached))
     assert j.OutCmd.DistanceReached and not j.Error, state(j)
@@ -325,7 +325,7 @@ def test_jog_increment_of_other_kind_ignored(
 ) -> None:
     """An increment that does not apply to the pressed key (rotation for X, translation for joints) is ignored: continuous jog."""
     enable(robot)
-    j = _jog(robot, mode=mode, **{kind: 1.0})
+    j = _jog(robot, mode=mode, **cast(dict[str, Any], {kind: 1.0}))
     _key(j, "X_J1_Pos")
     robot.run(40)
     assert sdk.joints[0] > 2.0 and not j.OutCmd.DistanceReached and j.OutCmd.MotionActive, state(j)

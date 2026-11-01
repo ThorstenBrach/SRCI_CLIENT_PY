@@ -435,7 +435,11 @@ def test_trigger_multiple_reads_at_each_trigger_and_is_deactivated(
     tu = _trigger(robot)
     for count in (1, 2):
         tu.Execute = True
-        robot.run(30, until=lambda c=count: rp.OutCmd.InvocationCounter == c)
+
+        def counted(c: int = count) -> bool:
+            return bool(rp.OutCmd.InvocationCounter == c)
+
+        robot.run(30, until=counted)
         assert rp.OutCmd.InvocationCounter == count and rp.Valid and rp.Busy and not rp.Done, state(rp)
         tu.Execute = False
         robot.run(2)
@@ -562,7 +566,7 @@ def test_cyclic_extended_axes_missing_axes_are_zero(sdk: SdkSimulator, kind: str
                 cy.OutCmd.ReadingCartesianPositionExt,
                 h.user_data.ReadingExtCartesianPosition,
             )
-            ud_ext = h.user_data.ExtCartesianPosition
+            ud_ext: Any = h.user_data.ExtCartesianPosition
         else:
             ext, reading, ud = (
                 cy.OutCmd.JointPositionExt,
@@ -662,7 +666,7 @@ def test_cyclic_data_in_user_data(sdk: SdkSimulator, kind: str) -> None:
         sdk.joints = JOINTS
         if kind == "cartesian":
             _cyclic(h, ReadCartesianPosition=True, ToolNo=1)
-            ud = h.user_data.CartesianPosition
+            ud: Any = h.user_data.CartesianPosition
             assert h.user_data.ReadingCartesianPosition
             assert _cart(ud) == pytest.approx(tuple(JOINTS[:6]))
             # the coordinate systems of the cyclic data are kept in the AxesGroup (not in UserData)

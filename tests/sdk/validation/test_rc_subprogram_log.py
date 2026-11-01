@@ -175,11 +175,16 @@ def test_call_runs_to_done(
         enable(robot)
     cs = _call(robot, mode=mode, Execute=True)
     in_progress = []
-    seen = watch(robot, [cs], SUB_CYCLES + 50, lambda: in_progress.append(cs.InProgress) or _ended(cs))[0]
+
+    def until() -> bool:
+        in_progress.append(cs.InProgress)
+        return bool(_ended(cs))
+
+    seen = watch(robot, [cs], SUB_CYCLES + 50, until)[0]
     assert cs.Done and not cs.Error and not cs.CommandAborted, _flags(cs)
     assert order(seen, "Busy", "Valid", "Done"), seen.flags
     assert any(in_progress) and not cs.InProgress and cs.OutCmd.Progress == 100, _flags(cs)
-    assert sdk.last_command(CALL_SUBPROGRAM)["JobID"] == "1"
+    assert (sdk.last_command(CALL_SUBPROGRAM) or {})["JobID"] == "1"
     cs.Execute = False
     robot.run(2)
     assert _all_outputs_reset(cs), _flags(cs)
@@ -337,7 +342,7 @@ def test_continuous_call_takes_new_data(robot: RobotTaskHarness, sdk: SdkSimulat
         robot.run(1)
         valid.append(cs.Valid)
     assert False in valid and valid[-1], valid
-    assert sdk.last_command(CALL_SUBPROGRAM)["Data[0]"] == "7"
+    assert (sdk.last_command(CALL_SUBPROGRAM) or {})["Data[0]"] == "7"
     assert cs.Busy and cs.InProgress and not cs.Error and not cs.Done, _flags(cs)
 
 

@@ -94,7 +94,12 @@ def test_reaches_target_with_progress(robot: RobotTaskHarness, sdk: SdkSimulator
     mv = _move_linear(robot, 100.0, 20.0, -10.0)
     mv.Execute = True
     progress: list[float] = []
-    seen = watch(robot, [mv], 300, lambda: progress.append(mv.OutCmd.Progress) or finished(mv))[0]
+
+    def until() -> bool:
+        progress.append(mv.OutCmd.Progress)
+        return bool(finished(mv))
+
+    seen = watch(robot, [mv], 300, until)[0]
     assert order(seen, "Busy", "CommandBuffered", "Active", "Done"), seen.flags
     assert not mv.Error and mv.ErrorID == 0
     assert sdk.joints[:3] == pytest.approx([100.0, 20.0, -10.0])
@@ -139,7 +144,7 @@ def test_second_edge_while_active_same_target(robot: RobotTaskHarness, sdk: SdkS
     assert mv.Done and not mv.Error, state(mv)
     assert "CommandAborted" not in seen.flags
     assert sdk.joints[0] == pytest.approx(100.0)
-    assert sdk.last_command(MOVE_LINEAR)["ParSeq"] == "1"  # sent once, no update
+    assert (sdk.last_command(MOVE_LINEAR) or {})["ParSeq"] == "1"  # sent once, no update
 
 
 def test_many_edges_while_active(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
@@ -158,7 +163,7 @@ def test_many_edges_while_active(robot: RobotTaskHarness, sdk: SdkSimulator) -> 
     robot.run(1000, until=lambda: finished(mv))
     assert mv.Done and not mv.Error, state(mv)
     assert sdk.joints[0] == pytest.approx(100.0)
-    assert sdk.last_command(MOVE_LINEAR)["ParSeq"] == "1"  # sent once, no update
+    assert (sdk.last_command(MOVE_LINEAR) or {})["ParSeq"] == "1"  # sent once, no update
 
 
 def test_second_edge_with_new_target_is_ignored(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
@@ -447,7 +452,11 @@ def test_ten_short_commands_buffered(robot: RobotTaskHarness, sdk: SdkSimulator,
     for i, mv in enumerate(moves):
         mv.Execute = True
         if i < len(moves) - 1:
-            robot.run(50, until=lambda mv=mv: bool(mv.CommandBuffered or mv.Error))
+
+            def buffered(mv: Any = mv) -> bool:
+                return bool(mv.CommandBuffered or mv.Error)
+
+            robot.run(50, until=buffered)
     active_while_previous_busy = []
 
     def step() -> bool:

@@ -87,14 +87,14 @@ def _sent(sdk: SdkSimulator, cmd_type: int, since: int) -> int:
     )
 
 
-def _default_dynamics(h: RobotTaskHarness, rates: tuple[float, float, float, float]) -> Any:
+def _default_dynamics(h: RobotTaskHarness, rates: tuple[float, ...]) -> Any:
     block = fb(h, "MC_WriteRobotDefaultDynamicsFB")
     for name, value in zip(RATES, rates, strict=True):
         setattr(block.ParCmd.DynamicValues, name, value)
     return block
 
 
-def _reference_dynamics(h: RobotTaskHarness, refs: tuple[float, float, float, float]) -> Any:
+def _reference_dynamics(h: RobotTaskHarness, refs: tuple[float, ...]) -> Any:
     block = fb(h, "MC_WriteRobotReferenceDynamicsFB")
     for name, value in zip(REFS, refs, strict=True):
         setattr(block.ParCmd.DynamicValues, name, value)

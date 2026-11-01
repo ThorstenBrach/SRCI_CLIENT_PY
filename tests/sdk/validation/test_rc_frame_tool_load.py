@@ -82,7 +82,8 @@ def _read(h: RobotTaskHarness, kind: str, number: int) -> tuple[int, Any]:
 
 def _user_data(h: RobotTaskHarness, kind: str, number: int) -> Any:
     """Entry of the user data array (ToolData / FrameData / LoadData of the RobotTask)."""
-    return {"frame": h.frames, "tool": h.tools, "load": h.loads}[kind][number]
+    tables: dict[str, Any] = {"frame": h.frames, "tool": h.tools, "load": h.loads}
+    return tables[kind][number]
 
 
 def _same(data: Any, values: dict[str, Any]) -> None:

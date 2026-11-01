@@ -147,7 +147,12 @@ def test_flag_sequence_progress_and_done_reset(robot: RobotTaskHarness, sdk: Sdk
     mv = move_axes(robot, 30.0, -10.0)
     progress: list[float] = []
     mv.Execute = True
-    seen = watch(robot, [mv], 4 * MOVE_CYCLES, lambda: progress.append(mv.OutCmd.Progress) or finished(mv))[0]
+
+    def until() -> bool:
+        progress.append(mv.OutCmd.Progress)
+        return bool(finished(mv))
+
+    seen = watch(robot, [mv], 4 * MOVE_CYCLES, until)[0]
     assert order(seen, "Busy", "CommandBuffered", "Active", "Done"), seen.flags
     assert not mv.Error and mv.ErrorID == 0
     assert sdk.joints[:2] == pytest.approx([30.0, -10.0])

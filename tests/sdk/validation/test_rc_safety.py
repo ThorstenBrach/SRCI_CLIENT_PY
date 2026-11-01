@@ -129,7 +129,7 @@ def test_brake_test_all_axes(robot: RobotTaskHarness, sdk: SdkSimulator) -> None
     assert order(s, "Busy", "Done") and not s.final["Error"], s.flags
     assert _bits(b.OutCmd.RobotAxesStatus) == [1, 2, 3, 4, 5, 6]
     assert _bits(b.OutCmd.RobotAxesWarning) == []
-    assert int(sdk.firmware_command(int(CmdType.BrakeTest))["RobotAxesActive"]) == ALL_AXES
+    assert int((sdk.firmware_command(int(CmdType.BrakeTest)) or {})["RobotAxesActive"]) == ALL_AXES
 
 
 @pytest.mark.parametrize("axis", [1, 2, 3, 4, 5, 6], ids=[f"j{i}" for i in range(1, 7)])
@@ -406,7 +406,7 @@ def test_safe_referencing_tool_reaches_rc(robot: RobotTaskHarness, sdk: SdkSimul
     s = fb(robot, "MC_SafeReferencingFB")
     s.ParCmd.ToolNo = tool
     assert execute(robot, s).final["Done"]
-    assert int(sdk.last_command(int(CmdType.SafeReferencing))["ToolNo"]) == tool
+    assert int((sdk.last_command(int(CmdType.SafeReferencing)) or {})["ToolNo"]) == tool
 
 
 def test_safe_referencing_aborted_by_group_stop(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
@@ -443,7 +443,7 @@ def test_read_reference_position(robot: RobotTaskHarness, sdk: SdkSimulator) -> 
     assert r.OutCmd.NumberOfPositions == 3
     p = r.OutCmd.Position
     assert [p.J1, p.J2, p.J3, p.J4, p.J5, p.J6] == pytest.approx([1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
-    assert int(sdk.last_command(int(CmdType.ReadSafeReferencePosition))["Index"]) == 2
+    assert int((sdk.last_command(int(CmdType.ReadSafeReferencePosition)) or {})["Index"]) == 2
 
 
 def test_read_reference_position_undefined_index(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:

@@ -33,7 +33,7 @@ is gone (``SdkSimulator.reset``: the SDK notices it otherwise only with its real
 from __future__ import annotations
 
 from collections.abc import Iterator
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from srci_sdk_sim.sdk import SdkSimulator, sdk_transport
@@ -41,6 +41,7 @@ from srci_sdk_sim.sdk import SdkSimulator, sdk_transport
 from srci.fb.General.MC_RobotTask.MC_RobotTaskFB import MC_RobotTaskFB
 from srci.iec.clock import FakeClock, use_clock
 from srci.runtime.systemtime import system_time_now
+from srci.transport import Transport
 from srci.types import AxesGroup, BlendingMode, ProcessingMode, RobotLibraryErrorIdEnum
 from tests.robot_task_harness import SIZE, RobotTaskHarness
 from tests.sdk.validation.conftest import cartesian, enable, execute, fb, move_axes, order, state, watch
@@ -126,7 +127,7 @@ def test_rc_restart_after_initialization(sdk: SdkSimulator, clock: FakeClock) ->
     acknowledgement (Enable FALSE / TRUE) it is initialized without error, every time.
     """
     cable = _Cable(sdk)
-    h = RobotTaskHarness(cable, advance=clock.advance)
+    h = RobotTaskHarness(cast(Transport, cable), advance=clock.advance)
     _initialized(h)
     for _ in range(3):
         cable.plug(SdkSimulator())
@@ -158,7 +159,7 @@ def test_connection_lost_during_a_motion(sdk: SdkSimulator, clock: FakeClock, va
     """
     sdk.set_move_cycles(300)
     cable = _Cable(sdk)
-    h = RobotTaskHarness(cable, advance=clock.advance)
+    h = RobotTaskHarness(cast(Transport, cable), advance=clock.advance)
     _initialized(h)
     enable(h)
     mv = move_axes(h, 50.0)

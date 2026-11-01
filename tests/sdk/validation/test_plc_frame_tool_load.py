@@ -217,7 +217,7 @@ def test_execute_pulse_shows_done_for_one_cycle(
         if block.Done:
             done_cycles += 1
             if BLOCKS[name][2]:
-                returned.append(getattr(block.OutCmd, BLOCKS[name][2]))
+                returned.append(getattr(block.OutCmd, str(BLOCKS[name][2])))
     assert done_cycles == 1, state(block)
     assert not block.Busy and not block.Error and not block.Done
     assert _sent(sdk, BLOCKS[name][1], since) == 1
@@ -259,7 +259,7 @@ def test_new_edge_while_busy_is_ignored(robot: RobotTaskHarness, sdk: SdkSimulat
     robot.run(10)
     assert block.Done and not block.Error, state(block)
     if BLOCKS[name][2]:
-        assert getattr(block.OutCmd, BLOCKS[name][2]) == 1
+        assert getattr(block.OutCmd, str(BLOCKS[name][2])) == 1
     assert _sent(sdk, BLOCKS[name][1], since) == 1
 
 
@@ -269,13 +269,13 @@ def test_same_instance_reads_another_number(robot: RobotTaskHarness, name: str) 
     Done) with number 5: the second Done returns number 5."""
     block = _block(robot, name, 1)
     first = execute(robot, block, reset=False)
-    assert first.final["Done"] and getattr(block.OutCmd, BLOCKS[name][2]) == 1
+    assert first.final["Done"] and getattr(block.OutCmd, str(BLOCKS[name][2])) == 1
     block.Execute = False
     robot.run(2)
     _prepare(block, name, 5)
     second = execute(robot, block, reset=False)
     assert order(second, "Busy", "Done") and second.final["ErrorID"] == 0, second.flags
-    assert getattr(block.OutCmd, BLOCKS[name][2]) == 5
+    assert getattr(block.OutCmd, str(BLOCKS[name][2])) == 5
 
 
 # ---------------------------------------------------------------- user data arrays

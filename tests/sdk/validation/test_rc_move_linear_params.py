@@ -110,7 +110,7 @@ def test_dynamics_rate_accepted(
     mv = _move_linear(robot, 200.0, 50.0)
     setattr(mv.ParCmd, rate, value)
     _expect_done(robot, sdk, mv, [200.0, 50.0])
-    assert sdk.last_command(MOVE_LINEAR)[rate] == sent
+    assert (sdk.last_command(MOVE_LINEAR) or {})[rate] == sent
 
 
 def _duration(h: RobotTaskHarness, sdk: SdkSimulator, x: float, **par: Any) -> int:
@@ -188,7 +188,7 @@ def test_blending_single_command_stops_at_target(
     enable(robot)
     mv = _move_linear(robot, 300.0, 40.0, BlendingMode=mode, BlendingParameter=list(parameter))
     _expect_done(robot, sdk, mv, [300.0, 40.0])
-    sent = sdk.last_command(MOVE_LINEAR)
+    sent = sdk.last_command(MOVE_LINEAR) or {}
     assert sent["BlendingMode"] == str(int(mode))
     assert float(sent["BlendingParameter[0]"]) == parameter[0]
 
@@ -226,15 +226,12 @@ def test_blending_into_second_command(
     robot.run(50, until=lambda: bool(first.CommandBuffered or first.Error))
     second.Execute = True
     early: list[bool] = []
-    seen = watch(
-        robot,
-        [first, second],
-        500,
-        lambda: (
-            early.append(bool(second.Active and not (first.Done or first.Error)))
-            or (finished(first) and finished(second))
-        ),
-    )
+
+    def until() -> bool:
+        early.append(bool(second.Active and not (first.Done or first.Error)))
+        return bool(finished(first) and finished(second))
+
+    seen = watch(robot, [first, second], 500, until)
     if mode in SUPPORTED_BLENDING:
         assert order(seen[0], "Busy", "CommandBuffered", "Active", "Done"), seen[0].flags
     else:
@@ -299,7 +296,7 @@ def _move_direct_then_linear(
     assert md.Done and not md.Error, state(md)
     assert order(seen, "Busy", "CommandBuffered", "Active", "Done"), (seen.flags, seen.final)
     assert sdk.joints[:3] == pytest.approx([200.0, 50.0, 50.0])
-    sent = sdk.last_command(MOVE_LINEAR)
+    sent = sdk.last_command(MOVE_LINEAR) or {}
     assert int(sent["ConfigMode[0]"]) == int(mode[0]) | int(mode[1]) << 4
     assert int(sent["ConfigMode[1]"]) == int(mode[2])
     return read_position(h).ActualCartesianPosition
@@ -398,7 +395,7 @@ def test_turn_mode_ignores_turn_number(
     mv = _move_linear(robot, 200.0, 10.0, TurnMode=mode)
     mv.ParCmd.Position.TurnNumber.J4Turns = turns
     _expect_done(robot, sdk, mv, [200.0, 10.0])
-    assert sdk.last_command(MOVE_LINEAR)["TurnMode"] == str(int(mode))
+    assert (sdk.last_command(MOVE_LINEAR) or {})["TurnMode"] == str(int(mode))
     assert read_position(robot).ActualCartesianPosition.TurnNumber.J4Turns == 0
 
 
@@ -407,7 +404,7 @@ def test_turn_mode_use_turn_number(robot: RobotTaskHarness, sdk: SdkSimulator) -
     enable(robot)
     mv = _move_linear(robot, 200.0, 10.0, TurnMode=TurnMode.USE_TURN_NUMBER)
     _expect_done(robot, sdk, mv, [200.0, 10.0])
-    assert sdk.last_command(MOVE_LINEAR)["TurnMode"] == "0"
+    assert (sdk.last_command(MOVE_LINEAR) or {})["TurnMode"] == "0"
 
 
 @pytest.mark.xfail(
@@ -439,7 +436,7 @@ def test_ori_mode_interpolated(robot: RobotTaskHarness, sdk: SdkSimulator, mode:
     seen = execute(robot, mv)
     assert order(seen, "Busy", "CommandBuffered", "Active", "Done"), seen.flags
     assert sdk.joints[0] == pytest.approx(200.0) and sdk.joints[5] == pytest.approx(45.0)
-    assert sdk.last_command(MOVE_LINEAR)["OriMode"] == str(int(mode))
+    assert (sdk.last_command(MOVE_LINEAR) or {})["OriMode"] == str(int(mode))
 
 
 @pytest.mark.parametrize("rz", [0.0, 45.0], ids=["same-orientation", "other-orientation"])
@@ -485,7 +482,7 @@ def test_tool_and_frame_number(robot: RobotTaskHarness, sdk: SdkSimulator, kind:
         _write(robot, "MC_WriteToolDataFB" if kind == "ToolNo" else "MC_WriteFrameDataFB", no, 10.0)
     mv = _move_linear(robot, 200.0, 10.0, **{kind: no})
     _expect_done(robot, sdk, mv, [200.0, 10.0])
-    assert sdk.last_command(MOVE_LINEAR)[kind] == str(no)
+    assert (sdk.last_command(MOVE_LINEAR) or {})[kind] == str(no)
 
 
 def test_external_tcp_tool(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
@@ -494,4 +491,4 @@ def test_external_tcp_tool(robot: RobotTaskHarness, sdk: SdkSimulator) -> None:
     _write(robot, "MC_WriteToolDataFB", 1, 100.0, ExternalTCP=True)
     mv = _move_linear(robot, 200.0, 10.0, ToolNo=1)
     _expect_done(robot, sdk, mv, [200.0, 10.0])
-    assert sdk.last_command(MOVE_LINEAR)["ToolNo"] == "1"
+    assert (sdk.last_command(MOVE_LINEAR) or {})["ToolNo"] == "1"

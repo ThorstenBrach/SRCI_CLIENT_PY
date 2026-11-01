@@ -73,8 +73,8 @@ def _running(
     h = RobotTaskHarness(sdk_transport(sdk, SIZE, SIZE), advance=clock.advance)
     modes = h.cfg.Plc.Parameter.SynchronizationModes.SWLimits
     modes[SyncTime.DURING_START_UP] = SyncMode.CLIENT_TO_SERVER
-    modes[SyncTime.AFTER_START_UP] = after
-    h.cfg.Rob.Parameter.SyncReaction = reaction
+    modes[SyncTime.AFTER_START_UP] = SyncMode(after)
+    h.cfg.Rob.Parameter.SyncReaction = SyncReaction(reaction)
     h.cfg.Rob.Parameter.SyncDelay = delay_ms
     h.run(1500, until=lambda: bool(h.rt.Synchronized or h.rt.Error))
     assert h.rt.Synchronized and not h.rt.Error, h.history

@@ -38,7 +38,7 @@ the rate tests check the values sent to the RC and the final position, not the d
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from srci_sdk_sim.sdk import SdkSimulator
@@ -422,7 +422,7 @@ def test_dynamics_rate_sent(robot: RobotTaskHarness, sdk: SdkSimulator, rate: st
     A negative rate is sent as 16#FFFF (use the default). The simulator does not model the
     effect on the duration."""
     _, at, _ = _away(robot, sdk)
-    block = _rtp(robot, **{rate: value})
+    block = _rtp(robot, **cast(dict[str, Any], {rate: value}))
     _run(robot, block)
     assert block.Done, state(block)
     sent = sdk.last_command(RETURN_TO_PRIMARY) or {}
@@ -436,7 +436,7 @@ def test_dynamics_rate_changed_while_returning(robot: RobotTaskHarness, sdk: Sdk
     """A dynamics rate changed from 5 % to 100 % while returning does not disturb the active return (Done at the interrupt position)."""
     _, at, _ = _away(robot, sdk, jog_cycles=200)
     sdk.set_move_cycles(200)
-    block = _rtp(robot, **{rate: 5.0})
+    block = _rtp(robot, **cast(dict[str, Any], {rate: 5.0}))
     _active(robot, block)
     setattr(block.ParCmd, rate, 100.0)
     robot.run(400, until=lambda: bool(block.Done or block.Error))
