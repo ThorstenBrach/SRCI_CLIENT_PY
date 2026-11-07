@@ -22,7 +22,7 @@
 
 """SRCI structures - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 1c7c5d83772f8a44)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 bf5963865386ae36)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa

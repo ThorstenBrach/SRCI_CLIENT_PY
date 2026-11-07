@@ -160,6 +160,7 @@ class MC_ChangeSpeedOverrideFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.Override valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         if (SysDepIsValidReal(Value=self.ParCmd.Override) == False or self.ParCmd.Override < 0) or self.ParCmd.Override > 100:
             # Parameter not valid
             CheckParameterValid = False

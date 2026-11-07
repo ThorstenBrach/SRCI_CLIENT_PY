@@ -449,6 +449,7 @@ class MC_MoveApproachDirectFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.VelocityRate valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F96: every value < 0 is the default
         if SysDepIsValidReal(Value=self.ParCmd.VelocityRate) == False or self.ParCmd.VelocityRate > 100:
             # Parameter not valid
@@ -460,6 +461,7 @@ class MC_MoveApproachDirectFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.AccelerationRate valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F96: every value < 0 is the default
         if SysDepIsValidReal(Value=self.ParCmd.AccelerationRate) == False or self.ParCmd.AccelerationRate > 100:
             # Parameter not valid
@@ -471,6 +473,7 @@ class MC_MoveApproachDirectFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.DecelerationRate valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F96: every value < 0 is the default
         if SysDepIsValidReal(Value=self.ParCmd.DecelerationRate) == False or self.ParCmd.DecelerationRate > 100:
             # Parameter not valid
@@ -482,6 +485,7 @@ class MC_MoveApproachDirectFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.JerkRate valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F96: every value < 0 is the default
         if SysDepIsValidReal(Value=self.ParCmd.JerkRate) == False or self.ParCmd.JerkRate > 100:
             # Parameter not valid

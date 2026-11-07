@@ -168,6 +168,7 @@ class MC_WriteRobotDefaultDynamicsFB(RobotLibraryBaseExecuteFB):
         CheckParameterValid = True
 
         # Check ParCmd.DynamicValues.VelocityRate ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F97: UINT with factor 100 in the telegram
         if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.VelocityRate) == False or self.ParCmd.DynamicValues.VelocityRate > 655.35:
             # Parameter not valid
@@ -181,6 +182,7 @@ class MC_WriteRobotDefaultDynamicsFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.DynamicValues.AccelerationRate ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F97: UINT with factor 100 in the telegram
         if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.AccelerationRate) == False or self.ParCmd.DynamicValues.AccelerationRate > 655.35:
             # Parameter not valid
@@ -194,6 +196,7 @@ class MC_WriteRobotDefaultDynamicsFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.DynamicValues.DecelerationRate ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F97: UINT with factor 100 in the telegram
         if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.DecelerationRate) == False or self.ParCmd.DynamicValues.DecelerationRate > 655.35:
             # Parameter not valid
@@ -207,6 +210,7 @@ class MC_WriteRobotDefaultDynamicsFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.DynamicValues.JerkRate ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F97: UINT with factor 100 in the telegram
         if SysDepIsValidReal(Value=self.ParCmd.DynamicValues.JerkRate) == False or self.ParCmd.DynamicValues.JerkRate > 655.35:
             # Parameter not valid

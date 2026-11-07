@@ -424,6 +424,7 @@ class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
                 return CheckParameterValid
 
             # Check ParCmd.SplineData[x].VelocityRate valid ?
+            # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
             # ST-FIX F96: every value < 0 is the default
             if SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].VelocityRate) == False or self.ParCmd.SplineData[_idx].VelocityRate > 100:
                 # Parameter not valid
@@ -436,6 +437,7 @@ class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
                 return CheckParameterValid
 
             # Check ParCmd.SplineData[x].AccelerationRate valid ?
+            # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
             # ST-FIX F96: every value < 0 is the default
             if SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].AccelerationRate) == False or self.ParCmd.SplineData[_idx].AccelerationRate > 100:
                 # Parameter not valid
@@ -448,6 +450,7 @@ class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
                 return CheckParameterValid
 
             # Check ParCmd.SplineData[x].DecelerationRate valid ?
+            # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
             # ST-FIX F96: every value < 0 is the default
             if SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].DecelerationRate) == False or self.ParCmd.SplineData[_idx].DecelerationRate > 100:
                 # Parameter not valid
@@ -460,6 +463,7 @@ class MC_DynamicSplineFB(RobotLibraryBaseEnableFB):
                 return CheckParameterValid
 
             # Check ParCmd.SplineData[x].JerkRate valid ?
+            # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
             # ST-FIX F96: every value < 0 is the default
             if SysDepIsValidReal(Value=self.ParCmd.SplineData[_idx].JerkRate) == False or self.ParCmd.SplineData[_idx].JerkRate > 100:
                 # Parameter not valid

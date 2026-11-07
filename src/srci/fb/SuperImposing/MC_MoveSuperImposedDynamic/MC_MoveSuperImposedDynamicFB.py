@@ -360,6 +360,7 @@ class MC_MoveSuperImposedDynamicFB(RobotLibraryBaseFB):
             return CheckParameterValid
 
         # Check ParCmd.VelocityDiffRate valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F96: every value < 0 is the default
         if SysDepIsValidReal(Value=self.ParCmd.VelocityDiffRate) == False or self.ParCmd.VelocityDiffRate > 100:
             # Parameter not valid
@@ -371,6 +372,7 @@ class MC_MoveSuperImposedDynamicFB(RobotLibraryBaseFB):
             return CheckParameterValid
 
         # Check ParCmd.AccelerationDiffRate valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F96: every value < 0 is the default
         if SysDepIsValidReal(Value=self.ParCmd.AccelerationDiffRate) == False or self.ParCmd.AccelerationDiffRate > 100:
             # Parameter not valid
@@ -382,6 +384,7 @@ class MC_MoveSuperImposedDynamicFB(RobotLibraryBaseFB):
             return CheckParameterValid
 
         # Check ParCmd.DecelerationDiffRate valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F96: every value < 0 is the default
         if SysDepIsValidReal(Value=self.ParCmd.DecelerationDiffRate) == False or self.ParCmd.DecelerationDiffRate > 100:
             # Parameter not valid
@@ -393,6 +396,7 @@ class MC_MoveSuperImposedDynamicFB(RobotLibraryBaseFB):
             return CheckParameterValid
 
         # Check ParCmd.JerkDiffRate valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         # ST-FIX F96: every value < 0 is the default
         if SysDepIsValidReal(Value=self.ParCmd.JerkDiffRate) == False or self.ParCmd.JerkDiffRate > 100:
             # Parameter not valid

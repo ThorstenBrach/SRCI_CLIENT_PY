@@ -252,6 +252,7 @@ class MC_SoftSwitchTcpFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.ResistanceForceTCP valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         if (SysDepIsValidReal(Value=self.ParCmd.ResistanceForceTCP) == False or self.ParCmd.ResistanceForceTCP < 0) or self.ParCmd.ResistanceForceTCP > 200:
             # Parameter not valid
             CheckParameterValid = False
@@ -264,6 +265,7 @@ class MC_SoftSwitchTcpFB(RobotLibraryBaseExecuteFB):
 
         for _idx in range(0, 6):
             # Check ParCmd.ResistanceForceAxis[x] valid ?
+            # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
             if (SysDepIsValidReal(Value=self.ParCmd.ResistanceForceAxis[_idx]) == False or self.ParCmd.ResistanceForceAxis[_idx] < 0) or self.ParCmd.ResistanceForceAxis[_idx] > 200:
                 # Parameter not valid
                 CheckParameterValid = False

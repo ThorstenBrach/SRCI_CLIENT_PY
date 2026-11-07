@@ -152,29 +152,6 @@ F28_POUS = (
 
 
 CONFIG = Config(
-    patches=[
-        # F153: at the start of a RobotTask no telegram has been read yet, so the check of F23 sees
-        # TelegramState UNDEFINED. An RC that is still INITIALIZED from the previous connection is
-        # taken as initialized without a reset; the RC drops to READY_FOR_INITIALIZATION a moment
-        # later and the start-up ends with ERR_TIMEOUT_CMD. INITIALIZED while no control request
-        # is pending can only come from an earlier connection -> reset the interface first.
-        SourcePatch(
-            "MC_RobotTaskFB",
-            "OnExecRun",
-            "// ST-FIX F23: wait until the RC left the state INITIALIZED of the previous enable",
-            "// ST-FIX F153: INITIALIZED without a request of this RobotTask: the RC is still\n"
-            "// initialized from an earlier connection -> reset the interface on the RC first\n"
-            "IF ( AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.INITIALIZED )\n"
-            "AND ( AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.NONE )\n"
-            "AND ( NOT _restartReset )\n"
-            "THEN\n"
-            "  AxesGroup.Cyclic.PlcToRob.Control := ControlHalfByte.RESET;\n"
-            "  _restartReset := TRUE;\n"
-            "END_IF\n\n"
-            "// ST-FIX F23: wait until the RC left the state INITIALIZED of the previous enable",
-            "F153: restart with an RC that is still initialized",
-        ),
-    ],
     mixins={
         "MC_RobotTaskFB": Mixin(
             "srci.fb.General.MC_RobotTask.MC_RobotTaskFB_Telegram",

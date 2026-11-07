@@ -172,6 +172,7 @@ class MC_GroupJogFB(RobotLibraryBaseEnableFB):
         CheckParameterValid = True
 
         # Check ParCmd.Override valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         if (SysDepIsValidReal(Value=self.ParCmd.Override) == False or self.ParCmd.Override < 0) or self.ParCmd.Override > 100:
             # Parameter not valid
             CheckParameterValid = False
@@ -225,6 +226,7 @@ class MC_GroupJogFB(RobotLibraryBaseEnableFB):
             return CheckParameterValid
 
         # Check ParCmd.IncrementalTranslation valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         if SysDepIsValidReal(Value=self.ParCmd.IncrementalTranslation) == False or self.ParCmd.IncrementalTranslation < 0:
             # Parameter not valid
             CheckParameterValid = False
@@ -235,6 +237,7 @@ class MC_GroupJogFB(RobotLibraryBaseEnableFB):
             return CheckParameterValid
 
         # Check ParCmd.IncrementalRotation valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         if SysDepIsValidReal(Value=self.ParCmd.IncrementalRotation) == False or self.ParCmd.IncrementalRotation < 0:
             # Parameter not valid
             CheckParameterValid = False

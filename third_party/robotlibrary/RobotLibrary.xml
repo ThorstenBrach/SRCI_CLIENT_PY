@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://www.plcopen.org/xml/tc6_0200">
-  <fileHeader companyName="Beckhoff Automation GmbH" productName="TwinCAT PLC Control" productVersion="3.5.20.60" creationDateTime="2026-11-01T16:30:16.5349646" />
-  <contentHeader name="SRCI_PLC_TEST_SUITE" modificationDateTime="2026-11-01T16:30:16.5349646">
+  <fileHeader companyName="Beckhoff Automation GmbH" productName="TwinCAT PLC Control" productVersion="3.5.20.60" creationDateTime="2026-11-07T19:12:34.520247" />
+  <contentHeader name="SRCI_PLC_TEST_SUITE" modificationDateTime="2026-11-07T19:12:34.5273136">
     <coordinateInfo>
       <fbd>
         <scaling x="1" y="1" />
@@ -145509,8 +145509,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check ParCmd.ProcessingMode defined ? 
 // ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
@@ -145611,8 +145610,9 @@ END_IF
 
 
 // Check ParCmd.Sensitivity valid ? 
-IF (( SysDepIsValidReal(ParCmd.Sensitivity) = FALSE ) OR
-    ( ParCmd.Sensitivity                    &lt;     0 ) OR  
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF (( SysDepIsValidReal(ParCmd.Sensitivity) = FALSE ) OR_ELSE
+    ( ParCmd.Sensitivity                    &lt;     0 ) OR_ELSE  
     ( ParCmd.Sensitivity                    &gt;   200 ))
 THEN
   // Parameter not valid
@@ -145635,8 +145635,9 @@ END_IF
 FOR _idx := 0 TO 6
 DO
   // Check ParCmd.SensitivityAxis valid ? 
-  IF (( SysDepIsValidReal(ParCmd.SensitivityAxis[_idx]) = FALSE ) OR
-      (                   ParCmd.SensitivityAxis[_idx]  &lt;     0 ) OR  
+  // ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+  IF (( SysDepIsValidReal(ParCmd.SensitivityAxis[_idx]) = FALSE ) OR_ELSE
+      (                   ParCmd.SensitivityAxis[_idx]  &lt;     0 ) OR_ELSE  
       (                   ParCmd.SensitivityAxis[_idx]  &gt;   200 ))      
   THEN
     // Parameter not valid
@@ -162259,7 +162260,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ?
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))
 THEN
@@ -162279,7 +162281,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ?
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))
 THEN
@@ -162299,7 +162302,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ?
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))
 THEN
@@ -162319,7 +162323,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ?
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))
 THEN
@@ -168104,8 +168109,9 @@ END_IF
 
 
 // Check ParCmd.ResistanceForceTCP valid ? 
-IF (( SysDepIsValidReal(ParCmd.ResistanceForceTCP) = FALSE ) OR
-    (                   ParCmd.ResistanceForceTCP  &lt;     0 ) OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF (( SysDepIsValidReal(ParCmd.ResistanceForceTCP) = FALSE ) OR_ELSE
+    (                   ParCmd.ResistanceForceTCP  &lt;     0 ) OR_ELSE
     (                   ParCmd.ResistanceForceTCP  &gt;   200 ))
 THEN
   // Parameter not valid
@@ -168127,8 +168133,9 @@ END_IF
 FOR _idx := 0 TO 5
 DO
   // Check ParCmd.ResistanceForceAxis[x] valid ? 
-  IF (( SysDepIsValidReal(ParCmd.ResistanceForceAxis[_idx]) = FALSE ) OR
-      (                   ParCmd.ResistanceForceAxis[_idx]  &lt;     0 ) OR
+  // ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+  IF (( SysDepIsValidReal(ParCmd.ResistanceForceAxis[_idx]) = FALSE ) OR_ELSE
+      (                   ParCmd.ResistanceForceAxis[_idx]  &lt;     0 ) OR_ELSE
       (                   ParCmd.ResistanceForceAxis[_idx]  &gt;   200 ))
   THEN
     // Parameter not valid
@@ -174838,8 +174845,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -175307,7 +175313,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -175327,7 +175334,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -175347,7 +175355,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -175367,7 +175376,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -178770,8 +178780,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -179239,7 +179248,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -179259,7 +179269,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -179279,7 +179290,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -179299,7 +179311,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -182710,8 +182723,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -182979,7 +182991,8 @@ THEN
 END_IF
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -182999,7 +183012,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -183019,7 +183033,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -183039,7 +183054,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -185706,8 +185722,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -186436,7 +186451,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -186456,7 +186472,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -186476,7 +186493,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -186496,7 +186514,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -190978,7 +190997,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -190998,7 +191018,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -191018,7 +191039,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -191038,7 +191060,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -194821,8 +194844,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -195568,7 +195590,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -195588,7 +195611,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -195608,7 +195632,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -195628,7 +195653,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -199413,8 +199439,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -199882,7 +199907,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -199902,7 +199928,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -199922,7 +199949,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -199942,7 +199970,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -203352,8 +203381,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -203821,7 +203849,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -203841,7 +203870,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -203861,7 +203891,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -203881,7 +203912,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -207629,7 +207661,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ?
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))
 THEN
@@ -207649,7 +207682,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ?
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))
 THEN
@@ -207669,7 +207703,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ?
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))
 THEN
@@ -207689,7 +207724,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ?
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))
 THEN
@@ -210594,8 +210630,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -211243,7 +211278,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -211263,7 +211299,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -211283,7 +211320,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -211303,7 +211341,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -214937,8 +214976,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -215292,7 +215330,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -215312,7 +215351,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -215332,7 +215372,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -215352,7 +215393,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -218450,8 +218492,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -218719,7 +218760,8 @@ THEN
 END_IF
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -218739,7 +218781,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -218759,7 +218802,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -218779,7 +218823,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -221830,7 +221875,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -221850,7 +221896,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -221870,7 +221917,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -221890,7 +221938,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -224868,8 +224917,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -225516,7 +225564,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -225536,7 +225585,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -225556,7 +225606,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -225576,7 +225627,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -229231,8 +229283,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -229567,7 +229618,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -229587,7 +229639,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -229607,7 +229660,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -229627,7 +229681,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -233316,7 +233371,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -233336,7 +233392,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -233356,7 +233413,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -233376,7 +233434,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -237651,7 +237710,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -237671,7 +237731,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -237691,7 +237752,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -237711,7 +237773,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -241275,8 +241338,9 @@ END_VAR
                   <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check ParCmd.Override valid ? 
-IF  (( SysDepIsValidReal(ParCmd.Override) = FALSE )  OR
-     (                   ParCmd.Override  &lt;     0 )  OR 
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.Override) = FALSE )  OR_ELSE
+     (                   ParCmd.Override  &lt;     0 )  OR_ELSE 
      (                   ParCmd.Override  &gt;   100 ))      
 THEN
   // Parameter not valid
@@ -245269,12 +245333,12 @@ END_VAR
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check ParCmd.Override valid ? 
-IF  (( SysDepIsValidReal(ParCmd.Override) = FALSE )  OR
-     (                   ParCmd.Override  &lt;     0 )  OR 
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.Override) = FALSE )  OR_ELSE
+     (                   ParCmd.Override  &lt;     0 )  OR_ELSE 
      (                   ParCmd.Override  &gt;   100 ))      
 THEN
   // Parameter not valid
@@ -245373,7 +245437,8 @@ END_IF
 
 
 // Check ParCmd.IncrementalTranslation valid ? 
-IF  (( SysDepIsValidReal(ParCmd.IncrementalTranslation) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.IncrementalTranslation) = FALSE )  OR_ELSE
      (                   ParCmd.IncrementalTranslation  &lt;     0 ))      
 THEN
   // Parameter not valid
@@ -245392,7 +245457,8 @@ END_IF
 
 
 // Check ParCmd.IncrementalRotation valid ? 
-IF  (( SysDepIsValidReal(ParCmd.IncrementalRotation) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.IncrementalRotation) = FALSE )  OR_ELSE
      (                   ParCmd.IncrementalRotation  &lt;     0 ))      
 THEN
   // Parameter not valid
@@ -245407,8 +245473,7 @@ THEN
                           MessageText := 'Invalid Parameter ParCmd.IncrementalRotation = {1}',
                           Para1       := VALID_REAL_TO_STRING(ParCmd.IncrementalRotation));                            
   RETURN;
-END_IF
-                </xhtml>
+END_IF</xhtml>
                 </ST>
               </body>
               <InterfaceAsPlainText>
@@ -248910,8 +248975,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -249179,7 +249243,8 @@ THEN
 END_IF
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -249199,7 +249264,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -249219,7 +249285,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -249239,7 +249306,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -251912,8 +251980,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -252248,7 +252315,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -252268,7 +252336,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -252288,7 +252357,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -252308,7 +252378,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -255413,8 +255484,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -255749,7 +255819,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -255769,7 +255840,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -255789,7 +255861,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -255809,7 +255882,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -258968,7 +259042,8 @@ END_IF
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -258988,7 +259063,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -259008,7 +259084,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -259028,7 +259105,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -325653,7 +325731,17 @@ CASE _stepCmd OF
          END_IF
        END_IF
      
-  01:  // ST-FIX F23: wait until the RC left the state INITIALIZED of the previous enable
+  01:  // ST-FIX F153: INITIALIZED without a request of this RobotTask: the RC is still
+// initialized from an earlier connection -&gt; reset the interface on the RC first
+IF (( AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.INITIALIZED ) AND
+    ( AxesGroup.Cyclic.PlcToRob.Control       = ControlHalfByte.NONE      ) AND
+    ( NOT _restartReset                                                   ))
+THEN
+  AxesGroup.Cyclic.PlcToRob.Control := ControlHalfByte.RESET;
+  _restartReset := TRUE;
+END_IF
+
+// ST-FIX F23: wait until the RC left the state INITIALIZED of the previous enable
 IF ( _restartReset )
 THEN
   IF ( AxesGroup.Cyclic.RobToPlc.TelegramState &lt;&gt; TelegramState.INITIALIZED )
@@ -374421,8 +374509,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -374801,7 +374888,8 @@ END_FOR
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -374821,7 +374909,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -374841,7 +374930,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -374861,7 +374951,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -375047,8 +375138,7 @@ END_IF
 
 
 // Check ParCmd.Manipulation
-// -&gt; no plausibility check for boolean
-                </xhtml>
+// -&gt; no plausibility check for boolean</xhtml>
                 </ST>
               </body>
               <InterfaceAsPlainText>
@@ -377736,8 +377826,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check AbortingMode valid ? 
 IF (( AbortingMode &lt;&gt; AbortingModeEnum.BUFFER ) AND
@@ -378050,7 +378139,8 @@ END_FOR
 
 
 // Check ParCmd.VelocityRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityRate  &gt;   100 ))      
 THEN
@@ -378070,7 +378160,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationRate  &gt;   100 ))      
 THEN
@@ -378090,7 +378181,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationRate  &gt;   100 ))      
 THEN
@@ -378110,7 +378202,8 @@ END_IF
 
 
 // Check ParCmd.JerkRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkRate  &gt;   100 ))      
 THEN
@@ -378130,8 +378223,7 @@ END_IF
 
 
 // Check ParCmd.Manipulation
-// -&gt; no plausibility check for boolean
-                </xhtml>
+// -&gt; no plausibility check for boolean</xhtml>
                 </ST>
               </body>
               <InterfaceAsPlainText>
@@ -380540,8 +380632,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 
 // Check ParCmd.Mode valid ? 
@@ -380891,7 +380982,8 @@ DO
 
   
   // Check ParCmd.SplineData[x].VelocityRate valid ? 
-  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].VelocityRate) = FALSE )  OR
+  // ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].VelocityRate) = FALSE )  OR_ELSE
       (* ST-FIX F96: every value &lt; 0 is the default *)
        (                   ParCmd.SplineData[_idx].VelocityRate  &gt;   100 ))      
   THEN
@@ -380913,7 +381005,8 @@ DO
   
   
   // Check ParCmd.SplineData[x].AccelerationRate valid ? 
-  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].AccelerationRate) = FALSE )  OR
+  // ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].AccelerationRate) = FALSE )  OR_ELSE
       (* ST-FIX F96: every value &lt; 0 is the default *)
        (                   ParCmd.SplineData[_idx].AccelerationRate  &gt;   100 ))      
   THEN
@@ -380935,7 +381028,8 @@ DO
   
   
   // Check ParCmd.SplineData[x].DecelerationRate valid ? 
-  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].DecelerationRate) = FALSE )  OR
+  // ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].DecelerationRate) = FALSE )  OR_ELSE
       (* ST-FIX F96: every value &lt; 0 is the default *)
        (                   ParCmd.SplineData[_idx].DecelerationRate  &gt;   100 ))      
   THEN
@@ -380957,7 +381051,8 @@ DO
   
   
   // Check ParCmd.SplineData[x].JerkRate valid ? 
-  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].JerkRate) = FALSE )  OR
+  // ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].JerkRate) = FALSE )  OR_ELSE
       (* ST-FIX F96: every value &lt; 0 is the default *)
        (                   ParCmd.SplineData[_idx].JerkRate  &gt;   100 ))      
   THEN
@@ -384833,8 +384928,7 @@ END_VAR
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 
 // Check AbortingMode valid ? 
@@ -385268,7 +385362,8 @@ DO
 
   
   // Check ParCmd.SplineData[x].VelocityRate valid ? 
-  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].VelocityRate) = FALSE )  OR
+  // ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].VelocityRate) = FALSE )  OR_ELSE
       (* ST-FIX F96: every value &lt; 0 is the default *)
        (                   ParCmd.SplineData[_idx].VelocityRate  &gt;   100 ))      
   THEN
@@ -385290,7 +385385,8 @@ DO
   
   
   // Check ParCmd.SplineData[x].AccelerationRate valid ? 
-  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].AccelerationRate) = FALSE )  OR
+  // ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].AccelerationRate) = FALSE )  OR_ELSE
       (* ST-FIX F96: every value &lt; 0 is the default *)
        (                   ParCmd.SplineData[_idx].AccelerationRate  &gt;   100 ))      
   THEN
@@ -385312,7 +385408,8 @@ DO
   
   
   // Check ParCmd.SplineData[x].DecelerationRate valid ? 
-  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].DecelerationRate) = FALSE )  OR
+  // ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].DecelerationRate) = FALSE )  OR_ELSE
       (* ST-FIX F96: every value &lt; 0 is the default *)
        (                   ParCmd.SplineData[_idx].DecelerationRate  &gt;   100 ))      
   THEN
@@ -385334,7 +385431,8 @@ DO
   
   
   // Check ParCmd.SplineData[x].JerkRate valid ? 
-  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].JerkRate) = FALSE )  OR
+  // ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+  IF  (( SysDepIsValidReal(ParCmd.SplineData[_idx].JerkRate) = FALSE )  OR_ELSE
       (* ST-FIX F96: every value &lt; 0 is the default *)
        (                   ParCmd.SplineData[_idx].JerkRate  &gt;   100 ))      
   THEN
@@ -390337,8 +390435,7 @@ END_VAR</xhtml>
               </interface>
               <body>
                 <ST>
-                  <xhtml xmlns="http://www.w3.org/1999/xhtml">
-                  CheckParameterValid := TRUE;
+                  <xhtml xmlns="http://www.w3.org/1999/xhtml">CheckParameterValid := TRUE;
 
 // Check ParCmd.ProcessingMode defined ? 
 // ST-FIX F122: the values between CONTINUOUS and DEACTIVATE are not defined either
@@ -390697,7 +390794,8 @@ END_IF
 
 
 // Check ParCmd.VelocityDiffRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityDiffRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityDiffRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityDiffRate  &gt;   100 ))      
 THEN
@@ -390717,7 +390815,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationDiffRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationDiffRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationDiffRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationDiffRate  &gt;   100 ))      
 THEN
@@ -390737,7 +390836,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationDiffRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationDiffRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationDiffRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationDiffRate  &gt;   100 ))      
 THEN
@@ -390757,7 +390857,8 @@ END_IF
 
 
 // Check ParCmd.JerkDiffRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkDiffRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkDiffRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkDiffRate  &gt;   100 ))      
 THEN
@@ -394058,7 +394159,8 @@ END_IF
 
 
 // Check ParCmd.VelocityDiffRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.VelocityDiffRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.VelocityDiffRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.VelocityDiffRate  &gt;   100 ))      
 THEN
@@ -394078,7 +394180,8 @@ END_IF
 
 
 // Check ParCmd.AccelerationDiffRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.AccelerationDiffRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.AccelerationDiffRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.AccelerationDiffRate  &gt;   100 ))      
 THEN
@@ -394098,7 +394201,8 @@ END_IF
 
 
 // Check ParCmd.DecelerationDiffRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.DecelerationDiffRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.DecelerationDiffRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.DecelerationDiffRate  &gt;   100 ))      
 THEN
@@ -394118,7 +394222,8 @@ END_IF
 
 
 // Check ParCmd.JerkDiffRate valid ? 
-IF  (( SysDepIsValidReal(ParCmd.JerkDiffRate) = FALSE )  OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF  (( SysDepIsValidReal(ParCmd.JerkDiffRate) = FALSE )  OR_ELSE
     (* ST-FIX F96: every value &lt; 0 is the default *)
      (                   ParCmd.JerkDiffRate  &gt;   100 ))      
 THEN
@@ -435310,7 +435415,8 @@ END_VAR</xhtml>
 
 
 // Check ParCmd.DynamicValues.VelocityRate ? 
-IF (( SysDepIsValidReal(ParCmd.DynamicValues.VelocityRate) = FALSE ) OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF (( SysDepIsValidReal(ParCmd.DynamicValues.VelocityRate) = FALSE ) OR_ELSE
     ( ParCmd.DynamicValues.VelocityRate &gt; 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram 
 THEN
   // Parameter not valid
@@ -435331,7 +435437,8 @@ END_IF
 
 
 // Check ParCmd.DynamicValues.AccelerationRate ? 
-IF (( SysDepIsValidReal(ParCmd.DynamicValues.AccelerationRate) = FALSE ) OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF (( SysDepIsValidReal(ParCmd.DynamicValues.AccelerationRate) = FALSE ) OR_ELSE
     ( ParCmd.DynamicValues.AccelerationRate &gt; 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram 
 THEN
   // Parameter not valid
@@ -435352,7 +435459,8 @@ END_IF
 
 
 // Check ParCmd.DynamicValues.DecelerationRate ? 
-IF (( SysDepIsValidReal(ParCmd.DynamicValues.DecelerationRate) = FALSE ) OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF (( SysDepIsValidReal(ParCmd.DynamicValues.DecelerationRate) = FALSE ) OR_ELSE
     ( ParCmd.DynamicValues.DecelerationRate &gt; 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram 
 THEN
   // Parameter not valid
@@ -435373,7 +435481,8 @@ END_IF
 
 
 // Check ParCmd.DynamicValues.JerkRate ? 
-IF (( SysDepIsValidReal(ParCmd.DynamicValues.JerkRate) = FALSE ) OR
+// ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
+IF (( SysDepIsValidReal(ParCmd.DynamicValues.JerkRate) = FALSE ) OR_ELSE
     ( ParCmd.DynamicValues.JerkRate &gt; 655.35 )) // ST-FIX F97: UINT with factor 100 in the telegram 
 THEN
   // Parameter not valid

@@ -231,6 +231,7 @@ class MC_CollisionDetectionFB(RobotLibraryBaseExecuteFB):
             return CheckParameterValid
 
         # Check ParCmd.Sensitivity valid ?
+        # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
         if (SysDepIsValidReal(Value=self.ParCmd.Sensitivity) == False or self.ParCmd.Sensitivity < 0) or self.ParCmd.Sensitivity > 200:
             # Parameter not valid
             CheckParameterValid = False
@@ -243,6 +244,7 @@ class MC_CollisionDetectionFB(RobotLibraryBaseExecuteFB):
 
         for _idx in range(0, 7):
             # Check ParCmd.SensitivityAxis valid ?
+            # ST-FIX F152: OR_ELSE - ST evaluates OR completely, a comparison with NaN raises an FPU exception
             if (SysDepIsValidReal(Value=self.ParCmd.SensitivityAxis[_idx]) == False or self.ParCmd.SensitivityAxis[_idx] < 0) or self.ParCmd.SensitivityAxis[_idx] > 200:
                 # Parameter not valid
                 CheckParameterValid = False
