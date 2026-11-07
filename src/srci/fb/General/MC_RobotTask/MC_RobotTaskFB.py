@@ -5716,6 +5716,12 @@ class MC_RobotTaskFB(MC_RobotTaskFB_Telegram, RobotLibraryLogFB):
                         self._stepCmd = self._stepCmd + 1
 
             case 1:
+                # initialized from an earlier connection -> reset the interface on the RC first
+                if (AxesGroup.Cyclic.RobToPlc.TelegramState == TelegramState.INITIALIZED and AxesGroup.Cyclic.PlcToRob.Control == ControlHalfByte.NONE) and (not self._restartReset):
+                    AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.RESET
+                    self._restartReset = True
+
+                # ST-FIX F23: wait until the RC left the state INITIALIZED of the previous enable
                 if self._restartReset:
                     if AxesGroup.Cyclic.RobToPlc.TelegramState != TelegramState.INITIALIZED:
                         self._restartReset = False

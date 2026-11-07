@@ -6730,6 +6730,13 @@
   "status": "active"
  },
  {
+  "id": "UT-RUN-012",
+  "test": "tests/unit/runtime/test_robot_task_restart.py::test_rc_still_initialized_gets_a_reset",
+  "title": "Rc still initialized gets a reset",
+  "refs": [],
+  "status": "active"
+ },
+ {
   "id": "UT-TR-001",
   "test": "tests/unit/transport/test_transports.py::test_loopback_exchange_and_statistics",
   "title": "Loopback exchange and statistics",
