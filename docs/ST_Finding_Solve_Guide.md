@@ -47,15 +47,15 @@ to the ST text before it transpiles it, so the result is proven by the Python te
 
 | Finding | Problem | Steps | POUs |
 |---|---|---:|---|
-| [F152](#f152) | `MC_RobotTaskFB.OnExecRun` step 1 - at the start of a RobotTask no telegram has been read yet, the check of F23 sees UNDEFINED. An RC still INITIALIZED from an earlier connection is taken as initialized without a reset; the RC drops to READY_FOR_INITIALIZATION and the start-up ends with ERR_TIMEOUT_CMD (seen at the JAKA after a quick reconnect). Fix: in step 1, INITIALIZED while `Control` = NONE requests RESET first | 1 | `MC_RobotTaskFB` |
+| [F153](#f153) | `MC_RobotTaskFB.OnExecRun` step 1 - at the start of a RobotTask no telegram has been read yet, the check of F23 sees UNDEFINED. An RC still INITIALIZED from an earlier connection is taken as initialized without a reset; the RC drops to READY_FOR_INITIALIZATION and the start-up ends with ERR_TIMEOUT_CMD (seen at the JAKA after a quick reconnect). Fix: in step 1, INITIALIZED while `Control` = NONE requests RESET first | 1 | `MC_RobotTaskFB` |
 
 ## Generated ST changes
 
-### F152
+### F153
 
 _`MC_RobotTaskFB.OnExecRun` step 1 - at the start of a RobotTask no telegram has been read yet, the check of F23 sees UNDEFINED. An RC still INITIALIZED from an earlier connection is taken as initialized without a reset; the RC drops to READY_FOR_INITIALIZATION and the start-up ends with ERR_TIMEOUT_CMD (seen at the JAKA after a quick reconnect). Fix: in step 1, INITIALIZED while `Control` = NONE requests RESET first_
 
-- F152: restart with an RC that is still initialized
+- F153: restart with an RC that is still initialized
 
 **MC_RobotTaskFB** · `OnExecRun` · patch
 
@@ -67,7 +67,7 @@ _`MC_RobotTaskFB.OnExecRun` step 1 - at the start of a RobotTask no telegram has
         END_IF
       
 -  01:  // ST-FIX F23: wait until the RC left the state INITIALIZED of the previous enable
-+  01:  // ST-FIX F152: INITIALIZED without a request of this RobotTask: the RC is still
++  01:  // ST-FIX F153: INITIALIZED without a request of this RobotTask: the RC is still
 +// initialized from an earlier connection -> reset the interface on the RC first
 +IF ( AxesGroup.Cyclic.RobToPlc.TelegramState = TelegramState.INITIALIZED )
 +AND ( AxesGroup.Cyclic.PlcToRob.Control = ControlHalfByte.NONE )

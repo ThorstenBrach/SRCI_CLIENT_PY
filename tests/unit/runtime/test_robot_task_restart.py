@@ -7,7 +7,7 @@
 #  Date:        2026-09-26
 #
 #  Description:
-#    ST-FIX F152: a RobotTask that meets an RC still initialized from an earlier connection.
+#    ST-FIX F153: a RobotTask that meets an RC still initialized from an earlier connection.
 #
 #  Copyright:
 #    (C) 2026 Thorsten Brach. All rights reserved
@@ -20,7 +20,7 @@
 #
 # -------------------------------------------------------------------------
 
-"""ST-FIX F152: a RobotTask that meets an RC still initialized from an earlier connection."""
+"""ST-FIX F153: a RobotTask that meets an RC still initialized from an earlier connection."""
 
 from __future__ import annotations
 
