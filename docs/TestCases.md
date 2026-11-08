@@ -67,7 +67,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [OPCUA](#opcua) | OPC UA transport | 18 | 0 |
 | [SPEC-IF](#spec-if) | Interfaces of the function blocks against the specification | 3 | 121 |
 | [SPEC-PAY](#spec-pay) | Payload layout against the tables of the specification | 7 | 30 |
-| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 68 | 154 |
+| [UT-FB](#ut-fb) | Function blocks (unit tests without SDK) | 70 | 157 |
 | [UT-FN](#ut-fn) | Functions of the library | 18 | 28 |
 | [UT-IEC](#ut-iec) | IEC 61131-3 runtime (data types, timers, conversions) | 42 | 96 |
 | [UT-RUN](#ut-run) | Cyclic runner | 12 | 12 |
@@ -75,7 +75,7 @@ library are `xfail` with the finding of [ST_FINDINGS.md](ST_FINDINGS.md).
 | [UT-TYP](#ut-typ) | Generated data types | 20 | 1336 |
 | [UT-TOOL](#ut-tool) | Code generators and tools | 71 | 223 |
 | [UT-PKG](#ut-pkg) | Package, logging | 16 | 16 |
-| | **Total** | **1067** | **10108** |
+| | **Total** | **1069** | **10111** |
 
 ## Test methodology
 
@@ -1313,6 +1313,8 @@ Function blocks (unit tests without SDK)
 | UT-FB-066 | F90: MC_MeasuringInputFB showed the MeasuringID only at DONE, so a running measurement could not be aborted by its ID (MC_AbortMeasuringInputFB). | 1 | `test_f90_measuring_input_shows_the_measuring_id_while_active` |
 | UT-FB-067 | F91: MC_WriteAnalogOutputFB accepted Index 0 (spec 1..32, like MC_ReadAnalogInputFB). | 1 | `test_f91_write_analog_output_rejects_index_0` |
 | UT-FB-068 | F92: MC_UnitMeasurementFB reported an invalid MeasuringMode as ERR_PROCESSINGMODE_NOT_ALLOWED. | 1 | `test_f92_unit_measurement_invalid_measuring_mode_is_a_parameter_error` |
+| UT-FB-069 | Interrupted with abort info sets command aborted | 2 | `test_interrupted_with_abort_info_sets_command_aborted` |
+| UT-FB-070 | Interrupted without abort info keeps command aborted false | 1 | `test_interrupted_without_abort_info_keeps_command_aborted_false` |
 
 ## UT-FN
 

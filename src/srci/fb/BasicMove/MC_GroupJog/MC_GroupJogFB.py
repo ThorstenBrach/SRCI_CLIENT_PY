@@ -693,7 +693,8 @@ class MC_GroupJogFB(RobotLibraryBaseEnableFB):
                 self.Busy = False
             # Interrupted and awaiting continuation
             case CmdMessageState.INTERRUPTED:
-                pass
+                if self._response.AlarmMessageCode == 27668 or self._response.AlarmMessageCode == 27669:
+                    self.CommandAborted = True
             # Requested for abort
             case CmdMessageState.ABORT_REQUEST:
                 pass
