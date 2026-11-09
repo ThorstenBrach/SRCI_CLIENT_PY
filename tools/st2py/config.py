@@ -152,24 +152,6 @@ F28_POUS = (
 
 
 CONFIG = Config(
-    patches=[
-        # F154: spec 6.3.1.8 - the RC reports an aborted jog as INTERRUPTED with the info 16#6C14
-        # (GroupStop) or 16#6C15 (RA sequence state INTERRUPTED); the client sets CommandAborted.
-        # MC_GroupJogFB ignored the info code (seen at the JAKA with GroupInterrupt while jogging).
-        SourcePatch(
-            "MC_GroupJogFB",
-            "OnUpdateStateFlags",
-            r"CmdMessageState\.INTERRUPTED\s*:;",
-            "CmdMessageState.INTERRUPTED         : // ST-FIX F154: info 16#6C14 / 16#6C15 - the jog was aborted (spec 6.3.1.8)\n"
-            "                                        IF (( _response.AlarmMessageCode = 16#6C14 ) OR\n"
-            "                                            ( _response.AlarmMessageCode = 16#6C15 ))\n"
-            "                                        THEN\n"
-            "                                          CommandAborted := TRUE;\n"
-            "                                        END_IF",
-            "F154: GroupJog sets CommandAborted for the infos 16#6C14 / 16#6C15",
-            regex=True,
-        ),
-    ],
     mixins={
         "MC_RobotTaskFB": Mixin(
             "srci.fb.General.MC_RobotTask.MC_RobotTaskFB_Telegram",
