@@ -22,7 +22,7 @@
 
 """SRCI types - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 344a0f6b71bffe8c)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 f5f292ace154abd6)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa

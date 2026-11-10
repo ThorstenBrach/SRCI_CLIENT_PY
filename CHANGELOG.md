@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- `third_party/robotlibrary/RobotLibrary.xml`: the same library 1.5.5.0 exported from the XAE Shell
+  (PLCopen 3.5.13); the export of VS2022 / 4026 repeated the declaration text at every VAR block
+  (about 90,000 lines more). Generated code unchanged; docs name F1 ... F154 as fixed in the library.
+
 ## [1.5.0] - 2026-11-10
 
 First release. The version follows the SRCI profile: 1.5.x is the client for the profile
@@ -190,3 +195,12 @@ PLC library 1.5.5.0 (ST fixes F1 ... F154).
    Linear moves need TurnMode FREE and ConfigMode SAME or FREE; the only accepted blending mode
    is MAX_CORNER_DEVIATION (linear and joint moves). The RC sends no LifeSign for about 200 ms
    after a rejected command, so a LifeSign timeout of 500 ms is used
+
+### Known issues
+Open findings of the PLC library, so also of the generated Python code; fixed in the next version
+(details: `docs/ST_FINDINGS.md`):
+ - F113: a new rising edge of `Execute` while a motion block is `Busy` is ignored (no new command, a changed target is not used)
+ - F116: `ERR_AXESGROUP_CHANGED` (16#8614) is never set when the `AxesGroup` input changes while a block is `Busy`
+ - F117: `ChangeSpeedOverrideParCmd.Override` starts with 5 %; the specification (6.2.3) names 10 %
+ - F125: the warning `WARN_CYCLIC_DATA_DISABLED_STILL_ACTIVE` (16#7303) is never set
+ - F126: `ReferenceDynamics` / `DefaultDynamics` start with 0.0 instead of a negative value ("do not change", 6.2.13 / 6.2.14)

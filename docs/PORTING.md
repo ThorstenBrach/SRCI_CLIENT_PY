@@ -41,7 +41,7 @@ Never edit generated files (header "Generated from the PLC library ... DO NOT ED
 ## Deviations from the ST code
 
 All deviations are listed in `tools/st2py/config.py` and `docs/ST_FINDINGS.md`. Since the
-library export of 2026-10-17 (contains F1 … F103) `config.py` has no source patch left, only the
+library export of 2026-11-08 (1.5.5.0, contains F1 … F154) `config.py` has no source patch left, only the
 hand written parts below; the mechanisms stay for new findings:
 
 * **Source patches** (`SourcePatch`): small textual corrections of the ST source before

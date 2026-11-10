@@ -1,6 +1,6 @@
 # Transfer of the fixes into the PLC library (PLCopen XML)
 
-> Status 2026-10-17: the PLC library contains all fixes F1 … F103, `tools/st2py/config.py` and
+> Status 2026-11-08 (library 1.5.5.0): the PLC library contains all fixes F1 … F154, `tools/st2py/config.py` and
 > `tools/plcopen_gen/overrides.py` have no correction left; the tool is used again for new findings.
 
 The Python port corrects the ST code of the PLC library while it reads
