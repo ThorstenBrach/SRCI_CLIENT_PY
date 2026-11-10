@@ -3,7 +3,7 @@
 
 # Standard Robot Command Interface (SRCI) – Python client
 
-![SRCI](https://raw.githubusercontent.com/wiki/ThorstenBrach/SRCI/Images/SRCI_Logo_small.png)
+![SRCI](https://raw.githubusercontent.com/wiki/ThorstenBrach/SRCI/images/SRCI_Logo_small.png)
 
 **This is an open Python client implementation of the SRCI interface, based on SRCI specification V1.5.9 (Dec 2024).**
 
