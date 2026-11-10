@@ -35,7 +35,7 @@ Run a failed test locally to see details.
 2. **Push the SDK repository** (the local `SRCI SDK` folder with its private git):
 
    ```
-   cd "D:\Projekte\SRCI\SRCI SDK"
+   cd "D:\Projekte\SRCI\SRCI_SERVER_SDK"
    git remote add origin git@github.com:<owner>/srci-sdk-private.git
    git push -u origin main
    git push origin --tags        # sdk-original = unchanged SDK (baseline of the CUSTOM changes)
