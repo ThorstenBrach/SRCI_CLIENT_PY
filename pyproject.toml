@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "srci-client"
-version = "0.1.0.dev0"
+version = "1.5.0rc1"
 description = "Python client for the Standard Robot Command Interface (SRCI), ported from the open SRCI PLC library"
 readme = "README.md"
 license = "MIT"
