@@ -35,7 +35,7 @@ opcua = [
 
 [project.urls]
 Source = "https://github.com/ThorstenBrach/SRCI_CLIENT_PY"
-"PLC library" = "https://github.com/ThorstenBrach/SRCI"
+"PLC library" = "https://github.com/ThorstenBrach/SRCI_CLIENT_PLC"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/srci"]

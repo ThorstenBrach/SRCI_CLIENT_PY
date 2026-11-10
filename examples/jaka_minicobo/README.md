@@ -14,7 +14,7 @@ PC (Python, srci)  --TCP 192.168.2.10:5000-->  TwinCAT PLC (FB_SrciTcpIpBridge) 
 
 The PLC only forwards the telegrams (256 bytes in, 256 bytes out, lockstep); the whole SRCI logic
 (`MC_RobotTaskFB`, commands) runs in Python. The PLC project is the TwinCAT example of
-[SRCI_TcpIp_Bridge](https://github.com/ThorstenBrach/SRCI_TcpIp_Bridge) (TF6310, `FB_SrciTcpIpBridge`).
+[SRCI_SERVER_BRIDGE_TCP_IP](https://github.com/ThorstenBrach/SRCI_SERVER_BRIDGE_TCP_IP) (TF6310, `FB_SrciTcpIpBridge`).
 
 The JAKA MiniCobo supports only the profile **Core**, so the example uses only Core functions:
 the RobotTask (ReadRobotData, ExchangeConfiguration, ReadMessages), GroupReset, EnableRobot,

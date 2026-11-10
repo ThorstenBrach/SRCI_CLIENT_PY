@@ -22,7 +22,7 @@
 
 """SRCI client for Python.
 
-Python port of the open SRCI PLC library (https://github.com/ThorstenBrach/SRCI),
+Python port of the open SRCI PLC library (https://github.com/ThorstenBrach/SRCI_CLIENT_PLC),
 based on the SRCI profile V1.5.9. The structure (function blocks, methods, step
 numbers, error ids) mirrors the PLC library 1:1 so that fixes can be ported
 between both implementations. See ``docs/PORTING.md``.

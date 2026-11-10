@@ -9,7 +9,7 @@
 
 The Standard Robot Command Interface (SRCI) is an open, manufacturer-independent standard, designed to enable seamless integration and control of robots in PLC-based automation environments. It provides a consistent communication framework that simplifies the programming and operation of industrial and collaborative robots — regardless of the specific PLC or robot brand involved.
 
-This library brings the SRCI client to Python. Function blocks, parameters, outputs and error IDs are the same as in the open SRCI PLC library for Codesys and TwinCAT ([ThorstenBrach/SRCI](https://github.com/ThorstenBrach/SRCI)), so programs and know-how can be transferred between PLC and Python.
+This library brings the SRCI client to Python. Function blocks, parameters, outputs and error IDs are the same as in the open SRCI PLC library for Codesys and TwinCAT ([ThorstenBrach/SRCI](https://github.com/ThorstenBrach/SRCI_CLIENT_PLC)), so programs and know-how can be transferred between PLC and Python.
 
 More information about SRCI :
 
@@ -108,7 +108,7 @@ srci.configure(TOOL_MAX=20, FRAME_MAX=20, LOAD_MAX=20)
 
 # Teach pendant: SRCI_PY_HMI
 
-[SRCI_PY_HMI](https://github.com/ThorstenBrach/SRCI_PY_HMI) is a teach pendant built on this
+[SRCI_CLIENT_PY_HMI](https://github.com/ThorstenBrach/SRCI_CLIENT_PY_HMI) is a teach pendant built on this
 library: a web UI (NiceGUI) for setting up and teaching a robot from the browser or a tablet.
 Connect to the robot or the SDK simulator, jog in joints, base or tool, teach points, manage
 tools and frames on the robot controller and run programs with LIN / PTP / Joint steps, exact
@@ -129,7 +129,7 @@ Python (srci)  --TCP, raw telegram-->  PLC gateway  --PROFINET-->  Robot control
                <--one reply per request--
 ```
 
-The PLC side is ready-made in [SRCI_TcpIp_Bridge](https://github.com/ThorstenBrach/SRCI_TcpIp_Bridge):
+The PLC side is ready-made in [SRCI_SERVER_BRIDGE_TCP_IP](https://github.com/ThorstenBrach/SRCI_SERVER_BRIDGE_TCP_IP):
 `FB_SrciTcpIpBridge` with an example project for **TwinCAT 3** (tested with a JAKA MiniCobo) and for
 **CODESYS V3.5**.
 
