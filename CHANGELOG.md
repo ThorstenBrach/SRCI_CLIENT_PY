@@ -6,9 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## [1.5.0rc1] - 2026-11-10
+## [1.5.0] - 2026-11-10
 
-First release candidate. The version follows the SRCI profile: 1.5.x is the client for the profile
+First release. The version follows the SRCI profile: 1.5.x is the client for the profile
 V1.5 (specification V1.5.9); the last digit counts the releases of the client. Generated from the
 PLC library 1.5.5.0 (ST fixes F1 ... F154).
 

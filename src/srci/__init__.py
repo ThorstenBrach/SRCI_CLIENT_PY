@@ -30,7 +30,7 @@ between both implementations. See ``docs/PORTING.md``.
 
 from srci.library_parameters import configure, parameters
 
-__version__ = "1.5.0rc1"
+__version__ = "1.5.0"
 
 SRCI_PROFILE_VERSION = "1.5.9"
 
