@@ -1,0 +1,19 @@
+# SRCI OPC UA bridge (TwinCAT 3, PLC as OPC UA server between Python and a robot on PROFINET)
+#
+# GVL_Bridge.RobotOutData / RobotInData are ARRAY[0..255] OF BYTE, published by the TwinCAT
+# OPC UA server (attribute 'OPC.UA.DA'). One node per direction carries the whole telegram.
+
+name = "SRCI OPC UA bridge (TwinCAT)"
+description = "PLC bridge: GVL_Bridge.RobotOutData / RobotInData, Byte[256] each"
+endpoint = "opc.tcp://192.168.2.10:4840"
+timeout = 1.0
+cycle_ms = 10
+lifesign_timeout_ms = 500
+
+[plc_to_rc]                 # written by the client
+nodes = "ns=4;s=GVL_Bridge.RobotOutData"
+size = 256
+
+[rc_to_plc]                 # read by the client
+nodes = "ns=4;s=GVL_Bridge.RobotInData"
+size = 256

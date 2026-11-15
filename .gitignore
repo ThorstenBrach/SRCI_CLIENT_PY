@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv*/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# log files of the examples (minicobo_<date>_<time>.log etc.)
+*.log

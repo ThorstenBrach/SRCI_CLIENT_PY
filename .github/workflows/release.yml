@@ -1,0 +1,80 @@
+name: release
+
+# A tag vX.Y.Z creates a GitHub release with wheel and source package and publishes it on PyPI.
+# Before tagging: version in src/srci/__init__.py and a section "## [X.Y.Z]" in CHANGELOG.md.
+# Versions with a/b/rc/dev are published as pre-release.
+#
+# PyPI: Trusted Publishing - on pypi.org add this repository (workflow release.yml, environment
+# pypi) as trusted publisher of the project srci-client; no token is needed.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install build
+      - name: Tag = package version
+        run: |
+          version=$(python -c "import re; print(re.search(r'__version__ = \"([^\"]+)\"', open('src/srci/__init__.py').read()).group(1))")
+          test "v$version" = "${{ github.ref_name }}" || { echo "tag ${{ github.ref_name }} != version $version"; exit 1; }
+      - name: Release notes from CHANGELOG.md
+        run: |
+          python - "${{ github.ref_name }}" > release-notes.md <<'EOF'
+          import re, sys
+          version = sys.argv[1].lstrip("v")
+          text = open("CHANGELOG.md", encoding="utf-8").read()
+          m = re.search(rf"^## \[{re.escape(version)}\][^\n]*\n(.*?)(?=^## \[|\Z)", text, re.M | re.S)
+          if not m:
+              sys.exit(f"no section ## [{version}] in CHANGELOG.md")
+          print(m.group(1).strip())
+          EOF
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            dist/
+            release-notes.md
+
+  github-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+      - name: Pre-release?
+        id: pre
+        run: |
+          python -c "import re,sys; print('prerelease=' + ('true' if re.search(r'(a|b|rc|dev)[0-9]*$', sys.argv[1]) else 'false'))" "${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ github.ref_name }}
+          body_path: release-notes.md
+          prerelease: ${{ steps.pre.outputs.prerelease == 'true' }}
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+
+  pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

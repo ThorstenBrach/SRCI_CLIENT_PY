@@ -1,0 +1,29 @@
+name: build
+
+# Builds wheel and source package and checks that the package imports - on every push and pull
+# request. The tests of the library run in the development repository.
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.12", "3.13", "3.14"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install build
+      - run: python -m build
+      - name: Install the wheel and import every module
+        shell: bash
+        run: |
+          pip install dist/*.whl
+          cd /tmp 2>/dev/null || cd "$RUNNER_TEMP"
+          python -c "import importlib, pkgutil, srci; mods = [m.name for m in pkgutil.walk_packages(srci.__path__, 'srci.') if 'opcua' not in m.name]; [importlib.import_module(m) for m in mods]; print('srci', srci.__version__, len(mods), 'modules')"

@@ -1,0 +1,40 @@
+# Staubli CS9 with the uniVALpi interpreter (SRCI 1.3, profile Core), e.g. in the SRS emulator
+#
+# The CS9 OPC UA server maps every byte of the PROFINET board J207J208-SiemensTRL_256 to a node
+# of its own: ByteIn n = %IB(8*n) is the PLC->RC telegram, ByteOut n = %QB(8*n) the RC->PLC
+# telegram. Reading works anonymously; writing the inputs needs a user profile with
+# writeAccess (e.g. "maintenance"). The server offers security None only: the password goes
+# over the network in clear text, so give it to the application, not into this file.
+# The VAL 3 application run_uniVALpi must be running.
+
+name = "Staubli CS9 uniVALpi"
+description = "J207J208-SiemensTRL_256: one node per byte, %IB = PLC->RC, %QB = RC->PLC"
+endpoint = "opc.tcp://192.168.2.117:853/Staubli"
+username = "maintenance"
+password_env = "SRCI_OPCUA_PASSWORD"
+timeout = 2.0
+cycle_ms = 20               # 2 x 256 nodes per cycle: start slow, measure, then shorten
+lifesign_timeout_ms = 1000
+
+# Settings the RC needs (uniVALpi user's guide, chapter 7.3 "Simatic Robot Library"), for the
+# application: ParCfg.Rob.Parameter.WaitAtBlendingZone must be TRUE - "RC supports this value
+# only", FALSE gives 16#8E21 at ExchangeConfiguration. LogLevel 5 logs the interpreter in detail
+# (commissioning), 0 in production. Synchronization of tool/frame/load... off at the start, and
+# ActivateTwoSequences recommended false (uniVALpi 1.3.4 stops its task tCom when it is
+# reconfigured to two sequences after other optional cyclic data).
+wait_at_blending_zone = true
+log_level = 0
+activate_two_sequences = false
+enable_sync = false
+
+[plc_to_rc]                 # written by the client (inputs of the robot)
+nodes = "ns=1;s=Robot:Inputs/Outputs:J207J208-SiemensTRL_256:%IB{bit}"
+size = 256
+# uniVALpi takes a snapshot of the 256 bytes every cycle and processes it only if the last
+# byte equals the LifeSign in byte 1. The nodes are not written at the same instant: write the
+# last byte invalid first and valid last, so a snapshot in between is rejected.
+consistency_byte = 255
+
+[rc_to_plc]                 # read by the client (outputs of the robot)
+nodes = "ns=1;s=Robot:Inputs/Outputs:J207J208-SiemensTRL_256:%QB{bit}"
+size = 256
