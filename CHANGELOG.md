@@ -6,10 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 The version follows the SRCI profile: 1.5.x is the client for the profile V1.5 (specification
 V1.5.9); the last digit counts the releases of the client.
 
-## [1.5.2] - unreleased
+## [1.5.2] - 2026-11-15
 
-First release in this repository (the earlier releases were published from the development
-repository).
+Generated from the PLC library 1.5.7.0. First release in this repository (the earlier releases were
+published from the development repository).
 
 ### Added
 - OPC UA transport for robot controllers that publish their PROFINET I/O byte by byte (e.g. Staubli

@@ -22,7 +22,7 @@
 
 """SRCI enumerations - generated from the PLC library, DO NOT EDIT.
 
-Source: third_party/robotlibrary/RobotLibrary.xml (sha256 64a828c4076cbe7b)
+Source: third_party/robotlibrary/RobotLibrary.xml (sha256 17c0dd027aaf7974)
 Regenerate with ``python -m tools.plcopen_gen``.
 """
 # ruff: noqa

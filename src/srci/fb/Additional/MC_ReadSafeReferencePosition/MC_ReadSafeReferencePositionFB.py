@@ -332,8 +332,6 @@ class MC_ReadSafeReferencePositionFB(RobotLibraryBaseExecuteFB):
         if Timestamp is None:
             Timestamp = SystemTime()
         ParseResponsePayload: int = 0
-        # internal index for loops
-        _idx: int = 0
         # Parameter count
         _parameterCnt: int = 0
 
@@ -457,9 +455,6 @@ class MC_ReadSafeReferencePositionFB(RobotLibraryBaseExecuteFB):
             ResponseData = RobotLibraryResponseDataFB()
         if Timestamp is None:
             Timestamp = SystemTime()
-        # internal index for loops
-        _idx: int = 0
-
         # Create log entry for Parameter start
         self.CreateLogMessagePara1(Timestamp=Timestamp, MessageType=MessageType.CMD, Severity=Severity.DEBUG, MessageCode=0, MessageText='{1} parameter(s) to parse from the response data:', Para1=DINT_TO_STRING(ParameterCnt))
 
