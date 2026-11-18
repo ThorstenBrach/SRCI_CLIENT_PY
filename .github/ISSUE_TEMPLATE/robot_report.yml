@@ -1,11 +1,16 @@
-name: Experience with a robot
-description: Share what worked and what did not with a robot of a vendor.
-labels: [community]
+name: "🤖 Experience with a robot"
+description: "Share what worked and what did not with a robot of a vendor."
+title: "[Robot]: "
+labels: ["community"]
 body:
   - type: markdown
     attributes:
       value: |
         Thank you! Your results help other users and are added to the vendor pages of the wiki.
+  - type: markdown
+    attributes:
+      value: |
+        ## The robot
   - type: input
     id: vendor
     attributes:
@@ -17,7 +22,6 @@ body:
     id: firmware
     attributes:
       label: "Controller firmware"
-      description: "Version of the robot controller software"
       placeholder: "e.g. 3.3.15"
     validations:
       required: true
@@ -46,13 +50,40 @@ body:
       placeholder: "e.g. PROFINET, 256 bytes, cycle 8 ms"
     validations:
       required: true
-  - type: textarea
-    id: client
+  - type: markdown
     attributes:
-      label: "Client side"
-      description: "PLC library / Python client and version, engineering tool."
+      value: |
+        ## The client
+  - type: input
+    id: version
+    attributes:
+      label: "srci-client version"
+      description: "Output of `pip show srci-client`"
+      placeholder: "e.g. 1.5.2"
     validations:
       required: true
+  - type: input
+    id: env
+    attributes:
+      label: "Python version and operating system"
+      placeholder: "e.g. Python 3.13 on Windows 11"
+    validations:
+      required: false
+  - type: dropdown
+    id: transport
+    attributes:
+      label: "Transport"
+      options:
+        - "TCP/IP bridge (PLC)"
+        - "OPC UA"
+        - "Simulator / loopback"
+        - "other"
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## Results
   - type: textarea
     id: works
     attributes:
@@ -77,7 +108,7 @@ body:
   - type: checkboxes
     id: confidential
     attributes:
-      label: Confidential content
+      label: "Confidential content"
       options:
-        - label: The issue contains no confidential documents, passwords or IP addresses of production systems.
+        - label: "The issue contains no confidential documents, passwords or IP addresses of production systems."
           required: true

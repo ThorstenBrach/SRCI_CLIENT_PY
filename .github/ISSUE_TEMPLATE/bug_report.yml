@@ -1,28 +1,41 @@
-name: Bug report
-description: Something does not work as described.
-labels: [bug]
+name: "🕷️ Bug report"
+description: "Report errors or unexpected behavior."
+title: "[Bug]: "
+labels: ["bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        Please [search the existing issues](https://github.com/ThorstenBrach/SRCI_CLIENT_PY/issues?q=is%3Aissue) first. For a security problem
-        (e.g. a robot that moves unexpectedly) do **not** open a public issue - use the link
+        Please make sure to [search for existing issues](https://github.com/ThorstenBrach/SRCI_CLIENT_PY/issues?q=is%3Aissue) before filing a new one!
+        For a security problem (e.g. a robot that moves unexpectedly) do **not** open a public issue - use
         "Report a security problem" on the previous page.
+  - type: markdown
+    attributes:
+      value: |
+        ## About the item
   - type: input
-    id: pkg_version
+    id: item_name
+    attributes:
+      label: "Name"
+      description: "Class, function or function block"
+      placeholder: "e.g. SrciClient.execute or MC_MoveLinearAbsoluteFB"
+    validations:
+      required: false
+  - type: input
+    id: version
     attributes:
       label: "srci-client version"
-      description: "`pip show srci-client`"
+      description: "Output of `pip show srci-client`"
       placeholder: "e.g. 1.5.2"
     validations:
       required: true
   - type: input
-    id: python
+    id: env
     attributes:
-      label: "Python version and OS"
-      placeholder: "e.g. 3.13 on Windows 11"
+      label: "Python version and operating system"
+      placeholder: "e.g. Python 3.13 on Windows 11"
     validations:
-      required: true
+      required: false
   - type: dropdown
     id: transport
     attributes:
@@ -33,48 +46,74 @@ body:
         - "Simulator / loopback"
         - "other"
     validations:
-      required: true
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## About the bug
   - type: textarea
     id: current
     attributes:
       label: "Current behavior"
-      description: "What happens? Include error / warning IDs (e.g. 16#8C04)."
+      description: "A concise description of what you're experiencing. Include error / warning IDs (e.g. 16#8C04)."
     validations:
       required: true
   - type: textarea
     id: expected
     attributes:
       label: "Expected behavior"
-      description: "What did you expect, ideally with a reference to the specification (chapter / table)?"
+      description: "What did you expect? A reference to the SRCI specification (chapter / table) helps."
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
       label: "Steps to reproduce"
-      description: "Minimal steps or code."
-      placeholder: "1. ..."
-    validations:
-      required: true
-  - type: textarea
-    id: robot
-    attributes:
-      label: "Robot / RC"
-      description: "Robot, firmware or simulator used."
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
     validations:
       required: false
   - type: textarea
+    id: robot
+    attributes:
+      label: "Robot controller"
+      description: "Robot, firmware and SRCI version, or simulator used."
+      placeholder: "e.g. JAKA MiniCobo, firmware 3.3.15, SRCI 1.1"
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## Solution
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Proposed solution"
+      description: "Tell us if you already have an idea how this can be fixed."
+      placeholder: |
+        ```python
+        counter += 1  # 11 changed to 1
+        ```
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## Log data
+  - type: textarea
     id: logs
     attributes:
-      label: "Log output / telegrams"
-      description: "Message log, client log or captured telegrams."
+      label: "Relevant log output"
+      description: "Message log, client log or captured telegrams. This will be formatted as code automatically."
       render: shell
     validations:
       required: false
   - type: checkboxes
     id: confidential
     attributes:
-      label: Confidential content
+      label: "Confidential content"
       options:
-        - label: The issue contains no confidential documents, passwords or IP addresses of production systems.
+        - label: "The issue contains no confidential documents, passwords or IP addresses of production systems."
           required: true

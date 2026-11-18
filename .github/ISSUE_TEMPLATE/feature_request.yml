@@ -1,30 +1,60 @@
-name: Feature request
-description: Propose something new or an improvement.
-labels: [enhancement]
+name: "⭐ Feature or enhancement request"
+description: "Propose something new."
+title: "[Feature Request]: "
+labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        Please [search the existing issues](https://github.com/ThorstenBrach/SRCI_CLIENT_PY/issues?q=is%3Aissue) first. For a security problem
-        (e.g. a robot that moves unexpectedly) do **not** open a public issue - use the link
+        Please make sure to [search for existing issues](https://github.com/ThorstenBrach/SRCI_CLIENT_PY/issues?q=is%3Aissue) before filing a new one!
+        For a security problem (e.g. a robot that moves unexpectedly) do **not** open a public issue - use
         "Report a security problem" on the previous page.
+  - type: markdown
+    attributes:
+      value: |
+        ## About the item
+  - type: input
+    id: item_name
+    attributes:
+      label: "Name"
+      description: "Class, function or function block"
+      placeholder: "e.g. SrciClient.execute or MC_MoveLinearAbsoluteFB"
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: "srci-client version"
+      description: "Output of `pip show srci-client`"
+      placeholder: "e.g. 1.5.2"
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ## About the feature
   - type: textarea
     id: feature
     attributes:
-      label: "What should be added or changed?"
+      label: "Description of the new feature / enhancement"
+      placeholder: "What is the expected behavior of the proposed feature?"
     validations:
       required: true
   - type: textarea
-    id: use_case
+    id: scenario
     attributes:
-      label: "Use case"
-      description: "In which application would you use it?"
+      label: "Scenario when this would be used"
+      placeholder: "In which application would you use it?"
     validations:
       required: true
   - type: textarea
     id: spec
     attributes:
-      label: "Reference to the specification"
-      description: "Chapter / table of the SRCI specification, if any."
+      label: "Reference to the SRCI specification"
+      description: "Chapter / table, if any."
     validations:
       required: false
+  - type: markdown
+    attributes:
+      value: |
+        Please limit one request per issue.
