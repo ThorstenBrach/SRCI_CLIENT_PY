@@ -56,7 +56,7 @@ jobs:
         id: pre
         run: |
           python -c "import re,sys; print('prerelease=' + ('true' if re.search(r'(a|b|rc|dev)[0-9]*$', sys.argv[1]) else 'false'))" "${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           name: Release ${{ github.ref_name }}
           body_path: release-notes.md
