@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Questions and help (Discussions)
+    url: https://github.com/ThorstenBrach/SRCI_CLIENT_PY/discussions
+    about: Ask questions about setup, use and specific robot controllers here.
   - name: Documentation (wiki)
     url: https://github.com/ThorstenBrach/SRCI/wiki
     about: User manual, concepts, function blocks and robot vendor pages.
