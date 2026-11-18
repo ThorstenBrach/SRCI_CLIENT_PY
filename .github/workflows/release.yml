@@ -36,7 +36,7 @@ jobs:
           print(m.group(1).strip())
           EOF
       - run: python -m build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: |
